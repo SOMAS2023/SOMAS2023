@@ -23,15 +23,20 @@ type IExtendedAgent interface {
 	// Current Coordinates of Agent
 	GetCoordinates() [2]float64
 
-	// sets colour of agent for loot boxes
-	SetColour(lootBoxColour Colour)
-
-	// gets colour of agent
-	GetColour() Colour
-
-	// This method overrides the BaseAgent's UpdateAgentInternalState.
-	// After making a decision, the agent must return a force each round.
+	// Gets the current force, which will be called by the server after the agents have called UpdateForces()
+	// during the UpdateAgentInternalState() method call.
 	// The forces are forces["pedalForce"], forces["brakeForce"] and forces["turningForce"]
 	// The pedal and brake forces is a float from 0.0 to 1.0, the turning force is a float from -1.0 (90° left) to 1.0 (90° right)
-	UpdateAgentInternalState() [3]float64
+	GetForces() [3]float64
+
+	// Sets colour of agent for loot boxes
+	SetColour(lootBoxColour Colour)
+
+	// Gets colour of agent
+	GetColour() Colour
+
+	// After making a decision, the agent must update their force each round.
+	// The forces are forces["pedalForce"], forces["brakeForce"] and forces["turningForce"]
+	// The pedal and brake forces is a float from 0.0 to 1.0, the turning force is a float from -1.0 (90° left) to 1.0 (90° right)
+	UpdateForces()
 }
