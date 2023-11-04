@@ -1,34 +1,36 @@
-package ienvironmentobject
+package ibikeragent
 
 /*
 
-The IEnvironementObject is an interface class that all objects (including agents) must implement.
+The IBikerAgent is an extension to the BaseAgent class that will be implemented by BikerAgent
 
 */
 
 import (
-	"github.com/google/uuid"
+	baseagent "github.com/MattSScott/basePlatformSOMAS/BaseAgent"
+	// "SOMAS2023/internal/common/environment"
+	// "SOMAS2023/internal/common/utils"
 )
 
-type IEnvironementObject struct {
-	// Returns if object is alive or dead
-	IsAlive() bool
+type IBikerAgent interface {
+	// Inherits all functionality from BaseAgent i.e. GetID() and UpdateAgentInternalState()
+	baseagent.IAgent[IBikerAgent]
+	IEnvironementObject[IBikerAgent]
 
-	// returns the unique ID of an object
-	GetID() uuid.UUID
+	// Sets colour of agent for loot boxes
+	SetColour(lootBoxColour Colour)
 
-	// returns the current coordinates of Agent
-	GetPosition() [2]float64
+	// Gets colour of agent
+	GetColour() Colour
 
 	// Gets the current force, which will be called by the server after the agents have called UpdateForces()
 	// during the UpdateAgentInternalState() method call.
 	// The forces are[pedal, brake, turning]
 	// The pedal and brake forces is a float from 0.0 to 1.0, the turning force is a float from -1.0 (90° left) to 1.0 (90° right)
-	GetForces() [3]float64
+	GetForces() Forces
 
 	// After making a decision, the agent must update their force each round.
 	// The forces are forces["pedalForce"], forces["brakeForce"] and forces["turningForce"]
 	// The pedal and brake forces is a float from 0.0 to 1.0, the turning force is a float from -1.0 (90° left) to 1.0 (90° right)
 	UpdateForces()
-
 }
