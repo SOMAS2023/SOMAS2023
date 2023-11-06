@@ -1,4 +1,4 @@
-package commontypes
+package utils
 
 type Colour int
 
@@ -13,6 +13,7 @@ const (
 	Brown
 	Gray
 	White
+	NumOfColours // add a sentinel for counting the number of colours
 )
 
 type Forces struct {

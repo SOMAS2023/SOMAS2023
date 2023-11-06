@@ -1,4 +1,4 @@
-package ienvironmentobject
+package environment
 
 /*
 
@@ -13,9 +13,9 @@ import (
 )
 
 type IEnvironementObject interface {
-	// returns the unique ID of an object
+	// returns the unique ID of the object
 	GetID() uuid.UUID
 
-	// returns the current coordinates of Agent
+	// returns the current coordinates of the object
 	GetPosition() utils.Coordinates
 }

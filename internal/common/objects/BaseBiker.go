@@ -1,7 +1,8 @@
-package basebiker
+package objects
 
 import (
 	utils "SOMAS2023/internal/common/utils"
+	server "SOMAS2023/internal/server"
 
 	"math/rand"
 
@@ -9,21 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// placeholder
-type ServerStatus struct {
-	// []lootboxes
-	// []bikes
-	// []bikers
-}
-
 // agent with defualt strategy for MVP:
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
-	DecideAction(server_status ServerStatus) int
-	DecideForce(server_status ServerStatus) utils.Forces                      // defines the vector you pass to the bike: [pedal, brake, turning]
-	ChangeBike(server_status ServerStatus) uuid.UUID                          // action never performed in MVP, might call PickPike() in future implementations
-	UpdateColour(tot_colours utils.Colour)                                    // called if a box of the desired colour has been looted
-	UpdateAgent(energy_gained float64, energy_lost float64, point_gained int) // called by server
+	DecideAction(gameState server.GameState) int
+	DecideForce(gameState server.GameState) utils.Forces                   // defines the vector you pass to the bike: [pedal, brake, turning]
+	ChangeBike(gameState server.GameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
+	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
+	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
 }
 
 // Assumptions:
@@ -38,27 +32,26 @@ type IBaseBiker interface {
 // - asssume server assigns initial bikes to ppl
 
 // What we need to know:
-// - How is loot location given to us? (ie ServerStatus)
+// - How is loot location given to us? (ie server.GameState)
 // - How does the physics engine work
 
 type BaseBiker struct {
-	*baseAgent.BaseAgent[IBaseBiker]
-	sought_colour utils.Colour // the colour of the lootbox that the agent is currently seeking
-	on_bike       bool
-	energy_level  float64 // float between 0 and 1
-	points        int
-	bike_id       uuid.UUID
-	alive         bool
+	*baseAgent.BaseAgent[IBaseBiker]              // BaseBiker inherits functions from BaseAgent such as GetID(), GetAllMessages() and UpdateAgentInternalState()
+	soughtColour                     utils.Colour // the colour of the lootbox that the agent is currently seeking
+	onBike                           bool
+	energyLevel                      float64 // float between 0 and 1
+	points                           int
+	alive                            bool
 }
 
 // returns 0 if biker decides to pedal and 1 if it decides to change bike
 // based on this the server will call either DecideForce or ChangeBike
-func (bb *BaseBiker) DecideAction(server_status ServerStatus) int {
+func (bb *BaseBiker) DecideAction(gameState server.GameState) int {
 	return 0
 }
 
-// once we know what ServerStatus looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
-func (bb *BaseBiker) DecideForce(server_status ServerStatus) utils.Forces {
+// once we know what server.GameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
+func (bb *BaseBiker) DecideForce(gameState server.GameState) utils.Forces {
 	// the way this is determined depends on how the physics engine works and on what exactly the server passes us
 	forces := utils.Forces{
 		Pedal:   3.5,
@@ -69,18 +62,18 @@ func (bb *BaseBiker) DecideForce(server_status ServerStatus) utils.Forces {
 }
 
 // decide which bike to go to
-func (bb *BaseBiker) ChangeBike(server_status ServerStatus) uuid.UUID {
+func (bb *BaseBiker) ChangeBike(gameState server.GameState) uuid.UUID {
 	return uuid.New()
 }
 
-func (bb *BaseBiker) UpdateColour(tot_colours utils.Colour) {
-	bb.sought_colour = utils.Colour(rand.Intn(int(tot_colours)))
+func (bb *BaseBiker) UpdateColour(totColours utils.Colour) {
+	bb.soughtColour = utils.Colour(rand.Intn(int(totColours)))
 }
 
-func (bb *BaseBiker) UpdateAgent(energy_gained float64, energy_lost float64, points_gained int) {
-	bb.energy_level += (energy_gained - energy_lost)
-	bb.points += points_gained
-	bb.alive = bb.energy_level > 0
+func (bb *BaseBiker) UpdateAgent(energyGained float64, energyLost float64, pointsGained int) {
+	bb.energyLevel += (energyGained - energyLost)
+	bb.points += pointsGained
+	bb.alive = bb.energyLevel > 0
 }
 
 func (bb *BaseBiker) GetLifeStatus() bool {
@@ -88,27 +81,25 @@ func (bb *BaseBiker) GetLifeStatus() bool {
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
-func GetIBaseBiker(tot_colours utils.Colour, bike_id uuid.UUID) IBaseBiker {
+func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 	return &BaseBiker{
-		BaseAgent:     baseAgent.NewBaseAgent[IBaseBiker](),
-		sought_colour: utils.Colour(rand.Intn(int(tot_colours))),
-		on_bike:       true,
-		energy_level:  1.0,
-		points:        0,
-		bike_id:       bike_id,
-		alive:         true,
+		BaseAgent:    baseAgent.NewBaseAgent[IBaseBiker](),
+		soughtColour: utils.GenerateRandomColour(),
+		onBike:       true,
+		energyLevel:  1.0,
+		points:       0,
+		alive:        true,
 	}
 }
 
 // this function will be used by GetTeamAgent to get the ref to the BaseBiker
-func GetBaseBiker(tot_colours utils.Colour, bike_id uuid.UUID) *BaseBiker {
+func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 	return &BaseBiker{
-		BaseAgent:     baseAgent.NewBaseAgent[IBaseBiker](),
-		sought_colour: utils.Colour(rand.Intn(int(tot_colours))),
-		on_bike:       true,
-		energy_level:  1.0,
-		points:        0,
-		bike_id:       bike_id,
-		alive:         true,
+		BaseAgent:    baseAgent.NewBaseAgent[IBaseBiker](),
+		soughtColour: utils.GenerateRandomColour(),
+		onBike:       true,
+		energyLevel:  1.0,
+		points:       0,
+		alive:        true,
 	}
 }

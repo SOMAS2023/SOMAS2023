@@ -1,12 +1,12 @@
-package environmentparameters
+package utils
 
 // Grid size
-var gridLength float64 = 500.0
+var gridHeight float64 = 500.0
 var gridWidth float64 = 500.0
 
 // GridLength returns the length of the grid.
-func GridLength() float64 {
-	return gridLength
+func GridHeight() float64 {
+	return gridHeight
 }
 
 // GridWidth returns the width of the grid.
