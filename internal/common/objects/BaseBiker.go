@@ -2,7 +2,6 @@ package objects
 
 import (
 	utils "SOMAS2023/internal/common/utils"
-	server "SOMAS2023/internal/server"
 
 	"math/rand"
 
@@ -13,9 +12,9 @@ import (
 // agent with defualt strategy for MVP:
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
-	DecideAction(gameState server.GameState) int
-	DecideForce(gameState server.GameState) utils.Forces                   // defines the vector you pass to the bike: [pedal, brake, turning]
-	ChangeBike(gameState server.GameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
+	DecideAction(gameState utils.IGameState) int
+	DecideForce(gameState utils.IGameState) utils.Forces                   // defines the vector you pass to the bike: [pedal, brake, turning]
+	ChangeBike(gameState utils.IGameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
 	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
 	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
 }
@@ -32,7 +31,7 @@ type IBaseBiker interface {
 // - asssume server assigns initial bikes to ppl
 
 // What we need to know:
-// - How is loot location given to us? (ie server.GameState)
+// - How is loot location given to us? (ie utils.IGameState)
 // - How does the physics engine work
 
 type BaseBiker struct {
@@ -46,12 +45,12 @@ type BaseBiker struct {
 
 // returns 0 if biker decides to pedal and 1 if it decides to change bike
 // based on this the server will call either DecideForce or ChangeBike
-func (bb *BaseBiker) DecideAction(gameState server.GameState) int {
+func (bb *BaseBiker) DecideAction(gameState utils.IGameState) int {
 	return 0
 }
 
-// once we know what server.GameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
-func (bb *BaseBiker) DecideForce(gameState server.GameState) utils.Forces {
+// once we know what utils.IGameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
+func (bb *BaseBiker) DecideForce(gameState utils.IGameState) utils.Forces {
 	// the way this is determined depends on how the physics engine works and on what exactly the server passes us
 	forces := utils.Forces{
 		Pedal:   3.5,
@@ -62,7 +61,7 @@ func (bb *BaseBiker) DecideForce(gameState server.GameState) utils.Forces {
 }
 
 // decide which bike to go to
-func (bb *BaseBiker) ChangeBike(gameState server.GameState) uuid.UUID {
+func (bb *BaseBiker) ChangeBike(gameState utils.IGameState) uuid.UUID {
 	return uuid.New()
 }
 
