@@ -8,8 +8,8 @@ import (
 func GenerateRandomCoordinates() Coordinates {
 	// Generate random coordinates
 	return Coordinates{
-		X: rand.Float64() * GridWidth(),
-		Y: rand.Float64() * GridHeight(),
+		X: rand.Float64() * GridWidth,
+		Y: rand.Float64() * GridHeight,
 	}
 }
 

@@ -17,9 +17,9 @@ const (
 )
 
 type Forces struct {
-	Pedal   float64
-	Brake   float64
-	Turning float64
+	Pedal   float64 // Pedal is a force from 0-1 where 1 is 100% power
+	Brake   float64 // Brake is a force from 0-1 opposing the direction of travel (bike cannot go backwards)
+	Turning float64 // Turning is a force from -1 to 1 which maps to -180° to 180°
 }
 
 type Coordinates struct {
