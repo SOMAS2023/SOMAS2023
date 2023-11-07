@@ -1,21 +1,20 @@
 package objects
 
 import (
-	//"fmt"
 	utils "SOMAS2023/internal/common/utils"
-	//baseAgent "github.com/MattSScott/basePlatformSOMAS/BaseAgent"
+
 	"github.com/google/uuid"
 )
 
-// MegaBike will have the following forces 
-type MegaBike struct{
-	id uuid.UUID
-	coordinates utils.Coordinates
-	agentForces [] utils.Forces
-	Mass float64
+// MegaBike will have the following forces
+type MegaBike struct {
+	id           uuid.UUID
+	coordinates  utils.Coordinates
+	agentForces  []utils.Forces
+	Mass         float64
 	acceleration float64
-	velocity float64
-	orientation float64
+	velocity     float64
+	orientation  float64
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
@@ -36,38 +35,49 @@ func (mb *MegaBike) GetPosition() utils.Coordinates {
 	return mb.coordinates
 }
 
-func (mb *MegaBike) Calculate_Force()(float64){
-	force_map:=4.0
-	if len(mb.agentForces)==0{
-		return 0.0
-	}
-	Total_pedal:=0.0
-	Total_brake:=0.0
-	Total_mass:=utils.MassBike
-	for _,agent := range mb.agentForces{
-		Total_mass+=utils.MassBiker
-		if agent.Pedal !=0{
-			Total_pedal+=float64(agent.Pedal)
-		}else{
-			Total_brake+=float64(agent.Brake)
-		}
-	}
-	F:=force_map*(float64(Total_pedal)-float64(Total_brake))
-	return F
-}
-
-func (mb *MegaBike) Add_Agent(agentForces utils.Forces){
+// AddAgentForce should be called by the server once per agent, once all Bikers have called DecideForce
+func (mb *MegaBike) AddAgentForce(agentForces utils.Forces) {
 	mb.agentForces = append(mb.agentForces, agentForces)
 }
 
-func (mb *MegaBike)Calculate_Orientation(){
-	if len(mb.agentForces)==0{
-		return
+// Calculates the total force based on the Biker's force
+func (mb *MegaBike) CalculateForce() float64 {
+	forceMap := 4.0
+	if len(mb.agentForces) == 0 {
+		return 0.0
 	}
-	Total_turning:=0.0
-	for _,agent := range mb.agentForces{
-		Total_turning+=float64(agent.Turning)
+	totalPedal := 0.0
+	totalBrake := 0.0
+	totalMass := utils.MassBike
+	for _, agent := range mb.agentForces {
+		totalMass += utils.MassBiker
+		if agent.Pedal != 0 {
+			totalPedal += float64(agent.Pedal)
+		} else {
+			totalBrake += float64(agent.Brake)
+		}
 	}
-	Average_turning:=Total_turning/float64(len(mb.agentForces))
-	mb.orientation+=(Average_turning)
+	F := forceMap * (float64(totalPedal) - float64(totalBrake))
+	return F
+}
+
+// Calculates the final orientation of the Megabike, between -1 and 1 (-180° to 180°), given the Biker's Turning forces
+func (mb *MegaBike) CalculateOrientation() float64 {
+	if len(mb.agentForces) == 0 {
+		return mb.orientation
+	}
+	totalTurning := 0.0
+	for _, agentForce := range mb.agentForces {
+		totalTurning += float64(agentForce.Turning)
+	}
+	averageTurning := totalTurning / float64(len(mb.agentForces))
+	mb.orientation += (averageTurning)
+	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
+	if mb.orientation > 1.0 {
+		mb.orientation -= 2
+	} else if mb.orientation < -1.0 {
+		mb.orientation += 2
+	}
+
+	return mb.orientation
 }
