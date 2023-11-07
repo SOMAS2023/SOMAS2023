@@ -12,8 +12,8 @@ type LootBox struct {
 	id          uuid.UUID
 }
 
-// NewLootBox is a constructor for LootBox that initializes it with a new UUID and default position.
-func NewLootBox(colour utils.Colour) *LootBox {
+// GetLootBox is a constructor for LootBox that initializes it with a new UUID and default position.
+func GetLootBox() *LootBox {
 	return &LootBox{
 		id:          uuid.New(),                        // Generate a new unique identifier
 		coordinates: utils.GenerateRandomCoordinates(), // Initialize to randomized position

@@ -69,6 +69,7 @@ func (bb *BaseBiker) UpdateColour(totColours utils.Colour) {
 	bb.soughtColour = utils.Colour(rand.Intn(int(totColours)))
 }
 
+
 func (bb *BaseBiker) UpdateAgent(energyGained float64, energyLost float64, pointsGained int) {
 	bb.energyLevel += (energyGained - energyLost)
 	bb.points += pointsGained
