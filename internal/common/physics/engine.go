@@ -25,7 +25,7 @@ func (eng *Engine) CalcVelocity(acc float64, dt float64, currVelocity float64) f
 	return newVelocity
 }
 
-func (eng *Engine) UpdateLoc(coordinates utils.Coordinates, velocity float64, orientation float64) utils.Coordinates {
+func (eng *Engine) GetNewLock(coordinates utils.Coordinates, velocity float64, orientation float64) utils.Coordinates {
 	coordinates.X += velocity * float64(math.Cos(float64(math.Pi*orientation)))
 	coordinates.Y += velocity * float64(math.Sin(float64(math.Pi*orientation)))
 	return coordinates
