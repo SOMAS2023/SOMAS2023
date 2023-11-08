@@ -6,27 +6,27 @@ import (
 )
 
 /*
-The Engine struct is responsible for calculating physics for the environment
+The Engine is responsible for calculating physics for the environment
 */
-type Engine struct {
-}
 
-func (eng *Engine) CalcAcceleration(f float64, m float64) float64 {
+func CalcAcceleration(f float64, m float64) float64 {
 	return f / m
 }
 
-func (eng *Engine) CalcVelocity(acc float64, dt float64, currVelocity float64) float64 {
+func CalcVelocity(acc float64, currVelocity float64) float64 {
 	var newVelocity float64
-	if (currVelocity + (acc * dt)) < 0 {
+	// dt is equal to one
+	if (currVelocity + (acc * 1)) < 0 {
 		newVelocity = 0.0
 	} else {
-		newVelocity = (acc * dt) + currVelocity
+		newVelocity = (acc * 1) + currVelocity
 	}
 	return newVelocity
 }
 
-func (eng *Engine) GetNewLock(coordinates utils.Coordinates, velocity float64, orientation float64) utils.Coordinates {
+func GetNewPosition(coordinates utils.Coordinates, velocity float64, orientation float64) utils.Coordinates {
 	coordinates.X += velocity * float64(math.Cos(float64(math.Pi*orientation)))
 	coordinates.Y += velocity * float64(math.Sin(float64(math.Pi*orientation)))
 	return coordinates
 }
+

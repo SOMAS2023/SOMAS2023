@@ -13,10 +13,11 @@ import (
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 	DecideAction(gameState utils.IGameState) int
-	DecideForce(gameState utils.IGameState) utils.Forces                   // defines the vector you pass to the bike: [pedal, brake, turning]
+	DecideForce(gameState utils.IGameState)                                // defines the vector you pass to the bike: [pedal, brake, turning]
 	ChangeBike(gameState utils.IGameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
 	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
 	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
+	GetForces() utils.Forces
 }
 
 // Assumptions:
@@ -41,6 +42,7 @@ type BaseBiker struct {
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
 	alive                            bool
+	forces                           utils.Forces
 }
 
 // returns 0 if biker decides to pedal and 1 if it decides to change bike
@@ -50,14 +52,14 @@ func (bb *BaseBiker) DecideAction(gameState utils.IGameState) int {
 }
 
 // once we know what utils.IGameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
-func (bb *BaseBiker) DecideForce(gameState utils.IGameState) utils.Forces {
+func (bb *BaseBiker) DecideForce(gameState utils.IGameState) {
 	// the way this is determined depends on how the physics engine works and on what exactly the server passes us
-	forces := utils.Forces{
+	updated_forces := utils.Forces{
 		Pedal:   3.5,
 		Brake:   1.2,
 		Turning: 2.8,
 	}
-	return forces
+	bb.forces = updated_forces
 }
 
 // decide which bike to go to
@@ -69,7 +71,6 @@ func (bb *BaseBiker) UpdateColour(totColours utils.Colour) {
 	bb.soughtColour = utils.Colour(rand.Intn(int(totColours)))
 }
 
-
 func (bb *BaseBiker) UpdateAgent(energyGained float64, energyLost float64, pointsGained int) {
 	bb.energyLevel += (energyGained - energyLost)
 	bb.points += pointsGained
@@ -78,6 +79,10 @@ func (bb *BaseBiker) UpdateAgent(energyGained float64, energyLost float64, point
 
 func (bb *BaseBiker) GetLifeStatus() bool {
 	return bb.alive
+}
+
+func (bb *BaseBiker) GetForces() utils.Forces {
+	return bb.forces
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
