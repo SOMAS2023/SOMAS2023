@@ -1,10 +1,5 @@
 package utils
 
-import (
-	"SOMAS2023/internal/common/objects"
-	"github.com/google/uuid"
-)
-
 type Colour int
 
 const (
@@ -30,14 +25,4 @@ type Forces struct {
 type Coordinates struct {
 	X float64
 	Y float64
-}
-
-/*
-IGameState is an interface for GameState that objects will use to get the current game state
-*/
-type IGameState interface {
-	GetLootBoxes() map[uuid.UUID]*objects.LootBox
-	GetMegaBikes() map[uuid.UUID]*objects.MegaBike
-	// GetMegaBikeRiders returns a mapping from Agent ID -> ID of the bike that they are riding
-	GetMegaBikeRiders() map[uuid.UUID]uuid.UUID
 }
