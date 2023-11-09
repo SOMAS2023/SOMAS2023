@@ -1,14 +1,37 @@
 package server
 
 import (
+	"SOMAS2023/internal/common/objects"
 	"fmt"
 )
 
 func (s *Server) RunGameLoop() {
+	// Reset all the forces acting on the bike
+	for _, bike := range s.megaBikes {
+		bike.ResetAgentForces()
+	}
+
+	// Each agent makes a decision
 	for id, agent := range s.GetAgentMap() {
 		fmt.Printf("Agent %s updating state \n", id)
 		agent.UpdateAgentInternalState()
+		switch agent.DecideAction(s) {
+		case objects.Pedal:
+			force := agent.DecideForce(s)
+			if bikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
+				s.megaBikes[bikeId].AddAgentForce(force)
+			} else {
+				panic("agent tried to move when it was not on a bike")
+			}
+		case objects.ChangeBike:
+			newBikeId := agent.ChangeBike(s)
+			s.megaBikeRiders[agent.GetID()] = newBikeId
+		default:
+			panic("agent decided invalid action")
+		}
 	}
+
+	// Replenish objects
 	s.replenishLootBoxes()
 	s.replenishMegaBikes()
 }

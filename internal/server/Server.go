@@ -11,8 +11,9 @@ const MegaBikeCount = BikerAgentCount / 2
 
 type Server struct {
 	baseserver.BaseServer[objects.IBaseBiker]
-	lootBoxes map[uuid.UUID]*objects.LootBox
-	megaBikes map[uuid.UUID]*objects.MegaBike
+	lootBoxes      map[uuid.UUID]*objects.LootBox
+	megaBikes      map[uuid.UUID]*objects.MegaBike
+	megaBikeRiders map[uuid.UUID]uuid.UUID
 }
 
 func Initialize(iterations int) baseserver.IServer[objects.IBaseBiker] {
