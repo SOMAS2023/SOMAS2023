@@ -2,14 +2,21 @@ package server
 
 import (
 	obj "SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/utils"
+	"github.com/google/uuid"
 )
 
 /*
 The GameState is an implementation of the IGameState interface
 */
 type GameState struct {
-	BaseBikers map[string]obj.IBaseBiker // Map of IDs to IBaseBiker objects
-	LootBoxes  map[string]obj.LootBox    // Map of IDs to LootBox objects
+	BaseBikers map[uuid.UUID]obj.IBaseBiker // Map of IDs to IBaseBiker objects
+	LootBoxes  map[uuid.UUID]obj.LootBox    // Map of IDs to LootBox objects
+}
+
+func (g GameState) GetGameState() utils.IGameState {
+	//TODO implement me
+	panic("implement me")
 }
 
 // The usuage of GameState would be as follows:
