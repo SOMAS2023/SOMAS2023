@@ -12,13 +12,21 @@ import (
 // agent with defualt strategy for MVP:
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
-	DecideAction(gameState utils.IGameState) int
+	// DecideAction determines what action the agent is going to take this round.
+	// Based on this, the server will call either DecideForce or ChangeBike
+	DecideAction(gameState utils.IGameState) BikerAction
 	DecideForce(gameState utils.IGameState)                                // defines the vector you pass to the bike: [pedal, brake, turning]
 	ChangeBike(gameState utils.IGameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
 	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
 	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
-	GetForces() utils.Forces
 }
+
+type BikerAction int
+
+const (
+	Pedal BikerAction = iota
+	ChangeBike
+)
 
 // Assumptions:
 // - the server will update the energy level of the agent at the end of the round (both by subtracting the spent energy
@@ -45,10 +53,8 @@ type BaseBiker struct {
 	forces                           utils.Forces
 }
 
-// returns 0 if biker decides to pedal and 1 if it decides to change bike
-// based on this the server will call either DecideForce or ChangeBike
-func (bb *BaseBiker) DecideAction(gameState utils.IGameState) int {
-	return 0
+func (bb *BaseBiker) DecideAction(gameState utils.IGameState) BikerAction {
+	return Pedal
 }
 
 // once we know what utils.IGameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
