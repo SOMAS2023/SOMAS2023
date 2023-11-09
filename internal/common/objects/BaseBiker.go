@@ -2,6 +2,7 @@ package objects
 
 import (
 	utils "SOMAS2023/internal/common/utils"
+	obj "SOMAS2023/internal/common/objects"
 
 	"math/rand"
 
@@ -19,6 +20,7 @@ type IBaseBiker interface {
 	ChangeBike(gameState utils.IGameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
 	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
 	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
+	GetLocation(gameState utils.IGameState) utils.Coordinates
 }
 
 type BikerAction int
@@ -50,6 +52,12 @@ type BaseBiker struct {
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
 	alive                            bool
+	megaBikeId                       uuid.UUID               
+}
+
+func (bb *BaseBiker) GetLocation(gameState utils.IGameState) utils.Coordinates {
+	gs := gameState.GetGameState()
+	return gs.MegaBikes[bb.megaBikeId].coordinates
 }
 
 func (bb *BaseBiker) DecideAction(gameState utils.IGameState) BikerAction {
@@ -95,6 +103,7 @@ func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 		energyLevel:  1.0,
 		points:       0,
 		alive:        true,
+
 	}
 }
 

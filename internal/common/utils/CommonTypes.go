@@ -1,5 +1,8 @@
 package utils
 
+import (
+	server "SOMAS2023/internal/server"
+)
 type Colour int
 
 const (
@@ -31,5 +34,5 @@ type Coordinates struct {
 IGameState is an interface for GameState that objects will use to get the current game state
 */
 type IGameState interface {
-	GetGameState() IGameState
+	GetGameState() server.GameState
 }
