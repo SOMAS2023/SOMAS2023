@@ -15,7 +15,7 @@ type IBaseBiker interface {
 	// DecideAction determines what action the agent is going to take this round.
 	// Based on this, the server will call either DecideForce or ChangeBike
 	DecideAction(gameState utils.IGameState) BikerAction
-	DecideForce(gameState utils.IGameState) utils.Forces                   // defines the vector you pass to the bike: [pedal, brake, turning]
+	DecideForce(gameState utils.IGameState)                                // defines the vector you pass to the bike: [pedal, brake, turning]
 	ChangeBike(gameState utils.IGameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
 	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
 	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
@@ -50,6 +50,7 @@ type BaseBiker struct {
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
 	alive                            bool
+	forces                           utils.Forces
 }
 
 func (bb *BaseBiker) DecideAction(gameState utils.IGameState) BikerAction {
@@ -57,14 +58,14 @@ func (bb *BaseBiker) DecideAction(gameState utils.IGameState) BikerAction {
 }
 
 // once we know what utils.IGameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
-func (bb *BaseBiker) DecideForce(gameState utils.IGameState) utils.Forces {
+func (bb *BaseBiker) DecideForce(gameState utils.IGameState) {
 	// the way this is determined depends on how the physics engine works and on what exactly the server passes us
-	forces := utils.Forces{
+	updated_forces := utils.Forces{
 		Pedal:   3.5,
 		Brake:   1.2,
 		Turning: 2.8,
 	}
-	return forces
+	bb.forces = updated_forces
 }
 
 // decide which bike to go to
@@ -84,6 +85,10 @@ func (bb *BaseBiker) UpdateAgent(energyGained float64, energyLost float64, point
 
 func (bb *BaseBiker) GetLifeStatus() bool {
 	return bb.alive
+}
+
+func (bb *BaseBiker) GetForces() utils.Forces {
+	return bb.forces
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
