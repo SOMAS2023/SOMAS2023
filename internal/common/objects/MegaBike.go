@@ -50,6 +50,10 @@ func (mb *MegaBike) RemoveAgent(bikerId uuid.UUID) {
 	mb.agents = updatedAgents
 }
 
+func (mb *MegaBike) GetAgents() []IBaseBiker {
+	return mb.agents
+}
+
 // Calculate the mass of the bike with all it's agents
 func (mb *MegaBike) UpdateMass() {
 	mass := utils.MassBike
