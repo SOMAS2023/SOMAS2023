@@ -17,6 +17,7 @@ type IBaseBiker interface {
 	DecideAction(gameState utils.IGameState) BikerAction
 	DecideForce(gameState utils.IGameState) // defines the vector you pass to the bike: [pedal, brake, turning]
 	GetForces() utils.Forces
+	SetForces(utils.Forces)
 	ChangeBike(gameState utils.IGameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
 	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
 	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
@@ -174,6 +175,10 @@ func (bb *BaseBiker) GetLifeStatus() bool {
 
 func (bb *BaseBiker) GetForces() utils.Forces {
 	return bb.forces
+}
+
+func (bb *BaseBiker) SetForces(f utils.Forces) {
+	bb.forces = f
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
