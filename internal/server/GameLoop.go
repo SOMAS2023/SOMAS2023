@@ -33,8 +33,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 			if utils.CheckCollision(megabike.GetPosition(), lootbox.GetPosition(), EPSILON) {
 				// Collision detected
 				fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
-				agentsOnBike := megabike.GetAgentsOnBike()
-				agentMap := s.GetAgentMap()
+				agents := megabike.GetAgents()
 				totalUtility := 0.0
 				utilityMap := make(map[uuid.UUID]float64)
 				// Get total amount of attributes for each agent on the bike
@@ -42,16 +41,14 @@ func (s *Server) LootboxCheckAndDistributions() {
 				totalQ := 0.0
 				totalP := 0.0
 				totalR := 0.0
-				for _, agentid := range agentsOnBike {
-					agent := agentMap[agentid]
+				for _, agent := range agents {
 					totalG += agent.GetEnergyLevel()
 					totalQ += agent.GetResourceNeed()
 					totalP += agent.GetResourceProvision()
 					totalR += agent.GetResourceAppropriation()
 				}
 				// Calculate utility for each agent on the bike
-				for _, agentid := range agentsOnBike {
-					agent := agentMap[agentid]
+				for _, agent := range agents {
 					g := agent.GetEnergyLevel() / totalG
 					q := agent.GetResourceNeed() / totalQ
 					p := agent.GetResourceProvision() / totalP
@@ -67,16 +64,15 @@ func (s *Server) LootboxCheckAndDistributions() {
 					if agent.GetColour() == lootbox.GetColour() {
 						u *= COLOURMULTIPLIER
 					}
-					utilityMap[agentid] = u
+					utilityMap[agent.GetID()] = u
 					totalUtility += u
 				}
 				// Distribute loot based on utility as a share of the total utility
-				for _, agentid := range agentsOnBike {
-					agent := agentMap[agentid]
-					utilityShare := utilityMap[agentid] / totalUtility
+				for _, agent := range agents {
+					utilityShare := utilityMap[agent.GetID()] / totalUtility
 					lootShare := utilityShare * lootbox.GetTotalResources()
 					// Allocate loot based on the calculated utility share
-					fmt.Printf("Agent %s allocated %f loot \n", agentid, lootShare)
+					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 					agent.SetEnergyLevel(lootShare)
 				}
 			}
