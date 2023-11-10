@@ -100,6 +100,7 @@ func (bb *BaseBiker) GetResourceProvision() float64 {
 	return bb.resourceProvision
 }
 
+// TODO: this value must change as the agent moves towards the lootbox
 func (bb *BaseBiker) SetResourceProvision(provision float64) {
 	bb.resourceProvision = provision
 }

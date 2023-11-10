@@ -82,13 +82,6 @@ func (s *Server) LootboxCheckAndDistributions() {
 	}
 }
 
-func LootDistributionCalculator() map[string]float64 {
-	//TODO - Calculate loot distribution
-	attr := make(map[string]float64)
-
-	return attr
-}
-
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
 	for i := 0; i < s.GetIterations(); i++ {
