@@ -17,12 +17,12 @@ func (s *Server) RunGameLoop() {
 }
 
 func (s *Server) LootboxCheckAndDistributions() {
-	EPSILON := 0.1
-	// Assuming a, b, and c are defined elsewhere in your code
+	EPSILON := 0.1          // Collision detection threshold
+	COLOURMULTIPLIER := 1.2 // Multiplier for colour match
 	// a > c > b
-	a := 1.0 // Replace with actual value
-	b := 0.5 // Replace with actual value
-	c := 0.3 // Replace with actual value
+	a := 1.0
+	b := 0.5
+	c := 0.3
 	/**
 	Agents to focus on just meeting needs without hoarding: a to be high relative to b and c.
 	Discourage agents from appropriating less than their needs: c high.
@@ -64,7 +64,9 @@ func (s *Server) LootboxCheckAndDistributions() {
 					} else {
 						u = a*R - c*(q-R)
 					}
-
+					if agent.GetColour() == lootbox.GetColour() {
+						u *= COLOURMULTIPLIER
+					}
 					utilityMap[agentid] = u
 					totalUtility += u
 				}

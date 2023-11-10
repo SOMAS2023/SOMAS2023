@@ -32,6 +32,7 @@ type IBaseBiker interface {
 	SetResourceAllocation(allocation float64)       // sets the resource allocation of the agent
 	GetResourceAppropriation() float64              // returns the resource appropriation of the agent
 	SetResourceAppropriation(appropriation float64) // sets the resource appropriation of the agent
+	GetColour() utils.Colour                        // returns the colour of the lootbox that the agent is currently seeking
 }
 
 type BikerAction int
@@ -119,6 +120,10 @@ func (bb *BaseBiker) GetResourceAppropriation() float64 {
 
 func (bb *BaseBiker) SetResourceAppropriation(appropriation float64) {
 	bb.resourceAppropriation = appropriation
+}
+
+func (bb *BaseBiker) GetColour() utils.Colour {
+	return bb.soughtColour
 }
 
 func (bb *BaseBiker) ResetLootAttributes() {
