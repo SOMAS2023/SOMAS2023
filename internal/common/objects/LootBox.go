@@ -10,6 +10,7 @@ type LootBox struct {
 	colour      utils.Colour
 	coordinates utils.Coordinates
 	id          uuid.UUID
+	totalLoot   float64
 }
 
 // GetLootBox is a constructor for LootBox that initializes it with a new UUID and default position.
@@ -18,7 +19,13 @@ func GetLootBox() *LootBox {
 		id:          uuid.New(),                        // Generate a new unique identifier
 		coordinates: utils.GenerateRandomCoordinates(), // Initialize to randomized position
 		colour:      utils.GenerateRandomColour(),      // Initialize to randomized colour
+		totalLoot:   utils.GenerateRandomFloat(5, 10),  // Initialize to randomized totalLoot
 	}
+}
+
+// returns the total loot of the object
+func (lb *LootBox) GetTotalResources() float64 {
+	return lb.totalLoot
 }
 
 // returns the unique ID of the object

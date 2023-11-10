@@ -2,6 +2,7 @@ package server
 
 import (
 	"SOMAS2023/internal/common/objects"
+
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
 	"github.com/google/uuid"
 )
@@ -24,4 +25,13 @@ func Initialize(iterations int) baseserver.IServer[objects.IBaseBiker] {
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
 	return server
+}
+
+// Needed to add this getter for the collision detection for loot boxes
+func (s *Server) GetMegaBikes() map[uuid.UUID]*objects.MegaBike {
+	return s.megaBikes
+}
+
+func (s *Server) GetLootBoxes() map[uuid.UUID]*objects.LootBox {
+	return s.lootBoxes
 }
