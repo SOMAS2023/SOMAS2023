@@ -9,30 +9,33 @@ import (
 )
 
 func (s *Server) RunGameLoop() {
-	// Reset all the forces acting on the bike
-	for _, bike := range s.megaBikes {
-		bike.ResetAgentForces()
-	}
-
 	// Each agent makes a decision
-	for id, agent := range s.GetAgentMap() {
-		fmt.Printf("Agent %s updating state \n", id)
+	for agentId, agent := range s.GetAgentMap() {
+		fmt.Printf("Agent %s updating state \n", agentId)
 		agent.UpdateAgentInternalState()
 		switch agent.DecideAction(s) {
 		case objects.Pedal:
-			force := agent.DecideForce(s)
-			if bikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
-				s.megaBikes[bikeId].AddAgentForce(force)
-			} else {
-				panic("agent tried to move when it was not on a bike")
-			}
+			agent.DecideForce(s)
 		case objects.ChangeBike:
 			newBikeId := agent.ChangeBike(s)
-			s.megaBikeRiders[agent.GetID()] = newBikeId
+			// Remove the agent from the old bike, if it was on one
+			if oldBikeId, ok := s.megaBikeRiders[agentId]; ok {
+				s.megaBikes[oldBikeId].RemoveAgent(agentId)
+			}
+			// Add the agent to the new bike
+			s.megaBikes[newBikeId].AddAgent(agent)
+			s.megaBikeRiders[agentId] = newBikeId
 		default:
 			panic("agent decided invalid action")
 		}
 	}
+
+	for _, bike := range s.GetMegaBikes() {
+		bike.Move()
+	}
+
+	// Lootbox Distribution
+	s.LootboxCheckAndDistributions()
 
 	// Replenish objects
 	s.replenishLootBoxes()

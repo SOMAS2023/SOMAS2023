@@ -12,8 +12,10 @@ const MegaBikeCount = BikerAgentCount / 2
 
 type Server struct {
 	baseserver.BaseServer[objects.IBaseBiker]
-	lootBoxes      map[uuid.UUID]*objects.LootBox
-	megaBikes      map[uuid.UUID]*objects.MegaBike
+	lootBoxes map[uuid.UUID]*objects.LootBox
+	megaBikes map[uuid.UUID]*objects.MegaBike
+	// megaBikeRiders is a mapping from Agent ID -> ID of the bike that they are riding
+	// helps with efficiently managing ridership status
 	megaBikeRiders map[uuid.UUID]uuid.UUID
 }
 
@@ -26,13 +28,4 @@ func Initialize(iterations int) baseserver.IServer[objects.IBaseBiker] {
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
 	return server
-}
-
-// Needed to add this getter for the collision detection for loot boxes
-func (s *Server) GetMegaBikes() map[uuid.UUID]*objects.MegaBike {
-	return s.megaBikes
-}
-
-func (s *Server) GetLootBoxes() map[uuid.UUID]*objects.LootBox {
-	return s.lootBoxes
 }

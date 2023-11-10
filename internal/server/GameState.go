@@ -12,7 +12,3 @@ func (s *Server) GetLootBoxes() map[uuid.UUID]*objects.LootBox {
 func (s *Server) GetMegaBikes() map[uuid.UUID]*objects.MegaBike {
 	return s.megaBikes
 }
-
-func (s *Server) GetMegaBikeRiders() map[uuid.UUID]uuid.UUID {
-	return s.megaBikeRiders
-}
