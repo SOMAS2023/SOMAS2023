@@ -1,73 +1,110 @@
 package objects
 
 import (
-	//"fmt"
+	phy "SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
-	//baseAgent "github.com/MattSScott/basePlatformSOMAS/BaseAgent"
+
 	"github.com/google/uuid"
 )
 
-// MegaBike will have the following forces 
-type MegaBike struct{
-	id uuid.UUID
-	coordinates utils.Coordinates
-	agentForces [] utils.Forces
-	Mass float64
-	acceleration float64
-	velocity float64
-	orientation float64
+type IMegaBike interface {
+	IPhysicsObject
+	AddAgent(biker IBaseBiker)
+	RemoveAgent(bikerId uuid.UUID)
+	UpdateMass()
+	CalculateForce() float64
+	CalculateOrientation() float64
+}
+
+// MegaBike will have the following forces
+type MegaBike struct {
+	*PhysicsObject
+	agents []IBaseBiker
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
-func GetMegaBike() *MegaBike {
+func GetMegaBike(agents []IBaseBiker) *MegaBike {
 	return &MegaBike{
-		id:          uuid.New(),                        // Generate a new unique identifier
-		coordinates: utils.GenerateRandomCoordinates(), // Initialize to randomized position
+		PhysicsObject: GetPhysicsObject(utils.MassBike),
 	}
 }
 
-// returns the unique ID of the object
-func (mb *MegaBike) GetID() uuid.UUID {
-	return mb.id
+// adds
+func (mb *MegaBike) AddAgent(biker IBaseBiker) {
+	mb.agents = append(mb.agents, biker)
 }
 
-// returns the current coordinates of the object
-func (mb *MegaBike) GetPosition() utils.Coordinates {
-	return mb.coordinates
-}
+// Remove agent from bike, given its ID
+func (mb *MegaBike) RemoveAgent(bikerId uuid.UUID) {
+	// Create a new slice to store the updated agents
+	var updatedAgents []IBaseBiker
 
-func (mb *MegaBike) Calculate_Force()(float64){
-	force_map:=4.0
-	if len(mb.agentForces)==0{
-		return 0.0
-	}
-	Total_pedal:=0.0
-	Total_brake:=0.0
-	Total_mass:=utils.MassBike
-	for _,agent := range mb.agentForces{
-		Total_mass+=utils.MassBiker
-		if agent.Pedal !=0{
-			Total_pedal+=float64(agent.Pedal)
-		}else{
-			Total_brake+=float64(agent.Brake)
+	// Iterate through the agents and copy them to the updatedAgents slice
+	for _, agent := range mb.agents {
+		if agent.GetID() != bikerId {
+			updatedAgents = append(updatedAgents, agent)
 		}
 	}
-	F:=force_map*(float64(Total_pedal)-float64(Total_brake))
+
+	// Replace the mb.agents slice with the updatedAgents slice
+	mb.agents = updatedAgents
+}
+
+func (mb *MegaBike) GetAgents() []IBaseBiker {
+	return mb.agents
+}
+
+// Calculate the mass of the bike with all it's agents
+func (mb *MegaBike) UpdateMass() {
+	mass := utils.MassBike
+	mass += float64(len(mb.agents))
+	mb.mass = mass
+}
+
+// Calculates the total force based on the Biker's force
+func (mb *MegaBike) CalculateForce() float64 {
+	if len(mb.agents) == 0 {
+		return 0.0
+	}
+	totalPedal := 0.0
+	totalBrake := 0.0
+	for _, agent := range mb.agents {
+		force := agent.GetForces()
+
+		if force.Pedal != 0 {
+			totalPedal += float64(force.Pedal)
+		} else {
+			totalBrake += float64(force.Brake)
+		}
+	}
+	F := (float64(totalPedal) - float64(totalBrake))
 	return F
 }
 
-func (mb *MegaBike) Add_Agent(agentForces utils.Forces){
-	mb.agentForces = append(mb.agentForces, agentForces)
+// Calculates the final orientation of the Megabike, between -1 and 1 (-180° to 180°), given the Biker's Turning forces
+func (mb *MegaBike) CalculateOrientation() float64 {
+	if len(mb.agents) == 0 {
+		return mb.orientation
+	}
+	totalTurning := 0.0
+	for _, agent := range mb.agents {
+		totalTurning += float64(agent.GetForces().Turning)
+	}
+	averageTurning := totalTurning / float64(len(mb.agents))
+	mb.orientation += (averageTurning)
+	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
+	if mb.orientation > 1.0 {
+		mb.orientation -= 2
+	} else if mb.orientation < -1.0 {
+		mb.orientation += 2
+	}
+	return mb.orientation
 }
 
-func (mb *MegaBike)Calculate_Orientation(){
-	if len(mb.agentForces)==0{
-		return
-	}
-	Total_turning:=0.0
-	for _,agent := range mb.agentForces{
-		Total_turning+=float64(agent.Turning)
-	}
-	Average_turning:=Total_turning/float64(len(mb.agentForces))
-	mb.orientation+=(Average_turning)
+// Moves the MegaBike to its new position after the agents have applied thier force
+func (mb *MegaBike) Move() {
+	mb.acceleration = phy.CalcAcceleration(mb.CalculateForce(), mb.mass)
+	mb.velocity = phy.CalcVelocity(mb.acceleration, mb.velocity)
+	mb.orientation = mb.CalculateOrientation()
+	mb.coordinates = phy.GetNewPosition(mb.coordinates, mb.velocity, mb.orientation)
 }
