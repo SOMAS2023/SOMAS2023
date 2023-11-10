@@ -1,8 +1,9 @@
 package objects
 
 import (
-	utils "SOMAS2023/internal/common/utils"
 	obj "SOMAS2023/internal/common/objects"
+	utils "SOMAS2023/internal/common/utils"
+	"math"
 
 	"math/rand"
 
@@ -60,19 +61,47 @@ func (bb *BaseBiker) GetLocation(gameState utils.IGameState) utils.Coordinates {
 	return gs.MegaBikes[bb.megaBikeId].coordinates
 }
 
+func (bb *BaseBiker) NearestLoot(gameState utils.IGameState) utils.Coordinates {
+	gs := gameState.GetGameState()
+	currLocation := bb.GetLocation(gameState)
+	shortestDist := math.MaxFloat64
+	var nearestDest utils.Coordinates
+	var currDist float64
+	for _, loot := range gs.LootBoxes {
+		x, y := loot.coordinates.X, loot.coordinates.y
+		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+		if currDist < shortestDist {
+			nearestDest = loot.coordinates
+			shortestDist = currDist
+		}
+	}
+	return nearestDest
+}
+
 func (bb *BaseBiker) DecideAction(gameState utils.IGameState) BikerAction {
 	return Pedal
 }
 
 // once we know what utils.IGameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
+// currently taking gamestate as having everything
 func (bb *BaseBiker) DecideForce(gameState utils.IGameState) utils.Forces {
 	// the way this is determined depends on how the physics engine works and on what exactly the server passes us
-	forces := utils.Forces{
-		Pedal:   3.5,
-		Brake:   1.2,
-		Turning: 2.8,
+
+	// NEAREST BOX STRATEGY
+	currLocation := bb.GetLocation(gameState)
+	nearestLoot := bb.NearestLoot(gameState)
+	deltaX := nearestLoot.X - currLocation.X
+	deltaY := nearestLoot.Y - currLocation.Y
+	angle := math.Atan2(deltaX, deltaY)
+	angleInDegrees := angle * math.Pi/180
+
+	nearestBoxForces := utils.Forces{
+		Pedal: 1.0,
+		Brake: 0.0,
+		Turning: angleInDegrees,
 	}
-	return forces
+
+	return nearestBoxForces
 }
 
 // decide which bike to go to
