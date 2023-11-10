@@ -1,7 +1,6 @@
 package objects
 
 import (
-	obj "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	"math"
 
@@ -16,12 +15,13 @@ type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 	// DecideAction determines what action the agent is going to take this round.
 	// Based on this, the server will call either DecideForce or ChangeBike
-	DecideAction(gameState utils.IGameState) BikerAction
-	DecideForce(gameState utils.IGameState) utils.Forces                   // defines the vector you pass to the bike: [pedal, brake, turning]
-	ChangeBike(gameState utils.IGameState) uuid.UUID                       // action never performed in MVP, might call PickPike() in future implementations
+	DecideAction() BikerAction
+	DecideForce() utils.Forces                                             // defines the vector you pass to the bike: [pedal, brake, turning]
+	ChangeBike() uuid.UUID                                                 // action never performed in MVP, might call PickPike() in future implementations
 	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
 	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
-	GetLocation(gameState utils.IGameState) utils.Coordinates
+	GetLocation() utils.Coordinates
+	UpdateGameState(gameState IGameState)
 }
 
 type BikerAction int
@@ -53,22 +53,22 @@ type BaseBiker struct {
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
 	alive                            bool
-	megaBikeId                       uuid.UUID               
+	megaBikeId                       uuid.UUID
+	gameState                        IGameState
 }
 
-func (bb *BaseBiker) GetLocation(gameState utils.IGameState) utils.Coordinates {
-	gs := gameState.GetGameState()
-	return gs.MegaBikes[bb.megaBikeId].coordinates
+func (bb *BaseBiker) GetLocation() utils.Coordinates {
+	megaBikes := bb.gameState.GetMegaBikes()
+	return megaBikes[bb.megaBikeId].coordinates
 }
 
-func (bb *BaseBiker) NearestLoot(gameState utils.IGameState) utils.Coordinates {
-	gs := gameState.GetGameState()
-	currLocation := bb.GetLocation(gameState)
+func (bb *BaseBiker) NearestLoot() utils.Coordinates {
+	currLocation := bb.GetLocation()
 	shortestDist := math.MaxFloat64
 	var nearestDest utils.Coordinates
 	var currDist float64
-	for _, loot := range gs.LootBoxes {
-		x, y := loot.coordinates.X, loot.coordinates.y
+	for _, loot := range bb.gameState.GetLootBoxes() {
+		x, y := loot.coordinates.X, loot.coordinates.Y
 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
 		if currDist < shortestDist {
 			nearestDest = loot.coordinates
@@ -78,26 +78,26 @@ func (bb *BaseBiker) NearestLoot(gameState utils.IGameState) utils.Coordinates {
 	return nearestDest
 }
 
-func (bb *BaseBiker) DecideAction(gameState utils.IGameState) BikerAction {
+func (bb *BaseBiker) DecideAction() BikerAction {
 	return Pedal
 }
 
 // once we know what utils.IGameState looks like we can pass what we need (ie maybe just lootboxes and info on our bike)
 // currently taking gamestate as having everything
-func (bb *BaseBiker) DecideForce(gameState utils.IGameState) utils.Forces {
+func (bb *BaseBiker) DecideForce() utils.Forces {
 	// the way this is determined depends on how the physics engine works and on what exactly the server passes us
 
 	// NEAREST BOX STRATEGY
-	currLocation := bb.GetLocation(gameState)
-	nearestLoot := bb.NearestLoot(gameState)
+	currLocation := bb.GetLocation()
+	nearestLoot := bb.NearestLoot()
 	deltaX := nearestLoot.X - currLocation.X
 	deltaY := nearestLoot.Y - currLocation.Y
 	angle := math.Atan2(deltaX, deltaY)
-	angleInDegrees := angle * math.Pi/180
+	angleInDegrees := angle * math.Pi / 180
 
 	nearestBoxForces := utils.Forces{
-		Pedal: 1.0,
-		Brake: 0.0,
+		Pedal:   1.0,
+		Brake:   0.0,
 		Turning: angleInDegrees,
 	}
 
@@ -105,7 +105,7 @@ func (bb *BaseBiker) DecideForce(gameState utils.IGameState) utils.Forces {
 }
 
 // decide which bike to go to
-func (bb *BaseBiker) ChangeBike(gameState utils.IGameState) uuid.UUID {
+func (bb *BaseBiker) ChangeBike() uuid.UUID {
 	return uuid.New()
 }
 
@@ -123,6 +123,10 @@ func (bb *BaseBiker) GetLifeStatus() bool {
 	return bb.alive
 }
 
+func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
+	bb.gameState = gameState
+}
+
 // this function is going to be called by the server to instantiate bikers in the MVP
 func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 	return &BaseBiker{
@@ -132,7 +136,6 @@ func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 		energyLevel:  1.0,
 		points:       0,
 		alive:        true,
-
 	}
 }
 
