@@ -26,10 +26,3 @@ type Coordinates struct {
 	X float64
 	Y float64
 }
-
-/*
-IGameState is an interface for GameState that objects will use to get the current game state
-*/
-type IGameState interface {
-	GetGameState() IGameState
-}
