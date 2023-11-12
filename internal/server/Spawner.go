@@ -22,7 +22,7 @@ func BikerAgentGenerator() objects.IBaseBiker {
 }
 
 func AudiAgentGenerator() objects.IBaseBiker {
-	panic("not implemented")
+	return objects.GetIAudi()
 }
 
 func (s *Server) spawnLootBox() {
