@@ -22,9 +22,10 @@ func BikerAgentGenerator() objects.IBaseBiker {
 	return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
 }
 
-func AudiAgentGenerator() objects.IAudi {
-	return objects.GetIAudi()
-}
+// may not be needed, remove later
+//func AudiAgentGenerator() objects.IAudi{
+//	return objects.GetIAudi()
+//}
 
 func (s *Server) spawnLootBox() {
 	lootBox := objects.GetLootBox()

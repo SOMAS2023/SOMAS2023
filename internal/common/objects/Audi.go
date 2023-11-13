@@ -8,6 +8,7 @@ import (
 
 type IAudi interface {
 	IPhysicsObject
+	UpdateGameState(state IGameState)
 }
 
 type Audi struct {
