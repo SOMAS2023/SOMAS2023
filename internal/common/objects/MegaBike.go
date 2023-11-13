@@ -23,7 +23,7 @@ type MegaBike struct {
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
-func GetMegaBike(agents []IBaseBiker) *MegaBike {
+func GetMegaBike() *MegaBike {
 	return &MegaBike{
 		PhysicsObject: GetPhysicsObject(utils.MassBike),
 	}
