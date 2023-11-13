@@ -13,7 +13,7 @@ const AudiAgentCount = 0
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator, BikerAgentCount),
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](AudiAgentGenerator, AudiAgentCount),
+		//baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](AudiAgentGenerator, AudiAgentCount),
 	}
 }
 
@@ -21,7 +21,7 @@ func BikerAgentGenerator() objects.IBaseBiker {
 	return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
 }
 
-func AudiAgentGenerator() objects.IBaseBiker {
+func AudiAgentGenerator() objects.IAudi {
 	return objects.GetIAudi()
 }
 

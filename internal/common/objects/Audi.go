@@ -7,12 +7,10 @@ import (
 )
 
 type IAudi interface {
-	IBaseBiker
 	IPhysicsObject
 }
 
 type Audi struct {
-	*BaseBiker
 	*PhysicsObject
 	target *MegaBike
 }
@@ -32,21 +30,17 @@ func GetIAudi() IAudi {
 
 // Move as MegaBike, called by server
 func (audi *Audi) Move() {
-	audi.coordinates = phy.GetNewPosition(audi.coordinates, audi.velocity, audi.orientation)
-}
-
-// DecideForce is called by server as an agent, Audi finds possible target and move towards it at constant velocity
-func (audi *Audi) DecideForce() {
-	// the speed of audi should be constant, use force 1 to represent
 	if audi.target == nil { // no target, audi will stop
 		audi.velocity = 0.0
 	} else {
 		audi.velocity = 1.0 / audi.mass
 		audi.orientation = computeOrientation(audi.coordinates, audi.target.GetPosition())
 	}
+	audi.coordinates = phy.GetNewPosition(audi.coordinates, audi.velocity, audi.orientation)
 }
 
 func (audi *Audi) UpdateGameState(state IGameState) {
+	// search for target
 	minDistance := math.Inf(1)
 	audi.target = nil
 	for _, bike := range state.GetMegaBikes() {
