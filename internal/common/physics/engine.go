@@ -30,3 +30,14 @@ func GetNewPosition(coordinates utils.Coordinates, velocity float64, orientation
 	return coordinates
 }
 
+// ComputeOrientation is to compute the orientation from source coordinate to target coordinate
+func ComputeOrientation(src utils.Coordinates, target utils.Coordinates) float64 {
+	xDiff := target.X - src.X
+	yDiff := target.Y - src.Y
+	return math.Atan(yDiff/xDiff) / math.Pi
+}
+
+// ComputeDistance is to compute the L2 distance from source to target
+func ComputeDistance(src utils.Coordinates, target utils.Coordinates) float64 {
+	return math.Pow(src.X-target.X, 2) + math.Pow(src.Y-target.Y, 2)
+}

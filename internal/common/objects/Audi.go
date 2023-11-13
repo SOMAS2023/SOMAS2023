@@ -35,7 +35,7 @@ func (audi *Audi) Move() {
 		audi.velocity = 0.0
 	} else {
 		audi.velocity = 1.0 / audi.mass
-		audi.orientation = computeOrientation(audi.coordinates, audi.target.GetPosition())
+		audi.orientation = phy.ComputeOrientation(audi.coordinates, audi.target.GetPosition())
 	}
 	audi.coordinates = phy.GetNewPosition(audi.coordinates, audi.velocity, audi.orientation)
 }
@@ -48,20 +48,10 @@ func (audi *Audi) UpdateGameState(state IGameState) {
 		if bike.GetVelocity() != 0.0 {
 			continue
 		}
-		distance := computeDistance(audi.coordinates, bike.GetPosition())
+		distance := phy.ComputeDistance(audi.coordinates, bike.GetPosition())
 		if distance < minDistance {
 			minDistance = distance
 			audi.target = bike
 		}
 	}
-}
-
-func computeOrientation(src utils.Coordinates, target utils.Coordinates) float64 {
-	xDiff := target.X - src.X
-	yDiff := target.Y - src.Y
-	return math.Atan(yDiff/xDiff) / math.Pi
-}
-
-func computeDistance(src utils.Coordinates, target utils.Coordinates) float64 {
-	return math.Pow(src.X-target.X, 2) + math.Pow(src.Y-target.Y, 2)
 }
