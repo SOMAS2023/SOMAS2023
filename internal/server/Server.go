@@ -10,20 +10,22 @@ import (
 const LootBoxCount = BikerAgentCount * 2
 const MegaBikeCount = BikerAgentCount / 2
 
+type IBaseBikerServer baseserver.IServer[objects.IBaseBiker]
+
 type Server struct {
 	baseserver.BaseServer[objects.IBaseBiker]
-	lootBoxes map[uuid.UUID]*objects.LootBox
-	megaBikes map[uuid.UUID]*objects.MegaBike
+	lootBoxes map[uuid.UUID]objects.ILootBox
+	megaBikes map[uuid.UUID]objects.IMegaBike
 	// megaBikeRiders is a mapping from Agent ID -> ID of the bike that they are riding
 	// helps with efficiently managing ridership status
 	megaBikeRiders map[uuid.UUID]uuid.UUID
 }
 
-func Initialize(iterations int) baseserver.IServer[objects.IBaseBiker] {
+func Initialize(iterations int) IBaseBikerServer {
 	server := &Server{
 		BaseServer: *baseserver.CreateServer[objects.IBaseBiker](GetAgentGenerators(), iterations),
-		lootBoxes:  make(map[uuid.UUID]*objects.LootBox),
-		megaBikes:  make(map[uuid.UUID]*objects.MegaBike),
+		lootBoxes:  make(map[uuid.UUID]objects.ILootBox),
+		megaBikes:  make(map[uuid.UUID]objects.IMegaBike),
 	}
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()

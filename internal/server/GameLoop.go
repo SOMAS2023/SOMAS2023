@@ -9,12 +9,13 @@ func (s *Server) RunGameLoop() {
 	// Each agent makes a decision
 	for agentId, agent := range s.GetAgentMap() {
 		fmt.Printf("Agent %s updating state \n", agentId)
+		agent.UpdateGameState(s)
 		agent.UpdateAgentInternalState()
-		switch agent.DecideAction(s) {
+		switch agent.DecideAction() {
 		case objects.Pedal:
-			agent.DecideForce(s)
+			agent.DecideForce()
 		case objects.ChangeBike:
-			newBikeId := agent.ChangeBike(s)
+			newBikeId := agent.ChangeBike()
 			// Remove the agent from the old bike, if it was on one
 			if oldBikeId, ok := s.megaBikeRiders[agentId]; ok {
 				s.megaBikes[oldBikeId].RemoveAgent(agentId)

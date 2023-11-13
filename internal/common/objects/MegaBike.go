@@ -11,6 +11,7 @@ type IMegaBike interface {
 	IPhysicsObject
 	AddAgent(biker IBaseBiker)
 	RemoveAgent(bikerId uuid.UUID)
+	GetAgents() []IBaseBiker
 	UpdateMass()
 	CalculateForce() float64
 	CalculateOrientation() float64
