@@ -1,8 +1,6 @@
 package objects
 
-import (
-	"github.com/google/uuid"
-)
+import "github.com/google/uuid"
 
 /*
 IGameState is an interface for GameState that objects will use to get the current game state
