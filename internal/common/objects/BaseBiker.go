@@ -10,6 +10,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// this struct holds the allocation parameters that we want the allocation protocol to take into account
+// These can change based on how we want the allocation to happend, for now they are taken from
+// the lecture slides, but more/less could be taken into account.
+type ResourceAllocationParams struct {
+	resourceNeed          float64 // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
+	resourceDemand        float64 // 0-1, how much energy the agent wants, might differ from resourceNeed
+	resourceProvision     float64 // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
+	resourceAppropriation float64 // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
+}
+
 // agent with defualt strategy for MVP:
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
@@ -17,25 +27,16 @@ type IBaseBiker interface {
 	DecideAction() BikerAction // determines what action the agent is going to take this round. Based on this, the server will call either DecideForce or ChangeBike
 	DecideForce()              // defines the vector you pass to the bike: [pedal, brake, turning]
 	GetForces() utils.Forces
-	ChangeBike() uuid.UUID                                                 // called when biker wants to change bike, it will choose which bike to try and join based on agent-specific strategies
-	UpdateColour(totColours utils.Colour)                                  // called if a box of the desired colour has been looted
-	UpdateAgent(energyGained float64, energyLost float64, pointGained int) // called by server
-	// Loot distribution functions - Refer to Slide 8 of Lec06
-	GetEnergyLevel() float64                        // returns the energy level of the agent
-	SetEnergyLevel(energyLevel float64)             // sets the energy level of the agent
-	GetResourceNeed() float64                       // returns the resource need of the agent
-	SetResourceNeed(need float64)                   // sets the resource need of the agent
-	GetResourceDemand() float64                     // returns the resource demand of the agent
-	SetResourceDemand(demand float64)               // sets the resource demand of the agent
-	GetResourceProvision() float64                  // returns the resource provision of the agent
-	SetResourceProvision(provision float64)         // sets the resource provision of the agent
-	GetResourceAllocation() float64                 // returns the resource allocation of the agent
-	SetResourceAllocation(allocation float64)       // sets the resource allocation of the agent
-	GetResourceAppropriation() float64              // returns the resource appropriation of the agent
-	SetResourceAppropriation(appropriation float64) // sets the resource appropriation of the agent
-	GetColour() utils.Colour                        // returns the colour of the lootbox that the agent is currently seeking
-	GetLocation() utils.Coordinates                 // gets the agent's location
-	UpdateGameState(gameState IGameState)           // sets the gameState field at the beginning of each round
+	ChangeBike() uuid.UUID                 // called when biker wants to change bike, it will choose which bike to try and join based on agent-specific strategies
+	UpdateColour(totColours utils.Colour)  // called if a box of the desired colour has been looted
+	UpdatePoints(pointGained int)          // called by server
+	GetEnergyLevel() float64               // returns the energy level of the agent
+	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
+	GetResourceAllocationParams() ResourceAllocationParams
+	SetAllocationParameters()
+	GetColour() utils.Colour              // returns the colour of the lootbox that the agent is currently seeking
+	GetLocation() utils.Coordinates       // gets the agent's location
+	UpdateGameState(gameState IGameState) // sets the gameState field at the beginning of each round
 }
 
 type BikerAction int
@@ -45,17 +46,6 @@ const (
 	ChangeBike
 )
 
-// Assumptions:
-// - the server will update the energy level of the agent at the end of the round (both by subtracting the spent energy
-// by adding the loot energy if relevant)
-// - server calls for agent to update colour
-// - server gives loot based on alloc decision (MVP)
-// - server gives points based on colour of loot
-// - when biker dies the server deletes the instance (can have it set a status field "alive" to false instead if we
-// want to keep a record of dead bikers)
-// - server keeps track of round number
-// - assume server assigns initial bikes to ppl
-
 type BaseBiker struct {
 	*baseAgent.BaseAgent[IBaseBiker]              // BaseBiker inherits functions from BaseAgent such as GetID(), GetAllMessages() and UpdateAgentInternalState()
 	soughtColour                     utils.Colour // the colour of the lootbox that the agent is currently seeking
@@ -64,76 +54,40 @@ type BaseBiker struct {
 	points                           int
 	alive                            bool
 	forces                           utils.Forces
-	// Loot distribution attributes - Refer to Slide 8 of Lec06
-	resourceNeed          float64    // 0-1, how much energy the agent needs, for MVP, set to 1 - energyLevel
-	resourceDemand        float64    // 0-1, how much energy the agent wants, for MVP, set to same as resourceNeed
-	resourceProvision     float64    // 0-1, how much energy the agent is willing to give, for MVP, set to the energy expended in getting to the lootbox
-	resourceAllocation    float64    // 0-1, how much energy the server gives the agent, for MVP, set to the energy expended in getting to the lootbox
-	resourceAppropriation float64    // 0-1, the proportion of the resourceAllocation that the agent actually gets, for MVP, set to 1
-	megaBikeId            uuid.UUID  // if they are not on a bike it will be 0
-	gameState             IGameState // updated by the server at every round
+	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
+	gameState                        IGameState // updated by the server at every round
+	allocationParams                 ResourceAllocationParams
 }
 
-// Loot distribution functions - Refer to Slide 8 of Lec06
 func (bb *BaseBiker) GetEnergyLevel() float64 {
 	return bb.energyLevel
 }
 
-func (bb *BaseBiker) SetEnergyLevel(energyLevel float64) {
+// the function will be called by the server to:
+// - reduce the energy level based on the force spent pedalling (energyLevel will be neg.ve)
+// - increase the energy level after a lootbox has been looted (energyLevel will be pos.ve)
+func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 	bb.energyLevel += energyLevel
-}
-
-func (bb *BaseBiker) GetResourceNeed() float64 {
-	return bb.resourceNeed
-}
-
-func (bb *BaseBiker) SetResourceNeed(need float64) {
-	bb.resourceNeed = need
-}
-
-func (bb *BaseBiker) GetResourceDemand() float64 {
-	return bb.resourceDemand
-}
-
-func (bb *BaseBiker) SetResourceDemand(demand float64) {
-	bb.resourceDemand = demand
-}
-
-func (bb *BaseBiker) GetResourceProvision() float64 {
-	return bb.resourceProvision
-}
-
-// TODO: this value must change as the agent moves towards the lootbox
-func (bb *BaseBiker) SetResourceProvision(provision float64) {
-	bb.resourceProvision = provision
-}
-
-func (bb *BaseBiker) GetResourceAllocation() float64 {
-	return bb.resourceAllocation
-}
-
-func (bb *BaseBiker) SetResourceAllocation(allocation float64) {
-	bb.resourceAllocation = allocation
-}
-
-func (bb *BaseBiker) GetResourceAppropriation() float64 {
-	return bb.resourceAppropriation
-}
-
-func (bb *BaseBiker) SetResourceAppropriation(appropriation float64) {
-	bb.resourceAppropriation = appropriation
+	bb.alive = bb.energyLevel > 0
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
 	return bb.soughtColour
 }
 
-func (bb *BaseBiker) ResetLootAttributes() {
-	bb.resourceNeed = 1 - bb.energyLevel
-	bb.resourceDemand = bb.resourceNeed
-	bb.resourceProvision = 0
-	bb.resourceAllocation = 0
-	bb.resourceAppropriation = 1
+// this function will be called everytime a lootbox has to be distributed
+// these will be defined either based on team strategy and/or according to centralised rules
+// for example: it might be decided that the provision must be the average pedalling force provided
+// since the last lootbox, an agent might decide as part of their strategy to demand less than they
+// need when their energy is above a certain treshold etc etc
+func (bb *BaseBiker) SetAllocationParameters() {
+	allocParams := ResourceAllocationParams{
+		resourceNeed:          1 - bb.energyLevel,
+		resourceDemand:        1 - bb.energyLevel,
+		resourceProvision:     0,
+		resourceAppropriation: 1,
+	}
+	bb.allocationParams = allocParams
 }
 
 // the biker itself doesn't technically have a location (as it's on the map only when it's on a bike)
@@ -201,11 +155,9 @@ func (bb *BaseBiker) UpdateColour(totColours utils.Colour) {
 	bb.soughtColour = utils.Colour(rand.Intn(int(totColours)))
 }
 
-// update the energy levels and points at the end of a round
-func (bb *BaseBiker) UpdateAgent(energyGained float64, energyLost float64, pointsGained int) {
-	bb.energyLevel += (energyGained - energyLost)
+// update the points at the end of a round
+func (bb *BaseBiker) UpdatePoints(pointsGained int) {
 	bb.points += pointsGained
-	bb.alive = bb.energyLevel > 0
 }
 
 func (bb *BaseBiker) GetLifeStatus() bool {
@@ -218,6 +170,10 @@ func (bb *BaseBiker) GetForces() utils.Forces {
 
 func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
 	bb.gameState = gameState
+}
+
+func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
+	return bb.allocationParams
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
