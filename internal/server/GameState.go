@@ -2,7 +2,7 @@ package server
 
 import (
 	obj "SOMAS2023/internal/common/objects"
-	"SOMAS2023/internal/common/utils"
+
 	"github.com/google/uuid"
 )
 
@@ -15,12 +15,12 @@ type GameState struct {
 	MegaBikes  map[uuid.UUID]obj.MegaBike   // Map of IDs to LootBox objects
 }
 
-func (g GameState) GetGameState() utils.IGameState {
+func (g GameState) GetGameState() obj.IGameState {
 	//TODO implement me
 	panic("implement me")
 }
 
-// The usuage of GameState would be as follows:
+// The usage of GameState would be as follows:
 
 // // Add a Biker to the GameState
 // bikerID := "biker1"
