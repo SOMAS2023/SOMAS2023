@@ -14,6 +14,7 @@ type Server struct {
 	baseserver.BaseServer[objects.IBaseBiker]
 	lootBoxes map[uuid.UUID]*objects.LootBox
 	megaBikes map[uuid.UUID]*objects.MegaBike
+	audi      objects.IAudi
 }
 
 func Initialize(iterations int) baseserver.IServer[objects.IBaseBiker] {
@@ -21,6 +22,7 @@ func Initialize(iterations int) baseserver.IServer[objects.IBaseBiker] {
 		BaseServer: *baseserver.CreateServer[objects.IBaseBiker](GetAgentGenerators(), iterations),
 		lootBoxes:  make(map[uuid.UUID]*objects.LootBox),
 		megaBikes:  make(map[uuid.UUID]*objects.MegaBike),
+		audi:       objects.GetIAudi(),
 	}
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
