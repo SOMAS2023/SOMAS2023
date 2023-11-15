@@ -13,7 +13,7 @@ type IAudi interface {
 
 type Audi struct {
 	*PhysicsObject
-	target    *MegaBike
+	target    IMegaBike
 	gameState IGameState
 }
 
@@ -30,18 +30,25 @@ func GetIAudi() IAudi {
 	}
 }
 
-// Move as MegaBike, called by server
-func (audi *Audi) Move() {
+// Calculates and returns the desired force of the audi based on the current gamestate
+func (audi *Audi) UpdateForce() {
 	// Compute the target Megabike, which will update audi.target
 	audi.ComputeTarget()
 
-	if audi.target == nil { // no target, audi will stop
-		audi.velocity = 0.0
+	if audi.target == nil { // no target, audi will not apply a force and eventually come to a stop
+		audi.force = 0.0
 	} else {
-		audi.velocity = 1.0 / audi.mass
+		audi.force = utils.AudiMaxForce // Otherwise apply max force to get to target MegaBike
+	}
+}
+
+// Calculates and returns the desired orientation of the audi based on the current gamestate
+func (audi *Audi) UpdateOrientation() {
+	// If no target, audi will not change orientation
+	// Otherwise, new orientation is calculated based on positioning of target
+	if audi.target != nil {
 		audi.orientation = phy.ComputeOrientation(audi.coordinates, audi.target.GetPosition())
 	}
-	audi.coordinates = phy.GetNewPosition(audi.coordinates, audi.velocity, audi.orientation)
 }
 
 // Computes the target Megabike based on current gameState

@@ -26,3 +26,10 @@ type Coordinates struct {
 	X float64
 	Y float64
 }
+
+type PhysicalState struct {
+	Position     Coordinates
+	Acceleration float64
+	Velocity     float64
+	Mass         float64
+}

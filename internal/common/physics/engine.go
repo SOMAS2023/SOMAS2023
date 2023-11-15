@@ -9,8 +9,12 @@ import (
 The Engine is responsible for calculating physics for the environment
 */
 
-func CalcAcceleration(f float64, m float64) float64 {
-	return f / m
+func CalcAcceleration(f float64, m float64, v float64) float64 {
+	return (f - CalcDrag(v)) / m
+}
+
+func CalcDrag(velocity float64) float64 {
+	return utils.DragCoefficient * math.Pow(velocity, 2)
 }
 
 func CalcVelocity(acc float64, currVelocity float64) float64 {
@@ -40,4 +44,19 @@ func ComputeOrientation(src utils.Coordinates, target utils.Coordinates) float64
 // ComputeDistance is to compute the L2 distance from source to target
 func ComputeDistance(src utils.Coordinates, target utils.Coordinates) float64 {
 	return math.Pow(src.X-target.X, 2) + math.Pow(src.Y-target.Y, 2)
+}
+
+// This function is to be called from the server only
+func GenerateNewState(initialState utils.PhysicalState, force float64, orientation float64) utils.PhysicalState {
+	acceleration := CalcAcceleration(force, initialState.Mass, initialState.Velocity)
+	velocity := CalcVelocity(acceleration, initialState.Velocity)
+	coordinates := GetNewPosition(initialState.Position, velocity, orientation)
+
+	finalState := utils.PhysicalState{
+		Position:     coordinates,
+		Acceleration: acceleration,
+		Velocity:     velocity,
+	}
+
+	return finalState
 }

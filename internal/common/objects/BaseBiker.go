@@ -94,7 +94,7 @@ func (bb *BaseBiker) SetAllocationParameters() {
 // in fact this function is only called when the biker needs to make a decision about the pedaling forces
 func (bb *BaseBiker) GetLocation() utils.Coordinates {
 	megaBikes := bb.gameState.GetMegaBikes()
-	return megaBikes[bb.megaBikeId].coordinates
+	return megaBikes[bb.megaBikeId].GetPosition()
 }
 
 // returns the nearest lootbox with respect to the agent's bike current position
@@ -106,10 +106,10 @@ func (bb *BaseBiker) NearestLoot() utils.Coordinates {
 	var nearestDest utils.Coordinates
 	var currDist float64
 	for _, loot := range bb.gameState.GetLootBoxes() {
-		x, y := loot.coordinates.X, loot.coordinates.Y
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
 		if currDist < shortestDist {
-			nearestDest = loot.coordinates
+			nearestDest = loot.GetPosition()
 			shortestDist = currDist
 		}
 	}
@@ -137,7 +137,7 @@ func (bb *BaseBiker) DecideForce() {
 	angleInDegrees := angle * math.Pi / 180
 
 	nearestBoxForces := utils.Forces{
-		Pedal:   1.0,
+		Pedal:   utils.BikerMaxForce,
 		Brake:   0.0,
 		Turning: angleInDegrees,
 	}

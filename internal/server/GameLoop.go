@@ -2,6 +2,7 @@ package server
 
 import (
 	"SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/physics"
 	"fmt"
 )
 
@@ -29,7 +30,21 @@ func (s *Server) RunGameLoop() {
 	}
 
 	for _, bike := range s.GetMegaBikes() {
-		bike.Move()
+		// Server requests megabikes to update their force and orientation based on agents pedaling
+		bike.UpdateForce()
+		force := bike.GetForce()
+		bike.UpdateOrientation()
+		orientation := bike.GetOrientation()
+
+		// Obtains the current state (i.e. velocity, acceleration, position, mass)
+		initialState := bike.GetPhysicalState()
+
+		// Generates a new state based on the force and orientation of the bike
+		finalState := physics.GenerateNewState(initialState, force, orientation)
+
+		// Sets the new physical state (i.e. updates gamestate)
+		bike.SetPhysicalState(finalState)
+
 	}
 
 	// Lootbox Distribution
@@ -57,11 +72,11 @@ func (s *Server) LootboxCheckAndDistributions() {
 
 					// in the MVP  the allocation parameters are ignored and
 					// the utility share will simply be 1 / the number of agents on the bike
-					utilityShare := 1 / totAgents
+					utilityShare := 1.0 / float64(totAgents)
 					lootShare := utilityShare * lootbox.GetTotalResources()
 					// Allocate loot based on the calculated utility share
 					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
-					agent.SetEnergyLevel(lootShare)
+					agent.UpdateEnergyLevel(lootShare)
 				}
 			}
 		}

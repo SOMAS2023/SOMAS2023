@@ -1,7 +1,6 @@
 package objects
 
 import (
-	phy "SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 
 	"github.com/google/uuid"
@@ -13,8 +12,6 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
-	CalculateForce() float64
-	CalculateOrientation() float64
 }
 
 // MegaBike will have the following forces
@@ -62,10 +59,10 @@ func (mb *MegaBike) UpdateMass() {
 	mb.mass = mass
 }
 
-// Calculates the total force based on the Biker's force
-func (mb *MegaBike) CalculateForce() float64 {
+// Calculates and returns the total force of the Megabike based on the Biker's force
+func (mb *MegaBike) UpdateForce() {
 	if len(mb.agents) == 0 {
-		return 0.0
+		mb.force = 0.0
 	}
 	totalPedal := 0.0
 	totalBrake := 0.0
@@ -78,15 +75,11 @@ func (mb *MegaBike) CalculateForce() float64 {
 			totalBrake += float64(force.Brake)
 		}
 	}
-	F := (float64(totalPedal) - float64(totalBrake))
-	return F
+	mb.force = (float64(totalPedal) - float64(totalBrake))
 }
 
 // Calculates the final orientation of the Megabike, between -1 and 1 (-180° to 180°), given the Biker's Turning forces
-func (mb *MegaBike) CalculateOrientation() float64 {
-	if len(mb.agents) == 0 {
-		return mb.orientation
-	}
+func (mb *MegaBike) UpdateOrientation() {
 	totalTurning := 0.0
 	for _, agent := range mb.agents {
 		totalTurning += float64(agent.GetForces().Turning)
@@ -99,13 +92,4 @@ func (mb *MegaBike) CalculateOrientation() float64 {
 	} else if mb.orientation < -1.0 {
 		mb.orientation += 2
 	}
-	return mb.orientation
-}
-
-// Moves the MegaBike to its new position after the agents have applied thier force
-func (mb *MegaBike) Move() {
-	mb.acceleration = phy.CalcAcceleration(mb.CalculateForce(), mb.mass)
-	mb.velocity = phy.CalcVelocity(mb.acceleration, mb.velocity)
-	mb.orientation = mb.CalculateOrientation()
-	mb.coordinates = phy.GetNewPosition(mb.coordinates, mb.velocity, mb.orientation)
 }
