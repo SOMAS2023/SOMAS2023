@@ -19,13 +19,15 @@ type Server struct {
 	// megaBikeRiders is a mapping from Agent ID -> ID of the bike that they are riding
 	// helps with efficiently managing ridership status
 	megaBikeRiders map[uuid.UUID]uuid.UUID
+	audi           objects.IAudi
 }
 
 func Initialize(iterations int) IBaseBikerServer {
 	server := &Server{
 		BaseServer: *baseserver.CreateServer[objects.IBaseBiker](GetAgentGenerators(), iterations),
-		lootBoxes:  make(map[uuid.UUID]objects.ILootBox),
-		megaBikes:  make(map[uuid.UUID]objects.IMegaBike),
+		lootBoxes:  make(map[uuid.UUID]*objects.LootBox),
+		megaBikes:  make(map[uuid.UUID]*objects.MegaBike),
+		audi:       objects.GetIAudi(),
 	}
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
