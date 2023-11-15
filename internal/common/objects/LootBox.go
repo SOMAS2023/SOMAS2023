@@ -6,8 +6,8 @@ import (
 
 type ILootBox interface {
 	IPhysicsObject
-	GetTotalResources()
-	GetColour()
+	GetTotalResources() float64
+	GetColour() utils.Colour
 }
 
 type LootBox struct {

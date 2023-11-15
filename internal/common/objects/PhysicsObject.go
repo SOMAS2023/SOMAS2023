@@ -20,11 +20,21 @@ type IPhysicsObject interface {
 	GetID() uuid.UUID
 	// returns the current coordinates of the object
 	GetPosition() utils.Coordinates
-	GetMass() float64
-	GetAcceleration() float64
 	GetVelocity() float64
 	GetOrientation() float64
-	Move()
+	GetForce() float64
+	GetPhysicalState() utils.PhysicalState
+
+	// Server must set these variables since it updates the gamestate
+	SetPhysicalState(state utils.PhysicalState)
+
+	// This method will update the force of the PhysicsObject based on the current GameState.
+	// I.e. for MegaBike, force will be cacluated from the bikers
+	// For the audi, force will be calculated from the target MegaBike
+	UpdateForce()
+	// Similar to UpdateForce, this will update the desired orientation for the PhysicsObject,
+	// based on the current GameState
+	UpdateOrientation()
 	CheckForCollision(otherObject IPhysicsObject) bool
 }
 
@@ -35,6 +45,7 @@ type PhysicsObject struct {
 	acceleration float64
 	velocity     float64
 	orientation  float64
+	force        float64
 }
 
 // returns the unique ID of the object
@@ -47,14 +58,6 @@ func (po *PhysicsObject) GetPosition() utils.Coordinates {
 	return po.coordinates
 }
 
-func (po *PhysicsObject) GetMass() float64 {
-	return po.mass
-}
-
-func (po *PhysicsObject) GetAcceleration() float64 {
-	return po.acceleration
-}
-
 func (po *PhysicsObject) GetVelocity() float64 {
 	return po.velocity
 }
@@ -63,7 +66,25 @@ func (po *PhysicsObject) GetOrientation() float64 {
 	return po.orientation
 }
 
-func (po *PhysicsObject) Move() {}
+func (po *PhysicsObject) GetForce() float64 {
+	return po.force
+}
+
+func (po *PhysicsObject) GetPhysicalState() utils.PhysicalState {
+	return utils.PhysicalState{
+		Position:     po.coordinates,
+		Acceleration: po.acceleration,
+		Velocity:     po.velocity,
+		Mass:         po.mass,
+	}
+}
+
+func (po *PhysicsObject) SetPhysicalState(state utils.PhysicalState) {
+	po.mass = state.Mass
+	po.coordinates = state.Position
+	po.acceleration = state.Acceleration
+	po.velocity = state.Velocity
+}
 
 // this will be used to check if a MegaBike has looted a LootBok or if the Audi has collided with a MegaBike
 func (po *PhysicsObject) CheckForCollision(otherObject IPhysicsObject) bool {
@@ -75,6 +96,10 @@ func (po *PhysicsObject) CheckForCollision(otherObject IPhysicsObject) bool {
 		return false
 	}
 }
+
+func (po *PhysicsObject) UpdateForce() {}
+
+func (po *PhysicsObject) UpdateOrientation() {}
 
 func GetPhysicsObject(mass float64) *PhysicsObject {
 	return &PhysicsObject{
