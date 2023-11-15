@@ -13,7 +13,8 @@ type IAudi interface {
 
 type Audi struct {
 	*PhysicsObject
-	target *MegaBike
+	target    *MegaBike
+	gameState IGameState
 }
 
 // GetAudi is a constructor for Audi that initializes it with a new UUID and default position.
@@ -31,6 +32,9 @@ func GetIAudi() IAudi {
 
 // Move as MegaBike, called by server
 func (audi *Audi) Move() {
+	// Compute the target Megabike, which will update audi.target
+	audi.ComputeTarget()
+
 	if audi.target == nil { // no target, audi will stop
 		audi.velocity = 0.0
 	} else {
@@ -40,11 +44,12 @@ func (audi *Audi) Move() {
 	audi.coordinates = phy.GetNewPosition(audi.coordinates, audi.velocity, audi.orientation)
 }
 
-func (audi *Audi) UpdateGameState(state IGameState) {
+// Computes the target Megabike based on current gameState
+func (audi *Audi) ComputeTarget() {
 	// search for target
 	minDistance := math.Inf(1)
 	audi.target = nil
-	for _, bike := range state.GetMegaBikes() {
+	for _, bike := range audi.gameState.GetMegaBikes() {
 		if bike.GetVelocity() != 0.0 {
 			continue
 		}
@@ -54,4 +59,9 @@ func (audi *Audi) UpdateGameState(state IGameState) {
 			audi.target = bike
 		}
 	}
+}
+
+// Updates gameState member variable
+func (audi *Audi) UpdateGameState(state IGameState) {
+	audi.gameState = state
 }
