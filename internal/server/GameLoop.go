@@ -16,14 +16,7 @@ func (s *Server) RunGameLoop() {
 		case objects.Pedal:
 			agent.DecideForce()
 		case objects.ChangeBike:
-			newBikeId := agent.ChangeBike()
-			// Remove the agent from the old bike, if it was on one
-			if oldBikeId, ok := s.megaBikeRiders[agentId]; ok {
-				s.megaBikes[oldBikeId].RemoveAgent(agentId)
-			}
-			// Add the agent to the new bike
-			s.megaBikes[newBikeId].AddAgent(agent)
-			s.megaBikeRiders[agentId] = newBikeId
+			s.SetBikerBike(agent, agent.ChangeBike())
 		default:
 			panic("agent decided invalid action")
 		}

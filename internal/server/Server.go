@@ -26,12 +26,19 @@ type Server struct {
 
 func Initialize(iterations int) IBaseBikerServer {
 	server := &Server{
-		BaseServer: *baseserver.CreateServer[objects.IBaseBiker](GetAgentGenerators(), iterations),
-		lootBoxes:  make(map[uuid.UUID]objects.ILootBox),
-		megaBikes:  make(map[uuid.UUID]objects.IMegaBike),
-		audi:       objects.GetIAudi(),
+		BaseServer:     *baseserver.CreateServer[objects.IBaseBiker](GetAgentGenerators(), iterations),
+		lootBoxes:      make(map[uuid.UUID]objects.ILootBox),
+		megaBikes:      make(map[uuid.UUID]objects.IMegaBike),
+		megaBikeRiders: make(map[uuid.UUID]uuid.UUID),
+		audi:           objects.GetIAudi(),
 	}
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
+
+	// Randomly allocate bikers to bikes
+	for _, biker := range server.GetAgentMap() {
+		server.SetBikerBike(biker, server.GetRandomBikeId())
+	}
+
 	return server
 }

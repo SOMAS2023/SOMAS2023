@@ -28,6 +28,7 @@ type IBaseBiker interface {
 	DecideForce()              // defines the vector you pass to the bike: [pedal, brake, turning]
 	GetForces() utils.Forces
 	ChangeBike() uuid.UUID                 // called when biker wants to change bike, it will choose which bike to try and join based on agent-specific strategies
+	SetBike(uuid.UUID)                     // tells the biker which bike it is on
 	UpdateColour(totColours utils.Colour)  // called if a box of the desired colour has been looted
 	UpdatePoints(pointGained int)          // called by server
 	GetEnergyLevel() float64               // returns the energy level of the agent
@@ -148,6 +149,10 @@ func (bb *BaseBiker) DecideForce() {
 // for now it just returns a random uuid
 func (bb *BaseBiker) ChangeBike() uuid.UUID {
 	return uuid.New()
+}
+
+func (bb *BaseBiker) SetBike(bikeId uuid.UUID) {
+	bb.megaBikeId = bikeId
 }
 
 // this is called when a lootbox of the desidered colour has been looted in order to update the sought colour
