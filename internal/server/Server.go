@@ -10,7 +10,9 @@ import (
 const LootBoxCount = BikerAgentCount * 2
 const MegaBikeCount = BikerAgentCount / 2
 
-type IBaseBikerServer baseserver.IServer[objects.IBaseBiker]
+type IBaseBikerServer interface {
+	baseserver.IServer[objects.IBaseBiker]
+}
 
 type Server struct {
 	baseserver.BaseServer[objects.IBaseBiker]
@@ -25,8 +27,8 @@ type Server struct {
 func Initialize(iterations int) IBaseBikerServer {
 	server := &Server{
 		BaseServer: *baseserver.CreateServer[objects.IBaseBiker](GetAgentGenerators(), iterations),
-		lootBoxes:  make(map[uuid.UUID]*objects.LootBox),
-		megaBikes:  make(map[uuid.UUID]*objects.MegaBike),
+		lootBoxes:  make(map[uuid.UUID]objects.ILootBox),
+		megaBikes:  make(map[uuid.UUID]objects.IMegaBike),
 		audi:       objects.GetIAudi(),
 	}
 	server.replenishLootBoxes()
