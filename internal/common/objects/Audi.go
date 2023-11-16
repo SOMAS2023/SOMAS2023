@@ -13,7 +13,8 @@ type IAudi interface {
 
 type Audi struct {
 	*PhysicsObject
-	target *MegaBike
+	target    IMegaBike
+	gameState IGameState
 }
 
 // GetAudi is a constructor for Audi that initializes it with a new UUID and default position.
@@ -29,22 +30,33 @@ func GetIAudi() IAudi {
 	}
 }
 
-// Move as MegaBike, called by server
-func (audi *Audi) Move() {
-	if audi.target == nil { // no target, audi will stop
-		audi.velocity = 0.0
+// Calculates and returns the desired force of the audi based on the current gamestate
+func (audi *Audi) UpdateForce() {
+	// Compute the target Megabike, which will update audi.target
+	audi.ComputeTarget()
+
+	if audi.target == nil { // no target, audi will not apply a force and eventually come to a stop
+		audi.force = 0.0
 	} else {
-		audi.velocity = 1.0 / audi.mass
-		audi.orientation = phy.ComputeOrientation(audi.coordinates, audi.target.GetPosition())
+		audi.force = utils.AudiMaxForce // Otherwise apply max force to get to target MegaBike
 	}
-	audi.coordinates = phy.GetNewPosition(audi.coordinates, audi.velocity, audi.orientation)
 }
 
-func (audi *Audi) UpdateGameState(state IGameState) {
+// Calculates and returns the desired orientation of the audi based on the current gamestate
+func (audi *Audi) UpdateOrientation() {
+	// If no target, audi will not change orientation
+	// Otherwise, new orientation is calculated based on positioning of target
+	if audi.target != nil {
+		audi.orientation = phy.ComputeOrientation(audi.coordinates, audi.target.GetPosition())
+	}
+}
+
+// Computes the target Megabike based on current gameState
+func (audi *Audi) ComputeTarget() {
 	// search for target
 	minDistance := math.Inf(1)
 	audi.target = nil
-	for _, bike := range state.GetMegaBikes() {
+	for _, bike := range audi.gameState.GetMegaBikes() {
 		if bike.GetVelocity() != 0.0 {
 			continue
 		}
@@ -54,4 +66,9 @@ func (audi *Audi) UpdateGameState(state IGameState) {
 			audi.target = bike
 		}
 	}
+}
+
+// Updates gameState member variable
+func (audi *Audi) UpdateGameState(state IGameState) {
+	audi.gameState = state
 }

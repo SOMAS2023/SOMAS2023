@@ -28,6 +28,7 @@ type IBaseBiker interface {
 	DecideForce()              // defines the vector you pass to the bike: [pedal, brake, turning]
 	GetForces() utils.Forces
 	ChangeBike() uuid.UUID                 // called when biker wants to change bike, it will choose which bike to try and join based on agent-specific strategies
+	SetBike(uuid.UUID)                     // tells the biker which bike it is on
 	UpdateColour(totColours utils.Colour)  // called if a box of the desired colour has been looted
 	UpdatePoints(pointGained int)          // called by server
 	GetEnergyLevel() float64               // returns the energy level of the agent
@@ -94,7 +95,7 @@ func (bb *BaseBiker) SetAllocationParameters() {
 // in fact this function is only called when the biker needs to make a decision about the pedaling forces
 func (bb *BaseBiker) GetLocation() utils.Coordinates {
 	megaBikes := bb.gameState.GetMegaBikes()
-	return megaBikes[bb.megaBikeId].coordinates
+	return megaBikes[bb.megaBikeId].GetPosition()
 }
 
 // returns the nearest lootbox with respect to the agent's bike current position
@@ -106,10 +107,10 @@ func (bb *BaseBiker) NearestLoot() utils.Coordinates {
 	var nearestDest utils.Coordinates
 	var currDist float64
 	for _, loot := range bb.gameState.GetLootBoxes() {
-		x, y := loot.coordinates.X, loot.coordinates.Y
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
 		if currDist < shortestDist {
-			nearestDest = loot.coordinates
+			nearestDest = loot.GetPosition()
 			shortestDist = currDist
 		}
 	}
@@ -137,7 +138,7 @@ func (bb *BaseBiker) DecideForce() {
 	angleInDegrees := angle * math.Pi / 180
 
 	nearestBoxForces := utils.Forces{
-		Pedal:   1.0,
+		Pedal:   utils.BikerMaxForce,
 		Brake:   0.0,
 		Turning: angleInDegrees,
 	}
@@ -148,6 +149,10 @@ func (bb *BaseBiker) DecideForce() {
 // for now it just returns a random uuid
 func (bb *BaseBiker) ChangeBike() uuid.UUID {
 	return uuid.New()
+}
+
+func (bb *BaseBiker) SetBike(bikeId uuid.UUID) {
+	bb.megaBikeId = bikeId
 }
 
 // this is called when a lootbox of the desidered colour has been looted in order to update the sought colour

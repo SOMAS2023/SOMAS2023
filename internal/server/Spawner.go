@@ -9,23 +9,16 @@ import (
 )
 
 const BikerAgentCount = 6
-const AudiAgentCount = 0
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator, BikerAgentCount),
-		//baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](AudiAgentGenerator, AudiAgentCount),
 	}
 }
 
 func BikerAgentGenerator() objects.IBaseBiker {
 	return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
 }
-
-// may not be needed, remove later
-//func AudiAgentGenerator() objects.IAudi{
-//	return objects.GetIAudi()
-//}
 
 func (s *Server) spawnLootBox() {
 	lootBox := objects.GetLootBox()
