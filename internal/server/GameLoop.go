@@ -27,6 +27,7 @@ func (s *Server) RunGameLoop() {
 
 	// Move the mega bikes
 	for _, bike := range s.GetMegaBikes() {
+
 		// Server requests megabikes to update their force and orientation based on agents pedaling
 		bike.UpdateForce()
 		force := bike.GetForce()
@@ -79,9 +80,15 @@ func (s *Server) LootboxCheckAndDistributions() {
 					// the utility share will simply be 1 / the number of agents on the bike
 					utilityShare := 1.0 / float64(totAgents)
 					lootShare := utilityShare * lootbox.GetTotalResources()
+
 					// Allocate loot based on the calculated utility share
 					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 					agent.UpdateEnergyLevel(lootShare)
+
+					// Allocate points if the box is of the right colour
+					if agent.GetColour() == lootbox.GetColour() {
+						agent.UpdatePoints(1)
+					}
 				}
 			}
 		}
