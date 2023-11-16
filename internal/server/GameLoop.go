@@ -29,6 +29,10 @@ func (s *Server) RunGameLoop() {
 		}
 	}
 
+	// The Audi makes a decision
+	s.audi.UpdateGameState(s)
+
+	// Move the mega bikes
 	for _, bike := range s.GetMegaBikes() {
 		// Server requests megabikes to update their force and orientation based on agents pedaling
 		bike.UpdateForce()
@@ -44,8 +48,16 @@ func (s *Server) RunGameLoop() {
 
 		// Sets the new physical state (i.e. updates gamestate)
 		bike.SetPhysicalState(finalState)
-
 	}
+
+	// Move the audi
+	s.audi.UpdateForce()
+	force := s.audi.GetForce()
+	s.audi.UpdateOrientation()
+	orientation := s.audi.GetOrientation()
+	initialState := s.audi.GetPhysicalState()
+	finalState := physics.GenerateNewState(initialState, force, orientation)
+	s.audi.SetPhysicalState(finalState)
 
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
