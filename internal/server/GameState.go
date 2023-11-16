@@ -2,8 +2,9 @@ package server
 
 import (
 	"SOMAS2023/internal/common/objects"
-	"github.com/google/uuid"
 	"math/rand"
+
+	"github.com/google/uuid"
 )
 
 func (s *Server) GetMegaBikes() map[uuid.UUID]objects.IMegaBike {
@@ -24,6 +25,24 @@ func (s *Server) SetBikerBike(biker objects.IBaseBiker, bikeId uuid.UUID) {
 	s.megaBikes[bikeId].AddAgent(biker)
 	s.megaBikeRiders[biker.GetID()] = bikeId
 	biker.SetBike(bikeId)
+}
+
+// get a map of megaBikeIDs mapping to the ids of all Bikers that are trying to join it
+func (s *Server) GetJoiningRequests() map[uuid.UUID][]uuid.UUID {
+	// iterate over all agents, if their onBike is false add to the map their id in correspondance of that of their desired bike
+	bikeRequests := make(map[uuid.UUID][]uuid.UUID)
+
+	for agentID, agent := range s.GetAgentMap() {
+		if !agent.GetBikeStatus() {
+			bike := agent.GetBike()
+			if ids, ok := bikeRequests[bike]; ok {
+				bikeRequests[bike] = append(ids, agentID)
+			} else {
+				bikeRequests[bike] = []uuid.UUID{agentID}
+			}
+		}
+	}
+	return bikeRequests
 }
 
 // GetRandomBikeId returns the ID of a random bike.

@@ -3,22 +3,91 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
+	"SOMAS2023/internal/common/utils"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 func (s *Server) RunGameLoop() {
-	// Each agent makes a decision
+
+	// -------------------------- PROCESS JOINING REQUESTS -------------------------
+	// 1. group agents that have onBike = false by the bike they are trying to join
+	bikeRequests := s.GetJoiningRequests()
+	// 2. pass to agents on each of the desired bikes a list of all agents trying to join
+	for bike, pendingAgents := range bikeRequests {
+		agents := s.megaBikes[bike].GetAgents()
+
+		responses := make([](map[uuid.UUID]bool), 0) // list containing all the agents' ranking
+		for _, agent := range agents {
+			responses = append(responses, agent.DecideJoining(pendingAgents))
+		}
+		// 3. accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
+		acceptedRanked := utils.GetAcceptanceRanking(responses)
+		for _, accepted := range acceptedRanked[:(8 - len(s.megaBikes[bike].GetAgents()))] {
+			s.GetAgentMap()[accepted].ToggleOnBike()
+			s.SetBikerBike(s.GetAgentMap()[accepted], bike)
+		}
+	}
+
+	// map of the proposed directions by bike
+	proposedDirections := make(map[uuid.UUID][]uuid.UUID)
+	// -------------------------------- DECIDE ACTION ---------------------------------
 	for agentId, agent := range s.GetAgentMap() {
 		fmt.Printf("Agent %s updating state \n", agentId)
 		agent.UpdateGameState(s)
 		agent.UpdateAgentInternalState()
+
 		switch agent.DecideAction() {
 		case objects.Pedal:
-			agent.DecideForce()
+			// --------------------- VOTING ROUTINE - STEP 1 --------------------------
+			// pitch proposal (desired lootbox)
+			bike := agent.GetBike()
+			if ids, ok := proposedDirections[bike]; ok {
+				proposedDirections[bike] = append(ids, agent.ProposeDirection())
+			} else {
+				proposedDirections[bike] = []uuid.UUID{agent.ProposeDirection()}
+			}
+
 		case objects.ChangeBike:
-			s.SetBikerBike(agent, agent.ChangeBike())
+			// decide which bike the agent is going to try and go to
+			// the bike id is set to be the desired bike and onbike is set to false
+			// so by looking at the values of onBike and megaBikeID it will be known
+			// whether the agent is trying to join a bike (and which one)
+
+			// the request is handled at the beginning of the next round, so the moving
+			// will only be finalised then
+			agent.SetBike(agent.ChangeBike())
+			agent.ToggleOnBike()
+
+			// the biker needs to be removed from the current bike as well
+			// it will be added to the desired one (if accepted) at the beginning of next loop
+			if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
+				s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+			}
+
 		default:
 			panic("agent decided invalid action")
+		}
+	}
+
+	// pass the pitched directions of a bike to all agents on that bike and get their final vote
+	for bikeID, proposals := range proposedDirections {
+		// ----------------------------- VOTING ROUTINE - STEP 2 -----------------
+		// get second vote given everyone's proposal
+		// the finalVote can either be a ranking of proposed directions or a map from proposal to vote (between 0,1)
+		// we will try implementing both, the infrastructure should be the same
+		finalVotes := make([]map[uuid.UUID]float64, 0)
+		for _, agent := range s.megaBikes[bikeID].GetAgents() {
+			finalVotes = append(finalVotes, agent.FinalDirectionVote(proposals))
+		}
+
+		// ---------------------------VOTING ROUTINE - STEP 3 --------------
+		// get overall winner direction using chosen voting strategy
+		direction := utils.WinnerFromDist(finalVotes)
+		// get the force given the chosen voting strategy
+		for _, agent := range s.megaBikes[bikeID].GetAgents() {
+			agent.DecideForce(direction)
 		}
 	}
 
