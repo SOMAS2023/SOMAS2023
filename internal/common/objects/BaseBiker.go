@@ -53,7 +53,6 @@ type BaseBiker struct {
 	onBike                           bool
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
-	alive                            bool
 	forces                           utils.Forces
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
 	gameState                        IGameState // updated by the server at every round
@@ -69,7 +68,6 @@ func (bb *BaseBiker) GetEnergyLevel() float64 {
 // - increase the energy level after a lootbox has been looted (energyLevel will be pos.ve)
 func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 	bb.energyLevel += energyLevel
-	bb.alive = bb.energyLevel > 0
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
@@ -165,10 +163,6 @@ func (bb *BaseBiker) UpdatePoints(pointsGained int) {
 	bb.points += pointsGained
 }
 
-func (bb *BaseBiker) GetLifeStatus() bool {
-	return bb.alive
-}
-
 func (bb *BaseBiker) GetForces() utils.Forces {
 	return bb.forces
 }
@@ -189,7 +183,6 @@ func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
-		alive:        true,
 	}
 }
 
@@ -201,6 +194,5 @@ func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
-		alive:        true,
 	}
 }

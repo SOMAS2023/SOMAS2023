@@ -82,9 +82,21 @@ func (s *Server) LootboxCheckAndDistributions() {
 					// Allocate loot based on the calculated utility share
 					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 					agent.UpdateEnergyLevel(lootShare)
+					if agent.GetEnergyLevel() < 0 {
+						s.unaliveAgent(agent)
+					}
 				}
 			}
 		}
+	}
+}
+
+func (s *Server) unaliveAgent(agent objects.IBaseBiker) {
+	fmt.Printf("Agent %s got game ended\n", agent.GetID())
+	s.RemoveAgent(agent)
+	if bikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
+		s.megaBikes[bikeId].RemoveAgent(agent.GetID())
+		delete(s.megaBikeRiders, agent.GetID())
 	}
 }
 
