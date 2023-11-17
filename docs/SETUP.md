@@ -1,14 +1,13 @@
 ## Requirements
 
-- [Go 1.23.x](https://golang.org/dl/) (1.23.3 preferred)
-    - `go version` should produce `go version go1.23....`
+- [Go 1.21.x](https://golang.org/dl/) (1.21.4 preferred)
+    - `go version` should produce `go version go1.24....`
 
 (Note that the reference system as in CI is `Ubuntu 20.04`. It is preferable to run this OS, but if not, that's fine.)
 
 ## Text Editor & Language Server
 
 - You're encouraged to use [VSCode](https://code.visualstudio.com/), with the [Go extension](https://code.visualstudio.com/docs/languages/go).
-- You _must_ use [gopls](https://godoc.org/golang.org/x/tools/gopls). This is a language server that ensures an even code style among members, and it helps catches mistakes as you type them. This should be available in most LSP-enabled editors. If you don't understand this, use VSCode and the Go extension as in 1.
 
 ## Coding rules
 
@@ -30,28 +29,19 @@ s4 := S{name: "pittson"} // OK if `pittson`'s age is 0
 
 3. DO NOT TOUCH code you don't own unless you have a good reason to. If you have a good reason to, do it in a separate PR and notify the owners of the code.
 
-4. Do not use `panic` or `die`--return an `error` instead!
+4. Do not use `panic` - return an `error` instead!
 
 5. Do not use system-specific packages (e.g. `internal/syscall/unix`).
 
-6. Keep your team repo base up to date with the main repo.
+6. Use [`fmt.Errorf`](https://pkg.go.dev/fmt#Errorf) with the `%w` verb to create your errors
 
-7. Use the superior `errors.Errorf` to create your errors so that we have a stack trace.
-
-8. If you define a new `iota`, please implement the `String()`, `GoString()`, `MarshalText()`, and `MarshalJSON()` functions. See [`#150`](https://github.com/SOMAS2020/SOMAS2020/pull/150).
+7. If you define a new `iota` enum, please implement the `String()` method.
 
 ## Repo
 
-1. Each team will work off a fork of the main repo. Your team is responsible for all development happening in the fork, and are responsible to keep your own fork up-to-date, as well as to pull in changes to the main repo periodically. (Remember to give your teammates _write access_ to the fork!)
+1. Each team will work off branches in the main repo. Your team is responsible for all development happening in the branch, and are responsible to keep your own fork up-to-date, as well as to pull in changes to the main repo periodically. (Remember to give your teammates _write access_ to the fork!)
 
 2. Your team's fork must pass CI + infrastructure team code reviews before it can be merged into the main repo. Make sure you detail your changes succinctly in your PR, and _KEEP DIFFS SMALL_. Infra might not need to read every line, but having small reviews to do is helpful. Again, DO NOT TOUCH CODE YOU'RE NOT SUPPOSED TO. 
-
-3. Make sure your fork is up-to-date with the main repo's `main` branch before submitting a PR. You should install [https://github.com/wei/pull](https://github.com/wei/pull) on your fork to automate this.
-
-4. Your fork should inherit the Github Actions for CI as well, this means PRs into your `main` branch should run CI.
-
-5. Feel free to link your PR in the Discord infrastructure channel to request a review.
-
 
 ## Dependencies
 
