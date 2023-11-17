@@ -1,6 +1,6 @@
 module SOMAS2023
 
-go 1.21.3
+go 1.21
 
 require github.com/MattSScott/basePlatformSOMAS v1.4.1
 
