@@ -3,12 +3,19 @@ Constants used for the visualiser.
 """
 # Screen constants
 WINDOW_TITLE = "SOMAS Visualiser"
-FRAMERATE = 1
-SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
-GAME_SCREEN_WIDTH = 1000
+FRAMERATE = 60
+DIM = {
+    "SCREEN_WIDTH": 1280,
+    "SCREEN_HEIGHT": 720,
+    "GAME_SCREEN_WIDTH": 1000,
+    "UI_WIDTH": 280,
+    "BUTTON_WIDTH": 220,
+    "BUTTON_HEIGHT": 70
+}
 THEMEJSON = "visualiser/theme.json"
 BGCOLOURS = {
     "GUI" : "#E7E7E7",
+    "MAIN" : "#F0F0F0"
 }
 COLOURS = {
     "Red": (255, 0, 0),
