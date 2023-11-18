@@ -5,7 +5,6 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"math"
-	"fmt"
 
 	"github.com/google/uuid"
 )
