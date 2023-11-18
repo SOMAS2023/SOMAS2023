@@ -5,6 +5,7 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"math"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -44,7 +45,7 @@ func (agent *BenchmarkAgent) decideForces() {
 		Turning: 0.0,
 	}
 
-	println("forces for each round", forces)
+	//fmt.Println("forces for each round", forces)
 }
 
 func computeTurningAngle(agentPosition, lootBoxPosition utils.Coordinates) float64 {
