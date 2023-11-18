@@ -4,8 +4,9 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
-	"github.com/google/uuid"
 	"math"
+	"math/rand"
+	"github.com/google/uuid"
 	"sort"
 )
 
@@ -21,7 +22,20 @@ func (agent *BaselineAgent) DecideAction() objects.BikerAction {
 
 // DecideForces randomly based on current energyLevel
 func (agent *BaselineAgent) DecideForces() {
-	panic("DecideForces() to be implemented!")
+	energyLevel := agent.GetEnergyLevel() // 当前能量
+
+	randomPedalForce := rand.Float64() * energyLevel // 使用 rand 包生成随机的 pedal 力量，可以根据需要调整范围
+
+	// 因为force是一个struct,包括pedal, brake,和turning，因此需要一起定义，不能够只有pedal
+	forces := utils.Forces{
+		Pedal:   randomPedalForce,
+		Brake:   0.0, // 这里默认刹车为 0
+		Turning: 0.0, // 这里默认转向为 0
+	}
+
+	// 将决定的力量设置给 BaseBiker 对象, 未做到,缺少函数
+	println("forces for each round", forces)
+	// 缺少给agent赋forces的函数,目前只有GetForces,只能从函数获取,没办法给函数赋新值
 }
 
 // DecideJoining accept all
@@ -51,16 +65,21 @@ func (agent *BaselineAgent) ProposeDirection() utils.Coordinates {
 
 // decideTargetLootBox find closest lootBox
 func (agent *BaselineAgent) decideTargetLootBox(lootBoxes map[uuid.UUID]objects.ILootBox) (objects.ILootBox, error) {
-	var targetLootBox objects.ILootBox
-	minDistance := math.MaxFloat64
-	for _, lootBox := range lootBoxes {
-		dist := physics.ComputeDistance(agent.currentBike.GetPosition(), lootBox.GetPosition())
-		if dist < minDistance {
-			minDistance = dist
-			targetLootBox = lootBox
+
+	agentLocation := agent.GetLocation() //agent location
+	var nearestLootbox objects.ILootBox  //最近的一个lootbox
+	shortestDistance := math.MaxFloat64  //最短距离一开始设置为正无穷
+
+	for _, lootbox := range lootBoxes { //遍历每一个lootbox
+		lootboxLocation := lootbox.GetPosition()
+		distance := physics.ComputeDistance(agentLocation, lootboxLocation)
+
+		if distance < shortestDistance {
+			shortestDistance = distance
+			nearestLootbox = lootbox
 		}
 	}
-	return targetLootBox, nil
+	return nearestLootbox, nil
 }
 
 // rankTargetProposals rank by distance
