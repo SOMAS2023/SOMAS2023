@@ -10,88 +10,59 @@ import (
 )
 
 type BenchmarkAgent struct {
-	// Embed BaseBiker or any relevant struct
-	*objects.PhysicsObject
+	objects.BaseBiker
+	currentBike     *objects.MegaBike
 	PreferredColour utils.Colour
-	CurrentBikeID   uuid.UUID
-	OnBike          bool
 }
 
-func NewBenchmarkAgent(preferredColour utils.Colour) *BenchmarkAgent {
-	physicsObject := objects.GetPhysicsObject(utils.MassBiker)
-	return &BenchmarkAgent{
-		PhysicsObject:   physicsObject,
-		PreferredColour: preferredColour,
-		CurrentBikeID:   uuid.Nil,
-		OnBike:          true,
-	}
+// DecideAction
+func (agent *BenchmarkAgent) decideAction() objects.BikerAction {
+	return objects.Pedal
 }
 
-// choose the target bike
-func (b *BenchmarkAgent) ChooseBike(gameState objects.IGameState) uuid.UUID {
-	closestBikeID := uuid.Nil
-	minDistance := math.MaxFloat64
-	targetLootBox := gameState.GetLootBoxes()[b.ChooseLootBox(gameState)]
+// finding the closest same color lootBox
+func (agent *BenchmarkAgent) decideTargetLootBox(lootBoxes map[uuid.UUID]objects.ILootBox) (objects.ILootBox, error) {
+	agentLocation := agent.GetLocation()
+	shortestDistance := math.MaxFloat64
+	var nearestLootbox objects.ILootBox
 
-	for bikeID, bike := range gameState.GetMegaBikes() {
-		distance := physics.ComputeDistance(bike.GetPosition(), targetLootBox.GetPosition())
-		if distance < minDistance {
-			minDistance = distance
-			closestBikeID = bikeID
+	for _, lootbox := range lootBoxes {
+		lootboxLocation := lootbox.GetPosition()
+		distance := physics.ComputeDistance(agentLocation, lootboxLocation)
+		if distance < shortestDistance {
+			shortestDistance = distance
+			nearestLootbox = lootbox
 		}
 	}
-	return closestBikeID
+	return nearestLootbox, nil
 }
 
-// communication between the server and the agent, if have the leaving signal then leave
-func (b *BenchmarkAgent) VoteOnJoiningRequests(joiningRequests []uuid.UUID, leavingSignal bool, gameState objects.IGameState) map[uuid.UUID]float64 {
-	if leavingSignal {
-		//leav the current bike
-		targetBikeID := b.ChooseBike(gameState)
-		b.CurrentBikeID = targetBikeID
-		b.OnBike = false
-
-		// communication
-
-		return nil // no voting necessary
+func (agent *BenchmarkAgent) decideForces() {
+	forces := utils.Forces{
+		Pedal:   1.0,
+		Brake:   0.0,
+		Turning: 0.0,
 	}
 
-	// If not leaving, vote on joining requests
-	votes := make(map[uuid.UUID]float64)
-	for _, requestID := range joiningRequests {
-		votes[requestID] = 1.0 / float64(len(joiningRequests)) // Fair voting
+	println("forces for each round", forces)
+}
+
+func computeTurningAngle(agentPosition, lootBoxPosition utils.Coordinates) float64 {
+	deltaX := lootBoxPosition.X - agentPosition.X
+	deltaY := lootBoxPosition.Y - agentPosition.Y
+	angle := math.Atan2(deltaY, deltaX) / math.Pi
+
+	return angle * 2 / math.Pi
+}
+
+func (agent *BenchmarkAgent) voteOnJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+	decision := make(map[uuid.UUID]bool)
+	for _, agentID := range pendingAgents {
+		decision[agentID] = true
 	}
-	return votes
+	return decision
 }
 
-// choose a target lootbox
-func (b *BenchmarkAgent) ChooseLootBox(gameState objects.IGameState) uuid.UUID {
-	closestLootBoxID := uuid.Nil
-	minDistance := math.MaxFloat64
-	agentPosition := b.GetPosition()
-
-	for _, lootBox := range gameState.GetLootBoxes() {
-		if lootBox.GetColour() == b.PreferredColour {
-			lootBoxPosition := lootBox.GetPosition()
-			distance := math.Sqrt(math.Pow(lootBoxPosition.X-agentPosition.X, 2) + math.Pow(lootBoxPosition.Y-agentPosition.Y, 2))
-			if distance < minDistance {
-				minDistance = distance
-				closestLootBoxID = lootBox.GetID()
-			}
-		}
-	}
-	return closestLootBoxID
-}
-
-func (b *BenchmarkAgent) GetAcceleration(force float64) float64 {
-	return force / b.GetMass()
-}
-
-func (b *BenchmarkAgent) GetPosition() utils.Coordinates {
-	return b.PhysicsObject.GetPosition()
-}
-
-// vote equally on ranking, vote for the lootbox choosing ranking
 func (b *BenchmarkAgent) VoteOnLootBox(lootBoxOptions []uuid.UUID) map[uuid.UUID]float64 {
 	voteDistribution := make(map[uuid.UUID]float64)
 	numOptions := len(lootBoxOptions)
@@ -103,55 +74,63 @@ func (b *BenchmarkAgent) VoteOnLootBox(lootBoxOptions []uuid.UUID) map[uuid.UUID
 			voteDistribution[lootBoxID] = equalVote
 		}
 	}
+
 	return voteDistribution
 }
 
-// decide to choose pedal or change the bike, return teh action and the calues
-func (b *BenchmarkAgent) DecideActions(action string, gameState objects.IGameState) map[string]float64 {
-	actions := make(map[string]float64)
+func (agent *BenchmarkAgent) voteOnTargetProposals(proposedLootBox []objects.LootBox) (map[utils.Coordinates]float64, error) {
+	rank := make(map[utils.Coordinates]float64)
+	equalRank := 1.0 // Assigning the same rank to all
 
-	if action == "Pedal" {
-		actions["Pedal"] = 1.0
-		actions["Brake"] = 0.0
-		actions["Turning"] = 0.0
-	} else if action == "ChangeBike" {
-		//choose the closest lootbox of the same color as the future target
-		closestLootBoxID := b.ChooseLootBox(gameState)
-		closestLootBox := gameState.GetLootBoxes()[closestLootBoxID]
-		angle := computeSteeringAngle(b.GetPosition(), closestLootBox.GetPosition())
-
-		actions["Brake"] = 0.0
-		actions["Turning"] = normalizeAngleToRange(angle)
+	for _, lootBox := range proposedLootBox {
+		rank[lootBox.GetPosition()] = equalRank
 	}
 
-	return actions
+	return rank, nil
 }
 
-// get the angle aof a closest lootbox of the same color
-func computeSteeringAngle(currentPosition, targetPosition utils.Coordinates) float64 {
-	// Compute the angle from the current position to the target position
-	xDiff := targetPosition.X - currentPosition.X
-	yDiff := targetPosition.Y - currentPosition.Y
-	return math.Atan2(yDiff, xDiff) / math.Pi
-}
+func (agent *BenchmarkAgent) rankAgentsReputation(agentsOnBike []objects.BaseBiker) (map[uuid.UUID]float64, error) {
+	rank := make(map[uuid.UUID]float64)
+	equalRank := 1.0 // Assigning the same rank to all agents
 
-// steering angle
-func normalizeAngleToRange(angle float64) float64 {
-	// Normalize the angle to the range of [-1, 1]
-	normalizedAngle := angle / math.Pi
-	if normalizedAngle > 1 {
-		return 1
-	} else if normalizedAngle < -1 {
-		return -1
+	for _, agent := range agentsOnBike {
+		rank[agent.GetID()] = equalRank
 	}
-	return normalizedAngle
+
+	return rank, nil
 }
 
-// vote resource allocation, still equally distributed
-func (b *BenchmarkAgent) VoteResourceAllocation(onBikeAgents []uuid.UUID) map[uuid.UUID]float64 {
-	allocation := make(map[uuid.UUID]float64)
-	for _, agentID := range onBikeAgents {
-		allocation[agentID] = 1.0 / float64(len(onBikeAgents)) // Fair allocation
+func (b *BenchmarkAgent) ChooseBike(gameState objects.IGameState) uuid.UUID {
+	closestBikeID := uuid.Nil
+	minDistance := math.MaxFloat64
+
+	// Find the nearest loot box of the preferred color
+	nearestLootBox, err := b.decideTargetLootBox(gameState.GetLootBoxes())
+	if err != nil || nearestLootBox == nil {
+		return closestBikeID // Return nil if no suitable loot box is found
 	}
-	return allocation
+
+	lootBoxPosition := nearestLootBox.GetPosition()
+
+	// Iterate through all MegaBikes and find the one closest to the loot box
+	for bikeID, bike := range gameState.GetMegaBikes() {
+		bikePosition := bike.GetPosition()
+		distance := physics.ComputeDistance(bikePosition, lootBoxPosition)
+		if distance < minDistance {
+			minDistance = distance
+			closestBikeID = bikeID
+		}
+	}
+
+	return closestBikeID
+}
+
+func (b *BenchmarkAgent) DecideBikeChangeBasedOnVote(votingResult uuid.UUID, gameState objects.IGameState) uuid.UUID {
+	winningLootBox := gameState.GetLootBoxes()[votingResult]
+
+	if winningLootBox.GetColour() != b.PreferredColour {
+		return b.ChooseBike(gameState)
+	}
+
+	return uuid.Nil
 }
