@@ -1,7 +1,7 @@
 """
 Visualiser for SOMAS world
 """
-# pylint: disable=no-member
+# pylint: disable=no-member, import-error, no-name-in-module
 import os
 import tkinter as tk
 from tkinter import filedialog
@@ -39,7 +39,7 @@ class Visualiser:
             "dead_players": {}
         }
         # Initialise UI elements
-        self.gameScreen = GameScreen()
+        self.gameScreenManager = GameScreen()
         self.init_ui()
 
     def init_ui(self) -> None:
@@ -71,7 +71,7 @@ class Visualiser:
             }
         )
         # Game screen UI elements
-        self.UIElements["game_screen"] = self.gameScreen.init_ui(self.UIElements["game_screen"], self.manager, self.UIscreen)
+        self.UIElements["game_screen"] = self.gameScreenManager.init_ui(self.UIElements["game_screen"], self.manager, self.UIscreen)
 
     def switch_screen(self, newScreen:str) -> None:
         """
@@ -94,13 +94,12 @@ class Visualiser:
         while self.running:
             timeDelta = self.clock.tick(FRAMERATE) / 1000.0
             self.handle_events()
-            # Update the game screen
+            # Update the display
             match self.screenState:
                 case "main_menu":
-                    self.main_menu_screen()
-                case _:
-                    self.main_menu_screen()
-            # Update the display
+                    self.render_main_menu()
+                case "game_screen":
+                    self.render_game_screen()
             self.manager.update(timeDelta)
             self.window.blit(self.gamescreen, (0, 0))
             self.manager.draw_ui(self.window)
@@ -131,12 +130,22 @@ class Visualiser:
                         self.process_game_screen_events(event)
             self.manager.process_events(event)
 
-    def main_menu_screen(self) -> None:
+    def render_main_menu(self) -> None:
         """
         UI logic for the main menu screen
         """
         self.gamescreen.fill(BGCOLOURS["MAIN"])
+        font = pygame.font.SysFont("Arial Narrow", 90)
+        surface = font.render("SOMAS Visualiser", True, "#555555")
+        textWidth, textHeight = surface.get_size()
+        x, y = make_center((textWidth, textHeight), (DIM["GAME_SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]))
+        self.gamescreen.blit(surface, (x, y))
 
+    def render_game_screen(self) -> None:
+        """
+        UI logic for the game screen
+        """
+        
 
     def process_main_menu_events(self, event) -> None:
         """
@@ -182,4 +191,5 @@ class Visualiser:
 
 if __name__ == "__main__":
     visualiser = Visualiser()
+    visualiser.json_parser("visualiser/json/1.json")
     visualiser.run_loop()

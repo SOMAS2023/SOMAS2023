@@ -14,7 +14,7 @@ DIM = {
 }
 THEMEJSON = "visualiser/theme.json"
 BGCOLOURS = {
-    "GUI" : "#E7E7E7",
+    "GUI" : "#E0E0E0",
     "MAIN" : "#F0F0F0"
 }
 COLOURS = {

@@ -1,3 +1,6 @@
+"""
+Logic for the game screen visualiser
+"""
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
@@ -64,3 +67,8 @@ class GameScreen:
             }
         )
         return elements
+
+    def render_game_screen(self) -> None:
+        """
+        Render the game screen
+        """
