@@ -56,7 +56,7 @@ type BaseBiker struct {
 	alive                            bool
 	forces                           utils.Forces
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
-	gameState                        IGameState // updated by the server at every round
+	GameState                        IGameState // updated by the server at every round
 	allocationParams                 ResourceAllocationParams
 }
 
@@ -94,7 +94,7 @@ func (bb *BaseBiker) SetAllocationParameters() {
 // the biker itself doesn't technically have a location (as it's on the map only when it's on a bike)
 // in fact this function is only called when the biker needs to make a decision about the pedaling forces
 func (bb *BaseBiker) GetLocation() utils.Coordinates {
-	megaBikes := bb.gameState.GetMegaBikes()
+	megaBikes := bb.GameState.GetMegaBikes()
 	return megaBikes[bb.megaBikeId].GetPosition()
 }
 
@@ -106,7 +106,7 @@ func (bb *BaseBiker) NearestLoot() utils.Coordinates {
 	shortestDist := math.MaxFloat64
 	var nearestDest utils.Coordinates
 	var currDist float64
-	for _, loot := range bb.gameState.GetLootBoxes() {
+	for _, loot := range bb.GameState.GetLootBoxes() {
 		x, y := loot.GetPosition().X, loot.GetPosition().Y
 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
 		if currDist < shortestDist {
@@ -174,7 +174,7 @@ func (bb *BaseBiker) GetForces() utils.Forces {
 }
 
 func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
-	bb.gameState = gameState
+	bb.GameState = gameState
 }
 
 func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
