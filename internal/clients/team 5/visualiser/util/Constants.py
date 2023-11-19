@@ -16,6 +16,7 @@ AGENT = {
     "LINE_WIDTH": 2,
     "LINE_COLOUR": "#000000",
     "FONT_SIZE": 30,
+    "PADDING": 5,
 }
 DIM = {
     "SCREEN_WIDTH": 1280,

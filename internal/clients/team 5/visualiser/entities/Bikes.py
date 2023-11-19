@@ -2,8 +2,8 @@
 Logic for handling bikes in the visualiser
 """
 # pylint: disable=import-error, no-name-in-module
+import math
 import pygame
-import pygame_gui
 from visualiser.util.Constants import AGENT, BIKE
 from visualiser.entities.Agents import Agent
 from visualiser.entities.Common import Drawable
@@ -16,27 +16,27 @@ class Bike(Drawable):
 
     def draw(self, screen, offsetX, offsetY, zoom) -> None:
         """
-        Draw the bike on the screen.
+        Draw the bike and agents onto the screen.
         """
         noAgents = len(self.agentList.values())
-        rectWidth = BIKE["SIZE"] * zoom
-        # Adjust the height calculation to provide enough space for all agents
-        rectHeight = BIKE["SIZE"] * zoom * max(noAgents, 1) * 2.5
-        rectX = int(self.x * zoom + offsetX - rectWidth / 2)
-        # Adjust the Y position to start from the top
-        rectY = int(self.y * zoom + offsetY - rectHeight)
-        lineWidth = int(BIKE["LINE_WIDTH"] * zoom)
-        # Draw the filled rectangle
-        pygame.draw.rect(screen, BIKE["COLOUR"], (rectX, rectY, rectWidth, rectHeight))
-        # Draw the outline rectangle
-        pygame.draw.rect(screen, BIKE["LINE_COLOUR"], (rectX, rectY, rectWidth, rectHeight), max(1, lineWidth))
-        # Draw the agents, starting from the top of the bike
-        agentSpacing = rectHeight / max(noAgents, 1)
-        agentSize = AGENT["SIZE"] * zoom  # Assuming AGENT["SIZE"] is defined
+        # Determine the grid size
+        gridSize = min(3, max(1, int(math.ceil(math.sqrt(noAgents)))))
+        agentPadding = AGENT["PADDING"] * zoom  # Padding around agents
+        agentSize = AGENT["SIZE"] * 2 * zoom
+        squareSide = gridSize * agentSize + ((gridSize+1) * agentPadding)
+        # Calculate bike's position and size
+        rectX = int(self.x * zoom + offsetX)
+        rectY = int(self.y * zoom + offsetY)
+        # Draw the bike square
+        pygame.draw.rect(screen, BIKE["COLOUR"], (rectX, rectY, squareSide, squareSide))
+        # Draw the agents within the bike
         for index, agent in enumerate(self.agentList.values()):
-            # Calculate the Y position for each agent
-            agentY = rectY + 2*agentSize - (rectHeight / 4) + (index * agentSpacing)
-            agent.draw(screen, offsetX, agentY, zoom)
+            # Calculate agent's position within the grid
+            row = index // gridSize
+            col = index % gridSize
+            agentX = rectX - 3 * agentSize + ((agentSize + agentPadding) * (col + 1))
+            agentY = rectY - 3 * agentSize + ((agentSize + agentPadding) * (row + 1))
+            agent.draw(screen, agentX, agentY, zoom)
 
     def set_agents(self, agentJson:dict) -> None:
         """
