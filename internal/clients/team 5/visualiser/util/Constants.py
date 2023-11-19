@@ -5,6 +5,18 @@ Constants used for the visualiser.
 WINDOW_TITLE = "SOMAS Visualiser"
 FRAMERATE = 60
 MINZOOM, MAXZOOM = 0.3, 2.0
+BIKE = {
+    "SIZE": 20,
+    "LINE_WIDTH": 1,
+    "LINE_COLOUR": "#000000",
+    "COLOUR" : "#560059"
+}
+AGENT = {
+    "SIZE": 20,
+    "LINE_WIDTH": 2,
+    "LINE_COLOUR": "#000000",
+    "FONT_SIZE": 30,
+}
 DIM = {
     "SCREEN_WIDTH": 1280,
     "SCREEN_HEIGHT": 720,
@@ -12,7 +24,6 @@ DIM = {
     "UI_WIDTH": 280,
     "BUTTON_WIDTH": 220,
     "BUTTON_HEIGHT": 70,
-    "AGENT_SIZE": 20,
     "GRIDSPACING": 20,
 }
 THEMEJSON = "visualiser/theme.json"
@@ -31,5 +42,5 @@ COLOURS = {
     "Pink": (255, 192, 203),
     "Brown": (165, 42, 42),
     "Gray": (128, 128, 128),
-    # "White": (255, 255, 255)
+    "White": (255, 255, 255)
 }

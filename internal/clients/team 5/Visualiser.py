@@ -2,7 +2,6 @@
 Visualiser for SOMAS world
 """
 # pylint: disable=no-member, import-error, no-name-in-module
-import os
 import tkinter as tk
 from tkinter import filedialog
 import json
@@ -137,6 +136,10 @@ class Visualiser:
         surface = font.render("SOMAS Visualiser", True, "#555555")
         textWidth, textHeight = surface.get_size()
         x, y = make_center((textWidth, textHeight), (DIM["GAME_SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]))
+        pygame.draw.line(self.gamescreen, "#555555", (x, y+textHeight), (x+textWidth, y+textHeight), 2)
+        # Divider line at edge of UI screen
+        lineWidth = 1
+        pygame.draw.line(self.gamescreen, "#555555", (DIM["GAME_SCREEN_WIDTH"]-lineWidth, 0), (DIM["GAME_SCREEN_WIDTH"]-lineWidth, DIM["SCREEN_HEIGHT"]), lineWidth)
         self.gamescreen.blit(surface, (x, y))
 
     def render_game_screen(self) -> None:
@@ -184,7 +187,14 @@ class Visualiser:
             data = json.load(f)
         self.jsondata = data
 
+    def test(self) -> None:
+        """
+        Test function
+        """
+        self.json_parser("visualiser/json/test.json")
+        self.gameScreenManager.bike1.set_agents(self.jsondata["gameloop"]["bikes"]["bike_1"]["agents"])
+
 if __name__ == "__main__":
     visualiser = Visualiser()
-    visualiser.json_parser("visualiser/json/1.json")
+    visualiser.test()
     visualiser.run_loop()

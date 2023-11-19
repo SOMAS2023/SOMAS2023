@@ -5,9 +5,9 @@ Logic for the game screen visualiser
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
-from visualiser.util.Constants import DIM, COLOURS, BGCOLOURS, MAXZOOM, MINZOOM
-from visualiser.util.HelperFunc import make_center, pick_random_colour
-from visualiser.entities.Agents import Agent
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM
+from visualiser.util.HelperFunc import make_center
+from visualiser.entities.Bikes import Bike
 
 class GameScreen:
     def __init__(self) -> None:
@@ -19,7 +19,9 @@ class GameScreen:
         self.mouseX, self.mouseY = 0, 0
         self.oldZoom = 1.0
         self.zoom = 1.0
-        self.agent1 = Agent(100, 100, pick_random_colour(COLOURS))
+        # self.agent1 = Agent(100, 100, pick_random_colour(COLOURS), random.randint(0, 8), 0)
+        self.bike1 = Bike(100, 100, 0)
+
 
     def init_ui(self, elements:dict, manager:pygame_gui.UIManager, screen:pygame_gui.core.UIContainer) -> dict:
         """
@@ -87,7 +89,11 @@ class GameScreen:
         """
         screen.fill((255, 255, 255))
         self.draw_grid(screen)
-        self.agent1.draw(screen, self.offsetX, self.offsetY, self.zoom)
+        # Draw agents
+        self.bike1.draw(screen, self.offsetX, self.offsetY, self.zoom)
+        # Divider line
+        lineWidth = 1
+        pygame.draw.line(screen, "#555555", (DIM["GAME_SCREEN_WIDTH"]-lineWidth, 0), (DIM["GAME_SCREEN_WIDTH"]-lineWidth, DIM["SCREEN_HEIGHT"]), lineWidth)
 
     def process_events(self, event:pygame.event.Event) -> None:
         """
