@@ -3,12 +3,13 @@ T.W.O is a team of 8 members. The aim of this team is to change the flow of the 
 
 # Team Members
 
-| Rep               | Name              | Shortcode             | Github ID             |
-| Captain           | Ishaan Reni       | ir320                 | ishaanreni            |
-| Ideation          | Your names here   | Your usernames here   | Your Github Username  |
-| Testing           | Your names here   | Your usernames here   | Your Github Username  |
-| Visualisation     | Your names here   | Your usernames here   | Your Github Username  |
-| Presentation      | Your names here   | Your usernames here   | Your Github Username  |
-| Report            | Your names here   | Your usernames here   | Your Github Username  |
-|                   | Your names here   | Your usernames here   | Your Github Username  |
-|                   | Your names here   | Your usernames here   | Your Github Username  |
+|Name              | Shortcode             | Github ID             |
+|-                 | -                     | -                     |
+|Ishaan R          | ir320                 | ishaanreni            |
+|Sam H F           | sh1620                | sh1620                |
+|Marco C           | mc620                 | mc1017                |
+|Dharmil S         | dgs119                | dharmilshah99         |
+|Alexandra N       | an720                 | neagualexa            |
+|Harry P           | hjp20                 | harryjph              |
+|Charmaine L       | ccl19                 | ccl19                 |
+|Thanasis K        | Your usernames here   | thanasiskantas        |
