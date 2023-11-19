@@ -4,7 +4,10 @@ import (
 	"fmt"
 )
 
+// This map can hold any type of data as the value
 type Map map[string]interface{}
+
+// Define VoteTypes
 type VoteType int
 
 const (
@@ -13,9 +16,9 @@ const (
 )
 
 type VoteInputs struct {
-	decisionType   VoteType
-	choiceMap      map[string]int
-	voteParameters map[string]interface{}
+	decisionType   VoteType       // Type of vote that needs to be made
+	choiceMap      map[string]int // Map of choices [Dummy map for now]
+	voteParameters Map            // Parameters for the vote
 }
 
 type Vote struct {
@@ -26,7 +29,6 @@ type VotingFramework struct {
 	IDecisionFramework[VoteInputs, Vote]
 }
 
-// Implement constructor for VotingFramework
 func NewVotingFramework() *VotingFramework {
 	return &VotingFramework{}
 }
