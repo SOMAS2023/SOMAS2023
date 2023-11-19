@@ -11,7 +11,7 @@ func calculateResourceAllocation(gameState objects.IGameState, self objects.IBas
 
 	//how to get id of my megabike?
 	var bikeID uuid.UUID
-	// bikeID = self.megaBikeId
+	// bikeID = self.GetmegaBikeId
 
 	bike := gameState.GetMegaBikes()[bikeID]
 	agentsOnBike := bike.GetAgents()
