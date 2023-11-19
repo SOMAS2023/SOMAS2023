@@ -7,8 +7,8 @@ import (
 )
 
 type NavigationInputs struct {
-	desiredLootbox  utils.Coordinates
-	currentLocation utils.Coordinates
+	DesiredLootbox  utils.Coordinates
+	CurrentLocation utils.Coordinates
 }
 
 /*
@@ -24,8 +24,8 @@ type NavigationDecisionFramework struct {
 func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) utils.Forces {
 	ndf.inputs = &inputs
 	// Get distances between current location and desired lootbox
-	dx := ndf.inputs.desiredLootbox.X - ndf.inputs.currentLocation.X
-	dy := ndf.inputs.desiredLootbox.Y - ndf.inputs.currentLocation.Y
+	dx := ndf.inputs.DesiredLootbox.X - ndf.inputs.CurrentLocation.X
+	dy := ndf.inputs.DesiredLootbox.Y - ndf.inputs.CurrentLocation.Y
 
 	angle_radians := math.Atan2(dy, dx)
 
@@ -37,8 +37,8 @@ func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) uti
 	forces := utils.Forces{Pedal: pedalling_force, Brake: braking_force, Turning: turning_force}
 
 	fmt.Println("NavigationDecisionFramework: GetDecision called")
-	fmt.Println("NavigationDecisionFramework: Current location: ", ndf.inputs.currentLocation)
-	fmt.Println("NavigationDecisionFramework: Desired lootbox: ", ndf.inputs.desiredLootbox)
+	fmt.Println("NavigationDecisionFramework: Current location: ", ndf.inputs.CurrentLocation)
+	fmt.Println("NavigationDecisionFramework: Desired lootbox: ", ndf.inputs.DesiredLootbox)
 	fmt.Println("NavigationDecisionFramework: Forces: ", forces)
 
 	return forces

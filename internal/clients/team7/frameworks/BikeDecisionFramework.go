@@ -37,3 +37,9 @@ func (bdf *BikeDecisionFramework) GetDecision(inputs BikeDecisionInputs) BikeDec
 
 	return BikeDecision{leaveBike: false}
 }
+
+func NewBikeDecisionFramework() *BikeDecisionFramework {
+	return &BikeDecisionFramework{
+		inputs: &BikeDecisionInputs{},
+	}
+}
