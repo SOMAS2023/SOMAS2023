@@ -13,8 +13,9 @@ type NavigationInputs struct {
 
 /*
 This framework can be used for determining the navigation decisions of the biker.
-Input: NavigationInputs
-Output: Forces
+
+	Input: NavigationInputs
+	Output: Forces
 */
 type NavigationDecisionFramework struct {
 	IDecisionFramework[NavigationInputs, utils.Forces]

@@ -21,7 +21,7 @@ type BaseTeamSevenBiker struct {
 	votingFramework       *frameworks.VotingFramework
 }
 
-// Implement constructor for BaseTeamSevenBiker
+// Produce new BaseTeamSevenBiker
 func NewBaseTeamSevenBiker(agentId uuid.UUID) *BaseTeamSevenBiker {
 	return &BaseTeamSevenBiker{
 		BaseBiker:             objects.GetBaseBiker(utils.GenerateRandomColour(), agentId),

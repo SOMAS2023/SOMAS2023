@@ -6,17 +6,22 @@ import (
 	"fmt"
 )
 
+// There will be different times when a decision needs to be made.
+// For example, when the biker is on the bike, the biker needs to decide whether to get off the bike or not.
+// This enum can be used to specify the type of decision that needs to be made.
 type BikeDecisionType int
 
 const (
-	OnBike BikeDecisionType = iota
-	OffBike
+	StayOrLeaveBike BikeDecisionType = iota
+	FindNewBike
 )
 
+// All inputs needed for the decisions around staying on a bike or joining a new bike.
+// Not all inputs will be needed for all decisions.
 type BikeDecisionInputs struct {
-	decisionType    BikeDecisionType
-	currentLocation utils.Coordinates
-	availableBikes  []objects.MegaBike
+	decisionType    BikeDecisionType   // Type of decision that needs to be made
+	currentLocation utils.Coordinates  // Current location of the biker
+	availableBikes  []objects.MegaBike // List of available bikes
 }
 
 type BikeDecision struct {
