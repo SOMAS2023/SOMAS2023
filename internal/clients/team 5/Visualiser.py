@@ -21,11 +21,10 @@ class Visualiser:
         self.UIState = "main_menu"
         self.running = True
         self.jsondata = None
-        self.loopNo = 0
         pygame.init()
         # Set screens, UI manager, caption, clock and timeDelta
         self.window = pygame.display.set_mode((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]))
-        self.manager = UIManager((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]), os.path.abspath(THEMEJSON))
+        self.manager = UIManager((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]), THEMEJSON)
         self.gamescreen = pygame.Surface((DIM["GAME_SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]))
         self.UIscreen = UIContainer(relative_rect=pygame.Rect((DIM["GAME_SCREEN_WIDTH"], 0),
                           (DIM["UI_WIDTH"], DIM["SCREEN_HEIGHT"],)),
@@ -122,12 +121,11 @@ class Visualiser:
                         case pygame.K_ESCAPE:
                             self.running = False
             # Handle UI events
-            if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                match self.screenState:
-                    case "main_menu":
-                        self.process_main_menu_events(event)
-                    case "game_screen":
-                        self.process_game_screen_events(event)
+            match self.screenState:
+                case "main_menu":
+                    self.process_main_menu_events(event)
+                case "game_screen":
+                    self.process_game_screen_events(event)
             self.manager.process_events(event)
 
     def render_main_menu(self) -> None:
@@ -145,49 +143,46 @@ class Visualiser:
         """
         UI logic for the game screen
         """
-        
+        self.gameScreenManager.render_game_screen(self.gamescreen)
 
-    def process_main_menu_events(self, event) -> None:
+    def process_main_menu_events(self, event:pygame.event.Event) -> None:
         """
         Process events in the main menu screen
         """
         elements = self.UIElements["main_menu"]
-        if event.ui_element == elements["load_json"]:
-            #Load JSON for game using tkinter
-            root = tk.Tk()
-            root.withdraw()
-            filepath = filedialog.askopenfilename(
-                initialdir=".",
-                title="Select JSON file",
-                filetypes=(("JSON files", "*.json"), ("all files", "*.*"))
-            )
-            root.destroy()
-            if filepath != "":
-                self.json_parser(filepath)
-                self.switch_screen("game_screen")
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == elements["load_json"]:
+                #Load JSON for game using tkinter
+                root = tk.Tk()
+                root.withdraw()
+                filepath = filedialog.askopenfilename(
+                    initialdir=".",
+                    title="Select JSON file",
+                    filetypes=(("JSON files", "*.json"), ("all files", "*.*"))
+                )
+                root.destroy()
+                if filepath != "":
+                    self.json_parser(filepath)
+                    self.switch_screen("game_screen")
 
-    def process_game_screen_events(self, event) -> None:
+    def process_game_screen_events(self, event:pygame.event.Event) -> None:
         """
         Process events in the main menu screen
         """
         elements = self.UIElements["game_screen"]
-        if event.ui_element == elements["reset"]:
-            self.switch_screen("main_menu")
-            self.jsondata = None
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == elements["reset"]:
+                self.switch_screen("main_menu")
+                self.jsondata = None
+        self.gameScreenManager.process_events(event)
 
-    def json_parser(self, filepath) -> None:
+    def json_parser(self, filepath:str) -> None:
         """
         Reads the simulated JSON file and stores the data
         """
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
         self.jsondata = data
-
-    def game_screen(self) -> None:
-        pass
-
-    def dead_player_screen(self) -> None:
-        pass
 
 if __name__ == "__main__":
     visualiser = Visualiser()
