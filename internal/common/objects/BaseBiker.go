@@ -23,13 +23,13 @@ type ResourceAllocationParams struct {
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 
-	DecideAction() BikerAction                                              // ** determines what action the agent is going to take this round. (changeBike or Pedal)
-	DecideForce(direction uuid.UUID)                                        // ** defines the vector you pass to the bike: [pedal, brake, turning]
-	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool              // ** decide whether to accept or not accept bikers, ranks the ones
-	ChangeBike() uuid.UUID                                                  // ** called when biker wants to change bike, it will choose which bike to try and join
-	ProposeDirection() utils.Coordinates                                    // ** returns the id of the desired lootbox based on internal strategy
-	FinalDirectionVote(proposals []utils.Coordinates) utils.PositionVoteMap // ** stage 3 of direction voting
-	DecideAllocationParameters()                                            // ** decide the allocation parameters
+	DecideAction() BikerAction                                     // ** determines what action the agent is going to take this round. (changeBike or Pedal)
+	DecideForce(direction uuid.UUID)                               // ** defines the vector you pass to the bike: [pedal, brake, turning]
+	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool     // ** decide whether to accept or not accept bikers, ranks the ones
+	ChangeBike() uuid.UUID                                         // ** called when biker wants to change bike, it will choose which bike to try and join
+	ProposeDirection() uuid.UUID                                   // ** returns the id of the desired lootbox based on internal strategy
+	FinalDirectionVote(proposals []uuid.UUID) utils.LootboxVoteMap // ** stage 3 of direction voting
+	DecideAllocationParameters()                                   // ** decide the allocation parameters
 
 	GetForces() utils.Forces                               // returns forces for current round
 	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
@@ -109,16 +109,16 @@ func (bb *BaseBiker) GetLocation() utils.Coordinates {
 // returns the nearest lootbox with respect to the agent's bike current position
 // in the MVP this is used to determine the pedalling forces as all agent will be
 // aiming to get to the closest lootbox by default
-func (bb *BaseBiker) NearestLoot() utils.Coordinates {
+func (bb *BaseBiker) nearestLoot() uuid.UUID {
 	currLocation := bb.GetLocation()
 	shortestDist := math.MaxFloat64
-	var nearestBox utils.Coordinates
+	var nearestBox uuid.UUID
 	var currDist float64
 	for _, loot := range bb.gameState.GetLootBoxes() {
 		x, y := loot.GetPosition().X, loot.GetPosition().Y
 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
 		if currDist < shortestDist {
-			nearestBox = loot.GetPosition()
+			nearestBox = loot.GetID()
 			shortestDist = currDist
 		}
 	}
@@ -141,7 +141,8 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 	// NEAREST BOX STRATEGY (MVP)
 	currLocation := bb.GetLocation()
-	nearestLootPos := bb.NearestLoot()
+	nearestLoot := bb.nearestLoot()
+	nearestLootPos := bb.gameState.GetLootBoxes()[nearestLoot].GetPosition()
 	deltaX := nearestLootPos.X - currLocation.X
 	deltaY := nearestLootPos.Y - currLocation.Y
 	angle := math.Atan2(deltaX, deltaY)
@@ -196,8 +197,8 @@ func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
 }
 
 // default implementation returns the id of the nearest lootbox
-func (bb *BaseBiker) ProposeDirection() utils.Coordinates {
-	return bb.NearestLoot()
+func (bb *BaseBiker) ProposeDirection() uuid.UUID {
+	return bb.nearestLoot()
 }
 
 func (bb *BaseBiker) ToggleOnBike() {
@@ -220,8 +221,8 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
-func (bb *BaseBiker) FinalDirectionVote(proposals []utils.Coordinates) utils.PositionVoteMap {
-	votes := make(utils.PositionVoteMap)
+func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) utils.LootboxVoteMap {
+	votes := make(utils.LootboxVoteMap)
 	totOptions := len(proposals)
 	normalDist := 1.0 / float64(totOptions)
 	for _, proposal := range proposals {

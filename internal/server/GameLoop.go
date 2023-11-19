@@ -30,8 +30,8 @@ func (s *Server) RunGameLoop() {
 		}
 	}
 
-	// map of the proposed directions by bike
-	proposedDirections := make(map[uuid.UUID][]utils.Coordinates)
+	// map of the proposed lootboxes by bike (for each bike a list of lootbox proposals is made, with one lootbox proposed by each agent on the bike)
+	proposedDirections := make(map[uuid.UUID][]uuid.UUID)
 	// -------------------------------- DECIDE ACTION ---------------------------------
 	for agentId, agent := range s.GetAgentMap() {
 		fmt.Printf("Agent %s updating state \n", agentId)
@@ -46,7 +46,7 @@ func (s *Server) RunGameLoop() {
 			if ids, ok := proposedDirections[bike]; ok {
 				proposedDirections[bike] = append(ids, agent.ProposeDirection())
 			} else {
-				proposedDirections[bike] = []utils.Coordinates{agent.ProposeDirection()}
+				proposedDirections[bike] = []uuid.UUID{agent.ProposeDirection()}
 			}
 
 		case objects.ChangeBike:
@@ -78,7 +78,8 @@ func (s *Server) RunGameLoop() {
 		// the finalVote can either be a ranking of proposed directions or a map from proposal to vote (between 0,1)
 		// we will try implementing both, the infrastructure should be the same
 		agentsOnBike := s.megaBikes[bikeID].GetAgents()
-		finalVotes := make([]utils.PositionVoteMap, len(agentsOnBike))
+		// server collates all vote distributions from each agent into a list of final votes
+		finalVotes := make([]utils.LootboxVoteMap, len(agentsOnBike))
 
 		for _, agent := range s.megaBikes[bikeID].GetAgents() {
 			finalVotes = append(finalVotes, agent.FinalDirectionVote(proposals))

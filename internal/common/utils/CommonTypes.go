@@ -40,9 +40,10 @@ type INormaliseVoteMap interface {
 	IsNormalisedVoteMap()
 }
 
-type PositionVoteMap map[Coordinates]float64
+// lootboxID:distribution
+type LootboxVoteMap map[uuid.UUID]float64
 
-func (PositionVoteMap) IsNormalisedVoteMap() {}
+func (LootboxVoteMap) IsNormalisedVoteMap() {}
 
 type IdVoteMap map[uuid.UUID]float64
 
