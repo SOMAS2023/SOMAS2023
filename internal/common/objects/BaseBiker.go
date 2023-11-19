@@ -294,3 +294,40 @@ func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 		points:       0,
 	}
 }
+
+/* Added setters below */
+func (bb *BaseBiker) SetSoughtColour(colour utils.Colour) {
+	bb.soughtColour = colour
+}
+
+func (bb *BaseBiker) SetOnBike(onBike bool) {
+	bb.onBike = onBike
+}
+
+func (bb *BaseBiker) SetEnergyLevel(energyLevel float64) {
+	bb.energyLevel = energyLevel
+}
+
+func (bb *BaseBiker) SetPoints(points int) {
+	bb.points = points
+}
+
+func (bb *BaseBiker) SetAlive(alive bool) {
+	bb.alive = alive
+}
+
+func (bb *BaseBiker) SetForces(forces utils.Forces) {
+	bb.forces = forces
+}
+
+func (bb *BaseBiker) SetMegaBikeId(megaBikeId uuid.UUID) {
+	bb.megaBikeId = megaBikeId
+}
+
+func (bb *BaseBiker) SetGameState(gameState IGameState) {
+	bb.gameState = gameState
+}
+
+func (bb *BaseBiker) SetAllocationParams(allocationParams ResourceAllocationParams) {
+	bb.allocationParams = allocationParams
+}
