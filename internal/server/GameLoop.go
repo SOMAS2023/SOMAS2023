@@ -106,10 +106,11 @@ func (s *Server) LootboxCheckAndDistributions() {
 				}
 
 				// Distribute loot.
+				lootboxTotalResource := lootbox.GetTotalResources()
 				for _, agent := range agents {
 					lootShare, exists := accVotes[agent.GetID()]
 					if exists {
-						lootShare *= lootbox.GetTotalResources()
+						lootShare *= lootboxTotalResource
 
 						fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 						agent.UpdateResourceAppropriation(lootShare)
