@@ -12,6 +12,7 @@ func calculateResourceAllocation(gameState objects.IGameState, self objects.IBas
 	//how to get id of my megabike?
 	var bikeID uuid.UUID
 	// bikeID = self.GetmegaBikeId
+	bikeID = getBikeIdFromGameState(self, gameState)
 
 	bike := gameState.GetMegaBikes()[bikeID]
 	agentsOnBike := bike.GetAgents()
@@ -23,6 +24,21 @@ func calculateResourceAllocation(gameState objects.IGameState, self objects.IBas
 	allocations = normaliseMap(allocations)
 
 	return allocations
+}
+
+// gets Bike ID from gamestate, to be removed after getter added to basebiker
+func getBikeIdFromGameState(self objects.IBaseBiker, gameState objects.IGameState) uuid.UUID {
+	bikes := gameState.GetMegaBikes()
+
+	for id, bike := range bikes {
+		for _, agent := range bike.GetAgents() {
+			if agent.GetID() == self.GetID() {
+				return id
+			}
+		}
+	}
+
+	return uuid.Nil
 }
 
 func generateAllocation(agent objects.IBaseBiker, self objects.IBaseBiker, method string) float32 {
