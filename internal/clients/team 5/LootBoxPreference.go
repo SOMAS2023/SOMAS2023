@@ -12,8 +12,8 @@ func ProposeDirection(gameState objects.IGameState, agentID uuid.UUID) map[uuid.
 	preferenceMap := make(map[uuid.UUID]float64)
 
 	// Get the megabike, agent and lootboxes
-	bike := gameState.GetMegaBikes()[agentID]
-	agent := findAgent(bike.GetAgents(), agentID)
+	bikeId, agent := findAgentandBike(gameState, agentID)
+	bike := gameState.GetMegaBikes()[bikeId]
 	lootBoxes := gameState.GetLootBoxes()
 
 	// Weights for distance, energy and colour
@@ -22,7 +22,7 @@ func ProposeDirection(gameState objects.IGameState, agentID uuid.UUID) map[uuid.
 	// Calculate the preference for each lootbox
 	for id, loot := range lootBoxes {
 		distance := calculateDistance(bike.GetPosition(), bike.GetPosition())
-		energy := energyPreference(agent.GetEnergyLevel(), loot.GetTotalResources(), gameState, agent.GetID())
+		energy := energyPreference(agent.GetEnergyLevel(), loot.GetTotalResources(), gameState, agent.GetID(), bike)
 		colour := colourMatch(agent.GetColour(), loot.GetColour())
 
 		preference := wd/(1+distance) + we*energy + wc*colour
@@ -32,14 +32,16 @@ func ProposeDirection(gameState objects.IGameState, agentID uuid.UUID) map[uuid.
 	return preferenceMap
 }
 
-// Find the agent with the given ID
-func findAgent(agents []objects.IBaseBiker, agentID uuid.UUID) objects.IBaseBiker {
-	for _, a := range agents {
-		if a.GetID() == agentID {
-			return a
+// Find the agent with the given ID and return the bike ID and agent
+func findAgentandBike(gameState objects.IGameState, agentID uuid.UUID) (uuid.UUID, objects.IBaseBiker) {
+	for id, bike := range gameState.GetMegaBikes() {
+		for _, agent := range bike.GetAgents() {
+			if agent.GetID() == agentID {
+				return id, agent
+			}
 		}
 	}
-	return nil
+	return uuid.Nil, nil
 }
 
 // Calculate the Euclidean distance between two coordinates
@@ -63,6 +65,7 @@ func energyPreference(agentEnergy, lootResources float64, gameState objects.IGam
 	return altruismFactor * lootResources * math.Pow(1-agentEnergy, 2) // Quadratic function for energy preference as to give a greater effect on urgency to replenish energy when energy gets lower
 }
 
+// Calculate the altruism factor based on the agent's energy level
 func averageEnergyPreference(agentEnergy, lootResources float64, averageEnergyOthers float64) float64 {
 	if agentEnergy < averageEnergyOthers {
 		return 1.0 // Agent has less energy than average of other agents, so it is more urgent to replenish energy
@@ -70,23 +73,22 @@ func averageEnergyPreference(agentEnergy, lootResources float64, averageEnergyOt
 	return 0.2 // Agent has more energy than average of other agents, so it is less urgent to replenish energy
 }
 
-func calculateAverageEnergyOthers(gameState objects.IGameState, agentID uuid.UUID) float64 {
-	// Calculate the average energy of other agents
+// Calculate the average energy of other agents
+func calculateAverageEnergyOthers(gameState objects.IGameState, agentID uuid.UUID, megabike objects.IMegaBike) float64 {
 	totalEnergy := 0.0
-	megabike := gameState.GetMegaBikes()[agentID]
 
 	agents := megabike.GetAgents()
 	totAgents := len(agents) - 1
+
+	if totAgents == 0 {
+		return 0
+	}
 
 	// Calculate the total energy of other agents on the bike
 	for _, agent := range agents {
 		if agent.GetID() != agentID {
 			totalEnergy += agent.GetEnergyLevel()
 		}
-	}
-
-	if totAgents == 0 {
-		return 0
 	}
 
 	return totalEnergy / float64(totAgents)
