@@ -1,41 +1,72 @@
 package reputation
 
-type AgentID int
-type FinalRep float64
+import (
+	// Assuming this package contains the IMegaBike interface
+	"SOMAS2023/internal/common/objects"
+	"math"
 
-// use this to calculate final reputation metric
-type Reputation struct {
-	PointsContribution  float64
-	CooperativeBehavior float64
-	SurvivalScore       float64 //Will be more reliant on you if they're dying
+	"github.com/google/uuid"
+)
+
+// AgentReputation defines the structure for an agent's reputation
+type AgentReputation struct {
+	Contribution  float64
+	SurvivalScore float64
+	//If colours are visible, can be used as another factor (i.e matching colour)
+}
+
+func (agentRep *AgentReputation) normaliseRep() float64 { //private
+	maxContribution, maxSurvival := 100.0, 100.0
+	normContribution := agentRep.Contribution / maxContribution
+	normSurvival := agentRep.SurvivalScore / maxSurvival
+	finalRep := (normContribution + normSurvival) / 2
+	return math.Min(math.Max(finalRep, 0), 1)
 }
 
 type ReputationSystem struct {
-	agents map[AgentID]Reputation
+	agentReputations map[uuid.UUID]float64
+	gameState        objects.IGameState
 }
 
-func NewReputationSystem() *ReputationSystem {
+// returns rep system pointer with empty map (pass as argument to rest of the functions)
+func NewRepSystem(gameState objects.IGameState) *ReputationSystem {
 	return &ReputationSystem{
-		agents: make(map[AgentID]Reputation),
+		agentReputations: make(map[uuid.UUID]float64),
+		gameState:        gameState,
 	}
 }
 
-// UpdateReputation updates the reputation for a given agent
-func (rs *ReputationSystem) UpdateReputation(id AgentID, rep Reputation) {
-	// Here you can add logic to normalize and update reputations
-	rs.agents[id] = rep
+// updates the reputation of an agent
+func (rs *ReputationSystem) UpdateAgentReputation(agentID uuid.UUID, rep AgentReputation) {
+	rs.agentReputations[agentID] = rep.normaliseRep()
 }
 
-// func main() {
-// 	repSystem := NewReputationSystem()
+func (repSystem *ReputationSystem) calculateMegaBikeReputation(mbID uuid.UUID) float64 {
+	megaBikes := repSystem.gameState.GetMegaBikes() // Get all MegaBikes from the game state (game state not complete rn so this won't work)
+	mb, exists := megaBikes[mbID]
+	if !exists {
+		return 0
+	}
 
-// 	agentID := AgentID(1)
-// 	newReputation := Reputation{
-// 		PointsContribution:  10.0,
-// 		CooperativeBehavior: 8.5,
-// 		SurvivalScore:       9.0,
-// 	}
-// 	repSystem.UpdateReputation(agentID, newReputation)
+	agents := mb.GetAgents()
+	if len(agents) == 0 {
+		return 0
+	}
 
-// 	fmt.Printf("Agent %d's Reputation: %+v\n", agentID, repSystem.agents[agentID])
-// }
+	var totalRep float64
+	for _, agent := range agents {
+		totalRep += repSystem.agentReputations[agent.GetID()]
+	}
+	return math.Min(math.Max(totalRep/float64(len(agents)), 0), 1)
+}
+
+// calculates the average reputation of all agents on a MegaBike
+func (repSystem *ReputationSystem) CalculateAllMegaBikeReputations() map[uuid.UUID]float64 {
+	megaBikes := repSystem.gameState.GetMegaBikes() // from IGameState
+	megaBikeReputations := make(map[uuid.UUID]float64)
+
+	for mbID := range megaBikes {
+		megaBikeReputations[mbID] = repSystem.calculateMegaBikeReputation(mbID)
+	}
+	return megaBikeReputations
+}
