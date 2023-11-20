@@ -21,7 +21,7 @@ func ProposeDirection(gameState objects.IGameState, agentID uuid.UUID) map[uuid.
 
 	// Calculate the preference for each lootbox
 	for id, loot := range lootBoxes {
-		distance := calculateDistance(bike.GetPosition(), bike.GetPosition())
+		distance := calculateDistance(bike.GetPosition(), loot.GetPosition())
 		energy := energyPreference(agent.GetEnergyLevel(), loot.GetTotalResources(), gameState, agent.GetID(), bike)
 		colour := colourMatch(agent.GetColour(), loot.GetColour())
 
