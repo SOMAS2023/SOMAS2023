@@ -4,6 +4,8 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 func (s *Server) RunGameLoop() {
@@ -69,19 +71,48 @@ func (s *Server) LootboxCheckAndDistributions() {
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
+				// Compute resource allocation share.
+				accVotes := make(map[uuid.UUID]float64)
 				for _, agent := range agents {
-					// this function allows the agent to decide on its allocation parameters
-					// these are the parameters that we want to be considered while carrying out
-					// the elected protocol for resource allocation
-					agent.SetAllocationParameters()
+					agentVote := agent.GetResourceVote()
 
-					// in the MVP  the allocation parameters are ignored and
-					// the utility share will simply be 1 / the number of agents on the bike
-					utilityShare := 1.0 / float64(totAgents)
-					lootShare := utilityShare * lootbox.GetTotalResources()
-					// Allocate loot based on the calculated utility share
-					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
-					agent.UpdateEnergyLevel(lootShare)
+					// Normalize votes.
+					sum := 0.0
+					for _, vote := range agentVote {
+						sum += vote
+					}
+					if sum != 0 {
+						for agentID, vote := range agentVote {
+							agentVote[agentID] = vote / sum
+						}
+					}
+
+					// Accumulate votes.
+					for agentID, vote := range agentVote {
+						if _, exists := accVotes[agentID]; !exists {
+							accVotes[agentID] = 0
+						}
+						accVotes[agentID] += vote
+					}
+				}
+
+				// Normalize resource allocation share.
+				if totAgents != 0 {
+					for agentID, vote := range accVotes {
+						accVotes[agentID] = vote / float64(totAgents)
+					}
+				}
+
+				// Distribute loot.
+				for _, agent := range agents {
+					lootShare, exists := accVotes[agent.GetID()]
+					if exists {
+						lootShare *= lootbox.GetTotalResources()
+
+						fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
+						agent.UpdateResourceAppropriation(lootShare)
+						agent.UpdateEnergyLevel(lootShare)
+					}
 				}
 			}
 		}

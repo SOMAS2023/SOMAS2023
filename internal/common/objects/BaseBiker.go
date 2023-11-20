@@ -14,10 +14,11 @@ import (
 // These can change based on how we want the allocation to happend, for now they are taken from
 // the lecture slides, but more/less could be taken into account.
 type ResourceAllocationParams struct {
-	resourceNeed          float64 // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
-	resourceDemand        float64 // 0-1, how much energy the agent wants, might differ from resourceNeed
-	resourceProvision     float64 // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
-	resourceAppropriation float64 // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
+	resourceNeed          float64               // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
+	resourceDemand        float64               // 0-1, how much energy the agent wants, might differ from resourceNeed
+	resourceProvision     float64               // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
+	resourceAppropriation float64               // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
+	resourceVote          map[uuid.UUID]float64 // 0-1, the proportion of the total resource that the agent wants to allocate to each other agent
 }
 
 // agent with defualt strategy for MVP:
@@ -34,6 +35,8 @@ type IBaseBiker interface {
 	GetEnergyLevel() float64               // returns the energy level of the agent
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	GetResourceAllocationParams() ResourceAllocationParams
+	GetResourceVote() map[uuid.UUID]float64
+	UpdateResourceAppropriation(resourceAppropriation float64)
 	SetAllocationParameters()
 	GetColour() utils.Colour              // returns the colour of the lootbox that the agent is currently seeking
 	GetLocation() utils.Coordinates       // gets the agent's location
@@ -179,6 +182,14 @@ func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
 
 func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
 	return bb.allocationParams
+}
+
+func (bb *BaseBiker) GetResourceVote() map[uuid.UUID]float64 {
+	return bb.allocationParams.resourceVote
+}
+
+func (bb *BaseBiker) UpdateResourceAppropriation(resourceAppropriation float64) {
+	bb.allocationParams.resourceAppropriation = resourceAppropriation
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
