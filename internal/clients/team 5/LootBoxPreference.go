@@ -67,23 +67,3 @@ func averageEnergyPreference(agentEnergy, lootResources float64, averageEnergyOt
 	}
 	return 0.2
 }
-
-func calculateAverageEnergyOthers(gameState objects.IGameState, agentID uuid.UUID) float64 {
-	totalEnergy := 0.0
-	megabike := gameState.GetMegaBikes()[agentID]
-
-	agents := megabike.GetAgents()
-	totAgents := len(agents) - 1
-
-	for id, agent := range agents {
-		if id != agentID {
-			totalEnergy += agent.GetEnergyLevel()
-		}
-	}
-
-	if totAgents == 0 {
-		return 0
-	}
-
-	return totalEnergy / float64(totAgents)
-}
