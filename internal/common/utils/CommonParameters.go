@@ -20,3 +20,8 @@ const AudiMaxForce float64 = 1.0  // The audi's force is equivalent to that of o
 const DragCoefficient float64 = 1.0 // Drag coefficient can be optimised in experimentation
 
 const MovingDepletion float64 = 1.0 // proportionality of energy loss
+
+/*
+Resources - Points and Energy
+*/
+const PointsFromSameColouredLootBox = 5.0

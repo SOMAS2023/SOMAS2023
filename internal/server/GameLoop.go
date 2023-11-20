@@ -4,6 +4,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -87,7 +88,7 @@ func (s *Server) ProcessJoiningRequests() {
 			responses = append(responses, agent.DecideJoining(pendingAgents))
 		}
 		// 3. accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
-		acceptedRanked := GetAcceptanceRanking(responses)
+		acceptedRanked := voting.GetAcceptanceRanking(responses)
 		totalSeatsFilled := len(s.megaBikes[bike].GetAgents())
 		emptySpaces := 8 - totalSeatsFilled
 		for _, accepted := range acceptedRanked[:emptySpaces] {
@@ -114,6 +115,7 @@ func (s *Server) RunActionProcess() {
 	for _, agent := range s.GetAgentMap() {
 		// agents that have decided to stay on the bike (and that haven't been kicked off it)
 		// will participate in the voting for the directions
+		// ---------------------------VOTING ROUTINE - STEP 1 ---------------------
 		if agent.GetBikeStatus() {
 			s.GetDirectionProposals(agent, proposedDirections)
 		}
@@ -122,7 +124,7 @@ func (s *Server) RunActionProcess() {
 	// pass the pitched directions of a bike to all agents on that bike and get their final vote
 	for bikeID, proposals := range proposedDirections {
 		// ---------------------------VOTING ROUTINE - STEP 2 ---------------------
-		finalVotes := s.GetProposalsRankings(bikeID, proposals)
+		finalVotes := s.GetProposalsDist(bikeID, proposals)
 
 		// ---------------------------VOTING ROUTINE - STEP 3 --------------
 		direction := s.GetWinningDirection(finalVotes)
@@ -135,7 +137,6 @@ func (s *Server) RunActionProcess() {
 			agent.UpdateEnergyLevel(-energyLost)
 		}
 	}
-
 }
 
 func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
@@ -156,14 +157,14 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 	po.SetPhysicalState(finalState)
 }
 
-func (s *Server) GetProposalsRankings(bikeID uuid.UUID, proposals []uuid.UUID) []utils.LootboxVoteMap {
+func (s *Server) GetProposalsDist(bikeID uuid.UUID, proposals []uuid.UUID) []voting.LootboxVoteMap {
 	// ----------------------------- VOTING ROUTINE - STEP 2 -----------------
 	// get second vote given everyone's proposal
 	// the finalVote can either be a ranking of proposed directions or a map from proposal to vote (between 0,1)
 	// we will try implementing both, the infrastructure should be the same
 	agentsOnBike := s.megaBikes[bikeID].GetAgents()
 	// server collates all vote distributions from each agent into a list of final votes
-	finalVotes := make([]utils.LootboxVoteMap, len(agentsOnBike))
+	finalVotes := make([]voting.LootboxVoteMap, len(agentsOnBike))
 
 	for _, agent := range s.megaBikes[bikeID].GetAgents() {
 		finalVotes = append(finalVotes, agent.FinalDirectionVote(proposals))
@@ -171,18 +172,18 @@ func (s *Server) GetProposalsRankings(bikeID uuid.UUID, proposals []uuid.UUID) [
 	return finalVotes
 }
 
-func (s *Server) GetWinningDirection(finalVotes []utils.LootboxVoteMap) uuid.UUID {
+func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UUID {
 	// get overall winner direction using chosen voting strategy
 
 	// this allows to get a slice of the interface from that of the specific type
 	// this way we can substitute agent.FInalDirectionVote with another function that returns
 	// another type of voting type which still implements INormaliseVoteMap
-	IfinalVotes := make([]utils.INormaliseVoteMap, len(finalVotes))
+	IfinalVotes := make([]voting.IVoter, len(finalVotes))
 	for i, v := range finalVotes {
 		IfinalVotes[i] = v
 	}
 
-	return WinnerFromDist(IfinalVotes)
+	return voting.WinnerFromDist(IfinalVotes)
 }
 
 func (s *Server) LootboxCheckAndDistributions() {
@@ -194,24 +195,28 @@ func (s *Server) LootboxCheckAndDistributions() {
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
+				allAllocations := make([]voting.IdVoteMap, totAgents)
 				for _, agent := range agents {
-					// this function allows the agent to decide on its allocation parameters
-					// these are the parameters that we want to be considered while carrying out
-					// the elected protocol for resource allocation
-					agent.DecideAllocationParameters()
+					// the agents return their ideal lootbox split by assigning a number between 0 and 1 to
+					// each biker on their bike (including themselves)
+					allAllocations = append(allAllocations, agent.DecideAllocation())
+				}
 
-					// in the MVP  the allocation parameters are ignored and
-					// the utility share will simply be 1 / the number of agents on the bike
-					utilityShare := 1.0 / float64(totAgents)
-					lootShare := utilityShare * lootbox.GetTotalResources()
+				Iallocations := make([]voting.IVoter, len(allAllocations))
+				for i, v := range allAllocations {
+					Iallocations[i] = v
+				}
+				winningAllocation := voting.CumulativeDist(Iallocations)
 
+				for agentID, allocation := range winningAllocation {
+					lootShare := allocation * lootbox.GetTotalResources()
+					agent := s.GetAgentMap()[agentID]
 					// Allocate loot based on the calculated utility share
 					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 					agent.UpdateEnergyLevel(lootShare)
-
 					// Allocate points if the box is of the right colour
 					if agent.GetColour() == lootbox.GetColour() {
-						agent.UpdatePoints(1)
+						agent.UpdatePoints(utils.PointsFromSameColouredLootBox)
 					}
 				}
 			}
