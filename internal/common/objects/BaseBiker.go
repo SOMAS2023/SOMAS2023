@@ -331,3 +331,11 @@ func (bb *BaseBiker) SetGameState(gameState IGameState) {
 func (bb *BaseBiker) SetAllocationParams(allocationParams ResourceAllocationParams) {
 	bb.allocationParams = allocationParams
 }
+
+func (bb *BaseBiker) GetGameState() IGameState {
+	return bb.gameState
+}
+
+func (bb *BaseBiker) GetMegaBikeId() uuid.UUID {
+	return bb.megaBikeId
+}
