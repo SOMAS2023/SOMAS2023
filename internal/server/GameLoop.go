@@ -4,6 +4,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -72,22 +73,23 @@ func (s *Server) LootboxCheckAndDistributions() {
 				totAgents := len(agents)
 
 				// Compute resource allocation share.
+				validVotes := totAgents
 				accVotes := make(map[uuid.UUID]float64)
 				for _, agent := range agents {
 					agentVote := agent.GetResourceVote()
 
-					// Normalize votes.
+					// Check if vote is valid.
 					sum := 0.0
 					for _, vote := range agentVote {
 						sum += vote
 					}
-					if sum != 0 {
-						for agentID, vote := range agentVote {
-							agentVote[agentID] = vote / sum
-						}
+					if math.Abs(sum-1.0) > 1e-9 {
+						validVotes -= 1
+						fmt.Printf("Agent %s provided an invalid resourceVote\n. It's vote will be discarded.", agent.GetID())
+						continue
 					}
 
-					// Accumulate votes.
+					// Accumulate valid votes.
 					for agentID, vote := range agentVote {
 						if _, exists := accVotes[agentID]; !exists {
 							accVotes[agentID] = 0
@@ -99,7 +101,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 				// Normalize resource allocation share.
 				if totAgents != 0 {
 					for agentID, vote := range accVotes {
-						accVotes[agentID] = vote / float64(totAgents)
+						accVotes[agentID] = vote / float64(validVotes)
 					}
 				}
 
