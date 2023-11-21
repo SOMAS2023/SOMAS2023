@@ -31,12 +31,13 @@ BIKE = {
         "MINVAL" : 60,
         "MAXVAL" : 80,
     },
+    "TRANSPARENCY": 150,
 }
 AWDI = {
-    "COLOUR" : "#B0B0B0",
+    "COLOUR" : "#0F0F0F",
     "LINE_WIDTH": 2,
     "LINE_COLOUR": "#000000",
-    "FONT_SIZE": 20,
+    "FONT_SIZE": 30,
     "SIZE": 100,
 }
 AGENT = {

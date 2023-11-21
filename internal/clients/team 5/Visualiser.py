@@ -84,11 +84,11 @@ class Visualiser:
                     obj.hide()
         self.screenState = newScreen
 
-    def run_loop(self) -> None:
+    def run_loop(self, screen:str="main_menu") -> None:
         """
         Main loop for visualiser.
         """
-        self.switch_screen("game_screen")
+        self.switch_screen(screen)
         while self.running:
             timeDelta = self.clock.tick(FRAMERATE) / 1000.0
             self.handle_events()
@@ -189,8 +189,9 @@ class Visualiser:
         """
         self.json_parser("visualiser/json/test2.json")
         self.gameScreenManager.change_round(0)
+        self.run_loop("game_screen")
 
 if __name__ == "__main__":
     visualiser = Visualiser()
-    visualiser.test()
+    # visualiser.test()
     visualiser.run_loop()
