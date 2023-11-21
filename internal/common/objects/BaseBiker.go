@@ -20,24 +20,32 @@ type ResourceAllocationParams struct {
 	resourceAppropriation float64 // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
 }
 
-// agent with defualt strategy for MVP:
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
-	// Based on this, the server will call either DecideForce or ChangeBike
-	DecideAction() BikerAction // determines what action the agent is going to take this round. Based on this, the server will call either DecideForce or ChangeBike
-	DecideForce()              // defines the vector you pass to the bike: [pedal, brake, turning]
-	GetForces() utils.Forces
-	ChangeBike() uuid.UUID                 // called when biker wants to change bike, it will choose which bike to try and join based on agent-specific strategies
-	SetBike(uuid.UUID)                     // tells the biker which bike it is on
+
+	DecideAction() BikerAction                                     // ** determines what action the agent is going to take this round. (changeBike or Pedal)
+	DecideForce(direction uuid.UUID)                               // ** defines the vector you pass to the bike: [pedal, brake, turning]
+	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool     // ** decide whether to accept or not accept bikers, ranks the ones
+	ChangeBike() uuid.UUID                                         // ** called when biker wants to change bike, it will choose which bike to try and join
+	ProposeDirection() uuid.UUID                                   // ** returns the id of the desired lootbox based on internal strategy
+	FinalDirectionVote(proposals []uuid.UUID) utils.LootboxVoteMap // ** stage 3 of direction voting
+	DecideAllocationParameters()                                   // ** decide the allocation parameters
+
+	GetForces() utils.Forces                               // returns forces for current round
+	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
+	GetLocation() utils.Coordinates                        // gets the agent's location
+	GetBike() uuid.UUID                                    // tells the biker which bike it is on
+	GetEnergyLevel() float64                               // returns the energy level of the agent
+	GetResourceAllocationParams() ResourceAllocationParams // returns set allocation parameters
+	GetBikeStatus() bool                                   // returns whether the biker is on a bike or not
+
+	SetBike(uuid.UUID) // sets the megaBikeID. this is either the id of the bike that the agent is on or the one that it's trying to join
+
 	UpdateColour(totColours utils.Colour)  // called if a box of the desired colour has been looted
 	UpdatePoints(pointGained int)          // called by server
-	GetEnergyLevel() float64               // returns the energy level of the agent
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
-	GetResourceAllocationParams() ResourceAllocationParams
-	SetAllocationParameters()
-	GetColour() utils.Colour              // returns the colour of the lootbox that the agent is currently seeking
-	GetLocation() utils.Coordinates       // gets the agent's location
-	UpdateGameState(gameState IGameState) // sets the gameState field at the beginning of each round
+	UpdateGameState(gameState IGameState)  // sets the gameState field at the beginning of each round
+	ToggleOnBike()                         // called when removing or adding a biker on a bike
 }
 
 type BikerAction int
@@ -81,7 +89,7 @@ func (bb *BaseBiker) GetColour() utils.Colour {
 // for example: it might be decided that the provision must be the average pedalling force provided
 // since the last lootbox, an agent might decide as part of their strategy to demand less than they
 // need when their energy is above a certain treshold etc etc
-func (bb *BaseBiker) SetAllocationParameters() {
+func (bb *BaseBiker) DecideAllocationParameters() {
 	allocParams := ResourceAllocationParams{
 		resourceNeed:          1 - bb.energyLevel,
 		resourceDemand:        1 - bb.energyLevel,
@@ -101,20 +109,20 @@ func (bb *BaseBiker) GetLocation() utils.Coordinates {
 // returns the nearest lootbox with respect to the agent's bike current position
 // in the MVP this is used to determine the pedalling forces as all agent will be
 // aiming to get to the closest lootbox by default
-func (bb *BaseBiker) NearestLoot() utils.Coordinates {
+func (bb *BaseBiker) nearestLoot() uuid.UUID {
 	currLocation := bb.GetLocation()
 	shortestDist := math.MaxFloat64
-	var nearestDest utils.Coordinates
+	var nearestBox uuid.UUID
 	var currDist float64
 	for _, loot := range bb.gameState.GetLootBoxes() {
 		x, y := loot.GetPosition().X, loot.GetPosition().Y
 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
 		if currDist < shortestDist {
-			nearestDest = loot.GetPosition()
+			nearestBox = loot.GetID()
 			shortestDist = currDist
 		}
 	}
-	return nearestDest
+	return nearestBox
 }
 
 // in the MVP the biker's action defaults to pedaling (as it won't be able to change bikes)
@@ -127,13 +135,16 @@ func (bb *BaseBiker) DecideAction() BikerAction {
 // determine the forces (pedalling, breaking and turning)
 // in the MVP the pedalling force will be 1, the breaking 0 and the tunring is determined by the
 // location of the nearest lootbox
-func (bb *BaseBiker) DecideForce() {
+
+// the function is passed in the id of the voted lootbox, for now ignored
+func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 	// NEAREST BOX STRATEGY (MVP)
 	currLocation := bb.GetLocation()
-	nearestLoot := bb.NearestLoot()
-	deltaX := nearestLoot.X - currLocation.X
-	deltaY := nearestLoot.Y - currLocation.Y
+	nearestLoot := bb.nearestLoot()
+	nearestLootPos := bb.gameState.GetLootBoxes()[nearestLoot].GetPosition()
+	deltaX := nearestLootPos.X - currLocation.X
+	deltaY := nearestLootPos.Y - currLocation.Y
 	angle := math.Atan2(deltaX, deltaY)
 	angleInDegrees := angle * math.Pi / 180
 
@@ -153,6 +164,10 @@ func (bb *BaseBiker) ChangeBike() uuid.UUID {
 
 func (bb *BaseBiker) SetBike(bikeId uuid.UUID) {
 	bb.megaBikeId = bikeId
+}
+
+func (bb *BaseBiker) GetBike() uuid.UUID {
+	return bb.megaBikeId
 }
 
 // this is called when a lootbox of the desidered colour has been looted in order to update the sought colour
@@ -179,6 +194,41 @@ func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
 
 func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
 	return bb.allocationParams
+}
+
+// default implementation returns the id of the nearest lootbox
+func (bb *BaseBiker) ProposeDirection() uuid.UUID {
+	return bb.nearestLoot()
+}
+
+func (bb *BaseBiker) ToggleOnBike() {
+	bb.onBike = !bb.onBike
+}
+
+func (bb *BaseBiker) GetBikeStatus() bool {
+	return bb.onBike
+}
+
+// an agent will have to rank the agents that are trying to join and that they will try to
+func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+	decision := make(map[uuid.UUID]bool)
+	for _, agent := range pendingAgents {
+		decision[agent] = true
+	}
+	return decision
+}
+
+// this function will contain the agent's strategy on deciding which direction to go to
+// the default implementation returns an equal distribution over all options
+// this will also be tried as returning a rank of options
+func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) utils.LootboxVoteMap {
+	votes := make(utils.LootboxVoteMap)
+	totOptions := len(proposals)
+	normalDist := 1.0 / float64(totOptions)
+	for _, proposal := range proposals {
+		votes[proposal] = normalDist
+	}
+	return votes
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP

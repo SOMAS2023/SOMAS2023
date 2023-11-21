@@ -1,5 +1,7 @@
 package utils
 
+import "github.com/google/uuid"
+
 type Colour int
 
 const (
@@ -33,3 +35,16 @@ type PhysicalState struct {
 	Velocity     float64
 	Mass         float64
 }
+
+type INormaliseVoteMap interface {
+	IsNormalisedVoteMap()
+}
+
+// lootboxID:distribution
+type LootboxVoteMap map[uuid.UUID]float64
+
+func (LootboxVoteMap) IsNormalisedVoteMap() {}
+
+type IdVoteMap map[uuid.UUID]float64
+
+func (IdVoteMap) isNormalisedVoteMap() {}
