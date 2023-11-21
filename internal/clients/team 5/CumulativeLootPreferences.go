@@ -24,8 +24,6 @@ func CalculateLootBoxPreferences(gameState objects.IGameState, agentID uuid.UUID
         // combine preferences (weights: 0.4 for distance, 0.3 for color, 0.2 for energy, 0.1 for cumulative)
         // ensure that if cant get first preference, get second preference and so on 
          
-        // 
-
         finalPreferences[id] = 0.4*(1/distance) + 0.3*colorPreference + 0.2*energyPreference + 0.1*cumulativePreference
     }
 
