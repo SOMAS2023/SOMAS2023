@@ -150,10 +150,16 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 	angle := math.Atan2(deltaX, deltaY)
 	angleInDegrees := angle * math.Pi / 180
 
+	// Default BaseBiker will always
+	turningDecision := utils.TurningDecision{
+		SteerBike:     true,
+		SteeringForce: angleInDegrees,
+	}
+
 	nearestBoxForces := utils.Forces{
 		Pedal:   utils.BikerMaxForce,
 		Brake:   0.0,
-		Turning: angleInDegrees,
+		Turning: turningDecision,
 	}
 	bb.forces = nearestBoxForces
 }
@@ -209,6 +215,14 @@ func (bb *BaseBiker) ToggleOnBike() {
 
 func (bb *BaseBiker) GetBikeStatus() bool {
 	return bb.onBike
+}
+
+func (bb *BaseBiker) GetGameState() IGameState {
+	return bb.gameState
+}
+
+func (bb *BaseBiker) GetMegaBikeId() uuid.UUID {
+	return bb.megaBikeId
 }
 
 // an agent will have to rank the agents that are trying to join and that they will try to
