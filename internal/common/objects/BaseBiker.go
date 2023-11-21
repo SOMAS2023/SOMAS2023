@@ -2,6 +2,7 @@ package objects
 
 import (
 	utils "SOMAS2023/internal/common/utils"
+	"errors"
 	"math"
 
 	"math/rand"
@@ -35,7 +36,7 @@ type IBaseBiker interface {
 	GetEnergyLevel() float64               // returns the energy level of the agent
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	GetResourceAllocationParams() ResourceAllocationParams
-	GetResourceVote() map[uuid.UUID]float64
+	GetResourceVote() (map[uuid.UUID]float64, error)
 	UpdateResourceAppropriation(resourceAppropriation float64)
 	SetAllocationParameters()
 	GetColour() utils.Colour              // returns the colour of the lootbox that the agent is currently seeking
@@ -184,8 +185,21 @@ func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
 	return bb.allocationParams
 }
 
-func (bb *BaseBiker) GetResourceVote() map[uuid.UUID]float64 {
-	return bb.allocationParams.resourceVote
+func (bb *BaseBiker) GetResourceVote() (map[uuid.UUID]float64, error) {
+	resourceVote := bb.allocationParams.resourceVote
+
+	sum := 0.0
+	invalidVote := false
+	for _, vote := range resourceVote {
+		sum += vote
+		if vote < 0 || vote > 1 {
+			invalidVote = true
+		}
+	}
+	if math.Abs(sum-1.0) > 1e-9 || invalidVote {
+		return resourceVote, errors.New("votes do not add up to one or are not in the range [0,1].")
+	}
+	return resourceVote, nil
 }
 
 func (bb *BaseBiker) UpdateResourceAppropriation(resourceAppropriation float64) {
