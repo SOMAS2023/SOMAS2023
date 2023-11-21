@@ -31,8 +31,8 @@ class Agent(Drawable):
         Draw the agent on the screen.
         """
         zoomedRadius = int(self.radius * zoom)
-        self.trueX = int(self.x * zoom + offsetX)
-        self.trueY = int(self.y * zoom + offsetY)
+        self.trueX = offsetX
+        self.trueY = offsetY
         pygame.draw.circle(screen, AGENT["LINE_COLOUR"], (self.trueX, self.trueY), zoomedRadius+max(AGENT["LINE_WIDTH"]*zoom, 1))
         pygame.draw.circle(screen, self.colour, (self.trueX, self.trueY), zoomedRadius)
         # Draw group ID
@@ -45,3 +45,9 @@ class Agent(Drawable):
         textRect.center = (self.trueX, self.trueY)
         screen.blit(text, textRect)
         self.overlay = self.update_overlay(zoom)
+
+    def change_round(self, json:dict) -> None:
+        """
+        Change the agent's properties based on the round
+        """
+        self.colour = json["colour"]

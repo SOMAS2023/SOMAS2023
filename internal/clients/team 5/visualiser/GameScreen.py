@@ -5,7 +5,7 @@ Logic for the game screen visualiser
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, COORDINATESCALE
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 
@@ -19,8 +19,12 @@ class GameScreen:
         self.mouseX, self.mouseY = 0, 0
         self.oldZoom = 1.0
         self.zoom = 1.0
-        self.bikes = {'0' : Bike(100, 100, 0)}
+        self.bikes = []
+        self.lootboxes = []
+        self.awdi = []
         self.elements = {}
+        self.jsonData = None
+        self.maxRound = 0
 
     def init_ui(self, manager:pygame_gui.UIManager, screen:pygame_gui.core.UIContainer) -> dict:
         """
@@ -89,7 +93,8 @@ class GameScreen:
         screen.fill((255, 255, 255))
         self.draw_grid(screen)
         # Draw agents
-        self.bikes["0"].draw(screen, self.offsetX, self.offsetY, self.zoom)
+        for bike in self.bikes:
+            bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Divider line
         lineWidth = 1
         pygame.draw.line(screen, "#555555", (DIM["GAME_SCREEN_WIDTH"]-lineWidth, 0), (DIM["GAME_SCREEN_WIDTH"]-lineWidth, DIM["SCREEN_HEIGHT"]), lineWidth)
@@ -130,15 +135,25 @@ class GameScreen:
         """
         Change the current round
         """
-        self.round = max(0, newRound)
+        self.round = max(0, min(self.maxRound, newRound))
         self.elements["round_count"].set_text(f"Round: {self.round}")
+        #Reload bikes
+        self.bikes = []
+        data = self.jsonData[f"loop_{self.round}"]["bikes"]
+        for b in data:
+            self.bikes.append(Bike(data[b]["position"]["x"]*COORDINATESCALE, data[b]["position"]["y"]*COORDINATESCALE, data[b]["id"]))
+        # self.bikes = [Bike(100, 400, "bike_1")]
+        # Update the agents
+        for b in self.bikes:
+            b.change_round(self.jsonData[f"loop_{self.round}"]["bikes"])
 
     def propagate_click(self, mousePos:tuple) -> None:
         """
         Propagate the click to all entities
         """
         mouseX, mouseY = mousePos
-        self.bikes["0"].propagate_click(mouseX, mouseY, self.offsetX, self.offsetY, self.zoom)
+        for bike in self.bikes:
+            bike.propagate_click(mouseX, mouseY, self.offsetX, self.offsetY, self.zoom)
 
     def adjust_zoom(self, zoomFactor:float, mousePos:tuple) -> None:
         """
@@ -149,7 +164,7 @@ class GameScreen:
         self.zoom = max(MINZOOM, min(self.zoom * zoomFactor, MAXZOOM))
         # Calculate the new offsets
         self.offsetX = mouseX - (mouseX - self.offsetX) * (self.zoom / self.oldZoom)
-        self.offsetY = mouseY - (mouseY - self.offsetY) * (self.zoom / self.oldZoom)
+        self.offsetY = mouseY  - (mouseY  - self.offsetY) * (self.zoom / self.oldZoom)
 
     def draw_grid(self, surface:pygame.Surface) -> None:
         """
@@ -169,3 +184,10 @@ class GameScreen:
         # Draw horizontal lines
         for y in range(-int(zoomedSpacing) + int(startY), height, int(zoomedSpacing)):
             pygame.draw.line(surface, BGCOLOURS["GRID"], (0, y), (width, y))
+
+    def set_data(self, data:dict) -> None:
+        """
+        Set the data for the game screen
+        """
+        self.jsonData = data
+        self.maxRound = len(data) - 1

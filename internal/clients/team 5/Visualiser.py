@@ -160,6 +160,7 @@ class Visualiser:
                 root.destroy()
                 if filepath != "":
                     self.json_parser(filepath)
+                    self.gameScreenManager.change_round(0)
                     self.switch_screen("game_screen")
 
     def process_game_screen_events(self, event:pygame.event.Event) -> None:
@@ -180,13 +181,14 @@ class Visualiser:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
         self.jsondata = data
+        self.gameScreenManager.set_data(data)
 
     def test(self) -> None:
         """
         Test function
         """
-        self.json_parser("visualiser/json/test.json")
-        self.gameScreenManager.bikes["0"].set_agents(self.jsondata["gameloop"]["bikes"]["bike_1"]["agents"])
+        self.json_parser("visualiser/json/test2.json")
+        self.gameScreenManager.change_round(0)
 
 if __name__ == "__main__":
     visualiser = Visualiser()

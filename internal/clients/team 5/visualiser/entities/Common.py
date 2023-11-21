@@ -3,23 +3,17 @@ Common functions between entities.
 """
 import pygame
 import pygame_gui
+from visualiser.util.Constants import OVERLAY
 class Drawable:
     def __init__(self, x, y) -> None:
         self.x = x
         self.y = y
         self.trueX = x
         self.trueY = y
-        self.properties = {"test" : 41}
+        self.properties = {"test" : 41, "test2" : 42}
         self.clicked = False
         self.id = None
         self.overlay = pygame.Surface((0, 0))
-
-    def update_position(self, x:int, y:int) -> None:
-        """
-        Update the position of the agent.
-        """
-        self.x = x
-        self.y = y
 
     def click(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> bool:
         """
@@ -38,17 +32,42 @@ class Drawable:
         Overlay entity properties when clicked.
         Returns True if the entity was clicked on.
         """
+        zoom = 1.0 # disable zoom
         # Basic setup
-        font = pygame.font.SysFont("Arial", int(20 * zoom))  # Adjust the font size based on zoom
-        padding = 10  # Space between rows
-        overlay = pygame.Surface((200, len(self.properties) * (20 * zoom + padding)))  # Adjust size as needed
-        overlay.fill((255, 255, 255))  # Background color of the overlay, change as needed
+        font = pygame.font.SysFont(OVERLAY["FONT"], int(OVERLAY["FONT_SIZE"] * zoom))
+        lineSpacing = OVERLAY["PADDING"] * zoom  # Apply zoom to line spacing
 
-        # Draw each property
+        # Calculate the total height required for the overlay
+        textHeight = font.size("Test")[1]  # Height of one line of text
+        totalHeight = len(self.properties) * (textHeight + lineSpacing)
+
+        # Create the overlay surface with the calculated height
+        overlay = pygame.Surface((OVERLAY["WIDTH"] * zoom, totalHeight))
+        overlay.fill(OVERLAY["BACKGROUND_COLOUR"])
+        length, height = overlay.get_size()
+
+         # Draw each property on left and right edge
         for i, (attr, value) in enumerate(self.properties.items()):
-            text = font.render(f"{attr}: {value}", True, (0, 0, 0))  # Text color
-            overlay.blit(text, (10, i * (20 * zoom + padding)))
-        return overlay
+            # Draw attribute name (left-aligned)
+            text = font.render(attr, True, OVERLAY["TEXT_COLOUR"])
+            overlay.blit(text, (OVERLAY["PADDING"] * zoom, i * (lineSpacing + textHeight)))
+
+            # Draw attribute value (right-aligned)
+            valueText = font.render(str(value), True, OVERLAY["TEXT_COLOUR"])
+            valueTextX = length - valueText.get_width() - OVERLAY["PADDING"] * zoom
+            overlay.blit(valueText, (valueTextX, i * (lineSpacing + textHeight)))
+
+            # Draw dividing line only if it's not the last item
+            if i < len(self.properties) - 1:
+                lineY = (i + 1) * (lineSpacing + textHeight)
+                pygame.draw.line(overlay, OVERLAY["LINE_COLOUR"], (0, lineY), (length, lineY), OVERLAY["LINE_WIDTH"])
+            border = pygame.Surface((length + 2 * OVERLAY["BORDER_WIDTH"], height + 2 * OVERLAY["BORDER_WIDTH"]))
+        border.fill(OVERLAY["BORDER_COLOUR"])
+        border.blit(overlay, (OVERLAY["BORDER_WIDTH"], OVERLAY["BORDER_WIDTH"]))
+
+        # Make transparent
+        border.set_alpha(OVERLAY["TRANSPARENCY"])
+        return border
 
     def check_collision(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> bool:
         """
@@ -62,3 +81,9 @@ class Drawable:
         """
         if self.clicked:
             screen.blit(self.overlay, (self.trueX, self.trueY))
+
+    def change_round(self, json:dict) -> None:
+        """
+        Change the round of the agent
+        """
+        raise NotImplementedError
