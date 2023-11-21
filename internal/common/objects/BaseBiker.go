@@ -15,10 +15,10 @@ import (
 // These can change based on how we want the allocation to happend, for now they are taken from
 // the lecture slides, but more/less could be taken into account.
 type ResourceAllocationParams struct {
-	resourceNeed          float64 // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
-	resourceDemand        float64 // 0-1, how much energy the agent wants, might differ from resourceNeed
-	resourceProvision     float64 // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
-	resourceAppropriation float64 // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
+	ResourceNeed          float64 `json:"need"`          // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
+	ResourceDemand        float64 `json:"demand"`        // 0-1, how much energy the agent wants, might differ from ResourceNeed
+	ResourceProvision     float64 `json:"provision"`     // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
+	ResourceAppropriation float64 `json:"appropriation"` // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
 }
 
 type IBaseBiker interface {

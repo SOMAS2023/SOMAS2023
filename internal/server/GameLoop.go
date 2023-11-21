@@ -5,9 +5,11 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
+	"os"
 )
 
 func (s *Server) RunGameLoop() {
@@ -229,14 +231,24 @@ func (s *Server) LootboxCheckAndDistributions() {
 
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
+	gameStates := make([]GameStateDump, 0, s.GetIterations())
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
 		fmt.Printf("Main game loop running...\n\n")
 		s.RunGameLoop()
+		gameStates = append(gameStates, s.NewGameStateDump())
 		fmt.Printf("\nMain game loop finished.\n\n")
 		fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
+	}
+	file, err := os.Create("game_dump.json")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	if err := json.NewEncoder(file).Encode(gameStates); err != nil {
+		panic(err)
 	}
 }
