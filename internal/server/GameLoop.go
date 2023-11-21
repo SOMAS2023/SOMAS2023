@@ -92,7 +92,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 				}
 
 				// Normalize resource allocation share.
-				if totAgents != 0 {
+				if valVotes != 0 {
 					for agentId, vote := range accVotes {
 						accVotes[agentId] = vote / float64(valVotes)
 					}
