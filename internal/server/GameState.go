@@ -15,6 +15,10 @@ func (s *Server) GetLootBoxes() map[uuid.UUID]objects.ILootBox {
 	return s.lootBoxes
 }
 
+func (s *Server) GetAudi() objects.IAudi {
+	return s.audi
+}
+
 func (s *Server) SetBikerBike(biker objects.IBaseBiker, bikeId uuid.UUID) {
 	// Remove the agent from the old bike, if it was on one
 	if oldBikeId, ok := s.megaBikeRiders[biker.GetID()]; ok {

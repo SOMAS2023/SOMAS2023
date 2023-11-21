@@ -144,24 +144,52 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 	// NEAREST BOX STRATEGY (MVP)
 	currLocation := bb.GetLocation()
 	nearestLoot := bb.nearestLoot()
-	nearestLootPos := bb.gameState.GetLootBoxes()[nearestLoot].GetPosition()
-	deltaX := nearestLootPos.X - currLocation.X
-	deltaY := nearestLootPos.Y - currLocation.Y
-	angle := math.Atan2(deltaX, deltaY)
-	angleInDegrees := angle * math.Pi / 180
+	currentLootBoxes := bb.gameState.GetLootBoxes()
 
-	// Default BaseBiker will always
-	turningDecision := utils.TurningDecision{
-		SteerBike:     true,
-		SteeringForce: angleInDegrees,
-	}
+	// Check if there are lootboxes available and move towards closest one
+	if len(currentLootBoxes) > 0 {
+		targetPos := currentLootBoxes[nearestLoot].GetPosition()
 
-	nearestBoxForces := utils.Forces{
-		Pedal:   utils.BikerMaxForce,
-		Brake:   0.0,
-		Turning: turningDecision,
+		deltaX := targetPos.X - currLocation.X
+		deltaY := targetPos.Y - currLocation.Y
+		angle := math.Atan2(deltaX, deltaY)
+		angleInDegrees := angle * math.Pi / 180
+
+		// Default BaseBiker will always
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: angleInDegrees,
+		}
+
+		nearestBoxForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		bb.forces = nearestBoxForces
+	} else { // otherwise move away from audi
+		audiPos := bb.GetGameState().GetAudi().GetPosition()
+
+		deltaX := audiPos.X - currLocation.X
+		deltaY := audiPos.Y - currLocation.Y
+
+		// Steer in opposite direction to audi
+		angle := math.Atan2(-deltaX, -deltaY)
+		angleInDegrees := angle * math.Pi / 180
+
+		// Default BaseBiker will always
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: angleInDegrees,
+		}
+
+		escapeAudiForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		bb.forces = escapeAudiForces
 	}
-	bb.forces = nearestBoxForces
 }
 
 // decide which bike to go to
