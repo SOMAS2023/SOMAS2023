@@ -189,15 +189,14 @@ func (bb *BaseBiker) GetResourceVote() (map[uuid.UUID]float64, error) {
 	resourceVote := bb.allocationParams.resourceVote
 
 	sum := 0.0
-	invalidVote := false
 	for _, vote := range resourceVote {
 		sum += vote
 		if vote < 0 || vote > 1 {
-			invalidVote = true
+			return resourceVote, errors.New("resource votes are not in the range [0,1].")
 		}
 	}
-	if math.Abs(sum-1.0) > 1e-9 || invalidVote {
-		return resourceVote, errors.New("votes do not add up to one or are not in the range [0,1].")
+	if math.Abs(sum-1.0) > 1e-9 {
+		return resourceVote, errors.New("resource votes do not add up to 1.")
 	}
 	return resourceVote, nil
 }
