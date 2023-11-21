@@ -19,10 +19,12 @@ func ProposeDirection(gameState objects.IGameState, agentID uuid.UUID) map[uuid.
 	// Weights for distance, energy and colour
 	var wd, we, wc = 0.3, 0.3, 0.4
 
+	averageEnergyOthers := calculateAverageEnergyOthers(gameState, agentID, bike) // Average energy of other agents on the bike
+
 	// Calculate the preference for each lootbox
 	for id, loot := range lootBoxes {
 		distance := calculateDistance(bike.GetPosition(), loot.GetPosition())
-		energy := energyPreference(agent.GetEnergyLevel(), loot.GetTotalResources(), gameState, agent.GetID(), bike)
+		energy := energyPreference(agent.GetEnergyLevel(), loot.GetTotalResources(), averageEnergyOthers)
 		colour := colourMatch(agent.GetColour(), loot.GetColour())
 
 		preference := wd/(1+distance) + we*energy + wc*colour
@@ -58,8 +60,7 @@ func colourMatch(agentColour, lootColour utils.Colour) float64 {
 }
 
 // Calculate the preference for a lootbox based on agent energy
-func energyPreference(agentEnergy, lootResources float64, gameState objects.IGameState, agentID uuid.UUID) float64 {
-	averageEnergyOthers := calculateAverageEnergyOthers(gameState, agentID)                    // Average energy of other agents
+func energyPreference(agentEnergy, lootResources float64, averageEnergyOthers float64) float64 {
 	altruismFactor := averageEnergyPreference(agentEnergy, lootResources, averageEnergyOthers) // Altruism factor that takes into account other agents' energy
 
 	return altruismFactor * lootResources * math.Pow(1-agentEnergy, 2) // Quadratic function for energy preference as to give a greater effect on urgency to replenish energy when energy gets lower
@@ -70,7 +71,7 @@ func averageEnergyPreference(agentEnergy, lootResources float64, averageEnergyOt
 	if agentEnergy < averageEnergyOthers {
 		return 1.0 // Agent has less energy than average of other agents, so it is more urgent to replenish energy
 	}
-	return 0.2 // Agent has more energy than average of other agents, so it is less urgent to replenish energy
+	return 0.5 // Agent has more energy than average of other agents, so it is less urgent to replenish energy
 }
 
 // Calculate the average energy of other agents
