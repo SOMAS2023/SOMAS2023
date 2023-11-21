@@ -2,6 +2,7 @@ package objects
 
 import (
 	utils "SOMAS2023/internal/common/utils"
+	voting "SOMAS2023/internal/common/voting"
 	"math"
 
 	"math/rand"
@@ -23,13 +24,13 @@ type ResourceAllocationParams struct {
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 
-	DecideAction() BikerAction                                     // ** determines what action the agent is going to take this round. (changeBike or Pedal)
-	DecideForce(direction uuid.UUID)                               // ** defines the vector you pass to the bike: [pedal, brake, turning]
-	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool     // ** decide whether to accept or not accept bikers, ranks the ones
-	ChangeBike() uuid.UUID                                         // ** called when biker wants to change bike, it will choose which bike to try and join
-	ProposeDirection() uuid.UUID                                   // ** returns the id of the desired lootbox based on internal strategy
-	FinalDirectionVote(proposals []uuid.UUID) utils.LootboxVoteMap // ** stage 3 of direction voting
-	DecideAllocationParameters()                                   // ** decide the allocation parameters
+	DecideAction() BikerAction                                      // ** determines what action the agent is going to take this round. (changeBike or Pedal)
+	DecideForce(direction uuid.UUID)                                // ** defines the vector you pass to the bike: [pedal, brake, turning]
+	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      // ** decide whether to accept or not accept bikers, ranks the ones
+	ChangeBike() uuid.UUID                                          // ** called when biker wants to change bike, it will choose which bike to try and join
+	ProposeDirection() uuid.UUID                                    // ** returns the id of the desired lootbox based on internal strategy
+	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
+	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
 
 	GetForces() utils.Forces                               // returns forces for current round
 	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
@@ -84,19 +85,20 @@ func (bb *BaseBiker) GetColour() utils.Colour {
 	return bb.soughtColour
 }
 
-// this function will be called everytime a lootbox has to be distributed
-// these will be defined either based on team strategy and/or according to centralised rules
-// for example: it might be decided that the provision must be the average pedalling force provided
-// since the last lootbox, an agent might decide as part of their strategy to demand less than they
-// need when their energy is above a certain treshold etc etc
-func (bb *BaseBiker) DecideAllocationParameters() {
-	allocParams := ResourceAllocationParams{
-		resourceNeed:          1 - bb.energyLevel,
-		resourceDemand:        1 - bb.energyLevel,
-		resourceProvision:     0,
-		resourceAppropriation: 1,
+// through this function the agent submits their desired allocation of resources
+// in the MVP each agent returns 1 whcih will cause the distribution to be equal across all of them
+func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
+	bikeID := bb.GetBike()
+	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	distribution := make(voting.IdVoteMap)
+	for _, agent := range fellowBikers {
+		if agent.GetID() == bb.GetID() {
+			distribution[agent.GetID()] = 1.0
+		} else {
+			distribution[agent.GetID()] = 0.0
+		}
 	}
-	bb.allocationParams = allocParams
+	return distribution
 }
 
 // the biker itself doesn't technically have a location (as it's on the map only when it's on a bike)
@@ -142,18 +144,52 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 	// NEAREST BOX STRATEGY (MVP)
 	currLocation := bb.GetLocation()
 	nearestLoot := bb.nearestLoot()
-	nearestLootPos := bb.gameState.GetLootBoxes()[nearestLoot].GetPosition()
-	deltaX := nearestLootPos.X - currLocation.X
-	deltaY := nearestLootPos.Y - currLocation.Y
-	angle := math.Atan2(deltaX, deltaY)
-	angleInDegrees := angle * math.Pi / 180
+	currentLootBoxes := bb.gameState.GetLootBoxes()
 
-	nearestBoxForces := utils.Forces{
-		Pedal:   utils.BikerMaxForce,
-		Brake:   0.0,
-		Turning: angleInDegrees,
+	// Check if there are lootboxes available and move towards closest one
+	if len(currentLootBoxes) > 0 {
+		targetPos := currentLootBoxes[nearestLoot].GetPosition()
+
+		deltaX := targetPos.X - currLocation.X
+		deltaY := targetPos.Y - currLocation.Y
+		angle := math.Atan2(deltaX, deltaY)
+		angleInDegrees := angle * math.Pi / 180
+
+		// Default BaseBiker will always
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: angleInDegrees,
+		}
+
+		nearestBoxForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		bb.forces = nearestBoxForces
+	} else { // otherwise move away from audi
+		audiPos := bb.GetGameState().GetAudi().GetPosition()
+
+		deltaX := audiPos.X - currLocation.X
+		deltaY := audiPos.Y - currLocation.Y
+
+		// Steer in opposite direction to audi
+		angle := math.Atan2(-deltaX, -deltaY)
+		angleInDegrees := angle * math.Pi / 180
+
+		// Default BaseBiker will always
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: angleInDegrees,
+		}
+
+		escapeAudiForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		bb.forces = escapeAudiForces
 	}
-	bb.forces = nearestBoxForces
 }
 
 // decide which bike to go to
@@ -209,6 +245,14 @@ func (bb *BaseBiker) GetBikeStatus() bool {
 	return bb.onBike
 }
 
+func (bb *BaseBiker) GetGameState() IGameState {
+	return bb.gameState
+}
+
+func (bb *BaseBiker) GetMegaBikeId() uuid.UUID {
+	return bb.megaBikeId
+}
+
 // an agent will have to rank the agents that are trying to join and that they will try to
 func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	decision := make(map[uuid.UUID]bool)
@@ -221,8 +265,8 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
-func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) utils.LootboxVoteMap {
-	votes := make(utils.LootboxVoteMap)
+func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
+	votes := make(voting.LootboxVoteMap)
 	totOptions := len(proposals)
 	normalDist := 1.0 / float64(totOptions)
 	for _, proposal := range proposals {
