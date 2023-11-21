@@ -28,7 +28,7 @@ type AgentTwo struct {
 	Trust          map[uuid.UUID]float64 // Trust of other agents
 	Institution    map[uuid.UUID]float64 // Institution of other agents
 	Network        map[uuid.UUID]float64 // Network of other agents
-	GameIterations int32                 // Keep track of
+	GameIterations int32                 // Keep track of game iterations
 }
 
 const (
