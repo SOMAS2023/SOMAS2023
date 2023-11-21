@@ -206,7 +206,8 @@ func (s *Server) LootboxCheckAndDistributions() {
 				for i, v := range allAllocations {
 					Iallocations[i] = v
 				}
-				winningAllocation := voting.CumulativeDist(Iallocations)
+				// TODO handle error
+				winningAllocation, _ := voting.CumulativeDist(Iallocations)
 
 				for agentID, allocation := range winningAllocation {
 					lootShare := allocation * lootbox.GetTotalResources()

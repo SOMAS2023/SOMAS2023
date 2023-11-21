@@ -85,7 +85,7 @@ func (mb *MegaBike) UpdateOrientation() {
 	for _, agent := range mb.agents {
 		// if agents do not want to steer, they must set their turning force to AbstainingForce (for now)
 		turning := agent.GetForces().Turning
-		if turning == utils.AbstainingForce {
+		if turning != utils.AbstainingForce {
 			numOfSteeringAgents += 1.0
 			totalTurning += float64(agent.GetForces().Turning)
 		}
