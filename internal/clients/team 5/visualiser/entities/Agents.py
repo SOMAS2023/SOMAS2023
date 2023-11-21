@@ -37,7 +37,7 @@ class Agent(Drawable):
         pygame.draw.circle(screen, self.colour, (self.trueX, self.trueY), zoomedRadius)
         # Draw group ID
         font = pygame.font.SysFont("Arial", int(AGENT["FONT_SIZE"]*zoom))
-        if self.colour == "White":
+        if self.colour in ("White", "Yellow"):
             text = font.render(str(self.groupID), True, (0, 0, 0))
         else:
             text = font.render(str(self.groupID), True, (255, 255, 255))
@@ -51,3 +51,7 @@ class Agent(Drawable):
         Change the agent's properties based on the round
         """
         self.colour = json["colour"]
+        self.properties = {
+            "Points:" : json["points"],
+            "Energy" : json["energy"],
+        }

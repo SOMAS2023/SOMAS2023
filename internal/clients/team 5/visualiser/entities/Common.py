@@ -61,7 +61,7 @@ class Drawable:
             if i < len(self.properties) - 1:
                 lineY = (i + 1) * (lineSpacing + textHeight)
                 pygame.draw.line(overlay, OVERLAY["LINE_COLOUR"], (0, lineY), (length, lineY), OVERLAY["LINE_WIDTH"])
-            border = pygame.Surface((length + 2 * OVERLAY["BORDER_WIDTH"], height + 2 * OVERLAY["BORDER_WIDTH"]))
+        border = pygame.Surface((length + 2 * OVERLAY["BORDER_WIDTH"], height + 2 * OVERLAY["BORDER_WIDTH"]))
         border.fill(OVERLAY["BORDER_COLOUR"])
         border.blit(overlay, (OVERLAY["BORDER_WIDTH"], OVERLAY["BORDER_WIDTH"]))
 

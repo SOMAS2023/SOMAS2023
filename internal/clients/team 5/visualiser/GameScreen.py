@@ -2,12 +2,16 @@
 Logic for the game screen visualiser
 """
 # pylint: disable=no-member, import-error, no-name-in-module
+import random
+import colorsys
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, COORDINATESCALE
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, COORDINATESCALE, BIKE
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
+from visualiser.entities.Lootboxes import Lootbox
+from visualiser.entities.Awdi import Awdi
 
 class GameScreen:
     def __init__(self) -> None:
@@ -18,13 +22,14 @@ class GameScreen:
         self.dragging = False
         self.mouseX, self.mouseY = 0, 0
         self.oldZoom = 1.0
-        self.zoom = 1.0
+        self.zoom = ZOOM
         self.bikes = []
         self.lootboxes = []
-        self.awdi = []
+        self.awdi = None
         self.elements = {}
         self.jsonData = None
         self.maxRound = 0
+        self.bikeColourMap = {}
 
     def init_ui(self, manager:pygame_gui.UIManager, screen:pygame_gui.core.UIContainer) -> dict:
         """
@@ -92,9 +97,14 @@ class GameScreen:
         """
         screen.fill((255, 255, 255))
         self.draw_grid(screen)
+        # Draw lootboxes
+        for lootbox in self.lootboxes:
+            lootbox.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Draw agents
         for bike in self.bikes:
             bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
+        # Draw awdi
+        self.awdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Divider line
         lineWidth = 1
         pygame.draw.line(screen, "#555555", (DIM["GAME_SCREEN_WIDTH"]-lineWidth, 0), (DIM["GAME_SCREEN_WIDTH"]-lineWidth, DIM["SCREEN_HEIGHT"]), lineWidth)
@@ -141,11 +151,34 @@ class GameScreen:
         self.bikes = []
         data = self.jsonData[f"loop_{self.round}"]["bikes"]
         for b in data:
-            self.bikes.append(Bike(data[b]["position"]["x"]*COORDINATESCALE, data[b]["position"]["y"]*COORDINATESCALE, data[b]["id"]))
-        # self.bikes = [Bike(100, 400, "bike_1")]
-        # Update the agents
+            if data[b]["id"] not in self.bikeColourMap:
+                self.bikeColourMap[data[b]["id"]] = self.allocate_colour()
+            self.bikes.append(Bike(data[b]["position"]["x"]*COORDINATESCALE, data[b]["position"]["y"]*COORDINATESCALE, data[b]["id"], self.bikeColourMap[data[b]["id"]]))
+        # Update the agents and bikes
         for b in self.bikes:
             b.change_round(self.jsonData[f"loop_{self.round}"]["bikes"])
+        # Reload lootboxes
+        self.lootboxes = []
+        lootboxes = self.jsonData[f"loop_{self.round}"]["lootboxes"]
+        for l in lootboxes:
+            self.lootboxes.append(Lootbox(lootboxes[l]["position"]["x"]*COORDINATESCALE, lootboxes[l]["position"]["y"]*COORDINATESCALE, l))
+        # Update the lootboxes
+        for l in self.lootboxes:
+            l.change_round(self.jsonData[f"loop_{self.round}"]["lootboxes"])
+        self.awdi = Awdi(self.jsonData[f"loop_{self.round}"]["awdi"]["position"]["x"]*COORDINATESCALE, \
+                         self.jsonData[f"loop_{self.round}"]["awdi"]["position"]["y"]*COORDINATESCALE, self.jsonData[f"loop_{self.round}"]["awdi"]["id"])
+        self.awdi.change_round(self.jsonData[f"loop_{self.round}"]["awdi"])
+
+    def allocate_colour(self) -> str:
+        """
+        Allocate a colour to a bike
+        """
+        hue = random.randint(BIKE["COLOURS"]["MINHUE"], BIKE["COLOURS"]["MAXHUE"]) / 360
+        saturation = random.randint(BIKE["COLOURS"]["MINSAT"], BIKE["COLOURS"]["MAXSAT"]) / 100
+        value = random.randint(BIKE["COLOURS"]["MINVAL"], BIKE["COLOURS"]["MAXVAL"]) / 100
+        colour = colorsys.hsv_to_rgb(hue, saturation, value)
+        colour = (colour[0] * 255, colour[1] * 255, colour[2] * 255)
+        return colour
 
     def propagate_click(self, mousePos:tuple) -> None:
         """
@@ -154,6 +187,9 @@ class GameScreen:
         mouseX, mouseY = mousePos
         for bike in self.bikes:
             bike.propagate_click(mouseX, mouseY, self.offsetX, self.offsetY, self.zoom)
+        for lootbox in self.lootboxes:
+            lootbox.propagate_click(mouseX, mouseY, self.offsetX, self.offsetY, self.zoom)
+        self.awdi.propagate_click(mouseX, mouseY, self.offsetX, self.offsetY, self.zoom)
 
     def adjust_zoom(self, zoomFactor:float, mousePos:tuple) -> None:
         """

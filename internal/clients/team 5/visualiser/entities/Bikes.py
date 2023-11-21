@@ -3,25 +3,19 @@ Logic for handling bikes in the visualiser
 """
 # pylint: disable=import-error, no-name-in-module
 import math
-import random
-import colorsys
 import pygame
 import pygame_gui
-from visualiser.util.Constants import AGENT, BIKE
+from visualiser.util.Constants import AGENT
 from visualiser.entities.Agents import Agent
 from visualiser.entities.Common import Drawable
 
 class Bike(Drawable):
-    def __init__(self, x:int, y:int, bikeID) -> None:
+    def __init__(self, x:int, y:int, bikeID, colour:str) -> None:
         super().__init__(x, y)
         self.id = bikeID
         self.agentList = dict()
         self.squareSide = 0
-        hue = random.randint(BIKE["COLOURS"]["MINHUE"], BIKE["COLOURS"]["MAXHUE"]) / 360
-        saturation = random.randint(BIKE["COLOURS"]["MINSAT"], BIKE["COLOURS"]["MAXSAT"]) / 100
-        value = random.randint(BIKE["COLOURS"]["MINVAL"], BIKE["COLOURS"]["MAXVAL"]) / 100
-        self.colour = colorsys.hsv_to_rgb(hue, saturation, value)
-        self.colour = (self.colour[0] * 255, self.colour[1] * 255, self.colour[2] * 255)
+        self.colour = colour
 
     def draw(self, screen:pygame_gui.core.UIContainer, offsetX:int, offsetY:int, zoom:float) -> None:
         """
@@ -85,3 +79,6 @@ class Bike(Drawable):
         self.set_agents(json[self.id]["agents"])
         for agentid, agent in self.agentList.items():
             agent.change_round(json[self.id]["agents"][agentid])
+        self.properties = {
+            "Position" : f"{json[self.id]['position']['x']}, {json[self.id]['position']['y']}",
+        }

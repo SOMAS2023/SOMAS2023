@@ -4,13 +4,13 @@ Constants used for the visualiser.
 # Screen constants
 WINDOW_TITLE = "SOMAS Visualiser"
 FRAMERATE = 60
-MINZOOM, MAXZOOM = 0.3, 2.0
-COORDINATESCALE = 2.5
+MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
+COORDINATESCALE = 1.5
 OVERLAY = {
     "FONT" : "Arial",
     "WIDTH": 150,
-    "FONT_SIZE": 25,
-    "PADDING": 3,
+    "FONT_SIZE": 15,
+    "PADDING": 2,
     "LINE_SPACING": 2,
     "BACKGROUND_COLOUR": "#699ff5",
     "TEXT_COLOUR": "#FFFFFF",
@@ -21,7 +21,6 @@ OVERLAY = {
     "TRANSPARENCY": 240,
 }
 BIKE = {
-    "SIZE": 20,
     "LINE_WIDTH": 1,
     "LINE_COLOUR": "#000000",
     "COLOURS": {
@@ -33,12 +32,27 @@ BIKE = {
         "MAXVAL" : 80,
     },
 }
-AGENT = {
-    "SIZE": 20,
+AWDI = {
+    "COLOUR" : "#B0B0B0",
     "LINE_WIDTH": 2,
     "LINE_COLOUR": "#000000",
-    "FONT_SIZE": 30,
-    "PADDING": 5,
+    "FONT_SIZE": 20,
+    "SIZE": 100,
+}
+AGENT = {
+    "SIZE": 10,
+    "LINE_WIDTH": 2,
+    "LINE_COLOUR": "#000000",
+    "FONT_SIZE": 20,
+    "PADDING": 2,
+}
+LOOTBOX = {
+    "DEFAULT_COLOUR" : "#000000",
+    "HEIGHT" : 30,
+    "WIDTH": 120,
+    "LINE_WIDTH": 2,
+    "LINE_COLOUR": "#000000",
+    "FONT_SIZE": 20,
 }
 DIM = {
     "SCREEN_WIDTH": 1280,
