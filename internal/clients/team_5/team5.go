@@ -33,6 +33,7 @@ func (t5 *team5Agent) GetBike() uuid.UUID {
 	return t5.BaseBiker.GetBike()
 }
 
-func (b *team5Agent) DecideAllocation() voting.IdVoteMap {
-	return calculateResourceAllocation(b.GetGameState(), b)
+func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
+	fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
+	return calculateResourceAllocation(t5.GetGameState(), t5)
 }
