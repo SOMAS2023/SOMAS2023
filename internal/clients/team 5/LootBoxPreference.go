@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func ProposeDirection(gameState objects.IGameState, self objects.IBaseBiker) map[uuid.UUID]float64 {
+func ProposeDirection(gameState objects.IGameState, self objects.IBaseBiker) uuid.UUID {
 	preferenceMap := make(map[uuid.UUID]float64)
 
 	// Get the megabike, agent and lootboxes
@@ -19,19 +19,36 @@ func ProposeDirection(gameState objects.IGameState, self objects.IBaseBiker) map
 	// Weights for distance, energy and colour
 	var wd, we, wc = 0.3, 0.3, 0.4
 
-	averageEnergyOthers := calculateAverageEnergyOthers(gameState, self.GetID(), bike) // Average energy of other agents on the bike
+	averageEnergyOthers := calculateAverageEnergyOthers(gameState, self.GetID(), bike)   // Average energy of other agents on the bike
+	urgencyFactor := averageEnergyPreference(self.GetEnergyLevel(), averageEnergyOthers) // Urgency factor based on agent's energy level compared to his bike mates
 
 	// Calculate the preference for each lootbox
 	for id, loot := range lootBoxes {
 		distance := calculateDistance(bike.GetPosition(), loot.GetPosition())
-		energy := energyPreference(self.GetEnergyLevel(), loot.GetTotalResources(), averageEnergyOthers)
+		energy := energyPreference(self.GetEnergyLevel(), loot.GetTotalResources())
 		colour := colourMatch(self.GetColour(), loot.GetColour())
 
-		preference := wd/(1+distance) + we*energy + wc*colour
+		weightedDistancePreference := urgencyFactor * wd / (1 + distance)
+		weightedEnergyPreference := we * energy
+		weightedColourPreference := wc * colour
+
+		preference := weightedDistancePreference + weightedEnergyPreference + weightedColourPreference
 		preferenceMap[id] = preference
 	}
 
-	return preferenceMap
+	// Find the lootbox with the highest preference
+	var max = 0.0
+	var prefLootId uuid.UUID
+
+	for lootId, preference := range preferenceMap {
+		if preference > max {
+			prefLootId = lootId
+			max = preference
+		}
+	}
+
+	// Return the lootbox with the highest preference
+	return prefLootId
 }
 
 // Find the agent with the given ID and return the bike ID and agent
@@ -60,18 +77,16 @@ func colourMatch(agentColour, lootColour utils.Colour) float64 {
 }
 
 // Calculate the preference for a lootbox based on agent energy
-func energyPreference(agentEnergy, lootResources float64, averageEnergyOthers float64) float64 {
-	altruismFactor := averageEnergyPreference(agentEnergy, lootResources, averageEnergyOthers) // Altruism factor that takes into account other agents' energy
-
-	return altruismFactor * lootResources * math.Pow(1-agentEnergy, 2) // Quadratic function for energy preference as to give a greater effect on urgency to replenish energy when energy gets lower
+func energyPreference(agentEnergy, lootResources float64) float64 {
+	return lootResources * math.Pow(1/agentEnergy, 2) // Quadratic function for energy preference as to give a greater effect on urgency to replenish energy when energy gets lower
 }
 
 // Calculate the altruism factor based on the agent's energy level
-func averageEnergyPreference(agentEnergy, lootResources float64, averageEnergyOthers float64) float64 {
+func averageEnergyPreference(agentEnergy, averageEnergyOthers float64) float64 {
 	if agentEnergy < averageEnergyOthers {
-		return 1.0 // Agent has less energy than average of other agents, so it is more urgent to replenish energy
+		return 1.5 // Agent has less energy than average of other agents, so it is more urgent to replenish energy
 	}
-	return 0.5 // Agent has more energy than average of other agents, so it is less urgent to replenish energy
+	return 1.0 // Agent has more energy than average of other agents, so it is less urgent to replenish energy
 }
 
 // Calculate the average energy of other agents
