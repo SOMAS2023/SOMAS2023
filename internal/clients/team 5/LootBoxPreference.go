@@ -8,24 +8,24 @@ import (
 	"github.com/google/uuid"
 )
 
-func ProposeDirection(gameState objects.IGameState, agentID uuid.UUID) map[uuid.UUID]float64 {
+func ProposeDirection(gameState objects.IGameState, self objects.IBaseBiker) map[uuid.UUID]float64 {
 	preferenceMap := make(map[uuid.UUID]float64)
 
 	// Get the megabike, agent and lootboxes
-	bikeId, agent := findAgentandBike(gameState, agentID)
+	bikeId := findAgentandBike(gameState, self.GetID())
 	bike := gameState.GetMegaBikes()[bikeId]
 	lootBoxes := gameState.GetLootBoxes()
 
 	// Weights for distance, energy and colour
 	var wd, we, wc = 0.3, 0.3, 0.4
 
-	averageEnergyOthers := calculateAverageEnergyOthers(gameState, agentID, bike) // Average energy of other agents on the bike
+	averageEnergyOthers := calculateAverageEnergyOthers(gameState, self.GetID(), bike) // Average energy of other agents on the bike
 
 	// Calculate the preference for each lootbox
 	for id, loot := range lootBoxes {
 		distance := calculateDistance(bike.GetPosition(), loot.GetPosition())
-		energy := energyPreference(agent.GetEnergyLevel(), loot.GetTotalResources(), averageEnergyOthers)
-		colour := colourMatch(agent.GetColour(), loot.GetColour())
+		energy := energyPreference(self.GetEnergyLevel(), loot.GetTotalResources(), averageEnergyOthers)
+		colour := colourMatch(self.GetColour(), loot.GetColour())
 
 		preference := wd/(1+distance) + we*energy + wc*colour
 		preferenceMap[id] = preference
@@ -35,15 +35,15 @@ func ProposeDirection(gameState objects.IGameState, agentID uuid.UUID) map[uuid.
 }
 
 // Find the agent with the given ID and return the bike ID and agent
-func findAgentandBike(gameState objects.IGameState, agentID uuid.UUID) (uuid.UUID, objects.IBaseBiker) {
+func findAgentandBike(gameState objects.IGameState, agentID uuid.UUID) uuid.UUID {
 	for id, bike := range gameState.GetMegaBikes() {
 		for _, agent := range bike.GetAgents() {
 			if agent.GetID() == agentID {
-				return id, agent
+				return id
 			}
 		}
 	}
-	return uuid.Nil, nil
+	return uuid.Nil
 }
 
 // Calculate the Euclidean distance between two coordinates
