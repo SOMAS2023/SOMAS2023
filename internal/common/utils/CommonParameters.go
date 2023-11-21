@@ -6,6 +6,7 @@ Environment Parameters
 const GridHeight float64 = 500.0
 const GridWidth float64 = 500.0
 const CollisionThreshold float64 = 7.0
+const Epsilon float64 = 0.01 // tolerance for FP rounding and checking if == 1.0
 
 /*
 Physics Parameters

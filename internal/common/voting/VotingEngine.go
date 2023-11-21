@@ -1,8 +1,9 @@
 package voting
 
 import (
+	"SOMAS2023/internal/common/utils"
 	"errors"
-	"math/rand"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -53,7 +54,7 @@ func CumulativeDist(voters []IVoter) (map[uuid.UUID]float64, error) {
 
 	aggregateVotes := make(map[uuid.UUID]float64)
 	for _, IVoter := range voters {
-		if SumOfValues(IVoter) != 1.0 {
+		if math.Abs(SumOfValues(IVoter)-1.0) > utils.Epsilon {
 			return nil, errors.New("distribution doesn't sum to 1")
 		}
 		votes := IVoter.GetVotes()
@@ -72,11 +73,10 @@ func WinnerFromDist(voters []IVoter) uuid.UUID {
 	// TODO handle the error
 	aggregateVotes, _ := CumulativeDist(voters)
 
-	var winner uuid.UUID
+	var randomWinner, winner uuid.UUID
 	maxVote := 0.0
-	ids := make([]uuid.UUID, len(voters))
 	for id, vote := range aggregateVotes {
-		ids = append(ids, id)
+		randomWinner = id
 		if vote > maxVote {
 			maxVote = vote
 			winner = id
@@ -84,9 +84,7 @@ func WinnerFromDist(voters []IVoter) uuid.UUID {
 	}
 
 	if winner == uuid.Nil {
-		// return random id
-		idx := rand.Intn(len(ids))
-		winner = ids[idx]
+		winner = randomWinner
 	}
 
 	return winner
