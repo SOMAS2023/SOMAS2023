@@ -23,6 +23,8 @@ func (s *Server) RunGameLoop() {
 
 	// Move the mega bikes
 	for _, bike := range s.GetMegaBikes() {
+		// update mass dependent on number of agents on bike
+		bike.UpdateMass()
 		s.MovePhysicsObject(bike)
 	}
 

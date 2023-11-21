@@ -91,8 +91,11 @@ func (mb *MegaBike) UpdateOrientation() {
 			totalTurning += float64(turningDecision.SteeringForce)
 		}
 	}
-	averageTurning := totalTurning / float64(numOfSteeringAgents)
-	mb.orientation += (averageTurning)
+	// Do not update orientation if no biker want to steer
+	if numOfSteeringAgents > 0 {
+		averageTurning := totalTurning / float64(numOfSteeringAgents)
+		mb.orientation += (averageTurning)
+	}
 	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
 	if mb.orientation > 1.0 {
 		mb.orientation -= 2
