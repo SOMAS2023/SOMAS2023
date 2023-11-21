@@ -1,4 +1,4 @@
-# Implementation Details
+# Rules and Implementation Details
 
 ## Agent Goal / Winning Condition
 The winning agent must be alive and have the highest points (obtained via lootboxes) at the end of the game.
@@ -16,7 +16,7 @@ The winning agent must be alive and have the highest points (obtained via lootbo
    - The current value of orientation for MegaBike is referred to as the offset.
 
 4. **Turning Angle Calculation:**
-   - The Turning Angle depends only on the Turning force. To calculate it, sum up the turning force from different agents (optionally taking the average turning force) and map it to a range of -180 to 180 degrees.
+   - The turning angle depends on the TurningDecision.SteeringForce and TurningDecision.SteerBike. If agents do not want to steer, they must set their TurningDecision.SteerBike to false and their steering will not have an impact on the direction of the bike. If an agent does want to steer, they must submit is a force from -1 to 1 which maps to -180° to 180°. This will then be summed with all other agents on the bike who have set TurningDecision.SteerBike to true and averaged to output a new orientation for the bike.
 
 5. **Orientation Update:**
    - The updated Orientation is calculated by adding the Turning Angle to the Offset: `Offset = Offset + Turning Angle`.
