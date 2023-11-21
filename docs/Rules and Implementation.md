@@ -16,7 +16,7 @@ The winning agent must be alive and have the highest points (obtained via lootbo
    - The current value of orientation for MegaBike is referred to as the offset.
 
 4. **Turning Angle Calculation:**
-   - The Turning Angle depends only on the Turning force. To calculate it, sum up the turning force from different agents (optionally taking the average turning force) and map it to a range of -180 to 180 degrees. If agents do not want to steer, they must set their turning force to math.NaN()
+   - The Turning Angle depends only on the Turning force. To calculate it, sum up the turning force from different agents (optionally taking the average turning force) and map it to a range of -180 to 180 degrees. If agents do not want to steer, they must set their turning force to be = to abstainingForce 
 
 5. **Orientation Update:**
    - The updated Orientation is calculated by adding the Turning Angle to the Offset: `Offset = Offset + Turning Angle`.

@@ -1,6 +1,9 @@
 package voting
 
 import (
+	"errors"
+	"math/rand"
+
 	"github.com/google/uuid"
 )
 
@@ -33,31 +36,47 @@ func GetAcceptanceRanking([]map[uuid.UUID]bool) []uuid.UUID {
 	// return make([]uuid.UUID, 0)
 }
 
+func SumOfValues(voteMap IVoter) float64 {
+	sum := 0.0
+	for _, value := range voteMap.GetVotes() {
+		sum += value
+	}
+	return sum
+}
+
 // Returns the normalized vote outcome (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
-func CumulativeDist(voters []IVoter) map[uuid.UUID]float64 {
+func CumulativeDist(voters []IVoter) (map[uuid.UUID]float64, error) {
 	if len(voters) == 0 {
 		panic("no votes provided")
 	}
 
 	aggregateVotes := make(map[uuid.UUID]float64)
 	for _, IVoter := range voters {
-		for id, vote := range IVoter.GetVotes() {
+		if SumOfValues(IVoter) != 1.0 {
+			return nil, errors.New("distribution doesn't sum to 1")
+		}
+		votes := IVoter.GetVotes()
+		for id, vote := range votes {
 			aggregateVotes[id] += vote
 		}
 	}
+	// TODO normalise
 
-	return aggregateVotes
+	return aggregateVotes, nil
 }
 
 // returns the winner accoring to chosen voting strategy (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
 func WinnerFromDist(voters []IVoter) uuid.UUID {
-	aggregateVotes := CumulativeDist(voters)
+	// TODO handle the error
+	aggregateVotes, _ := CumulativeDist(voters)
 
 	var winner uuid.UUID
-	var maxVote float64
+	maxVote := 0.0
+	ids := make([]uuid.UUID, len(voters))
 	for id, vote := range aggregateVotes {
+		ids = append(ids, id)
 		if vote > maxVote {
 			maxVote = vote
 			winner = id
@@ -65,7 +84,9 @@ func WinnerFromDist(voters []IVoter) uuid.UUID {
 	}
 
 	if winner == uuid.Nil {
-		panic("no winner found")
+		// return random id
+		idx := rand.Intn(len(ids))
+		winner = ids[idx]
 	}
 
 	return winner

@@ -2,7 +2,6 @@ package objects
 
 import (
 	utils "SOMAS2023/internal/common/utils"
-	"math"
 
 	"github.com/google/uuid"
 )
@@ -84,8 +83,9 @@ func (mb *MegaBike) UpdateOrientation() {
 	totalTurning := 0.0
 	numOfSteeringAgents := 0.0
 	for _, agent := range mb.agents {
-		// if agents do not want to steer, they must set their turning force to math.NaN()
-		if math.IsNaN(totalTurning) {
+		// if agents do not want to steer, they must set their turning force to AbstainingForce (for now)
+		turning := agent.GetForces().Turning
+		if turning == utils.AbstainingForce {
 			numOfSteeringAgents += 1.0
 			totalTurning += float64(agent.GetForces().Turning)
 		}

@@ -19,7 +19,7 @@ const (
 type Forces struct {
 	Pedal   float64 // Pedal is a force from 0-1 where 1 is 100% power
 	Brake   float64 // Brake is a force from 0-1 opposing the direction of travel (bike cannot go backwards)
-	Turning float64 // Turning is a force from -1 to 1 which maps to -180° to 180°. If agents do not want to steer, they must set their turning force to math.NaN()
+	Turning float64 // Turning is a force from -1 to 1 which maps to -180° to 180°. If agents do not want to steer, they must set their turning force to AbstainingForce (const)
 }
 
 type Coordinates struct {

@@ -21,6 +21,8 @@ const DragCoefficient float64 = 1.0 // Drag coefficient can be optimised in expe
 
 const MovingDepletion float64 = 1.0 // proportionality of energy loss
 
+const AbstainingForce float64 = 2.0
+
 /*
 Resources - Points and Energy
 */
