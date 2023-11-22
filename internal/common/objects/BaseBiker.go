@@ -273,9 +273,9 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 // base biker defaults to democracy
 func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
 	governanceRanking := make(voting.GovernanceVote)
-	governanceRanking[utils.Democracy] = 0.0
+	governanceRanking[utils.Democracy] = 1.0
 	governanceRanking[utils.Dictatorship] = 0.0
-	governanceRanking[utils.Leadership] = 1.0
+	governanceRanking[utils.Leadership] = 0.0
 	return governanceRanking
 }
 
