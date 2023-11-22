@@ -1,11 +1,12 @@
-package main
+package team5Agent
 
 import (
     "math"
     "SOMAS2023/internal/common/utils"
-    "SOMAS2023/internal/objects"
     "github.com/google/uuid"
 )
+
+
 
 // calculates final preferences for loot boxes based on various factors
 func CalculateLootBoxPreferences(gameState objects.IGameState, agentID uuid.UUID, cumulativePreferences map[uuid.UUID]float64) map[uuid.UUID]float64 {

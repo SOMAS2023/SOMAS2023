@@ -30,7 +30,7 @@ type IBaseBiker interface {
 	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      // ** decide whether to accept or not accept bikers, ranks the ones
 	ChangeBike() uuid.UUID                                          // ** called when biker wants to change bike, it will choose which bike to try and join
 	ProposeDirection() uuid.UUID                                    // ** returns the id of the desired lootbox based on internal strategy
-	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
+	FinalDirectionVote(proposals map[uuid.UUID]float64) voting.LootboxVoteMap // ** stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
 
 	GetForces() utils.Forces                               // returns forces for current round
