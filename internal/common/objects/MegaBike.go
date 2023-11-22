@@ -81,11 +81,21 @@ func (mb *MegaBike) UpdateForce() {
 // Calculates the final orientation of the Megabike, between -1 and 1 (-180° to 180°), given the Biker's Turning forces
 func (mb *MegaBike) UpdateOrientation() {
 	totalTurning := 0.0
+	numOfSteeringAgents := 0
 	for _, agent := range mb.agents {
-		totalTurning += float64(agent.GetForces().Turning)
+		// If agents do not want to steer, they must set their TurningDecision.SteerBike to false and their steering
+		// will not have an impact on the direction of the bike.
+		turningDecision := agent.GetForces().Turning
+		if turningDecision.SteerBike {
+			numOfSteeringAgents += 1
+			totalTurning += float64(turningDecision.SteeringForce)
+		}
 	}
-	averageTurning := totalTurning / float64(len(mb.agents))
-	mb.orientation += (averageTurning)
+	// Do not update orientation if no biker want to steer
+	if numOfSteeringAgents > 0 {
+		averageTurning := totalTurning / float64(numOfSteeringAgents)
+		mb.orientation += (averageTurning)
+	}
 	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
 	if mb.orientation > 1.0 {
 		mb.orientation -= 2
