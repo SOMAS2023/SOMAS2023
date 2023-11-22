@@ -163,6 +163,26 @@ func (bb *BaseBiker) nearestLootColor() uuid.UUID {
 	return nearestBox
 }
 
+func (bb *BaseBiker) nearestLootColorIntermediate() uuid.UUID {
+	nearestColorBox := bb.nearestLootColor()
+	x2, y2 := bb.gameState.GetLootBoxes()[nearestColorBox].GetPosition().X, bb.gameState.GetLootBoxes()[nearestColorBox].GetPosition().Y
+	currLocation := bb.GetLocation()
+	shortestDist := math.MaxFloat64
+	var nearestBox uuid.UUID
+	var currDist float64
+	for _, loot := range bb.gameState.GetLootBoxes() {
+		x1, y1 := loot.GetPosition().X, loot.GetPosition().Y
+		currDist = math.Sqrt(math.Pow(currLocation.X-x1, 2) + math.Pow(currLocation.Y-y1, 2))+math.Sqrt(math.Pow(x1-x2, 2) + math.Pow(y1-y2, 2))
+		if (currDist < shortestDist){
+			nearestBox = loot.GetID()
+			shortestDist = currDist
+		}
+	}
+	return nearestBox
+}
+
+
+
 // in the MVP the biker's action defaults to pedaling (as it won't be able to change bikes)
 // in future implementations this function will be overridden by the agent's specific strategy
 // which will be used to determine whether to pedalor try to change bike
@@ -360,11 +380,7 @@ func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
 
 // default implementation returns the id of the nearest lootbox
 func (bb *BaseBiker) ProposeDirection() uuid.UUID {
-	if bb.GetEnergyLevel > lowEnergyLevel {
-		return bb.nearestLootColor()
-	} else {
-	return bb.nearestLoot()
-	}
+	return bb.nearestLootColorIntermediate()
 }
 
 func (bb *BaseBiker) ToggleOnBike() {
