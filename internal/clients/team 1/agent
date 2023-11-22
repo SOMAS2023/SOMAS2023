@@ -86,6 +86,7 @@ type BaseBiker struct {
 	trustconstant = 1				// weight of trust in opinion
 	effortConstant = 1				// weight of effort in opinion
 	fairnessDifference = 0.5		// modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
+	lowEnergyLevel = 0.3			// energy level below which the agent will try to get a lootbox of the desired colour
 }
 
 func (bb *BaseBiker) GetEnergyLevel() float64 {
@@ -146,6 +147,22 @@ func (bb *BaseBiker) nearestLoot() uuid.UUID {
 	return nearestBox
 }
 
+func (bb *BaseBiker) nearestLootColor() uuid.UUID {
+	currLocation := bb.GetLocation()
+	shortestDist := math.MaxFloat64
+	var nearestBox uuid.UUID
+	var currDist float64
+	for _, loot := range bb.gameState.GetLootBoxes() {
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
+		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+		if (currDist < shortestDist) && (loot.GetColour() == bb.soughtColour){
+			nearestBox = loot.GetID()
+			shortestDist = currDist
+		}
+	}
+	return nearestBox
+}
+
 // in the MVP the biker's action defaults to pedaling (as it won't be able to change bikes)
 // in future implementations this function will be overridden by the agent's specific strategy
 // which will be used to determine whether to pedalor try to change bike
@@ -190,7 +207,7 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 		}
 
 		nearestBoxForces := utils.Forces{
-			Pedal:   utils.BikerMaxForce,
+			Pedal:   utils.BikerMaxForce*bb.GetEnergyLevel(),
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
@@ -343,7 +360,11 @@ func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
 
 // default implementation returns the id of the nearest lootbox
 func (bb *BaseBiker) ProposeDirection() uuid.UUID {
+	if bb.GetEnergyLevel > lowEnergyLevel {
+		return bb.nearestLootColor()
+	} else {
 	return bb.nearestLoot()
+	}
 }
 
 func (bb *BaseBiker) ToggleOnBike() {
@@ -366,7 +387,11 @@ func (bb *BaseBiker) GetMegaBikeId() uuid.UUID {
 func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	decision := make(map[uuid.UUID]bool)
 	for _, agent := range pendingAgents {
-		decision[agent] = true
+		if agent.soughtColour == bb.soughtColour {
+			decision[agent] = true
+		} else {
+			decision[agent] = false
+		}
 	}
 	return decision
 }
