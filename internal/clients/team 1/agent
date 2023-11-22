@@ -133,13 +133,13 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 		sumEnergyNeeds := sumEnergyNeeds + energyNeed
 		i := i + 1
 	}
-	for _, agentId:= range helpfulAllocation {
+	for _, agentId:= range selfishAllocation {
 		if agent.GetID() != bb.GetID(){
 			selfishAllocation[agentId] := selfishAllocation[agentId]/sumEnergyNeeds
 		}
 	}
 
-	
+
 	distribution := make(voting.IdVoteMap)
 	for _, agent := range fellowBikers {
 		if agent.GetID() == bb.GetID() {
