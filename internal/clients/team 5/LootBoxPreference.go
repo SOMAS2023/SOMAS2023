@@ -28,7 +28,7 @@ func ProposeDirection(gameState objects.IGameState, self objects.IBaseBiker) uui
 		energy := energyPreference(self.GetEnergyLevel(), loot.GetTotalResources())
 		colour := colourMatch(self.GetColour(), loot.GetColour())
 
-		weightedDistancePreference := urgencyFactor * wd / (1 + distance)
+		weightedDistancePreference := urgencyFactor * wd / (0.01 * distance)
 		weightedEnergyPreference := we * energy
 		weightedColourPreference := wc * colour
 
@@ -71,14 +71,14 @@ func calculateDistance(a, b utils.Coordinates) float64 {
 // Calculate the preference for a lootbox based on colour
 func colourMatch(agentColour, lootColour utils.Colour) float64 {
 	if agentColour == lootColour {
-		return 1.0 // Colour match between agent and lootbox
+		return 0.1 // Colour match between agent and lootbox
 	}
-	return 0.2
+	return 0.0 // No colour match between agent and lootbox
 }
 
 // Calculate the preference for a lootbox based on agent energy
 func energyPreference(agentEnergy, lootResources float64) float64 {
-	return lootResources * math.Pow(1/agentEnergy, 2) // Quadratic function for energy preference as to give a greater effect on urgency to replenish energy when energy gets lower
+	return lootResources * math.Pow(1/(1+agentEnergy), 2) // Quadratic function for energy preference as to give a greater effect on urgency to replenish energy when energy gets lower
 }
 
 // Calculate the altruism factor based on the agent's energy level
