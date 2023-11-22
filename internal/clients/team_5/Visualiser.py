@@ -10,7 +10,7 @@ import pygame_gui
 from pygame_gui import UIManager
 from pygame_gui.elements import UIButton, UIImage
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON
+from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH
 from visualiser.util.HelperFunc import make_center
 from visualiser.GameScreen import GameScreen
 
@@ -101,8 +101,18 @@ class Visualiser:
             self.manager.update(timeDelta)
             self.window.blit(self.gamescreen, (0, 0))
             self.manager.draw_ui(self.window)
+            self.draw_fps()
             pygame.display.flip()
         pygame.quit()
+
+    def draw_fps(self) -> None:
+        """
+        Draw the FPS counter
+        """
+        fps = self.clock.get_fps()
+        font = pygame.font.SysFont("Arial Narrow", 20)
+        surface = font.render(f"FPS: {fps:.2f}", True, "#555555")
+        self.window.blit(surface, (DIM["GAME_SCREEN_WIDTH"]-surface.get_width()-OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
 
     def handle_events(self) -> None:
         """
@@ -153,7 +163,7 @@ class Visualiser:
                 root = tk.Tk()
                 root.withdraw()
                 filepath = filedialog.askopenfilename(
-                    initialdir=".",
+                    initialdir=JSONPATH,
                     title="Select JSON file",
                     filetypes=(("JSON files", "*.json"), ("all files", "*.*"))
                 )
@@ -187,7 +197,7 @@ class Visualiser:
         """
         Test function
         """
-        self.json_parser("visualiser/json/test2.json")
+        self.json_parser(JSONPATH+"test2.json")
         self.gameScreenManager.change_round(0)
         self.run_loop("game_screen")
 

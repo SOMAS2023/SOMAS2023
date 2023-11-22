@@ -100,7 +100,7 @@ class GameScreen:
         # Draw lootboxes
         for lootbox in self.lootboxes:
             lootbox.draw(screen, self.offsetX, self.offsetY, self.zoom)
-        # Draw agents
+        # # Draw agents
         for bike in self.bikes:
             bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Draw awdi

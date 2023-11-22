@@ -6,6 +6,7 @@ WINDOW_TITLE = "SOMAS Visualiser"
 FRAMERATE = 60
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
 COORDINATESCALE = 1.5
+JSONPATH = "./internal/clients/team_5/visualiser/json/"
 OVERLAY = {
     "FONT" : "Arial",
     "WIDTH": 150,
@@ -19,6 +20,7 @@ OVERLAY = {
     "BORDER_WIDTH": 2,
     "BORDER_COLOUR": "#000000",
     "TRANSPARENCY": 240,
+    "FPS_PAD" : 5,
 }
 BIKE = {
     "LINE_WIDTH": 1,
