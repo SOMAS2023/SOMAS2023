@@ -6,7 +6,6 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"fmt"
-
 	"github.com/google/uuid"
 )
 
