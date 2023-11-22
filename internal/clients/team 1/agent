@@ -110,6 +110,36 @@ func (bb *BaseBiker) GetColour() utils.Colour {
 func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	bikeID := bb.GetBike()
 	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+
+	sumEnergyNeeds := 0.0
+	helpfulAllocation := make(map[uuid.UUID]float)
+	i := 0
+	for _, agent := range fellowBikers{
+		energyNeed := 1.0 - agent.GetEnergyLevel()
+		helpfulAllocation[agent.GetID()] := energyNeed
+		sumEnergyNeeds := sumEnergyNeeds + energyNeed
+		i := i + 1
+	}
+	for _, agentId:= range helpfulAllocation {
+		helpfulAllocation[agentId] := helpfulAllocation[agentId]/sumEnergyNeeds
+	}
+
+	selfishAllocation := make(map[uuid.UUID]float)
+	selfishAllocation[bb.GetID()] := 1.0 - bb.GetEnergyLevel()//distribute max amount to ourselves
+	//remaining energy available = 1 - (1 - bb.GetEnergyLevel()) = bb.GetEnergyLevel()
+	for _, agent := range fellowBikers{
+		energyNeed := bb.GetEnergyLevel() - agent.GetEnergyLevel()
+		selfishAllocation[agent.GetID()] := energyNeed
+		sumEnergyNeeds := sumEnergyNeeds + energyNeed
+		i := i + 1
+	}
+	for _, agentId:= range helpfulAllocation {
+		if agent.GetID() != bb.GetID(){
+			selfishAllocation[agentId] := selfishAllocation[agentId]/sumEnergyNeeds
+		}
+	}
+
+	
 	distribution := make(voting.IdVoteMap)
 	for _, agent := range fellowBikers {
 		if agent.GetID() == bb.GetID() {
@@ -120,7 +150,7 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	}
 	return distribution
 }
-
+//part 1: 
 // the biker itself doesn't technically have a location (as it's on the map only when it's on a bike)
 // in fact this function is only called when the biker needs to make a decision about the pedaling forces
 func (bb *BaseBiker) GetLocation() utils.Coordinates {
