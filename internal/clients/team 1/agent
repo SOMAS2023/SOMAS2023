@@ -78,6 +78,14 @@ type BaseBiker struct {
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
 	gameState                        IGameState // updated by the server at every round
 	allocationParams                 ResourceAllocationParams
+	deviateNegative = -0.3			// trust loss on deviation
+	deviatePositive = 0.2			// trust gain on non deviation
+	leaveThreshold = 0.2			// threshold for leaving
+	kickThreshhold = 0.4			// threshold for kicking
+	fairnessConstant = 1			// weight of fairness in opinion
+	trustconstant = 1				// weight of trust in opinion
+	effortConstant = 1				// weight of effort in opinion
+	fairnessDifference = 0.5		// modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
 }
 
 func (bb *BaseBiker) GetEnergyLevel() float64 {
@@ -142,7 +150,16 @@ func (bb *BaseBiker) nearestLoot() uuid.UUID {
 // in future implementations this function will be overridden by the agent's specific strategy
 // which will be used to determine whether to pedalor try to change bike
 func (bb *BaseBiker) DecideAction() BikerAction {
-	return Pedal
+	fellowBikers := bb.GetFellowBikers()
+	avg_opinion := 1.0
+	for _, agent := range fellowBikers {
+		avg_opinion := avg_opinion + bb.Opinion.opinion[agent.GetID()]
+	}
+	if avg_opinion < leaveThreshold {
+		return ChangeBike
+	} else {
+		return Pedal
+	}
 }
 
 // determine the forces (pedalling, breaking and turning)
@@ -203,29 +220,84 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 	}
 }
 
+func (bb *BaseBiker) GetFellowBikers() []IAgent {
+	return bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+}
 
 
 // initialise maps for opinions
-effort := make(map[uuid.UUID]float64)
-trust := make(map[uuid.UUID]float64)
-fairness := make(map[uuid.UUID]float64)
-
-
-
-func (bb *BaseBiker) GetEffort int {
-	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
-	for _, agent := range fellowBikers {
-		effort[agent.GetID()] = (agent.forces.Pedal - bb.forces.Pedal) / agent.GetEnergyLevel()
+type Opinion struct {
+	effort := make(map[uuid.UUID]float64)
+	trust := make(map[uuid.UUID]float64)
+	fairness := make(map[uuid.UUID]float64)
+	opionion := make(map[uuid.UUID]float64)
 }
 
-func (bb *BaseBiker) GetTrust int {
-	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+
+// Functions to update different opinion metrics
+func (bb *BaseBiker) UpdateEffort int {
+	fellowBikers := bb.GetFellowBikers()
+	for _, agent := range fellowBikers {
+		bb.Opinion.effort[agent.GetID()] := (agent.forces.Pedal - bb.forces.Pedal) / agent.GetEnergyLevel()
+	}
+}
+
+func (bb *BaseBiker) UpdateTrust int {
+	fellowBikers := bb.GetFellowBikers()
 	for _, agent := range fellowBikers {
 		if agent.forces.TurningDecision.SteeringForce == bb.forces.TurningDecision.SteeringForce {
-			trust[agent.GetID()] := trust[agent.GetID()] + positiveDeviate
+			bb.Opinions.trust[agent.GetID()] := trust[agent.GetID()] + bb.positiveDeviate
 		} else {
-			trust[agent.GetID()] := trust[agent.GetID()] + deviateNegative
+			bb.Opinion.trust[agent.GetID()] := trust[agent.GetID()] + bb.deviateNegative
 		}
+	}
+}
+
+func (bb *BaseBiker) UpdateFairness int {
+	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	for _, agent := range fellowBikers {
+		difference := 0.0
+		for ourVote in voting.IdVoteMap[bb.GetID()]:
+			for theirVote in voting.IdVoteMap[agent.GetID()]:
+				difference := difference + math.Abs(ourVote - theirVote)
+		bb.Opinion.fairness[agent.GetID()] := fairness[agent.GetID()] + bb.fairnessDifference - difference/2
+	}
+}
+
+func (bb *BaseBiker) UpdateOpinions int {
+	bb.UpdateTrust()
+	bb.UpdateEffort()
+	bb.UpdateFairness()
+	fellowBikers := bb.GetFellowBikers()
+	for _, agent := range fellowBikers {
+		bb.Opinion.opinion[agent.GetID()] := (bb.Opinion.trust[agent.GetID()]*trustconstant + bb.Opinion.effort[agent.GetID()]*effortConstant + bb.Opinion.fairness[agent.GetID()]*fairnessConstant) / (trustconstant + effortConstant + fairnessConstant)
+	}
+}
+
+
+
+
+
+
+
+func (bb *BaseBiker) GetSubjectiveEnergeDisparities map[uuid.UUID]float {
+	fellowBikers := bb.GetFellowBikers()
+	disparities := make(map[uuid.UUID]float)
+	//find the maximum difference in energy between ourselves and any agent
+	maxDiff := 0.0
+	var diff float
+	for them := range fellowBikers {
+		diff = math.Abs(them.GetEnergyLevel() - bb.GetEnergyLevel())
+		if diff > maxDiff {
+			maxDiff = diff
+		}
+	}
+	//Calculate Subjective disparities as (them.energy - us.energy) / max energy diff
+	for them := range fellowBikers{
+		disparities[them.GetID()] = (them.GetEnergyLevel() - bb.GetEnergyLevel()) / maxDiff
+	}
+	
+	return disparities
 }
 
 // decide which bike to go to
@@ -261,7 +333,8 @@ func (bb *BaseBiker) GetForces() utils.Forces {
 }
 
 func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
-	bb.gameState = gameState
+	bb.gameState = GetGameState
+	bb.UpdateOpinions()
 }
 
 func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
