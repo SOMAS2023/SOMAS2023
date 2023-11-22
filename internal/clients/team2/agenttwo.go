@@ -13,6 +13,7 @@ package team2
 
 import (
 	"SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/utils"
 
 	// "SOMAS2023/internal/common/utils"
 	"math"
@@ -58,6 +59,14 @@ func (a *AgentTwo) CalculateSocialCapital() {
 type Vector struct {
 	X float64
 	Y float64
+}
+
+func forcesToVectorConversion(force utils.Forces) Vector {
+	xCoordinate := force.Pedal * float64(math.Cos(float64(math.Pi*force.Turning)))
+	yCoordinate := force.Pedal * float64(math.Sin(float64(math.Pi*force.Turning)))
+
+	newVector := Vector{X: xCoordinate, Y: yCoordinate}
+	return newVector
 }
 
 func dotProduct(v1, v2 Vector) float64 {
