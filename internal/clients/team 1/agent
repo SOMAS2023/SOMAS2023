@@ -41,6 +41,9 @@ type Biker1 struct {
 	effortConstant = 1				// weight of effort in opinion
 	fairnessDifference = 0.5		// modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
 	lowEnergyLevel = 0.3			// energy level below which the agent will try to get a lootbox of the desired colour
+	dislikeVote = false				// whether the agent disliked the most recent vote
+	recentVote 						LootboxVoteMap		// the most recent vote	
+	recentDecided					uuid.UUID			// the most recent decision
 }
 
 func (bb *BaseBiker) GetFellowBikers() []IAgent {
@@ -109,11 +112,12 @@ func (bb *BaseBiker) DecideAction() BikerAction {
 	for _, agent := range fellowBikers {
 		avg_opinion := avg_opinion + bb.Opinion.opinion[agent.GetID()]
 	}
-	if avg_opinion < leaveThreshold {
+	if (avg_opinion < leaveThreshold) || dislikeVote {
+		dislikeVote = true
 		return ChangeBike
 	} else {
 		return Pedal
-	}
+	} 
 }
 
 // determine the forces (pedalling, breaking and turning)
@@ -122,6 +126,14 @@ func (bb *BaseBiker) DecideAction() BikerAction {
 
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
+
+	if recentVote != nil {
+		if recentVote[direction] < 0.5 {
+			bb.dislikeVote = true
+		} else {
+			bb.dislikeVote = false
+		}
+	}
 
 	// NEAREST BOX STRATEGY (MVP)
 	currLocation := bb.GetLocation()
@@ -376,6 +388,7 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 	for _, proposal := range proposals {
 		votes[proposal] = normalDist
 	}
+	recentVote = votes
 	return votes
 }
 
