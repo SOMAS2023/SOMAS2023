@@ -41,3 +41,12 @@ type PhysicalState struct {
 	Velocity     float64
 	Mass         float64
 }
+
+type Governance int
+
+const (
+	Democracy Governance = iota
+	Leadership
+	Dictatorship
+	Invalid
+)
