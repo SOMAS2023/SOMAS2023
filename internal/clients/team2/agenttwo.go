@@ -25,11 +25,15 @@ type AgentTwo struct {
 	// BaseBiker represents a basic biker agent.
 	*objects.BaseBiker
 	// CalculateSocialCapitalOtherAgent: (trustworthiness - cosine distance, social networks - friends, institutions - num of rounds on a bike)
-	SocialCapital  map[uuid.UUID]float64 // Social Captial of other agents
-	Trust          map[uuid.UUID]float64 // Trust of other agents
-	Institution    map[uuid.UUID]float64 // Institution of other agents
-	Network        map[uuid.UUID]float64 // Network of other agents
-	GameIterations int32                 // Keep track of game iterations
+	SocialCapital      map[uuid.UUID]float64 // Social Captial of other agents
+	Trust              map[uuid.UUID]float64 // Trust of other agents
+	Institution        map[uuid.UUID]float64 // Institution of other agents
+	Network            map[uuid.UUID]float64 // Network of other agents
+	GameIterations     int32                 // Keep track of game iterations
+	forgivenessCounter int32                 // Keep track of how many rounds we have been forgiving an agent
+	gameState          objects.IGameState    // updated by the server at every round
+	// megaBikeId uuid.UUID
+	bikeCounter map[uuid.UUID]int32
 }
 
 const (
@@ -62,8 +66,8 @@ type Vector struct {
 }
 
 func forcesToVectorConversion(force utils.Forces) Vector {
-	xCoordinate := force.Pedal * float64(math.Cos(float64(math.Pi*force.Turning)))
-	yCoordinate := force.Pedal * float64(math.Sin(float64(math.Pi*force.Turning)))
+	xCoordinate := force.Pedal * float64(math.Cos(float64(math.Pi*force.Turning.SteeringForce)))
+	yCoordinate := force.Pedal * float64(math.Sin(float64(math.Pi*force.Turning.SteeringForce)))
 
 	newVector := Vector{X: xCoordinate, Y: yCoordinate}
 	return newVector
@@ -82,7 +86,7 @@ func cosineSimilarity(v1, v2 Vector) float64 {
 }
 
 const (
-	forgivenessFactor = 1.0
+	forgivenessFactor = 0.5
 )
 
 func (a *AgentTwo) updateTrustworthiness(agentID uuid.UUID, actualAction, expectedAction Vector) {
@@ -94,7 +98,21 @@ func (a *AgentTwo) updateTrustworthiness(agentID uuid.UUID, actualAction, expect
 	normalisedTrustworthiness := (similarity + 1) / 2
 
 	// Moving average
-	a.Trust[agentID] = (forgivenessFactor*a.Trust[agentID]*float64(a.GameIterations) + normalisedTrustworthiness) / (float64(a.GameIterations) + 1)
+	// a.Trust[agentID] = (forgivenessFactor*a.Trust[agentID]*float64(a.GameIterations) + normalisedTrustworthiness) / (float64(a.GameIterations) + 1)
+
+	// Bad action but with high trustworthiness in prev rounds, we feel remorse and we forgive them
+	if a.Trust[agentID] > normalisedTrustworthiness && a.forgivenessCounter <= 3 { // If they were trustworthy in prev rounds, we feel remorse and we forgive them
+		a.forgivenessCounter++
+		a.Trust[agentID] = (a.Trust[agentID]*float64(a.GameIterations) + (normalisedTrustworthiness + forgivenessFactor*(normalisedTrustworthiness-a.Trust[agentID]))) / (float64(a.GameIterations) + 1)
+	} else if a.forgivenessCounter > 3 {
+		// More than 3 rounds of BETRAYAL, we don't forgive them anymore...
+		a.Trust[agentID] = (a.Trust[agentID]*float64(a.GameIterations) + normalisedTrustworthiness) / (float64(a.GameIterations) + 1)
+	} else {
+		// Good action with high trustworthiness
+		a.forgivenessCounter = 0
+		a.Trust[agentID] = (a.Trust[agentID]*float64(a.GameIterations) + normalisedTrustworthiness) / (float64(a.GameIterations) + 1)
+	}
+
 }
 
 // func (a *AgentTwo) updateInstitution(agentID uuid.UUID) float64 {
@@ -120,42 +138,133 @@ func (a *AgentTwo) updateTrustworthiness(agentID uuid.UUID, actualAction, expect
 // 	// return 0.5 // This is just a placeholder value
 // }
 
-func (a *AgentTwo) ChangeBikeCalcUtility() {
+func (a *AgentTwo) ChooseOptimalBike() uuid.UUID {
 	// Implement this method
 	// Calculate utility of all bikes for our own survival (remember previous actions (has space, got lootbox, direction) of all bikes so you can choose a bike to move to to max our survival chances) -> check our reputation (trustworthiness, social networks, institutions)
+
+	// - We change the bike if an agent sees more than N agents below a social capital threshold.
+	var N int32 = 3
+	SocialCapitalThreshold := 0.5
+	// - N and the Social Capital Threshold could be varied.
+
+	currentBikeID := a.GetBike()
+
+	for bikeID, bike := range a.gameState.GetMegaBikes() {
+		for _, agent := range bike.GetAgents() {
+			if a.SocialCapital[agent.GetID()] > SocialCapitalThreshold {
+				a.bikeCounter[bikeID]++
+			}
+		}
+	}
+
+	if a.bikeCounter[currentBikeID] > N {
+		// Stay on bike
+		return currentBikeID
+	} else {
+		// find max bike counter in a.bikeCounter map
+		// change bike to that bike
+		var maxValue int32 = 0
+		maxBikeID := uuid.UUID{}
+		for bikeID, counter := range a.bikeCounter {
+			if maxValue < counter {
+				maxValue = counter
+				maxBikeID = bikeID
+			}
+		}
+		return maxBikeID
+	}
 }
 
 // Failsafe: if evergy level is less than oneround in the VOID, don't change bike
 // if we have a leader, then we keeop track of how many round each agent was a leader. If we are a leader, we can use this to decide if we want to change bike or not.
 // TODO: Create a function to retain history of previous actions of all bikes and bikers from gamestates (Needs conformation about getting access to gamestates)
 // TODO: Create a function to calculate expected gain
-func (a *AgentTwo) CalcExpectedGainForLootbox() {
-	// Implement this method
-	// Calculate gain of going for a given lootbox(box colour and distance to it), to decide the action (e.g. pedal, brake, turn) to take
-}
 
 func (a *AgentTwo) DecideAction() objects.BikerAction {
-	// Implement this method
+	lootBoxlocation := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
+	//update agent's trustworthiness every round pretty much at the start of each epoch
+	for _, bike := range a.gameState.GetMegaBikes() {
+		for _, agent := range bike.GetAgents() {
+			a.updateTrustworthiness(agent.GetID(), forcesToVectorConversion(agent.GetForces()), lootBoxlocation)
+		}
+	}
+
 	// Check energy level, if below threshold, don't change bike
-	// Calculate expected gain for each bike
+	energyThreshold := 0.2
+
+	if (a.GetEnergyLevel() < energyThreshold) || (a.ChooseOptimalBike() == a.GetBike()) {
+		return objects.Pedal
+	} else {
+		// random for now, changeBike changes to a random uuid for now.
+		return objects.ChangeBike
+	}
+
+	// TODO: When we have access to limbo/void then we can worry about these
 	// Utility = expected gain - cost of changing bike(no of rounds in the void * energy level drain)
 	// no of rounds in the void = 1 + (distance to lootbox / speed of bike)
-	return objects.Pedal
 }
 
-func (a *AgentTwo) DecideForce() {
-	// Pedal, Brake, Turning
-	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
-	// GetVotedLootbox() -> get voted lootbox from gamestates
-	// GetOptimalLootbox() -> get optimal lootbox for ourself from gamestates
-	// probabilityOfConformity = selfSocialCapital
-	// Generate random number between 0 and 1
-	// if random number < probabilityOfConformity, then conform
-	// else, don't conform
+// TODO: Once the MVP is complete, we can start thinking about this and then feed it into DecideForce
+// func (a *AgentTwo) CalcExpectedGainForLootbox(lootboxID uuid.UUID) float64 {
+// 	// Implement this method
+// 	// Calculate gain of going for a given lootbox(box colour and distance to it), to decide the action (e.g. pedal, brake, turn) to take
 
-	// CalculateForceAndSteer(Lootbox) -> calculate force and steer towards lootbox
+// 	// a.GetEnergyLevel()
+// 	// energyLost := agent.GetForces().Pedal * utils.MovingDepletion
 
-}
+// 	//What the server uses to drain energy from us for moving
+// 	// for _, agent := range s.megaBikes[bikeID].GetAgents() {
+// 	// 	agent.DecideForce(direction)
+// 	// 	// deplete energy
+// 	// 	energyLost := agent.GetForces().Pedal * utils.MovingDepletion
+// 	// 	agent.UpdateEnergyLevel(-energyLost)
+// 	// }
+
+// 	// energy from lootbox - energy from pedalling
+
+// 	currLocation := a.GetLocation()
+// 	targetPos := a.gameState.GetLootBoxes()[lootboxID].GetPosition()
+
+// 	deltaX := targetPos.X - currLocation.X
+// 	deltaY := targetPos.Y - currLocation.Y
+// 	angle := math.Atan2(deltaX, deltaY)
+// 	angleInDegrees := angle * math.Pi / 180
+
+// 	// Default BaseBiker will always
+// 	turningDecision := utils.TurningDecision{
+// 		SteerBike:     true,
+// 		SteeringForce: angleInDegrees,
+// 	}
+
+// 	lootboxForces := utils.Forces{
+// 		Pedal:   utils.BikerMaxForce,
+// 		Brake:   0.0,
+// 		Turning: turningDecision,
+// 	}
+
+// 	energyFromLootbox := a.gameState.GetLootBoxes()[lootboxID].GetTotalResources()
+// 	energyToPedal := lootboxForces.Pedal * utils.MovingDepletion //Moving depleteion is a constant 1 atm. TODO: Change this to a variable and check how Pedal relates to energy depletion
+
+// 	expectedGain := energyFromLootbox - energyToPedal
+
+// 	return expectedGain
+// }
+
+// func (a *AgentTwo) deci
+
+// func (a *AgentTwo) DecideForce() {
+// 	// Pedal, Brake, Turning
+// 	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
+// 	// GetVotedLootbox() -> get voted lootbox from gamestates
+// 	// GetOptimalLootbox() -> get optimal lootbox for ourself from gamestates
+// 	// probabilityOfConformity = selfSocialCapital
+// 	// Generate random number between 0 and 1
+// 	// if random number < probabilityOfConformity, then conform
+// 	// else, don't conform
+
+// 	// CalculateForceAndSteer(Lootbox) -> calculate force and steer towards lootbox
+// 	// set a.forces.steerbike == True
+// }
 
 func (a *AgentTwo) ChangeBike() uuid.UUID {
 	// Implement this method
