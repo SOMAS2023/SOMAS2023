@@ -222,32 +222,6 @@ func (bb *BaseBiker) UpdateOpinions int {
 	}
 }
 
-
-
-
-
-
-
-func (bb *BaseBiker) GetSubjectiveEnergeDisparities map[uuid.UUID]float {
-	fellowBikers := bb.GetFellowBikers()
-	disparities := make(map[uuid.UUID]float)
-	//find the maximum difference in energy between ourselves and any agent
-	maxDiff := 0.0
-	var diff float
-	for them := range fellowBikers {
-		diff = math.Abs(them.GetEnergyLevel() - bb.GetEnergyLevel())
-		if diff > maxDiff {
-			maxDiff = diff
-		}
-	}
-	//Calculate Subjective disparities as (them.energy - us.energy) / max energy diff
-	for them := range fellowBikers{
-		disparities[them.GetID()] = (them.GetEnergyLevel() - bb.GetEnergyLevel()) / maxDiff
-	}
-	
-	return disparities
-}
-
 // decide which bike to go to
 // for now it just returns a random uuid
 func (bb *BaseBiker) ChangeBike() uuid.UUID {
