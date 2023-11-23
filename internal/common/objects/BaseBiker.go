@@ -31,6 +31,7 @@ type IBaseBiker interface {
 	ProposeDirection() uuid.UUID                                    // ** returns the id of the desired lootbox based on internal strategy
 	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
+	VoteForKickout(agentsOnBike []IBaseBiker) uuid.UUID
 
 	GetForces() utils.Forces                               // returns forces for current round
 	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
@@ -269,24 +270,24 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 	return votes
 }
 
-func (bb *BaseBiker) VoteForKickout(agentsOnBike []IBaseBiker) voting.IdVoteMap {
-	vote := make(voting.IdVoteMap)
-
+func (bb *BaseBiker) VoteForKickout(agentsOnBike []IBaseBiker) uuid.UUID {
 	// Avoid voting for self - choose from other agents
 	otherAgents := make([]uuid.UUID, 0)
 	for _, agent := range agentsOnBike {
-		if agent.GetID() != bb.GetID() {
-			otherAgents = append(otherAgents, agent.GetID())
+		agentID := agent.GetID()
+		if agentID != bb.GetID() {
+			otherAgents = append(otherAgents, agentID)
 		}
 	}
 
 	// Randomly select one agent to vote for kicking out
 	if len(otherAgents) > 0 {
 		selectedAgent := otherAgents[rand.Intn(len(otherAgents))]
-		vote[selectedAgent] = 1.0
+		return selectedAgent
 	}
 
-	return vote
+	// Return a nil UUID if no other agents are available
+	return uuid.Nil
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
