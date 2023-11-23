@@ -269,6 +269,26 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 	return votes
 }
 
+func (bb *BaseBiker) VoteForKickout(agentsOnBike []IBaseBiker) voting.IdVoteMap {
+	vote := make(voting.IdVoteMap)
+
+	// Avoid voting for self - choose from other agents
+	otherAgents := make([]uuid.UUID, 0)
+	for _, agent := range agentsOnBike {
+		if agent.GetID() != bb.GetID() {
+			otherAgents = append(otherAgents, agent.GetID())
+		}
+	}
+
+	// Randomly select one agent to vote for kicking out
+	if len(otherAgents) > 0 {
+		selectedAgent := otherAgents[rand.Intn(len(otherAgents))]
+		vote[selectedAgent] = 1.0
+	}
+
+	return vote
+}
+
 // this function is going to be called by the server to instantiate bikers in the MVP
 func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 	return &BaseBiker{
