@@ -13,7 +13,7 @@ import (
 )
 
 
-// Add all of our constants here
+// Add all of our constants her
 const deviateNegative = -0.3
 const deviatePositive = 0.2
 const leave = 0.2
@@ -67,6 +67,61 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	return distribution
 }
 
+// necessary functions:
+// for a box, see if we can reach it -> distance to box from us, our energy level -> function verifies if our energy means we can travel far enough to reach box
+	// to do the above, need a function that converts energy to reachable distance 
+// function to return nearest box in our reach to a box (our colour) that is out of reach
+	// function that returns all the boxes we can reach
+
+func (bb *BaseBiker) energyToReachableDistance(energy float64) float64 {
+	// TODO: write this
+	distance := 0.5
+	return distance
+}
+
+func (bb *BaseBiker) getAllReachableBoxes() []uuid.UUID {
+	currLocation := bb.GetLocation()
+	ourEnergy := bb.GetEnergyLevel();
+	var currDist float64
+	for _, loot := range bb.gameState.GetLootBoxes() {
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
+		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+		if (currDist < energyToReachableDistance(ourEnergy)){
+			reachableBoxes := append(reachableBoxes, loot)
+		}
+	}
+	return reachableBoxes
+}
+
+func (bb *BaseBiker) () checkBoxNearColour(box uuid.UUID, energy float64) []uuid.UUID {
+	box_x, box_y := loot.GetPosition().X, loot.GetPosition().Y
+	var currDist float64
+	for _, loot := range bb.gameState.GetLootBoxes() {
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
+		currDist = math.Sqrt(math.Pow(box_x-x, 2) + math.Pow(box_y-y, 2))
+		if (currDist < energyToReachableDistance(energy) && loot.GetColour() == bb.soughtColour){
+			return true
+		}
+	}
+	return false
+}
+
+func (bb *BaseBiker) () getNearestReachableBoxToNearestColor() uuid.UUID {
+	currLocation := bb.GetLocation()
+	reachableBoxes := getAllReachableBoxes()
+	shortestDist := math.MaxFloat64
+	var nearestBox uuid.UUID
+	var currDist float64
+	for _, loot := range reachableBoxes {
+		x, y = loot.GetPosition().X, loot.GetPosition().Y
+		currDist := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+		if (currDist < shortestDist) {
+			nearestBox := loot.getID()
+		}	
+	}
+	return nearestBox
+}
+
 func (bb *BaseBiker) nearestLootColor() uuid.UUID {
 	currLocation := bb.GetLocation()
 	shortestDist := math.MaxFloat64
@@ -83,7 +138,7 @@ func (bb *BaseBiker) nearestLootColor() uuid.UUID {
 	return nearestBox
 }
 
-func (bb *BaseBiker) nearestLootColorIntermediate() uuid.UUID {
+func (bb *BaseBiker) findNearestColorBox() (uuid.UUID, float64) {
 	nearestColorBox := bb.nearestLootColor()
 	x2, y2 := bb.gameState.GetLootBoxes()[nearestColorBox].GetPosition().X, bb.gameState.GetLootBoxes()[nearestColorBox].GetPosition().Y
 	currLocation := bb.GetLocation()
@@ -98,7 +153,7 @@ func (bb *BaseBiker) nearestLootColorIntermediate() uuid.UUID {
 			shortestDist = currDist
 		}
 	}
-	return nearestBox
+	return nearestBox, shortestDist
 }
 
 
@@ -345,8 +400,29 @@ func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
 }
 
 // default implementation returns the id of the nearest lootbox
-func (bb *BaseBiker) ProposeDirection() uuid.UUID {
-	return bb.nearestLootColorIntermediate()
+func (bb *BaseBiker) ProposeDirection() uuid.UUID {	
+	// all logic for nominations goes in here
+	// find nearest coloured box
+	// if we can reach it, nominate it
+	// if a box exists but we can't reach it, we nominate the box closest to that that we can reach
+	// else, nominate nearest box TODO 
+
+	// necessary functions:
+	// find nearest coloured box: DONE
+	// for a box, see if we can reach it -> distance to box from us, our energy level -> function verifies if our energy means we can travel far enough to reach box
+		// to do the above, need a function that converts energy to reachable distance 
+	// function to return nearest box in our reach to a box (our colour) that is out of reach
+		// function that returns all the boxes we can reach
+
+	nearestBox, distanceToNearestBox := bb.findNearestColorBox()
+	// TODO: check if nearestBox actually exists
+	reachableDistance = energyToReachableDistance(bb.energyLevel) // TODO add all other biker energies
+	if distanceToNearestBox < reachableDistance {
+		return nearestBox
+	}
+
+	nearestReachableBox := bb.getNearestReachableBoxToNearestColor()
+	return nearestReachableBox	
 }
 
 func (bb *BaseBiker) ToggleOnBike() {
@@ -377,18 +453,67 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 	}
 	return decision
 }
+func (bb *BaseBiker) distanceToReachableBox(box uuid.UUID) float64 {
+	currLocation := bb.GetLocation()
+	x, y := bb.gameState.GetLootBoxes()[box].GetPosition().X, bb.gameState.GetLootBoxes()[box].GetPosition().Y
+	currDist := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+	if (currDist < energyToReachableDistance(bb.energyLevel)){
+		return currDist
+	}
+	return -1.
+}
+
+func (bb *BaseBiker) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
+	remaining_energy := 0.5 // TODO not use constant
+	return remainingEnergy
+}
 
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
 func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
+	// add in voting logic using knowledge of everyone's nominations:
+	
+	// for all boxes, rule out any that you can't reach
+	// if no boxes left, go for nearest one
+	// else if you can reach a box, if someone else can't reach any boxes, vote the box nearest to them (altruistic - add later?)
+	// else for every reachable box:
+		// calculate energy left if you went there
+			// function: calculate energy left given distance moved
+		// scan area around box for other boxes based on energy left after reaching it
+			// function: given energy and a coordinate on the map, get all boxes that are reachable from that coordinate
+		// if our colour is in those boxes, assign the number of people who voted for that box as the score, else assign, 0
+		// set highest score box to 1, rest to 0 (subject to change)
+
+	// votes := make(voting.LootboxVoteMap)
+	// totOptions := len(proposals)
+	// // normalDist := 1.0 / float64(totOptions)
+	// for _, proposal := range proposals {
+	// 	votes[proposal] = normalDist
+	// }
+	// recentVote = votes
+	// return votes
+	
 	votes := make(voting.LootboxVoteMap)
 	totOptions := len(proposals)
-	normalDist := 1.0 / float64(totOptions)
+
 	for _, proposal := range proposals {
-		votes[proposal] = normalDist
+		distToBox := distanceToReachableBox(proposal)
+		if distToBox >= 0 {
+			// calculate energy left if we went here
+			remainingEnergy := findRemainingEnergyAfterReachingBox(proposal)
+			// find nearest reachable boxes from current coordinate
+			isColorNear := checkBoxNearColour(proposal, remainingEnergy)
+			// assign score of number of votes for this box if our colour is nearby
+			if isColorNear {
+				// this box has score (number of votes for it)
+				votes[proposal] = 1 // TODO: number of proposals for this box
+			} else{
+				votes[proposal] = 0
+			}
+		}
 	}
-	recentVote = votes
+	
 	return votes
 }
 
