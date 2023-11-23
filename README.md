@@ -30,7 +30,7 @@ go run . --help
 
 ### [`docs`](docs)
 Important documents pertaining to codebase organisation, code conventions and project management. Read before writing code.
-The rules can be found here [Rules and Implentation](./docs/Rules%20and%20Implentation.md)
+The rules can be found here [Rules and Implementation](./docs/Rules%20and%20Implementation.md)
 
 ### [`internal`](internal)
 Internal SOMAS2020 packages. Most development occurs here, including client and server code.
