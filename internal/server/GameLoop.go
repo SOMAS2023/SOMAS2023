@@ -189,6 +189,20 @@ func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UU
 }
 
 func (s *Server) LootboxCheckAndDistributions() {
+
+	// checks how many bikes have looted one lootbox to split it between them
+	looted := make(map[uuid.UUID]int)
+	for _, megabike := range s.GetMegaBikes() {
+		for lootid, lootbox := range s.GetLootBoxes() {
+			if megabike.CheckForCollision(lootbox) {
+				if value, ok := looted[lootid]; ok {
+					looted[lootid] = value + 1
+				} else {
+					looted[lootid] = 1
+				}
+			}
+		}
+	}
 	for bikeid, megabike := range s.GetMegaBikes() {
 		for lootid, lootbox := range s.GetLootBoxes() {
 			if megabike.CheckForCollision(lootbox) {
@@ -210,9 +224,10 @@ func (s *Server) LootboxCheckAndDistributions() {
 				}
 				// TODO handle error
 				winningAllocation, _ := voting.CumulativeDist(Iallocations)
+				bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
 				for agentID, allocation := range winningAllocation {
-					lootShare := allocation * lootbox.GetTotalResources()
+					lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
 					agent := s.GetAgentMap()[agentID]
 					// Allocate loot based on the calculated utility share
 					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
@@ -223,6 +238,13 @@ func (s *Server) LootboxCheckAndDistributions() {
 					}
 				}
 			}
+		}
+	}
+
+	// despawn lootboxes that have been looted
+	for id, loot := range looted {
+		if loot > 0 {
+			delete(s.lootBoxes, id)
 		}
 	}
 }
