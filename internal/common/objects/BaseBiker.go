@@ -151,12 +151,12 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
 		angle := math.Atan2(deltaX, deltaY)
-		angleInDegrees := angle * math.Pi / 180
+		normalisedAngle := angle / math.Pi
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: angleInDegrees,
+			SteeringForce: normalisedAngle - bb.gameState.GetMegaBikes()[bb.megaBikeId].GetOrientation(),
 		}
 
 		nearestBoxForces := utils.Forces{
@@ -173,12 +173,12 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 		// Steer in opposite direction to audi
 		angle := math.Atan2(-deltaX, -deltaY)
-		angleInDegrees := angle * math.Pi / 180
+		normalisedAngle := angle / math.Pi
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: angleInDegrees,
+			SteeringForce: normalisedAngle,
 		}
 
 		escapeAudiForces := utils.Forces{
