@@ -110,12 +110,14 @@ func VoteToKickOutAgent(megaBike *objects.MegaBike, targetAgentID uuid.UUID) boo
 	agents := megaBike.GetAgents()
 	yesVotes := 0
 
-	// Each agent votes
+	// Each agent votes for an agent to kick out
 	for _, agent := range agents {
-		if agent.VoteForKickout(targetAgentID) {
+		votedAgentID := agent.VoteForKickout(agents)
+		if votedAgentID == targetAgentID {
 			yesVotes++
 		}
 	}
+
 	return yesVotes > len(agents)/2
 }
 
