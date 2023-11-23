@@ -105,6 +105,17 @@ func (bb *BaseBiker) GetColour() utils.Colour {
 	return bb.soughtColour
 }
 
+// Success-Relationship algo for calculating selfishness score
+func calculateSelfishnessScore(success float64, relationship float64) float64 {
+	difference := math.Abs(success - relationship)
+	if success >= relationship {
+		overallScore = 0.5 + ((difference) / 2)
+	} else if relationship > success {
+		overallScore = 0.5 - ((difference) / 2)
+	}
+	return overallScore
+}
+
 // through this function the agent submits their desired allocation of resources
 // in the MVP each agent returns 1 whcih will cause the distribution to be equal across all of them
 func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
@@ -113,42 +124,58 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 
 	sumEnergyNeeds := 0.0
 	helpfulAllocation := make(map[uuid.UUID]float)
-	i := 0
+
 	for _, agent := range fellowBikers{
+		'''TI - We have a struct for energyNeed - ResourceAllocationParams?'''
 		energyNeed := 1.0 - agent.GetEnergyLevel()
 		helpfulAllocation[agent.GetID()] := energyNeed
 		sumEnergyNeeds := sumEnergyNeeds + energyNeed
-		i := i + 1
 	}
 	for _, agentId:= range helpfulAllocation {
-		helpfulAllocation[agentId] := helpfulAllocation[agentId]/sumEnergyNeeds
+		helpfulAllocation[agentId] /= sumEnergyNeeds
 	}
 
 	selfishAllocation := make(map[uuid.UUID]float)
-	selfishAllocation[bb.GetID()] := 1.0 - bb.GetEnergyLevel()//distribute max amount to ourselves
+	// selfishAllocation[bb.GetID()] := 1.0 - bb.GetEnergyLevel() //distribute max amount to ourselves
 	//remaining energy available = 1 - (1 - bb.GetEnergyLevel()) = bb.GetEnergyLevel()
 	for _, agent := range fellowBikers{
-		energyNeed := bb.GetEnergyLevel() - agent.GetEnergyLevel()
+		//energyNeed := bb.GetEnergyLevel() - agent.GetEnergyLevel
+		energyNeed := 1.0 - agent.GetEnergyLevel() 
 		selfishAllocation[agent.GetID()] := energyNeed
-		sumEnergyNeeds := sumEnergyNeeds + energyNeed
-		i := i + 1
+		//sumEnergyNeeds := sumEnergyNeeds + energyNeed
 	}
+	sumEnergyNeeds -= (1.0-bb.GetEnergyLevel()) // remove our energy need from the sum
+
 	for _, agentId:= range selfishAllocation {
 		if agent.GetID() != bb.GetID(){
-			selfishAllocation[agentId] := selfishAllocation[agentId]/sumEnergyNeeds
+			selfishAllocation[agentId] := (selfishAllocation[agentId]/sumEnergyNeeds)*bb.GetEnergyLevel() //NB assuming energy is 0-1
 		}
 	}
 
-
+	//3/4) Look in success vector to see relative success of each agent and calculate selfishness score using suc-rel chart (0-1)
+	'''TI - Around line 350, we have Soma`s pseudocode on agent opinion held in bb.Opinion.opinion, lets assume its normalized between 0-1'''
+	selfishnessScore := 0.5 // Initial value
+	runningScore := 0.0
+	for _, agent := range fellowBikers {
+		if agent.GetID() != bb.GetID(){
+			relativeSuccess := (agent.points - bb.points) / maxPoints //maxPoints not defined idk what it is
+			relativeSuccess = (relativeSuccess+1.0) / 2.0 //shift to 0-1
+			ourRelationship := bb.Opinion.opinion[agent.GetID()]
+			runningScore = runningScore + calculateSelfishnessScore(relativeSuccess, ourRelationship)
+		}
+	}
+	if runningScore > 0.0 {
+		selfishnessScore = runningScore / len(fellowBikers)
+	}
+	
+	//5) Linearly interpolate between selfish and helpful allocations based on selfishness score
 	distribution := make(voting.IdVoteMap)
 	for _, agent := range fellowBikers {
-		if agent.GetID() == bb.GetID() {
-			distribution[agent.GetID()] = 1.0
-		} else {
-			distribution[agent.GetID()] = 0.0
-		}
+		id := agent.GetID()
+		distribution[id] := (selfishnessScore * selfishAllocation[id]) + ((1.0 - selfishnessScore) * helpfulAllocation[id]) //NB This is already 0-1
 	}
 	return distribution
+
 }
 //part 1: 
 // the biker itself doesn't technically have a location (as it's on the map only when it's on a bike)
@@ -297,7 +324,7 @@ type Opinion struct {
 	effort := make(map[uuid.UUID]float64)
 	trust := make(map[uuid.UUID]float64)
 	fairness := make(map[uuid.UUID]float64)
-	opionion := make(map[uuid.UUID]float64)
+	opinion := make(map[uuid.UUID]float64)
 }
 
 
@@ -346,7 +373,7 @@ func (bb *BaseBiker) UpdateOpinions int {
 
 
 
-
+''' TI - Deprecated? '''
 func (bb *BaseBiker) GetSubjectiveEnergeDisparities map[uuid.UUID]float {
 	fellowBikers := bb.GetFellowBikers()
 	disparities := make(map[uuid.UUID]float)
