@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+type GovernanceVote map[utils.Governance]float64
+
 // Generic IVoter type to accept different outputs
 type IVoter interface {
 	GetVotes() map[uuid.UUID]float64
@@ -88,4 +90,42 @@ func WinnerFromDist(voters []IVoter) uuid.UUID {
 	}
 
 	return winner
+}
+
+func WinnerFromGovernance(voters []GovernanceVote) (utils.Governance, error) {
+	// check if length of votes is greater than one
+	if len(voters) == 0 {
+		return utils.Invalid, errors.New("no votes provided")
+	}
+
+	// Summing up the votes for each governance type
+	for _, vote := range voters {
+		sum := 0.0
+		for _, votes := range vote {
+			sum += votes
+		}
+		if sum > 1.0 {
+			return utils.Invalid, errors.New("distribution doesn't sum to 1")
+		}
+	}
+
+	var voteTotals = make(map[utils.Governance]float64)
+	var winner utils.Governance
+	var highestVotes float64
+
+	// Summing up the votes for each governance type
+	for _, vote := range voters {
+		for governance, votes := range vote {
+			voteTotals[governance] += votes
+		}
+	}
+	// Finding the governance type with the highest votes
+	for governance, votes := range voteTotals {
+		if votes > highestVotes {
+			highestVotes = votes
+			winner = governance
+		}
+	}
+
+	return winner, nil
 }

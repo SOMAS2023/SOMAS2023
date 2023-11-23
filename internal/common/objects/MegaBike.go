@@ -12,18 +12,26 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
+	GetGovernance() utils.Governance
+	GetRuler() uuid.UUID
+	SetGovernance(governance utils.Governance)
+	SetRuler(ruler uuid.UUID)
 }
 
 // MegaBike will have the following forces
 type MegaBike struct {
 	*PhysicsObject
-	agents []IBaseBiker
+	agents     []IBaseBiker
+	governance utils.Governance
+	ruler      uuid.UUID
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
 func GetMegaBike() *MegaBike {
 	return &MegaBike{
 		PhysicsObject: GetPhysicsObject(utils.MassBike),
+		governance:    utils.Democracy,
+		ruler:         uuid.Nil,
 	}
 }
 
@@ -87,8 +95,11 @@ func (mb *MegaBike) UpdateOrientation() {
 		// will not have an impact on the direction of the bike.
 		turningDecision := agent.GetForces().Turning
 		if turningDecision.SteerBike {
-			numOfSteeringAgents += 1
-			totalTurning += float64(turningDecision.SteeringForce)
+			// Only dictators can steer if Governance is set to dictatorship
+			if (mb.governance != utils.Dictatorship) || (agent.GetID() == mb.ruler) {
+				numOfSteeringAgents += 1
+				totalTurning += float64(turningDecision.SteeringForce)
+			}
 		}
 	}
 	// Do not update orientation if no biker want to steer
@@ -102,4 +113,20 @@ func (mb *MegaBike) UpdateOrientation() {
 	} else if mb.orientation < -1.0 {
 		mb.orientation += 2
 	}
+}
+
+func (mb *MegaBike) GetGovernance() utils.Governance {
+	return mb.governance
+}
+
+func (mb *MegaBike) GetRuler() uuid.UUID {
+	return mb.ruler
+}
+
+func (mb *MegaBike) SetGovernance(governance utils.Governance) {
+	mb.governance = governance
+}
+
+func (mb *MegaBike) SetRuler(ruler uuid.UUID) {
+	mb.ruler = ruler
 }
