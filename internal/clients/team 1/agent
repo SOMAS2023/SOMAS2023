@@ -5,7 +5,7 @@ import (
 	voting "SOMAS2023/internal/common/voting"
 	basebiker "SOMAS2023/internal/common/objects/basebiker"
 	"math"
-
+	"sort"
 	"math/rand"
 
 	baseAgent "github.com/MattSScott/basePlatformSOMAS/BaseAgent"
@@ -41,11 +41,15 @@ type Biker1 struct {
 	effortConstant = 1				// weight of effort in opinion
 	fairnessDifference = 0.5		// modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
 	lowEnergyLevel = 0.3			// energy level below which the agent will try to get a lootbox of the desired colour
+	dislikeVote = false				// whether the agent disliked the most recent vote
+	recentVote 						LootboxVoteMap		// the most recent vote	
+	recentDecided					uuid.UUID			// the most recent decision
 }
 
 func (bb *BaseBiker) GetFellowBikers() []IAgent {
 	return bb.gameState.GetMegaBikes()[bikeID].GetAgents()
 }
+
 
 // through this function the agent submits their desired allocation of resources
 // in the MVP each agent returns 1 whcih will cause the distribution to be equal across all of them
@@ -108,11 +112,12 @@ func (bb *BaseBiker) DecideAction() BikerAction {
 	for _, agent := range fellowBikers {
 		avg_opinion := avg_opinion + bb.Opinion.opinion[agent.GetID()]
 	}
-	if avg_opinion < leaveThreshold {
+	if (avg_opinion < leaveThreshold) || dislikeVote {
+		dislikeVote = true
 		return ChangeBike
 	} else {
 		return Pedal
-	}
+	} 
 }
 
 // determine the forces (pedalling, breaking and turning)
@@ -121,6 +126,14 @@ func (bb *BaseBiker) DecideAction() BikerAction {
 
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
+
+	if recentVote != nil {
+		if recentVote[direction] < 0.5 {
+			bb.dislikeVote = true
+		} else {
+			bb.dislikeVote = false
+		}
+	}
 
 	// NEAREST BOX STRATEGY (MVP)
 	currLocation := bb.GetLocation()
@@ -222,10 +235,78 @@ func (bb *BaseBiker) UpdateOpinions int {
 	}
 }
 
+// ByAge implements sort.Interface for []Person based on
+// the Age field.
+type BikeSorter struct {
+	bikes []bikeDistance
+	by func(b1, b2 *bikeDistance) bool // Closure used in the Less method.
+}
+
+func (sorter *BikeSorter) Len() int { 
+	return len(sorter.bikes)
+ }
+func (sorter *BikeSorter) Swap(i, j int) { 
+	sorter.bikes[i], sorter.bikes[j] = sorter.bikes[j], sorter.bikes[i]
+}
+func (sorter *BikeSorter) Less(i, j int) bool { 
+	return sorter.by(&sorter.bikes[i], &sorter.bikes[j])
+}
+
+struct bikeDistance {
+	bikeID uuid.UUID
+	bike MegaBike
+	distance float64
+}
+//Calculate how far we can jump for another bike -> based on energy level
+func (bb *BaseBiker) GetMaxJumpDistance() float64 {
+	//default to half grid size
+	return utils.GridHeight / 2
+}
+func (bb *BaseBiker) BikeOurColour(bike MegaBike) bool {
+	matchCounter := 0
+	totalAgents := len(bike.GetAgents())
+	for _, agent := range bike.GetAgents() {
+		if agent.soughtColour != bb.soughtColour {
+			matchCounter++
+		}
+	}
+	if matchCounter > totalAgents/2 {
+		return true
+	} else {
+		return false
+	}
+}
+
 // decide which bike to go to
 // for now it just returns a random uuid
 func (bb *BaseBiker) ChangeBike() uuid.UUID {
-	return uuid.New()
+	distance := func(b1, b2 *bikeDistance) bool {
+		return b1.distance < b2.distance
+	}
+	allBikes := bb.gameState.GetMegaBikes()
+	var bikeID uuid.UUID
+	var bikeDistances []bikeDistance
+	for id, bike := range allBikes {
+		if len(bike.GetAgents()) < 8 {
+			dist := ComputeDistance(bb.GetLocation(), bike.GetLocation())
+			if dist < bb.GetMaxJumpDistance(){
+				bikeDistances = append(bikeDistances, bikeDistance{
+					bikeID: id,
+					bike: bike,
+					distance: dist,
+				})
+			}
+			
+		}
+	}
+
+	By(dist).Sort(bikeDistances)
+	for _, bike := range bikeDistances {
+		if bb.BikeOurColour(bike.bike) {
+			return bike.bikeID
+		}
+	}
+	return bikeDistances[0].bikeID
 }
 
 func (bb *BaseBiker) SetBike(bikeId uuid.UUID) {
@@ -307,8 +388,10 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 	for _, proposal := range proposals {
 		votes[proposal] = normalDist
 	}
+	recentVote = votes
 	return votes
 }
+
 
 // this function is going to be called by the server to instantiate bikers in the MVP
 func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
