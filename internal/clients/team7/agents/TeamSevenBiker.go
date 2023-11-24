@@ -45,6 +45,35 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 		CurrentLocation: biker.GetLocation(),
 	}
 	navOutput := biker.navigationFramework.GetDecision(navInputs)
+	// navOutput := biker.NavigationDecisionFramework.GetDecision(navInputs)
 
 	biker.SetForces(navOutput)
+	// biker.forces = navOutput
 }
+
+
+// VOTING FUNCTIONS
+func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+	voteInputs := frameworks.VoteInputs{
+		DecisionType:	frameworks.VoteToAcceptNewAgent
+		ChoiceMap: 		pendingAgents
+		VoteParameters:	YesNo
+	}
+
+	voteOutput := biker.VotingFramework.GetDecision(voteInputs)
+
+	return voteOutput
+}
+
+func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
+	voteInputs := frameworks.VoteInputs{
+		DecisionType:	frameworks.VoteOnAllocation
+		ChoiceMap: 		
+		VoteParameters:	YesNo
+	}
+
+	voteOutput := biker.VotingFramework.GetDecision(voteInputs)
+
+	return voteOutput
+}
+
