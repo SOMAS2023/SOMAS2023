@@ -27,6 +27,7 @@ func Plurality(voteList []map[uuid.UUID]float64) uuid.UUID {
 		for lootBox, key := range preference {
 			if key > maxPreference {
 				firstLootBoxChoice = lootBox
+				maxPreference = key
 			}
 		}
 		voteCount[firstLootBoxChoice]++
@@ -64,6 +65,7 @@ func Runoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 		for lootBox, key := range preference {
 			if key > maxPreference {
 				firstLootBoxChoice = lootBox
+				maxPreference = key
 			}
 		}
 		voteCount[firstLootBoxChoice]++
@@ -241,8 +243,10 @@ func Approval(voteList []map[uuid.UUID]float64) uuid.UUID {
 	var winner uuid.UUID
 
 	for _, preference := range voteList {
-		for key := range preference {
-			voteCount[key]++
+		for key, value := range preference {
+			if value > 0 {
+				voteCount[key]++
+			}
 		}
 	}
 
