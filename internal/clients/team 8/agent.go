@@ -138,22 +138,22 @@ func calculateAverageOfCostAndPercentage(decisions []bool, energyLevels []int, t
 
 func (bb *BaseBiker) DecideAction() BikerAction {
 	// Example usage
-	utilityLevels := []float64{80.0, 90.0, 75.0, 85.0}
-	agentGoals := []int{1, 2, 1, 1, 2, 2, 1, 1, 2, 2}
+	utilityLevels := []float64{80.0, 90.0, 75.0, 85.0, 45.0, 35.0, 60.0, 70.0, 65.0}
+	agentGoals := []int{1, 2, 1, 1, 2, 2, 1, 1, 2}
 	targetGoal := 1
 	turns := []bool{true, false, true, true, false, true, true, false, true}
-	decisions := []bool{true, false, false, true, true, false, false, true}
-	//energyLevels := []int{80, 45, 60, 30, 70, 40, 55, 75, 90}
-	//energyThreshold := 50
+	decisions := []bool{true, false, false, true, true, false, false, true, false}
+	energyLevels := []int{80, 45, 60, 30, 70, 40, 55, 75, 90}
+	energyThreshold := 50
 
 	// Find quantified ‘Value-judgement’
 	valueJudgement := calculateValueJudgement(utilityLevels, agentGoals, targetGoal, turns)
 
 	// Scale the ‘Cost in the collective improvement’
-	costInCollectiveImprovement := calculateCostInCollectiveImprovement(decisions)
+	AverageOfCostAndPercentage := calculateAverageOfCostAndPercentage(decisions, energyLevels, energyThreshold)
 
 	// Find the overall ‘changeBike’ coefficient
-	changeBikeCoefficient := 0.6*valueJudgement - 0.4*costInCollectiveImprovement
+	changeBikeCoefficient := 0.6*valueJudgement - 0.4*AverageOfCostAndPercentage
 
 	// Make a decision based on the calculated coefficients
 	if rand.Float64() < changeBikeCoefficient {
@@ -165,5 +165,5 @@ func (bb *BaseBiker) DecideAction() BikerAction {
 }
 
 func main() {
-	// You can test your DecideAction function here
+	// test
 }
