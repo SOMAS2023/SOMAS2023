@@ -126,8 +126,7 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	helpfulAllocation := make(map[uuid.UUID]float)
 
 	for _, agent := range fellowBikers{
-		'''TI - We have a struct for energyNeed - ResourceAllocationParams?'''
-		energyNeed := 1.0 - agent.GetEnergyLevel()
+		energyNeed := agent.GetResourceAllocationParams.resourceDemand
 		helpfulAllocation[agent.GetID()] := energyNeed
 		sumEnergyNeeds := sumEnergyNeeds + energyNeed
 	}
@@ -140,7 +139,7 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	//remaining energy available = 1 - (1 - bb.GetEnergyLevel()) = bb.GetEnergyLevel()
 	for _, agent := range fellowBikers{
 		//energyNeed := bb.GetEnergyLevel() - agent.GetEnergyLevel
-		energyNeed := 1.0 - agent.GetEnergyLevel() 
+		energyNeed := agent.GetResourceAllocationParams.resourceDemand//1.0 - agent.GetEnergyLevel() 
 		selfishAllocation[agent.GetID()] := energyNeed
 		//sumEnergyNeeds := sumEnergyNeeds + energyNeed
 	}
