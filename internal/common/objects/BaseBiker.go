@@ -15,10 +15,10 @@ import (
 // These can change based on how we want the allocation to happend, for now they are taken from
 // the lecture slides, but more/less could be taken into account.
 type ResourceAllocationParams struct {
-	resourceNeed          float64 // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
-	resourceDemand        float64 // 0-1, how much energy the agent wants, might differ from resourceNeed
-	resourceProvision     float64 // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
-	resourceAppropriation float64 // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
+	ResourceNeed          float64 `json:"need"`          // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
+	ResourceDemand        float64 `json:"demand"`        // 0-1, how much energy the agent wants, might differ from ResourceNeed
+	ResourceProvision     float64 `json:"provision"`     // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
+	ResourceAppropriation float64 `json:"appropriation"` // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
 }
 
 type IBaseBiker interface {
@@ -67,7 +67,6 @@ type BaseBiker struct {
 	onBike                           bool
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
-	alive                            bool
 	forces                           utils.Forces
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
 	gameState                        IGameState // updated by the server at every round
@@ -83,7 +82,6 @@ func (bb *BaseBiker) GetEnergyLevel() float64 {
 // - increase the energy level after a lootbox has been looted (energyLevel will be pos.ve)
 func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 	bb.energyLevel += energyLevel
-	bb.alive = bb.energyLevel > 0
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
@@ -158,12 +156,12 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
 		angle := math.Atan2(deltaX, deltaY)
-		angleInDegrees := angle * math.Pi / 180
+		normalisedAngle := angle / math.Pi
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: angleInDegrees,
+			SteeringForce: normalisedAngle - bb.gameState.GetMegaBikes()[bb.megaBikeId].GetOrientation(),
 		}
 
 		nearestBoxForces := utils.Forces{
@@ -180,12 +178,12 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 		// Steer in opposite direction to audi
 		angle := math.Atan2(-deltaX, -deltaY)
-		angleInDegrees := angle * math.Pi / 180
+		normalisedAngle := angle / math.Pi
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: angleInDegrees,
+			SteeringForce: normalisedAngle,
 		}
 
 		escapeAudiForces := utils.Forces{
@@ -219,10 +217,6 @@ func (bb *BaseBiker) UpdateColour(totColours utils.Colour) {
 // update the points at the end of a round
 func (bb *BaseBiker) UpdatePoints(pointsGained int) {
 	bb.points += pointsGained
-}
-
-func (bb *BaseBiker) GetLifeStatus() bool {
-	return bb.alive
 }
 
 func (bb *BaseBiker) GetForces() utils.Forces {
@@ -338,7 +332,6 @@ func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
-		alive:        true,
 	}
 }
 
@@ -350,6 +343,5 @@ func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
-		alive:        true,
 	}
 }

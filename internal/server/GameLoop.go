@@ -5,9 +5,11 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
+	"os"
 )
 
 func (s *Server) RunGameLoop() {
@@ -33,6 +35,12 @@ func (s *Server) RunGameLoop() {
 
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
+
+	// Punish bikeless agents
+	s.punishBikelessAgents()
+
+	// Check if agents died
+	s.unaliveAgents()
 
 	// Replenish objects
 	s.replenishLootBoxes()
@@ -69,6 +77,7 @@ func (s *Server) GetLeavingDecisions() {
 			// it will be added to the desired one (if accepted) at the beginning of next loop
 			if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
 				s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+				delete(s.megaBikeRiders, agent.GetID())
 			}
 		default:
 			panic("agent decided invalid action")
@@ -166,6 +175,20 @@ func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UU
 }
 
 func (s *Server) LootboxCheckAndDistributions() {
+
+	// checks how many bikes have looted one lootbox to split it between them
+	looted := make(map[uuid.UUID]int)
+	for _, megabike := range s.GetMegaBikes() {
+		for lootid, lootbox := range s.GetLootBoxes() {
+			if megabike.CheckForCollision(lootbox) {
+				if value, ok := looted[lootid]; ok {
+					looted[lootid] = value + 1
+				} else {
+					looted[lootid] = 1
+				}
+			}
+		}
+	}
 	for bikeid, megabike := range s.GetMegaBikes() {
 		for lootid, lootbox := range s.GetLootBoxes() {
 			if megabike.CheckForCollision(lootbox) {
@@ -187,9 +210,10 @@ func (s *Server) LootboxCheckAndDistributions() {
 				}
 				// TODO handle error
 				winningAllocation, _ := voting.CumulativeDist(Iallocations)
+				bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
 				for agentID, allocation := range winningAllocation {
-					lootShare := allocation * lootbox.GetTotalResources()
+					lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
 					agent := s.GetAgentMap()[agentID]
 					// Allocate loot based on the calculated utility share
 					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
@@ -202,18 +226,57 @@ func (s *Server) LootboxCheckAndDistributions() {
 			}
 		}
 	}
+
+	// despawn lootboxes that have been looted
+	for id, loot := range looted {
+		if loot > 0 {
+			delete(s.lootBoxes, id)
+		}
+	}
+}
+
+func (s *Server) unaliveAgents() {
+	for id, agent := range s.GetAgentMap() {
+		if agent.GetEnergyLevel() < 0 {
+			fmt.Printf("Agent %s got game ended\n", id)
+			s.RemoveAgent(agent)
+			if bikeId, ok := s.megaBikeRiders[id]; ok {
+				s.megaBikes[bikeId].RemoveAgent(id)
+				delete(s.megaBikeRiders, id)
+			}
+		}
+	}
+}
+
+func (s *Server) punishBikelessAgents() {
+	for id, agent := range s.GetAgentMap() {
+		if _, ok := s.megaBikeRiders[id]; !ok {
+			// Agent is not on a bike
+			agent.UpdateEnergyLevel(utils.LimboEnergyPenalty)
+		}
+	}
 }
 
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
+	gameStates := make([]GameStateDump, 0, s.GetIterations())
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
 		fmt.Printf("Main game loop running...\n\n")
 		s.RunGameLoop()
+		gameStates = append(gameStates, s.NewGameStateDump())
 		fmt.Printf("\nMain game loop finished.\n\n")
 		fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
+	}
+	file, err := os.Create("game_dump.json")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	if err := json.NewEncoder(file).Encode(gameStates); err != nil {
+		panic(err)
 	}
 }
