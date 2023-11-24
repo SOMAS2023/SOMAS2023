@@ -32,10 +32,11 @@ func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) uti
 
 	// Normalize angle to be between -1 and 1
 	turning_force := angle_radians / math.Pi
+	turning_input := utils.TurningDecision{SteerBike: true, SteeringForce: turning_force}
 	pedalling_force := float64(1)
 	braking_force := float64(0)
 
-	forces := utils.Forces{Pedal: pedalling_force, Brake: braking_force, Turning: turning_force}
+	forces := utils.Forces{Pedal: pedalling_force, Brake: braking_force, Turning: turning_input}
 
 	fmt.Println("NavigationDecisionFramework: GetDecision called")
 	fmt.Println("NavigationDecisionFramework: Current location: ", ndf.inputs.CurrentLocation)

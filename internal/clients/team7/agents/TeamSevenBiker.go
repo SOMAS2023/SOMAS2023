@@ -33,15 +33,15 @@ func NewBaseTeamSevenBiker(agentId uuid.UUID) *BaseTeamSevenBiker {
 		opinionFramework:      frameworks.NewOpinionFramework(frameworks.OpinionFrameworkInputs{}),
 		socialNetwork:         frameworks.NewSocialNetwork(),
 		votingFramework:       frameworks.NewVotingFramework(),
-		environmentHandler:    NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetMegaBikeId()),
+		environmentHandler:    NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetMegaBikeId(), agentId),
 		personality:           NewDefaultPersonality(),
 	}
 }
 
 // Override base biker functions
-func (biker *BaseTeamSevenBiker) DecideForce() {
+func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 	navInputs := frameworks.NavigationInputs{
-		DesiredLootbox:  biker.NearestLoot(),
+		DesiredLootbox:  biker.environmentHandler.GetNearestLootBox().GetPosition(),
 		CurrentLocation: biker.GetLocation(),
 	}
 	navOutput := biker.navigationFramework.GetDecision(navInputs)
