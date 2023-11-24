@@ -2,7 +2,7 @@ package team_8
 
 import (
 	"SOMAS2023/internal/common/objects"
-	voting "SOMAS2023/internal/common/voting"
+	"SOMAS2023/internal/common/voting"
 
 	"github.com/google/uuid"
 )
