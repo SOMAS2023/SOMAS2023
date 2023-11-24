@@ -241,7 +241,7 @@ func Approval(voteList []map[uuid.UUID]float64) uuid.UUID {
 	var winner uuid.UUID
 
 	for _, preference := range voteList {
-		for key, _ := range preference {
+		for key := range preference {
 			voteCount[key]++
 		}
 	}
