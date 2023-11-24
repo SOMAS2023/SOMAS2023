@@ -70,7 +70,7 @@ func (env *EnvironmentHandler) GetBikerListByAgentIds(agentIds []uuid.UUID) []ob
 	return bikers
 }
 
-func NewEnvironmentHandler(gameState objects.IGameState, bikeId uuid.UUID) *EnvironmentHandler {
+func NewEnvironmentHandler(gameState objects.IGameState, bikeId uuid.UUID, agentId uuid.UUID) *EnvironmentHandler {
 	return &EnvironmentHandler{
 		GameState:     gameState,
 		CurrentBikeId: bikeId,
