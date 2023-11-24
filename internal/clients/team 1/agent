@@ -153,25 +153,29 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 
 	//3/4) Look in success vector to see relative success of each agent and calculate selfishness score using suc-rel chart (0-1)
 	'''TI - Around line 350, we have Soma`s pseudocode on agent opinion held in bb.Opinion.opinion, lets assume its normalized between 0-1'''
-	selfishnessScore := 0.5 // Initial value
+	//selfishnessScore := 0.5 // Initial value
+	selfishnessScore := make(map[uuid.UUID]float)
 	runningScore := 0.0
 	for _, agent := range fellowBikers {
 		if agent.GetID() != bb.GetID(){
 			relativeSuccess := (agent.points - bb.points) / maxPoints //maxPoints not defined idk what it is
 			relativeSuccess = (relativeSuccess+1.0) / 2.0 //shift to 0-1
 			ourRelationship := bb.Opinion.opinion[agent.GetID()]
-			runningScore = runningScore + calculateSelfishnessScore(relativeSuccess, ourRelationship)
+			//runningScore = runningScore + calculateSelfishnessScore(relativeSuccess, ourRelationship)
+			id := agent.GetID()
+			selfishnessScore[id] := calculateSelfishnessScore(relativeSuccess, ourRelationship)
 		}
 	}
-	if runningScore > 0.0 {
-		selfishnessScore = runningScore / len(fellowBikers)
-	}
+	/*if runningScore > 0.0 {
+		selfishnessScore = runningScore / len(fellowBikers)//this finds the average of all the selfishness scores
+	}*/
 	
 	//5) Linearly interpolate between selfish and helpful allocations based on selfishness score
 	distribution := make(voting.IdVoteMap)
 	for _, agent := range fellowBikers {
 		id := agent.GetID()
-		distribution[id] := (selfishnessScore * selfishAllocation[id]) + ((1.0 - selfishnessScore) * helpfulAllocation[id]) //NB This is already 0-1
+		//distribution[id] := (selfishnessScore * selfishAllocation[id]) + ((1.0 - selfishnessScore) * helpfulAllocation[id]) //NB This is already 0-1
+		distribution[id] := (selfishnessScore[id]*selfishAllocation[id]) + ((1.0 - selfishnessScore[id]) * helpfulAllocation[id])
 	}
 	return distribution
 
