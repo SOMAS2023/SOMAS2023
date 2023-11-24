@@ -62,8 +62,8 @@ type Vector struct {
 }
 
 func forcesToVectorConversion(force utils.Forces) Vector {
-	xCoordinate := force.Pedal * float64(math.Cos(float64(math.Pi*force.Turning)))
-	yCoordinate := force.Pedal * float64(math.Sin(float64(math.Pi*force.Turning)))
+	xCoordinate := force.Pedal * float64(math.Cos(float64(math.Pi*force.Turning.SteeringForce)))
+	yCoordinate := force.Pedal * float64(math.Sin(float64(math.Pi*force.Turning.SteeringForce)))
 
 	newVector := Vector{X: xCoordinate, Y: yCoordinate}
 	return newVector
