@@ -146,7 +146,7 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	sumEnergyNeeds -= (1.0-bb.GetEnergyLevel()) // remove our energy need from the sum
 
 	for _, agentId:= range selfishAllocation {
-		if agent.GetID() != bb.GetID(){
+		if agentId != bb.GetID()//if agent.GetID() != bb.GetID(){
 			selfishAllocation[agentId] := (selfishAllocation[agentId]/sumEnergyNeeds)*bb.GetEnergyLevel() //NB assuming energy is 0-1
 		}
 	}
@@ -161,21 +161,28 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 			relativeSuccess := (agent.points - bb.points) / maxPoints //maxPoints not defined idk what it is
 			relativeSuccess = (relativeSuccess+1.0) / 2.0 //shift to 0-1
 			ourRelationship := bb.Opinion.opinion[agent.GetID()]
-			//runningScore = runningScore + calculateSelfishnessScore(relativeSuccess, ourRelationship)
 			id := agent.GetID()
 			selfishnessScore[id] := calculateSelfishnessScore(relativeSuccess, ourRelationship)
+			runningScore = runningScore + selfishnessScore[id]
 		}
 	}
 	/*if runningScore > 0.0 {
 		selfishnessScore = runningScore / len(fellowBikers)//this finds the average of all the selfishness scores
 	}*/
+	selfishnessScore[bb.GetID()] := runningScore/(len(fellowBikers)-1)
 	
 	//5) Linearly interpolate between selfish and helpful allocations based on selfishness score
 	distribution := make(voting.IdVoteMap)
+	runningDistribution := 0.0
 	for _, agent := range fellowBikers {
 		id := agent.GetID()
 		//distribution[id] := (selfishnessScore * selfishAllocation[id]) + ((1.0 - selfishnessScore) * helpfulAllocation[id]) //NB This is already 0-1
-		distribution[id] := (selfishnessScore[id]*selfishAllocation[id]) + ((1.0 - selfishnessScore[id]) * helpfulAllocation[id])
+		distribution := (selfishnessScore[id]*selfishAllocation[id]) + ((1.0 - selfishnessScore[id]) * helpfulAllocation[id])
+		distribution[id] := distribution
+		runningDistribution := runningDistribution + distribution
+	}
+	for _, agentId:= range distribution {
+			distribution[agentId] := distribution[agentId]/runningDistribution//ensures distribution sums to 1
 	}
 	return distribution
 
