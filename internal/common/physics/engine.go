@@ -10,6 +10,9 @@ The Engine is responsible for calculating physics for the environment
 */
 
 func CalcAcceleration(f float64, m float64, v float64) float64 {
+	if m == 0 {
+		panic("zero mass")
+	}
 	return (f - CalcDrag(v)) / m
 }
 
@@ -56,6 +59,7 @@ func GenerateNewState(initialState utils.PhysicalState, force float64, orientati
 		Position:     coordinates,
 		Acceleration: acceleration,
 		Velocity:     velocity,
+		Mass:         initialState.Mass,
 	}
 
 	return finalState
