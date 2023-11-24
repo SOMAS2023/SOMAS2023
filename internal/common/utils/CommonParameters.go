@@ -22,6 +22,8 @@ const DragCoefficient float64 = 1.0 // Drag coefficient can be optimised in expe
 
 const MovingDepletion float64 = 1.0 // proportionality of energy loss
 
+const LimboEnergyPenalty float64 = -0.25 // amount of energy lost per round when off a bike
+
 /*
 Resources - Points and Energy
 */
