@@ -266,11 +266,39 @@ func CopelandScoring(voteList []map[uuid.UUID]float64) uuid.UUID {
 			A win-loss record, the Copeland Score, is calculated for each candidate.
 	*/
 
-	for _, preference := range voteList {
-		for key := range preference {
-			return key
+	// the map to store the winning score for each lootbox
+	scores := make(map[uuid.UUID]int)
+
+	// iterate the voting
+	for _, vote := range voteList {
+		for candidate1, score1 := range vote {
+			for candidate2, score2 := range vote {
+				// do not compare with itself
+				if candidate1 == candidate2 {
+					continue
+				}
+
+				// update the score of each lootbox
+				if score1 > score2 {
+					scores[candidate1]++
+					scores[candidate2]--
+				} else if score1 < score2 {
+					scores[candidate1]--
+					scores[candidate2]++
+				}
+			}
 		}
 	}
 
-	return uuid.Nil
+	// find the lootbox with the highest score
+	var maxScore int
+	var maxCandidate uuid.UUID
+	for candidate, score := range scores {
+		if score > maxScore || maxCandidate == uuid.Nil {
+			maxScore = score
+			maxCandidate = candidate
+		}
+	}
+
+	return maxCandidate
 }
