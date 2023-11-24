@@ -5,13 +5,13 @@ Logic for handling the agents in the visualiser
 import math
 import pygame
 import pygame_gui
-from visualiser.util.Constants import AGENT
+from visualiser.util.Constants import AGENT, COLOURS
 from visualiser.entities.Common import Drawable
 
 class Agent(Drawable):
     def __init__(self, x:int, y:int, colour:pygame.color, groupID, agentID) -> None:
         super().__init__(x, y)
-        self.colour = colour
+        self.colour = COLOURS[colour]
         self.radius = AGENT["SIZE"]
         self.groupID = groupID
         self.id = agentID
@@ -37,7 +37,7 @@ class Agent(Drawable):
         pygame.draw.circle(screen, self.colour, (self.trueX, self.trueY), zoomedRadius)
         # Draw group ID
         font = pygame.font.SysFont("Arial", int(AGENT["FONT_SIZE"]*zoom))
-        if self.colour in ("White", "Yellow"):
+        if self.colour in (COLOURS["White"]):
             text = font.render(str(self.groupID), True, (0, 0, 0))
         else:
             text = font.render(str(self.groupID), True, (255, 255, 255))
@@ -50,7 +50,7 @@ class Agent(Drawable):
         """
         Change the agent's properties based on the round
         """
-        self.colour = json["colour"]
+        self.colour = COLOURS[json["colour"]]
         self.properties = {
             "Points:" : json["points"],
             "Energy" : json["energy"],

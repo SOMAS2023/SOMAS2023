@@ -203,5 +203,5 @@ class Visualiser:
 
 if __name__ == "__main__":
     visualiser = Visualiser()
-    # visualiser.test()
-    visualiser.run_loop()
+    visualiser.test()
+    # visualiser.run_loop()

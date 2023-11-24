@@ -26,10 +26,10 @@ BIKE = {
     "LINE_WIDTH": 1,
     "LINE_COLOUR": "#000000",
     "COLOURS": {
-        "MINHUE" : 240,
+        "MINHUE" : 300,
         "MAXHUE" : 300,
-        "MINSAT" : 50,
-        "MAXSAT" : 80,
+        "MINSAT" : 0,
+        "MAXSAT" : 0,
         "MINVAL" : 60,
         "MAXVAL" : 80,
     },
@@ -73,14 +73,14 @@ BGCOLOURS = {
     "GRID" : "#E5E5E5",
 }
 COLOURS = {
-    "Red": (255, 0, 0),
-    "Green": (0, 128, 0),
-    "Blue": (0, 0, 255),
-    "Yellow": (255, 255, 0),
-    "Orange": (255, 165, 0),
-    "Purple": (128, 0, 128),
-    "Pink": (255, 192, 203),
-    "Brown": (165, 42, 42),
-    "Gray": (128, 128, 128),
-    "White": (255, 255, 255)
+    "Red": "#E05558",
+    "Orange": "#D5C801",
+    "Yellow": "#D5C801",
+    "Green": "#7BBD01",
+    "Blue": "#5E82FD",
+    "Purple": "#A575ED",
+    "Pink": "#DE82C3",
+    "Brown": "#AC6223",
+    "Gray": "#666666",
+    "White": "#FFFFFF"
 }

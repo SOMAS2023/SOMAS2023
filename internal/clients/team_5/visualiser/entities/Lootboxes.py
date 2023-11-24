@@ -4,7 +4,7 @@ Logic for handling bikes in the visualiser
 # pylint: disable=import-error, no-name-in-module
 import pygame
 import pygame_gui
-from visualiser.util.Constants import LOOTBOX, OVERLAY
+from visualiser.util.Constants import LOOTBOX, OVERLAY, COLOURS
 from visualiser.entities.Common import Drawable
 
 class Lootbox(Drawable):
@@ -27,7 +27,7 @@ class Lootbox(Drawable):
         overlay.fill(self.colour)
         # Add lootbox text
         font = pygame.font.SysFont(OVERLAY["FONT"], int(LOOTBOX["FONT_SIZE"] * zoom))
-        if self.colour in ("White", "Yellow"):
+        if self.colour in (COLOURS["White"]):
             text = font.render(self.id, True, "Black")
         else:
             text = font.render(self.id, True, "White")
@@ -53,7 +53,7 @@ class Lootbox(Drawable):
         """
         Change the current round for the agents
         """
-        self.colour = json[self.id]["colour"]
+        self.colour = COLOURS[json[self.id]["colour"]]
         self.properties = {
             "Position" : f"{json[self.id]['position']['x']}, {json[self.id]['position']['y']}",
         }
