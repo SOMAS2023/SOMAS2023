@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-
-	"github.com/google/uuid"
 )
 
 // This map can hold any type of data as the value
@@ -73,7 +71,7 @@ func (vf *VotingFramework) deliberateVote(voteInputs VoteInputs) Vote {
 	} else if voteInputs.DecisionType == VoteToAcceptNewAgent {
 		// TODO: Deliberate on whether to accept a new agent
 		fmt.Println("Deliberating on whether to accept a new agent")
-		vote = VoteToAcceptWrapper(voteInputs)
+		// vote = VoteToAcceptWrapper(voteInputs)
 	} else if voteInputs.DecisionType == VoteOnProposals {
 		// TODO: Deliberate on how to vote on proposed directions
 		fmt.Println("Deliberating on how to vote on proposals")
