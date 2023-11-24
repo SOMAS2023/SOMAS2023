@@ -36,6 +36,9 @@ func (s *Server) RunGameLoop() {
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
 
+	// Punish bikeless agents
+	s.punishBikelessAgents()
+
 	// Check if agents died
 	s.unaliveAgents()
 
@@ -74,6 +77,7 @@ func (s *Server) GetLeavingDecisions() {
 			// it will be added to the desired one (if accepted) at the beginning of next loop
 			if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
 				s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+				delete(s.megaBikeRiders, agent.GetID())
 			}
 		default:
 			panic("agent decided invalid action")
@@ -263,6 +267,15 @@ func (s *Server) unaliveAgents() {
 				s.megaBikes[bikeId].RemoveAgent(id)
 				delete(s.megaBikeRiders, id)
 			}
+		}
+	}
+}
+
+func (s *Server) punishBikelessAgents() {
+	for id, agent := range s.GetAgentMap() {
+		if _, ok := s.megaBikeRiders[id]; !ok {
+			// Agent is not on a bike
+			agent.UpdateEnergyLevel(utils.LimboEnergyPenalty)
 		}
 	}
 }
