@@ -500,13 +500,14 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 	for _, proposal := range proposals {
 		distToBox := distanceToReachableBox(proposal)
 		if distToBox >= 0 {
+			// if box is our colour and number of proposals is majority, make it 1, rest 0, return
+			// else:
 			// calculate energy left if we went here
 			remainingEnergy := findRemainingEnergyAfterReachingBox(proposal)
 			// find nearest reachable boxes from current coordinate
 			isColorNear := checkBoxNearColour(proposal, remainingEnergy)
 			// assign score of number of votes for this box if our colour is nearby
 			if isColorNear {
-				// this box has score (number of votes for it)
 				votes[proposal] = 1 // TODO: number of proposals for this box
 			} else{
 				votes[proposal] = 0
