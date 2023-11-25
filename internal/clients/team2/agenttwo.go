@@ -14,7 +14,6 @@ package team2
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"time"
 
 	// "SOMAS2023/internal/common/utils"
 	"math"
@@ -265,11 +264,12 @@ type Action struct {
 	AgentID         uuid.UUID
 	Action          string
 	Force           utils.Forces
-	GameLoop        time.Time
+	GameLoop        int
 	lootBoxlocation Vector
 }
 
 var actions []Action
+var gameLoopNumber int // TODO: find a function to increment the gameLoopNumber
 
 // To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
 func (a *AgentTwo) DecideForce() {
@@ -290,15 +290,23 @@ func (a *AgentTwo) DecideForce() {
 	for _, bike := range a.gameState.GetMegaBikes() {
 		for _, agent := range bike.GetAgents() {
 			// Record the action
-			actions = append(actions, Action{
+			action := Action{
 				AgentID:         agent.GetID(),
 				Action:          "DecideForce",
 				Force:           agent.GetForces(),
-				GameLoop:        time.Now(),
+				GameLoop:        gameLoopNumber, // record the game loop number
 				lootBoxlocation: lootBoxlocation,
-			})
+			}
+			// If we have more than 5 actions, remove the oldest one
+			if len(actions) >= 5 {
+				actions = actions[1:]
+			}
+
+			// Append the new action
+			actions = append(actions, action)
 		}
 	}
+	// fmt.Println(actions)
 }
 
 func (a *AgentTwo) ChangeBike() uuid.UUID {
