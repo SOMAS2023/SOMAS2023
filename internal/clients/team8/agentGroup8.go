@@ -3,7 +3,6 @@ package team_8
 import (
 	"SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
-	"SOMAS2023/internal/common/voting"
 
 	"github.com/google/uuid"
 )
@@ -100,7 +99,7 @@ func (bb *Agent8) CountAgentsWithSameColour(bikeID uuid.UUID) int {
 	return count
 }
 
-func (bb *Agent8) CalculateBordaScore() uuid.UUID {
+func (bb *Agent8) ChangeBike() uuid.UUID {
 	// Get all the bikes from the game state
 	megaBikes := bb.gameState.GetMegaBikes()
 
@@ -129,32 +128,4 @@ func (bb *Agent8) CalculateBordaScore() uuid.UUID {
 	}
 
 	return winningBikeID
-}
-
-func (bb *Agent8) ChangeBike() uuid.UUID {
-	//TODO： need to be implemented
-	return uuid.New()
-}
-
-// default implementation returns the id of the nearest lootbox
-func (bb *Agent8) ProposeDirection() uuid.UUID {
-	//TODO： need to be implemented
-	return uuid.New()
-}
-
-// this function will contain the agent's strategy on deciding which direction to go to
-// the default implementation returns an equal distribution over all options
-// this will also be tried as returning a rank of options
-func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
-	//TODO： need to be implemented
-	votes := make(map[uuid.UUID]float64)
-	return votes
-}
-
-// through this function the agent submits their desired allocation of resources
-// in the MVP each agent returns 1 whcih will cause the distribution to be equal across all of them
-func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
-	//TODO： need to be implemented
-	distribution := make(map[uuid.UUID]float64)
-	return distribution
 }
