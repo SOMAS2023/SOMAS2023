@@ -5,6 +5,7 @@ Visualiser for SOMAS world
 import tkinter as tk
 from tkinter import filedialog
 import json
+from os.path import exists
 import pygame
 import pygame_gui
 from pygame_gui import UIManager
@@ -197,9 +198,12 @@ class Visualiser:
         """
         Test function
         """
-        self.json_parser(JSONPATH)
-        self.gameScreenManager.change_round(0)
-        self.run_loop("game_screen")
+        if exists(JSONPATH):
+            self.json_parser(JSONPATH)
+            self.gameScreenManager.change_round(0)
+            self.run_loop("game_screen")
+        else:
+            self.run_loop()
 
 if __name__ == "__main__":
     visualiser = Visualiser()
