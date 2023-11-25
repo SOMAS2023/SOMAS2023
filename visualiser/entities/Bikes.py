@@ -5,17 +5,23 @@ Logic for handling bikes in the visualiser
 import math
 import pygame
 import pygame_gui
-from visualiser.util.Constants import AGENT, BIKE
+from visualiser.util.Constants import AGENT, BIKE, PRECISION
 from visualiser.entities.Agents import Agent
 from visualiser.entities.Common import Drawable
 
 class Bike(Drawable):
-    def __init__(self, x:int, y:int, bikeID, colour:str) -> None:
-        super().__init__(x, y)
-        self.id = bikeID
+    def __init__(self, jsonData:dict, colour:str) -> None:
+        super().__init__(jsonData)
         self.agentList = dict()
         self.squareSide = 0
         self.colour = colour
+        properties = {
+            "Acceleration" : round(jsonData["physical_state"]["acceleration"], PRECISION),
+            "Velocity" : round(jsonData["physical_state"]["velocity"], PRECISION),
+            "Mass" : jsonData["physical_state"]["mass"],
+        }
+        self.properties.update(properties)
+        self.set_agents(jsonData["agents"])
 
     def draw(self, screen:pygame_gui.core.UIContainer, offsetX:int, offsetY:int, zoom:float) -> None:
         """
@@ -57,8 +63,8 @@ class Bike(Drawable):
         Set the agents that are in the bike
         """
         self.agentList = dict()
-        for agent, data in agentJson.items():
-            self.agentList[agent] = Agent(self.x, self.y, data["colour"], data["groupID"], agent)
+        for agent in agentJson:
+            self.agentList[agent["id"]] = Agent(self.x, self.y, agent["colour"], "?", agent, agent)
 
     def propagate_click(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> None:
         """
@@ -79,13 +85,13 @@ class Bike(Drawable):
         return (self.trueX <= mouseX <= self.trueX + self.squareSide) and \
                (self.trueY <= mouseY <= self.trueY + self.squareSide)
 
-    def change_round(self, json:dict) -> None:
-        """
-        Change the current round for the agents
-        """
-        self.set_agents(json[self.id]["agents"])
-        for agentid, agent in self.agentList.items():
-            agent.change_round(json[self.id]["agents"][agentid])
-        self.properties = {
-            "Position" : f"{json[self.id]['position']['x']}, {json[self.id]['position']['y']}",
-        }
+    # def change_round(self, json:dict) -> None:
+    #     """
+    #     Change the current round for the agents
+    #     """
+    #     self.set_agents(json[self.id]["agents"])
+    #     for agentid, agent in self.agentList.items():
+    #         agent.change_round(json[self.id]["agents"][agentid])
+    #     self.properties = {
+    #         "Position" : f"{json[self.id]['position']['x']}, {json[self.id]['position']['y']}",
+    #     }
