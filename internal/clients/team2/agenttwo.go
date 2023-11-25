@@ -14,6 +14,7 @@ package team2
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"time"
 
 	// "SOMAS2023/internal/common/utils"
 	"math"
@@ -181,11 +182,19 @@ func (a *AgentTwo) ChooseOptimalBike() uuid.UUID {
 // TODO: Create a function to calculate expected gain
 
 func (a *AgentTwo) DecideAction() objects.BikerAction {
-	lootBoxlocation := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
+	// lootBoxlocation := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
 	//update agent's trustworthiness every round pretty much at the start of each epoch
 	for _, bike := range a.gameState.GetMegaBikes() {
 		for _, agent := range bike.GetAgents() {
-			a.updateTrustworthiness(agent.GetID(), forcesToVectorConversion(agent.GetForces()), lootBoxlocation)
+			// get the force for the agent with agentID in actions
+			agentID := agent.GetID()
+			for _, action := range actions {
+				if action.AgentID == agentID {
+					// update trustworthiness
+					a.updateTrustworthiness(agentID, forcesToVectorConversion(action.Force), action.lootBoxlocation)
+				}
+			}
+			// a.updateTrustworthiness(agent.GetID(), forcesToVectorConversion(), lootBoxlocation)
 		}
 	}
 
@@ -252,19 +261,45 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 
 // func (a *AgentTwo) deci
 
-// func (a *AgentTwo) DecideForce() {
-// 	// Pedal, Brake, Turning
-// 	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
-// 	// GetVotedLootbox() -> get voted lootbox from gamestates
-// 	// GetOptimalLootbox() -> get optimal lootbox for ourself from gamestates
-// 	// probabilityOfConformity = selfSocialCapital
-// 	// Generate random number between 0 and 1
-// 	// if random number < probabilityOfConformity, then conform
-// 	// else, don't conform
+type Action struct {
+	AgentID         uuid.UUID
+	Action          string
+	Force           utils.Forces
+	GameLoop        time.Time
+	lootBoxlocation Vector
+}
 
-// 	// CalculateForceAndSteer(Lootbox) -> calculate force and steer towards lootbox
-// 	// set a.forces.steerbike == True
-// }
+var actions []Action
+
+// To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
+func (a *AgentTwo) DecideForce() {
+	// Pedal, Brake, Turning
+	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
+	// GetVotedLootbox() -> get voted lootbox from gamestates
+	// GetOptimalLootbox() -> get optimal lootbox for ourself from gamestates
+	// probabilityOfConformity = selfSocialCapital
+	// Generate random number between 0 and 1
+	// if random number < probabilityOfConformity, then conform
+	// else, don't conform
+
+	// CalculateForceAndSteer(Lootbox) -> calculate force and steer towards lootbox
+	// set a.forces.steerbike == True
+
+	lootBoxlocation := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
+	//update agent's trustworthiness every round pretty much at the start of each epoch
+	for _, bike := range a.gameState.GetMegaBikes() {
+		for _, agent := range bike.GetAgents() {
+			// Record the action
+			actions = append(actions, Action{
+				AgentID:         agent.GetID(),
+				Action:          "DecideForce",
+				Force:           agent.GetForces(),
+				GameLoop:        time.Now(),
+				lootBoxlocation: lootBoxlocation,
+			})
+		}
+	}
+}
 
 func (a *AgentTwo) ChangeBike() uuid.UUID {
 	// Implement this method
