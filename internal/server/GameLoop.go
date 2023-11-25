@@ -5,11 +5,9 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
-	"os"
 )
 
 func (s *Server) RunGameLoop() {
@@ -294,12 +292,12 @@ func (s *Server) Start() {
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
 	}
-	file, err := os.Create("game_dump.json")
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	if err := json.NewEncoder(file).Encode(gameStates); err != nil {
-		panic(err)
-	}
+	// file, err := os.Create("game_dump.json")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer file.Close()
+	// if err := json.NewEncoder(file).Encode(gameStates); err != nil {
+	// 	panic(err)
+	// }
 }
