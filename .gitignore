@@ -1,2 +1,4 @@
 .vscode
 *.exe
+__pycache__
+game_dump.json
