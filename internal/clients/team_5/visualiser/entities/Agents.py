@@ -5,16 +5,28 @@ Logic for handling the agents in the visualiser
 import math
 import pygame
 import pygame_gui
-from visualiser.util.Constants import AGENT, COLOURS
+from visualiser.util.Constants import AGENT, COLOURS, PRECISION
 from visualiser.entities.Common import Drawable
 
 class Agent(Drawable):
-    def __init__(self, x:int, y:int, colour:pygame.color, groupID, agentID) -> None:
-        super().__init__(x, y)
+    def __init__(self, x:int, y:int, colour:pygame.color, groupID, agentID, jsonData:dict) -> None:
+        super().__init__(jsonData, x, y)
         self.colour = COLOURS[colour]
         self.radius = AGENT["SIZE"]
         self.groupID = groupID
         self.id = agentID
+        self.x = x
+        self.y = y
+        properties = {
+            "Pedal" : jsonData["forces"]["pedal"],
+            "Brake" : jsonData["forces"]["brake"],
+            "Steering?" : f'{jsonData["forces"]["turning"]["steer_bike"] != 0}, {round(jsonData["forces"]["turning"]["steering_force"],PRECISION)}',
+            "Energy" : jsonData["energy_level"],
+            "Resources Needed" : jsonData["resource_allocation_params"]["need"],
+            "Resource Demand" : jsonData["resource_allocation_params"]["demand"],
+            "Resource Appropration" : jsonData["resource_allocation_params"]["appropriation"],
+        }
+        self.properties.update(properties)
 
     def check_collision(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> bool:
         """
@@ -37,7 +49,7 @@ class Agent(Drawable):
         pygame.draw.circle(screen, self.colour, (self.trueX, self.trueY), zoomedRadius)
         # Draw group ID
         font = pygame.font.SysFont("Arial", int(AGENT["FONT_SIZE"]*zoom))
-        if self.colour in (COLOURS["White"]):
+        if self.colour in (COLOURS["white"]):
             text = font.render(str(self.groupID), True, (0, 0, 0))
         else:
             text = font.render(str(self.groupID), True, (255, 255, 255))

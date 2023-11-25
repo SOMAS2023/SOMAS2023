@@ -7,7 +7,7 @@ import colorsys
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, COORDINATESCALE, BIKE
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
@@ -97,14 +97,14 @@ class GameScreen:
         """
         screen.fill((255, 255, 255))
         self.draw_grid(screen)
+        # Draw awdi
+        self.awdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Draw lootboxes
         for lootbox in self.lootboxes:
             lootbox.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # # Draw agents
         for bike in self.bikes:
             bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
-        # Draw awdi
-        self.awdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Divider line
         lineWidth = 1
         pygame.draw.line(screen, "#555555", (DIM["GAME_SCREEN_WIDTH"]-lineWidth, 0), (DIM["GAME_SCREEN_WIDTH"]-lineWidth, DIM["SCREEN_HEIGHT"]), lineWidth)
@@ -143,31 +143,23 @@ class GameScreen:
 
     def change_round(self, newRound:int) -> None:
         """
-        Change the current round
+        Change the current round using the round controls and json data
         """
         self.round = max(0, min(self.maxRound, newRound))
         self.elements["round_count"].set_text(f"Round: {self.round}")
         #Reload bikes
         self.bikes = []
-        data = self.jsonData[f"loop_{self.round}"]["bikes"]
-        for b in data:
-            if data[b]["id"] not in self.bikeColourMap:
-                self.bikeColourMap[data[b]["id"]] = self.allocate_colour()
-            self.bikes.append(Bike(data[b]["position"]["x"]*COORDINATESCALE, data[b]["position"]["y"]*COORDINATESCALE, data[b]["id"], self.bikeColourMap[data[b]["id"]]))
-        # Update the agents and bikes
-        for b in self.bikes:
-            b.change_round(self.jsonData[f"loop_{self.round}"]["bikes"])
+        bikeData = self.jsonData[self.round]["bikes"]
+        for bike in bikeData:
+            if bike["id"] not in self.bikeColourMap:
+                self.bikeColourMap[bike["id"]] = self.allocate_colour()
+            self.bikes.append(Bike(bike, self.bikeColourMap[bike["id"]]))
         # Reload lootboxes
         self.lootboxes = []
-        lootboxes = self.jsonData[f"loop_{self.round}"]["lootboxes"]
-        for l in lootboxes:
-            self.lootboxes.append(Lootbox(lootboxes[l]["position"]["x"]*COORDINATESCALE, lootboxes[l]["position"]["y"]*COORDINATESCALE, l))
-        # Update the lootboxes
-        for l in self.lootboxes:
-            l.change_round(self.jsonData[f"loop_{self.round}"]["lootboxes"])
-        self.awdi = Awdi(self.jsonData[f"loop_{self.round}"]["awdi"]["position"]["x"]*COORDINATESCALE, \
-                         self.jsonData[f"loop_{self.round}"]["awdi"]["position"]["y"]*COORDINATESCALE, self.jsonData[f"loop_{self.round}"]["awdi"]["id"])
-        self.awdi.change_round(self.jsonData[f"loop_{self.round}"]["awdi"])
+        lootboxData = self.jsonData[self.round]["loot_boxes"]
+        for lootbox in lootboxData:
+            self.lootboxes.append(Lootbox(lootbox))
+        self.awdi = Awdi(self.jsonData[self.round]["audi"])
 
     def allocate_colour(self) -> str:
         """
@@ -207,7 +199,6 @@ class GameScreen:
         Draw the grid on the game screen
         """
         zoomedSpacing = DIM["GRIDSPACING"] * self.zoom
-
         # Correctly applying the offsets
         startX = self.offsetX % zoomedSpacing
         startY = self.offsetY % zoomedSpacing
@@ -221,7 +212,7 @@ class GameScreen:
         for y in range(-int(zoomedSpacing) + int(startY), height, int(zoomedSpacing)):
             pygame.draw.line(surface, BGCOLOURS["GRID"], (0, y), (width, y))
 
-    def set_data(self, data:dict) -> None:
+    def set_json(self, data:dict) -> None:
         """
         Set the data for the game screen
         """

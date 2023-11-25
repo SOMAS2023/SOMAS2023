@@ -191,13 +191,13 @@ class Visualiser:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
         self.jsondata = data
-        self.gameScreenManager.set_data(data)
+        self.gameScreenManager.set_json(data)
 
     def test(self) -> None:
         """
         Test function
         """
-        self.json_parser(JSONPATH+"test2.json")
+        self.json_parser(JSONPATH)
         self.gameScreenManager.change_round(0)
         self.run_loop("game_screen")
 

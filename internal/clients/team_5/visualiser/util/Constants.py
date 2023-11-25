@@ -6,10 +6,12 @@ WINDOW_TITLE = "SOMAS Visualiser"
 FRAMERATE = 60
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
 COORDINATESCALE = 1.5
-JSONPATH = "./internal/clients/team_5/visualiser/json/"
+PRECISION = 2
+# JSONPATH = "./internal/clients/team_5/visualiser/json/test2.json"
+JSONPATH = "game_dump.json"
 OVERLAY = {
     "FONT" : "Arial",
-    "WIDTH": 150,
+    "WIDTH": 300,
     "FONT_SIZE": 15,
     "PADDING": 2,
     "LINE_SPACING": 2,
@@ -73,14 +75,14 @@ BGCOLOURS = {
     "GRID" : "#E5E5E5",
 }
 COLOURS = {
-    "Red": "#E05558",
-    "Orange": "#D5C801",
-    "Yellow": "#D5C801",
-    "Green": "#7BBD01",
-    "Blue": "#5E82FD",
-    "Purple": "#A575ED",
-    "Pink": "#DE82C3",
-    "Brown": "#AC6223",
-    "Gray": "#666666",
-    "White": "#FFFFFF"
+    "red": "#E05558",
+    "orange": "#D5C801",
+    "yellow": "#D5C801",
+    "green": "#7BBD01",
+    "blue": "#5E82FD",
+    "purple": "#A575ED",
+    "pink": "#DE82C3",
+    "brown": "#AC6223",
+    "gray": "#666666",
+    "white": "#FFFFFF"
 }

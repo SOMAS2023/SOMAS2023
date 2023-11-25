@@ -1,0 +1,2346 @@
+[
+    {
+      "bikes": [
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.0960075166135,
+              "y": 219.7476975054638
+            },
+            "acceleration": 0.05660377358490566,
+            "velocity": 0.05660377358490566,
+            "mass": 53
+          },
+          "agents": [
+            {
+              "id": "3fa7db10-4d11-4248-bf2f-fd122e7e4a86",
+              "forces": {
+                "pedal": 1,
+                "brake": 0,
+                "turning": {
+                  "steer_bike": true,
+                  "steering_force": 0.32739571886294627
+                }
+              },
+              "energy_level": 0,
+              "resource_allocation_params": {
+                "need": 0,
+                "demand": 0,
+                "provision": 0,
+                "appropriation": 0
+              },
+              "colour": "pink",
+              "location": {
+                "x": 201.0960075166135,
+                "y": 219.7476975054638
+              }
+            },
+            {
+              "id": "3e6719f0-a251-4338-a9f6-c376d0b83f38",
+              "forces": {
+                "pedal": 1,
+                "brake": 0,
+                "turning": {
+                  "steer_bike": true,
+                  "steering_force": 0.32739571886294627
+                }
+              },
+              "energy_level": 0,
+              "resource_allocation_params": {
+                "need": 0,
+                "demand": 0,
+                "provision": 0,
+                "appropriation": 0
+              },
+              "colour": "red",
+              "location": {
+                "x": 201.0960075166135,
+                "y": 219.7476975054638
+              }
+            },
+            {
+              "id": "35734ced-7ff9-46a8-88e2-79ece607dd62",
+              "forces": {
+                "pedal": 1,
+                "brake": 0,
+                "turning": {
+                  "steer_bike": true,
+                  "steering_force": 0.32739571886294627
+                }
+              },
+              "energy_level": 0,
+              "resource_allocation_params": {
+                "need": 0,
+                "demand": 0,
+                "provision": 0,
+                "appropriation": 0
+              },
+              "colour": "yellow",
+              "location": {
+                "x": 201.0960075166135,
+                "y": 219.7476975054638
+              }
+            }
+          ]
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.09403726767717,
+              "y": 300.65786649744
+            },
+            "acceleration": 0.05660377358490566,
+            "velocity": 0.05660377358490566,
+            "mass": 53
+          },
+          "agents": [
+            {
+              "id": "b08f667a-6ab8-42c0-9f18-7c3b96835d74",
+              "forces": {
+                "pedal": 1,
+                "brake": 0,
+                "turning": {
+                  "steer_bike": true,
+                  "steering_force": 0.9833278334339111
+                }
+              },
+              "energy_level": 0,
+              "resource_allocation_params": {
+                "need": 0,
+                "demand": 0,
+                "provision": 0,
+                "appropriation": 0
+              },
+              "colour": "green",
+              "location": {
+                "x": 9.09403726767717,
+                "y": 300.65786649744
+              }
+            },
+            {
+              "id": "6dc543a8-a326-4d63-9936-6130160f750f",
+              "forces": {
+                "pedal": 1,
+                "brake": 0,
+                "turning": {
+                  "steer_bike": true,
+                  "steering_force": 0.9833278334339111
+                }
+              },
+              "energy_level": 0,
+              "resource_allocation_params": {
+                "need": 0,
+                "demand": 0,
+                "provision": 0,
+                "appropriation": 0
+              },
+              "colour": "blue",
+              "location": {
+                "x": 9.09403726767717,
+                "y": 300.65786649744
+              }
+            },
+            {
+              "id": "0aeabfc6-f047-4359-a6a1-8c1f0226978f",
+              "forces": {
+                "pedal": 1,
+                "brake": 0,
+                "turning": {
+                  "steer_bike": true,
+                  "steering_force": 0.9833278334339111
+                }
+              },
+              "energy_level": 0,
+              "resource_allocation_params": {
+                "need": 0,
+                "demand": 0,
+                "provision": 0,
+                "appropriation": 0
+              },
+              "colour": "red",
+              "location": {
+                "x": 9.09403726767717,
+                "y": 300.65786649744
+              }
+            }
+          ]
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.04286598791995,
+            "y": 254.50102495916337
+          },
+          "acceleration": 0,
+          "velocity": 0,
+          "mass": 1000
+        },
+        "target_bike": "00000000-0000-0000-0000-000000000000"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.19801171280687,
+              "y": 219.6987341623267
+            },
+            "acceleration": 0.056543320996527334,
+            "velocity": 0.11314709458143299,
+            "mass": 53
+          },
+          "agents": []
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.152908564636505,
+              "y": 300.7544917291683
+            },
+            "acceleration": 0.056543320996527334,
+            "velocity": 0.11314709458143299,
+            "mass": 53
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.04342813742196,
+            "y": 254.5001979235309
+          },
+          "acceleration": 0.001,
+          "velocity": 0.001,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.29978507943156,
+              "y": 219.64988162038995
+            },
+            "acceleration": -0.0002560453002443949,
+            "velocity": 0.1128910492811886,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.211646639271736,
+              "y": 300.8508983036119
+            },
+            "acceleration": -0.0002560453002443949,
+            "velocity": 0.1128910492811886,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.04455243586384,
+            "y": 254.49854385309297
+          },
+          "acceleration": 0.000999999,
+          "velocity": 0.0019999989999999997,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.40132866001332,
+              "y": 219.60113937874758
+            },
+            "acceleration": -0.00025488778015615504,
+            "velocity": 0.11263616150103244,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.2702520938494,
+              "y": 300.9470872092686
+            },
+            "acceleration": -0.00025488778015615504,
+            "velocity": 0.11263616150103244,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.04623888155913,
+            "y": 254.4960627503307
+          },
+          "acceleration": 0.000999996000004,
+          "velocity": 0.0029999950000039995,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.328725526558133,
+              "y": 301.04305942794304
+            },
+            "acceleration": -0.00025373809755373326,
+            "velocity": 0.1123824234034787,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.50264349101224,
+              "y": 219.55250693988523
+            },
+            "acceleration": -0.00025373809755373326,
+            "velocity": 0.1123824234034787,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.04848747169711,
+            "y": 254.49275461937927
+          },
+          "acceleration": 0.0009999910000299999,
+          "velocity": 0.003999986000033999,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.60373060188647,
+              "y": 219.5039838096496
+            },
+            "acceleration": -0.0002525961818007752,
+            "velocity": 0.11212982722167793,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.387067531545414,
+              "y": 301.1388159348072
+            },
+            "acceleration": -0.0002525961818007752,
+            "velocity": 0.11212982722167793,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.0512982023428,
+            "y": 254.48861946602784
+          },
+          "acceleration": 0.0009999840001119996,
+          "velocity": 0.004999970000145999,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.70459101515516,
+              "y": 219.45556949721816
+            },
+            "acceleration": -0.0002514619630552669,
+            "velocity": 0.11187836525862266,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.445278698953915,
+              "y": 301.23435769846
+            },
+            "acceleration": -0.0002514619630552669,
+            "velocity": 0.11187836525862266,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.0546710684369,
+            "y": 254.4836572977196
+          },
+          "acceleration": 0.0009999750002999976,
+          "velocity": 0.005999945000445997,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.80522574646074,
+              "y": 219.40726351506933
+            },
+            "acceleration": -0.0002503353722588357,
+            "velocity": 0.11162802988636382,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.503359614957427,
+              "y": 301.32968568098613
+            },
+            "acceleration": -0.0002503353722588357,
+            "velocity": 0.11162802988636382,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.05860606379602,
+            "y": 254.4778681235516
+          },
+          "acceleration": 0.0009999640006599915,
+          "velocity": 0.006999909001105989,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 201.90563580463044,
+              "y": 219.35906537895286
+            },
+            "acceleration": -0.00024921634112621866,
+            "velocity": 0.1113788135452376,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.56131086179639,
+              "y": 301.4248008380146
+            },
+            "acceleration": -0.00024921634112621866,
+            "velocity": 0.1113788135452376,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.06310318111255,
+            "y": 254.4712519542748
+          },
+          "acceleration": 0.0009999510012739762,
+          "velocity": 0.007999860002379965,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    },
+    {
+      "bikes": [
+        {
+          "id": "1cc1346c-e523-43dc-81b9-505e7cbe92a5",
+          "physical_state": {
+            "position": {
+              "x": 9.619133017813024,
+              "y": 301.5197041187763
+            },
+            "acceleration": -0.000248104802134896,
+            "velocity": 0.1111307087431027,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "c3f60ba6-9917-4af2-854c-dddda481f1a5",
+          "physical_state": {
+            "position": {
+              "x": 379.2924977174136,
+              "y": 18.741400417727487
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 50
+          },
+          "agents": []
+        },
+        {
+          "id": "6b01fca1-b131-4b03-b563-f21336c605f5",
+          "physical_state": {
+            "position": {
+              "x": 202.0058221917372,
+              "y": 219.31097460786071
+            },
+            "acceleration": -0.000248104802134896,
+            "velocity": 0.1111307087431027,
+            "mass": 50
+          },
+          "agents": []
+        }
+      ],
+      "loot_boxes": [
+        {
+          "id": "6efa4ec1-d728-4f66-adfd-1b2c486cc9a9",
+          "physical_state": {
+            "position": {
+              "x": 196.61239622680642,
+              "y": 271.7187551025661
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.223862076026958,
+          "colour": "blue"
+        },
+        {
+          "id": "74205dad-5993-4841-b247-6092de9048a5",
+          "physical_state": {
+            "position": {
+              "x": 331.69999803654366,
+              "y": 298.4051182853483
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.05605976254161,
+          "colour": "yellow"
+        },
+        {
+          "id": "e7d8237b-1311-405f-863c-fdc178a5c013",
+          "physical_state": {
+            "position": {
+              "x": 468.6940919821284,
+              "y": 350.16305777128605
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.857909996908691,
+          "colour": "green"
+        },
+        {
+          "id": "5cea014d-491b-40ba-af25-2d1f0ba6a74c",
+          "physical_state": {
+            "position": {
+              "x": 20.528039660472256,
+              "y": 83.63147128586395
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.049489528689825,
+          "colour": "white"
+        },
+        {
+          "id": "ab3ae98d-cc77-49e7-a61a-12f1e192adbd",
+          "physical_state": {
+            "position": {
+              "x": 174.19206318464458,
+              "y": 401.2478960094951
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.916819697775168,
+          "colour": "orange"
+        },
+        {
+          "id": "cfb7c3a9-0ce4-42b8-99db-13ed25c7bcca",
+          "physical_state": {
+            "position": {
+              "x": 30.414514365981706,
+              "y": 275.34185085883604
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.02432042789677,
+          "colour": "orange"
+        },
+        {
+          "id": "b4823708-56db-4519-bcc1-69f883152d9a",
+          "physical_state": {
+            "position": {
+              "x": 115.89557574633365,
+              "y": 261.14277353611874
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.658969402260344,
+          "colour": "gray"
+        },
+        {
+          "id": "0e56eb31-8be5-4dcb-8c42-8920fe7e6bd5",
+          "physical_state": {
+            "position": {
+              "x": 373.1155901005773,
+              "y": 402.6993693316822
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.336651012814518,
+          "colour": "white"
+        },
+        {
+          "id": "55b244d1-6be4-4e13-b849-906b02cfbd31",
+          "physical_state": {
+            "position": {
+              "x": 380.3556988945748,
+              "y": 212.3885015733297
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.7124568960435465,
+          "colour": "red"
+        },
+        {
+          "id": "55ebf557-a93c-4208-8a89-530e0b592537",
+          "physical_state": {
+            "position": {
+              "x": 448.46469652942966,
+              "y": 320.01772630163424
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 6.181558567934247,
+          "colour": "pink"
+        },
+        {
+          "id": "bd6906a3-c312-4be4-abc0-fe26bdb6b232",
+          "physical_state": {
+            "position": {
+              "x": 384.95724362680227,
+              "y": 35.856868951597555
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 5.820545930978837,
+          "colour": "green"
+        },
+        {
+          "id": "58b01ac6-94df-4da5-afec-721eb77b3abe",
+          "physical_state": {
+            "position": {
+              "x": 196.1905054606649,
+              "y": 229.96721606940176
+            },
+            "acceleration": 0,
+            "velocity": 0,
+            "mass": 0
+          },
+          "total_resources": 7.411995541333683,
+          "colour": "white"
+        }
+      ],
+      "audi": {
+        "id": "17da06fb-0281-49f9-bedb-ac86073295ae",
+        "physical_state": {
+          "position": {
+            "x": 219.0681624119548,
+            "y": 254.46380880229398
+          },
+          "acceleration": 0.0009999360022399423,
+          "velocity": 0.008999796004619908,
+          "mass": 1000
+        },
+        "target_bike": "c3f60ba6-9917-4af2-854c-dddda481f1a5"
+      }
+    }
+  ]
