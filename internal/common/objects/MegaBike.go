@@ -122,7 +122,6 @@ func (mb *MegaBike) GetCurrentLeader() uuid.UUID {
 	return mb.currentLeaderUUID
 }
 
-// remove an agent from the bike and increase the kickedOutCount
 func (mb *MegaBike) KickOutAgent() uuid.UUID {
 	voteCount := make(map[uuid.UUID]int)
 
@@ -138,23 +137,14 @@ func (mb *MegaBike) KickOutAgent() uuid.UUID {
 	var maxVotes int
 	var kickedOutAgentId uuid.UUID
 	for agentID, votes := range voteCount {
-		if votes > maxVotes && votes > len(voteCount)/2{
+		if votes > maxVotes && votes > len(voteCount)/2 {
 			maxVotes = votes
 			kickedOutAgentId = agentID
-		}
-	}
-
-	// Kick out the agent with the most votes
-	if kickedOutAgentId != uuid.Nil {
-		for i, biker := range mb.agents {
-			if biker.GetID() == kickedOutAgentId {
-				mb.agents = append(mb.agents[:i], mb.agents[i+1:]...)
-				mb.kickedOutCount++
-				break
-			}
+			mb.kickedOutCount++
 		}
 	}
 
 	return kickedOutAgentId
 }
+
 
