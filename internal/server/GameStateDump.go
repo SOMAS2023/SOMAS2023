@@ -19,7 +19,7 @@ type PhysicsObjectDump struct {
 
 type BikeDump struct {
 	PhysicsObjectDump
-	Agents []AgentDump
+	Agents []AgentDump `json:"agents"`
 }
 
 type AgentDump struct {
