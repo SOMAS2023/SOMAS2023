@@ -11,8 +11,7 @@ func calculateResourceAllocation(gameState objects.IGameState, b *team5Agent) ma
 
 	//how to get id of my megabike?
 	var bikeID uuid.UUID
-	// bikeID = b.GetmegaBikeId
-	bikeID = getBikeIdFromGameState(b, gameState)
+	bikeID = b.GetBike()
 
 	bike := gameState.GetMegaBikes()[bikeID]
 	agentsOnBike := bike.GetAgents()

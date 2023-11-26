@@ -6,9 +6,12 @@ WINDOW_TITLE = "SOMAS Visualiser"
 FRAMERATE = 60
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
 COORDINATESCALE = 1.5
+PRECISION = 2
+# JSONPATH = "./internal/clients/team_5/visualiser/json/test2.json"
+JSONPATH = "game_dump.json"
 OVERLAY = {
     "FONT" : "Arial",
-    "WIDTH": 150,
+    "WIDTH": 300,
     "FONT_SIZE": 15,
     "PADDING": 2,
     "LINE_SPACING": 2,
@@ -19,15 +22,16 @@ OVERLAY = {
     "BORDER_WIDTH": 2,
     "BORDER_COLOUR": "#000000",
     "TRANSPARENCY": 240,
+    "FPS_PAD" : 5,
 }
 BIKE = {
     "LINE_WIDTH": 1,
     "LINE_COLOUR": "#000000",
     "COLOURS": {
-        "MINHUE" : 240,
+        "MINHUE" : 300,
         "MAXHUE" : 300,
-        "MINSAT" : 50,
-        "MAXSAT" : 80,
+        "MINSAT" : 0,
+        "MAXSAT" : 0,
         "MINVAL" : 60,
         "MAXVAL" : 80,
     },
@@ -71,14 +75,14 @@ BGCOLOURS = {
     "GRID" : "#E5E5E5",
 }
 COLOURS = {
-    "Red": (255, 0, 0),
-    "Green": (0, 128, 0),
-    "Blue": (0, 0, 255),
-    "Yellow": (255, 255, 0),
-    "Orange": (255, 165, 0),
-    "Purple": (128, 0, 128),
-    "Pink": (255, 192, 203),
-    "Brown": (165, 42, 42),
-    "Gray": (128, 128, 128),
-    "White": (255, 255, 255)
+    "red": "#E05558",
+    "orange": "#D5C801",
+    "yellow": "#D5C801",
+    "green": "#7BBD01",
+    "blue": "#5E82FD",
+    "purple": "#A575ED",
+    "pink": "#DE82C3",
+    "brown": "#AC6223",
+    "gray": "#666666",
+    "white": "#FFFFFF"
 }

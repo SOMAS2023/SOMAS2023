@@ -1,3 +1,6 @@
 .vscode
 *.exe
-*.pyc
+__pycache__
+game_dump.json
+.DS_store
+Test.py
