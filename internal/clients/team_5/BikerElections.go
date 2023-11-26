@@ -11,15 +11,21 @@ func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 	agentsOnBike := t5.BaseBiker.GetGameState().GetMegaBikes()[bikeId].GetAgents()
 	decisions := make(map[uuid.UUID]bool)
 	threshold := 0.5
-	agentReputations := calculateMegaBikeReputation(bikeId) // Need to ask SG how it works after merging
 
-	for key, value := range agentReputations {
+	agentRep := NewRepSystem(t5.BaseBiker.GetGameState())
+	agentRep.updateReputationOfAllAgents()
+
+	for _, agent := range agentsOnBike {
+
+		key := agent.GetID()
+		value := agentRep.calculateReputationOfAgent(key)
+
 		fmt.Println(value)
 
-		if value > threshold {
-			decisions[key] = true
-		} else {
+		if value <= threshold {
 			decisions[key] = false
+		} else {
+			decisions[key] = true
 		}
 
 	}
