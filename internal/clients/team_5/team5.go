@@ -5,6 +5,7 @@ import (
 	utils "SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"fmt"
+
 	"github.com/google/uuid"
 )
 
@@ -37,24 +38,11 @@ func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	return calculateResourceAllocation(t5.GetGameState(), t5)
 }
 
-func (t5 *team5Agent) ProposeDirection(pendingAgents map[uuid.UUID]float64) uuid.UUID {
-    gameState := t5.GetGameState()
-    agentID := t5.GetID()
+func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]float64) voting.LootboxVoteMap {
+	gameState := t5.GetGameState()
+	finalPreferences := CalculateLootBoxPreferences(gameState, t5 /*t5.cumulativePreferences*/)
 
-    // Calculate the final preferences for all loot boxes
-    finalPreferences := CalculateLootBoxPreferences(gameState, agentID, t5.cumulativePreferences)
+	finalVote := SortPreferences(finalPreferences)
 
-    // Find the loot box with the highest preference
-    var bestBox uuid.UUID
-    maxPreference := -1.0
-    for boxID, preference := range finalPreferences {
-        if preference > maxPreference {
-            bestBox = boxID
-            maxPreference = preference
-        }
-    }
-
-    return bestBox
+	return finalVote
 }
-
-
