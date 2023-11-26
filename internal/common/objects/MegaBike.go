@@ -106,7 +106,6 @@ func (mb *MegaBike) UpdateOrientation() {
 	}
 }
 
-
 // get the count of kicked out agents
 func (mb *MegaBike) GetKickedOutCount() int {
 	return mb.kickedOutCount
@@ -114,12 +113,11 @@ func (mb *MegaBike) GetKickedOutCount() int {
 
 func (mb *MegaBike) KickOutAgent() map[uuid.UUID]int {
 	voteCount := make(map[uuid.UUID]int)
-
 	// Count votes for each agent
 	for _, agent := range mb.agents {
-		votedAgentID := agent.VoteForKickout(mb.agents)
-		if votedAgentID != uuid.Nil {
-			voteCount[votedAgentID]++
+		agentVotes := agent.VoteForKickout() // Assuming this now returns map[uuid.UUID]int
+		for agentID, votes := range agentVotes {
+			voteCount[agentID] += votes
 		}
 	}
 
@@ -135,5 +133,6 @@ func (mb *MegaBike) KickOutAgent() map[uuid.UUID]int {
 
 	return agentsToKickOut
 }
+
 
 
