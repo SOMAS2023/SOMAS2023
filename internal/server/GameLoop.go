@@ -36,6 +36,9 @@ func (s *Server) RunGameLoop() {
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
 
+	// Punish bikeless agents
+	s.punishBikelessAgents()
+
 	// Check if agents died
 	s.unaliveAgents()
 
@@ -94,6 +97,7 @@ func (s *Server) GetLeavingDecisions() {
 			// it will be added to the desired one (if accepted) at the beginning of next loop
 			if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
 				s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+				delete(s.megaBikeRiders, agent.GetID())
 			}
 		default:
 			panic("agent decided invalid action")
@@ -125,39 +129,31 @@ func (s *Server) ProcessJoiningRequests() {
 	}
 }
 
-func (s *Server) GetDirectionProposals(agent objects.IBaseBiker, proposedDirections map[uuid.UUID][]uuid.UUID) {
-	// --------------------- VOTING ROUTINE - STEP 1 --------------------------
-	// pitch proposal (desired lootbox)
-	bike := agent.GetBike()
-	if ids, ok := proposedDirections[bike]; ok {
-		proposedDirections[bike] = append(ids, agent.ProposeDirection())
-	} else {
-		proposedDirections[bike] = []uuid.UUID{agent.ProposeDirection()}
-	}
-}
-
 func (s *Server) RunActionProcess() {
-	// map of the proposed lootboxes by bike (for each bike a list of lootbox proposals is made, with one lootbox proposed by each agent on the bike)
-	proposedDirections := make(map[uuid.UUID][]uuid.UUID)
-	for _, agent := range s.GetAgentMap() {
-		// agents that have decided to stay on the bike (and that haven't been kicked off it)
-		// will participate in the voting for the directions
-		// ---------------------------VOTING ROUTINE - STEP 1 ---------------------
-		if agent.GetBikeStatus() {
-			s.GetDirectionProposals(agent, proposedDirections)
+	// vote on governance
+
+	for _, bike := range s.GetMegaBikes() {
+		votes := make([]voting.GovernanceVote, len(bike.GetAgents()))
+		agents := bike.GetAgents()
+		for i, agent := range agents {
+			votes[i] = agent.DecideGovernance()
 		}
-	}
 
-	// pass the pitched directions of a bike to all agents on that bike and get their final vote
-	for bikeID, proposals := range proposedDirections {
-		// ---------------------------VOTING ROUTINE - STEP 2 ---------------------
-		finalVotes := s.GetProposalsDist(bikeID, proposals)
+		// get the direction for this round (either the voted on or what's decided by the leader/ dictator)
+		// for now it's actually just the elected lootbox (will change to accomodate for other proposal types)
+		var direction uuid.UUID
+		electedGovernance, _ := voting.WinnerFromGovernance(votes)
+		bike.SetGovernance(electedGovernance)
+		switch electedGovernance {
+		case utils.Democracy:
+			direction = s.RunDemocraticAction(bike)
+		case utils.Dictatorship:
+			direction = s.RunRulerAction(bike, electedGovernance)
+		case utils.Leadership:
+			direction = s.RunRulerAction(bike, electedGovernance)
+		}
 
-		// ---------------------------VOTING ROUTINE - STEP 3 --------------
-		direction := s.GetWinningDirection(finalVotes)
-
-		// get the force given the chosen voting strategy
-		for _, agent := range s.megaBikes[bikeID].GetAgents() {
+		for _, agent := range agents {
 			agent.DecideForce(direction)
 			// deplete energy
 			energyLost := agent.GetForces().Pedal * utils.MovingDepletion
@@ -182,21 +178,6 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 
 	// Sets the new physical state (i.e. updates gamestate)
 	po.SetPhysicalState(finalState)
-}
-
-func (s *Server) GetProposalsDist(bikeID uuid.UUID, proposals []uuid.UUID) []voting.LootboxVoteMap {
-	// ----------------------------- VOTING ROUTINE - STEP 2 -----------------
-	// get second vote given everyone's proposal
-	// the finalVote can either be a ranking of proposed directions or a map from proposal to vote (between 0,1)
-	// we will try implementing both, the infrastructure should be the same
-	agentsOnBike := s.megaBikes[bikeID].GetAgents()
-	// server collates all vote distributions from each agent into a list of final votes
-	finalVotes := make([]voting.LootboxVoteMap, len(agentsOnBike))
-
-	for _, agent := range s.megaBikes[bikeID].GetAgents() {
-		finalVotes = append(finalVotes, agent.FinalDirectionVote(proposals))
-	}
-	return finalVotes
 }
 
 func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UUID {
@@ -283,6 +264,15 @@ func (s *Server) unaliveAgents() {
 				s.megaBikes[bikeId].RemoveAgent(id)
 				delete(s.megaBikeRiders, id)
 			}
+		}
+	}
+}
+
+func (s *Server) punishBikelessAgents() {
+	for id, agent := range s.GetAgentMap() {
+		if _, ok := s.megaBikeRiders[id]; !ok {
+			// Agent is not on a bike
+			agent.UpdateEnergyLevel(utils.LimboEnergyPenalty)
 		}
 	}
 }

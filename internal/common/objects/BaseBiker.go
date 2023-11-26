@@ -24,6 +24,7 @@ type ResourceAllocationParams struct {
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 
+	DecideGovernance() voting.GovernanceVote
 	DecideAction() BikerAction                                      // ** determines what action the agent is going to take this round. (changeBike or Pedal)
 	DecideForce(direction uuid.UUID)                                // ** defines the vector you pass to the bike: [pedal, brake, turning]
 	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      // ** decide whether to accept or not accept bikers, ranks the ones
@@ -32,6 +33,10 @@ type IBaseBiker interface {
 	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
 	VoteForKickout() map[uuid.UUID]int
+	VoteDictator() voting.IdVoteMap
+	VoteLeader() voting.IdVoteMap
+	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
+	LeadDirection() uuid.UUID
 
 	GetForces() utils.Forces                               // returns forces for current round
 	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
@@ -48,6 +53,10 @@ type IBaseBiker interface {
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	UpdateGameState(gameState IGameState)  // sets the gameState field at the beginning of each round
 	ToggleOnBike()                         // called when removing or adding a biker on a bike
+
+	GetReputation() map[uuid.UUID]float64 // get reputation value of all other agents
+	QueryReputation(uuid.UUID) float64    // query for reputation value of specific agent with UUID
+	SetReputation(uuid.UUID, float64)     // set reputation value of specific agent with UUID
 }
 
 type BikerAction int
@@ -67,6 +76,7 @@ type BaseBiker struct {
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
 	gameState                        IGameState // updated by the server at every round
 	allocationParams                 ResourceAllocationParams
+	reputation                       map[uuid.UUID]float64 // record reputation for other agents in float
 }
 
 func (bb *BaseBiker) GetEnergyLevel() float64 {
@@ -244,8 +254,31 @@ func (bb *BaseBiker) GetGameState() IGameState {
 	return bb.gameState
 }
 
-func (bb *BaseBiker) GetMegaBikeId() uuid.UUID {
-	return bb.megaBikeId
+// Returns the other agents on your bike :)
+func (bb *BaseBiker) GetFellowBikers() []IBaseBiker {
+	bike := bb.gameState.GetMegaBikes()[bb.megaBikeId]
+	fellowBikers := bike.GetAgents()
+	return fellowBikers
+}
+
+// GetReputation map from agent, need to check if nil when call this function
+func (bb *BaseBiker) GetReputation() map[uuid.UUID]float64 {
+	return bb.reputation
+}
+
+// QueryReputation of specific agent with given ID, if there is no record for given agentID then return 0
+func (bb *BaseBiker) QueryReputation(agentId uuid.UUID) float64 {
+	if bb.reputation == nil {
+		return 0
+	}
+	return bb.reputation[agentId]
+}
+
+func (bb *BaseBiker) SetReputation(agentId uuid.UUID, reputation float64) {
+	if bb.reputation == nil {
+		bb.reputation = make(map[uuid.UUID]float64)
+	}
+	bb.reputation[agentId] = reputation
 }
 
 // an agent will have to rank the agents that are trying to join and that they will try to
@@ -255,6 +288,15 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 		decision[agent] = true
 	}
 	return decision
+}
+
+// base biker defaults to democracy
+func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
+	governanceRanking := make(voting.GovernanceVote)
+	governanceRanking[utils.Democracy] = 1.0
+	governanceRanking[utils.Dictatorship] = 0.0
+	governanceRanking[utils.Leadership] = 0.0
+	return governanceRanking
 }
 
 // this function will contain the agent's strategy on deciding which direction to go to
@@ -284,6 +326,44 @@ func (bb *BaseBiker) VoteForKickout() map[uuid.UUID]int {
 	}
 
 	return voteResults
+}
+
+// defaults to voting for first agent in the list
+func (bb *BaseBiker) VoteDictator() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+}
+
+func (bb *BaseBiker) DictateDirection() uuid.UUID {
+	nearest := bb.nearestLoot()
+	return nearest
+}
+
+// defaults to voting for first agent in the list
+func (bb *BaseBiker) VoteLeader() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+}
+
+func (bb *BaseBiker) LeadDirection() uuid.UUID {
+	nearest := bb.nearestLoot()
+	return nearest
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
