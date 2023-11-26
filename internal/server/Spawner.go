@@ -38,7 +38,8 @@ func (s *Server) spawnMegaBike() {
 }
 
 func (s *Server) replenishMegaBikes() {
-	for i := 0; i < MegaBikeCount-len(s.megaBikes); i++ {
+	neededBikes := MegaBikeCount - len(s.megaBikes)
+	for i := 0; i < neededBikes; i++ {
 		s.spawnMegaBike()
 	}
 }

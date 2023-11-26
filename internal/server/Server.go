@@ -12,6 +12,7 @@ const MegaBikeCount = BikerAgentCount / 2
 
 type IBaseBikerServer interface {
 	baseserver.IServer[objects.IBaseBiker]
+	GetMegaBikes() map[uuid.UUID]objects.IMegaBike
 }
 
 type Server struct {
