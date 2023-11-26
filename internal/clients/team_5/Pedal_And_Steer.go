@@ -60,6 +60,7 @@ func (t5 *Team5Biker) calculatePedalForceBasedOnEnergy() float64 {
 // speed of other bikes
 // and 
 // position of other bikes and how fast to peddle depending on that
+// so the lootbox is the direction but we may need to turn more if the bike doesnt turn enough.
 
 
 
