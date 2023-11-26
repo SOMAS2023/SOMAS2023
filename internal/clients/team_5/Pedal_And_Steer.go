@@ -52,7 +52,12 @@ func (t5 *Team5Biker) calculatePedalForceBasedOnEnergy() float64 {
 
 // can add this to decide force
 
+// add a function depends
 
+
+// speed of other bikes
+// and 
+// position of other bikes and how fast to peddle depending on that
 
 
 
