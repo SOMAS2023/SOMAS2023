@@ -3,16 +3,23 @@ Common functions between entities.
 """
 import pygame
 import pygame_gui
-from visualiser.util.Constants import OVERLAY
+from visualiser.util.Constants import OVERLAY, COORDINATESCALE, PRECISION
 class Drawable:
-    def __init__(self, x, y) -> None:
-        self.x = x
-        self.y = y
-        self.trueX = x
-        self.trueY = y
-        self.properties = {"test" : 41, "test2" : 42}
+    def __init__(self, jsonData:dict, x=None, y=None) -> None:
+        if x is None:
+            self.x = round(jsonData["physical_state"]["position"]["x"]*COORDINATESCALE, PRECISION)
+            self.y = round(jsonData["physical_state"]["position"]["y"]*COORDINATESCALE, PRECISION)
+        else:
+            self.x = x*COORDINATESCALE
+            self.y = y*COORDINATESCALE
+        self.trueX = self.x
+        self.trueY = self.y
         self.clicked = False
-        self.id = None
+        self.id = jsonData["id"]
+        self.properties = {
+            "ID" : self.id,
+            "Position" : f"{self.x}, {self.y}",
+        }
         self.overlay = pygame.Surface((0, 0))
 
     def click(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> bool:
@@ -82,8 +89,8 @@ class Drawable:
         if self.clicked:
             screen.blit(self.overlay, (self.trueX, self.trueY))
 
-    def change_round(self, json:dict) -> None:
-        """
-        Change the round of the agent
-        """
-        raise NotImplementedError
+    # def change_round(self, json:dict) -> None:
+    #     """
+    #     Change the round of the agent
+    #     """
+    #     raise NotImplementedError

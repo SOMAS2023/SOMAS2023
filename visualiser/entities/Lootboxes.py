@@ -4,14 +4,20 @@ Logic for handling bikes in the visualiser
 # pylint: disable=import-error, no-name-in-module
 import pygame
 import pygame_gui
-from visualiser.util.Constants import LOOTBOX, OVERLAY
+from visualiser.util.Constants import LOOTBOX, OVERLAY, COLOURS
 from visualiser.entities.Common import Drawable
 
 class Lootbox(Drawable):
-    def __init__(self, x:int, y:int, lootboxID) -> None:
-        super().__init__(x, y)
-        self.id = lootboxID
-        self.colour = LOOTBOX["DEFAULT_COLOUR"]
+    def __init__(self, jsonData:dict) -> None:
+        super().__init__(jsonData)
+        self.colour = COLOURS[jsonData["colour"]]
+        properties = {
+            "Acceleration" : jsonData["physical_state"]["acceleration"],
+            "Velocity" : jsonData["physical_state"]["velocity"],
+            "Mass" : jsonData["physical_state"]["mass"],
+            "Resources" : jsonData["total_resources"],
+        }
+        self.properties.update(properties)
 
     def draw(self, screen:pygame_gui.core.UIContainer, offsetX:int, offsetY:int, zoom:float) -> None:
         """
@@ -27,7 +33,7 @@ class Lootbox(Drawable):
         overlay.fill(self.colour)
         # Add lootbox text
         font = pygame.font.SysFont(OVERLAY["FONT"], int(LOOTBOX["FONT_SIZE"] * zoom))
-        if self.colour in ("White", "Yellow"):
+        if self.colour in (COLOURS["white"]):
             text = font.render(self.id, True, "Black")
         else:
             text = font.render(self.id, True, "White")
@@ -49,14 +55,14 @@ class Lootbox(Drawable):
         return (self.trueX <= mouseX <= self.trueX + LOOTBOX["WIDTH"]) and \
                (self.trueY <= mouseY <= self.trueY + LOOTBOX["HEIGHT"])
 
-    def change_round(self, json:dict) -> None:
-        """
-        Change the current round for the agents
-        """
-        self.colour = json[self.id]["colour"]
-        self.properties = {
-            "Position" : f"{json[self.id]['position']['x']}, {json[self.id]['position']['y']}",
-        }
+    # def change_round(self, json:dict) -> None:
+    #     """
+    #     Change the current round for the agents
+    #     """
+    #     self.colour = COLOURS[json[self.id]["colour"]]
+    #     self.properties = {
+    #         "Position" : f"{json[self.id]['position']['x']}, {json[self.id]['position']['y']}",
+    #     }
 
     def propagate_click(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> None:
         """
