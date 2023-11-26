@@ -12,7 +12,7 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
-	KickOutAgent(bikerId uuid.UUID)
+	KickOutAgent() map[uuid.UUID]int
 }
 
 // MegaBike will have the following forces
@@ -20,7 +20,6 @@ type MegaBike struct {
 	*PhysicsObject
 	agents []IBaseBiker
 	kickedOutCount    int
-	currentLeaderUUID uuid.UUID
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
@@ -107,22 +106,13 @@ func (mb *MegaBike) UpdateOrientation() {
 	}
 }
 
+
 // get the count of kicked out agents
 func (mb *MegaBike) GetKickedOutCount() int {
 	return mb.kickedOutCount
 }
 
-// set a current leader
-func (mb *MegaBike) SetCurrentLeader(leaderUUID uuid.UUID) {
-	mb.currentLeaderUUID = leaderUUID
-}
-
-// get the current leader
-func (mb *MegaBike) GetCurrentLeader() uuid.UUID {
-	return mb.currentLeaderUUID
-}
-
-func (mb *MegaBike) KickOutAgent() uuid.UUID {
+func (mb *MegaBike) KickOutAgent() map[uuid.UUID]int {
 	voteCount := make(map[uuid.UUID]int)
 
 	// Count votes for each agent
@@ -133,18 +123,17 @@ func (mb *MegaBike) KickOutAgent() uuid.UUID {
 		}
 	}
 
-	// Find the agent with the most votes
-	var maxVotes int
-	var kickedOutAgentId uuid.UUID
+	// Find all agents with votes > half the number of agents
+	agentsToKickOut := make(map[uuid.UUID]int)
 	for agentID, votes := range voteCount {
-		if votes > maxVotes && votes > len(voteCount)/2 {
-			maxVotes = votes
-			kickedOutAgentId = agentID
-			mb.kickedOutCount++
+		if votes > len(mb.agents)/2 {
+			agentsToKickOut[agentID] = votes
 		}
 	}
 
-	return kickedOutAgentId
+	mb.kickedOutCount += len(agentsToKickOut)
+
+	return agentsToKickOut
 }
 
 
