@@ -47,24 +47,26 @@ func (s *Server) RunGameLoop() {
 func (s *Server) RunBikeSwitch() {
 	// check if agents want ot leave the bike on this round
 	s.GetLeavingDecisions()
-	// process joining requests from last round
-	s.ProcessJoiningRequests()
 	//process the kickout request
 	s.HandleKickoutProcess(objects.GetMegaBike())
+	// process joining requests from last round
+	s.ProcessJoiningRequests()
+
 }
 
 func (s *Server) HandleKickoutProcess(megaBike *objects.MegaBike) {
 	for _, bike := range s.GetMegaBikes() {
-		kickedOutAgentID := megaBike.KickOutAgent()
-		if kickedOutAgentID != uuid.Nil {
-			//fmt.Printf("Agent %s has been kicked out from the bike %s\n", kickedOutAgentID, bike.GetID())
-			bike.RemoveAgent(kickedOutAgentID)
-
-			if agent, ok := s.GetAgentMap()[kickedOutAgentID]; ok {
-				agent.ToggleOnBike()
+		agentsVoteCounts := megaBike.KickOutAgent()
+		for agentID, votes := range agentsVoteCounts {
+			if votes > len(bike.GetAgents())/2 {
+				bike.RemoveAgent(agentID)
+				
+				if agent, ok := s.GetAgentMap()[agentID]; ok {
+					agent.ToggleOnBike()
+					//if kickedoutagent is the leader, need to select one new
+				}
 			}
 
-			//if kickedoutagent is the leader, need to select one new
 		}
 	}
 }
