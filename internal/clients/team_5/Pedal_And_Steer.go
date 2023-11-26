@@ -1,26 +1,22 @@
 package team5Agent
 
 import (
-	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"github.com/google/uuid"
 	"fmt"
 )
 
-type Team5Biker struct {
-	*objects.BaseBiker
-	bikeVote uuid.UUID // uuid.UUID of voted lootbox from omars output
-}
-
 //for testing use any box in targetLootBoxID
 
-func (t5 *Team5Biker) DecideForce(targetLootBoxID uuid.UUID) {
+func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	fmt.Println("team5Agent: GetBike: t5.BaseBiker.GetBike(): ", t5.BaseBiker.GetBike())
-	return t5.BaseBiker.DecideForce(targetLootBoxID) // Pass the UUID to BaseBiker's DecideForce
+	fmt.Println("testing 1")
+
+	t5.BaseBiker.DecideForce(targetLootBoxID) // Pass the UUID to BaseBiker's DecideForce
 }
 
 // so this bassically adjusts the force depending on the energy of the agent
-func (t5 *Team5Biker) calculatePedalForceBasedOnEnergy() float64 {
+func (t5 *team5Agent) calculatePedalForceBasedOnEnergy() float64 {
 	ownEnergyLevel := t5.GetEnergyLevel()
 	// ask the guys what number i want to put the own energy level and if it
 	// should be adjusted based on energy level to sva eenergy
@@ -57,10 +53,11 @@ func (t5 *Team5Biker) calculatePedalForceBasedOnEnergy() float64 {
 // add a function depends
 
 
-// speed of other bikes
+// 2.)speed of other bikes
 // and 
 // position of other bikes and how fast to peddle depending on that
-// so the lootbox is the direction but we may need to turn more if the bike doesnt turn enough.
+
+// 1.)so the lootbox is the direction but we may need to turn more if the bike doesnt turn enough.
 
 
 
