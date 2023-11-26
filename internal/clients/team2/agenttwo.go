@@ -33,7 +33,9 @@ type AgentTwo struct {
 	forgivenessCounter int32                 // Keep track of how many rounds we have been forgiving an agent
 	gameState          objects.IGameState    // updated by the server at every round
 	// megaBikeId uuid.UUID
-	bikeCounter map[uuid.UUID]int32
+	bikeCounter    map[uuid.UUID]int32
+	actions        []Action
+	gameLoopNumber int // incremented at end of DecideForce
 }
 
 const (
@@ -41,6 +43,14 @@ const (
 	InstitutionWeight = 0.0
 	NetworkWeight     = 0.0
 )
+
+type Action struct {
+	AgentID         uuid.UUID
+	Action          string
+	Force           utils.Forces
+	GameLoop        int
+	lootBoxlocation Vector
+}
 
 // TODO: function CalculateSocialCapital
 func (a *AgentTwo) CalculateSocialCapital() {
@@ -187,7 +197,7 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 		for _, agent := range bike.GetAgents() {
 			// get the force for the agent with agentID in actions
 			agentID := agent.GetID()
-			for _, action := range actions {
+			for _, action := range a.actions {
 				if action.AgentID == agentID {
 					// update trustworthiness
 					a.updateTrustworthiness(agentID, forcesToVectorConversion(action.Force), action.lootBoxlocation)
@@ -260,17 +270,6 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 
 // func (a *AgentTwo) deci
 
-type Action struct {
-	AgentID         uuid.UUID
-	Action          string
-	Force           utils.Forces
-	GameLoop        int
-	lootBoxlocation Vector
-}
-
-var actions []Action
-var gameLoopNumber int // TODO: find a function to increment the gameLoopNumber
-
 // To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
 func (a *AgentTwo) DecideForce() {
 	// Pedal, Brake, Turning
@@ -294,18 +293,20 @@ func (a *AgentTwo) DecideForce() {
 				AgentID:         agent.GetID(),
 				Action:          "DecideForce",
 				Force:           agent.GetForces(),
-				GameLoop:        gameLoopNumber, // record the game loop number
+				GameLoop:        a.gameLoopNumber, // record the game loop number
 				lootBoxlocation: lootBoxlocation,
 			}
 			// If we have more than 5 actions, remove the oldest one
-			if len(actions) >= 5 {
-				actions = actions[1:]
+			if len(a.actions) >= 5 {
+				a.actions = a.actions[1:]
 			}
 
 			// Append the new action
-			actions = append(actions, action)
+			a.actions = append(a.actions, action)
 		}
 	}
+
+	a.gameLoopNumber++
 	// fmt.Println(actions)
 }
 
