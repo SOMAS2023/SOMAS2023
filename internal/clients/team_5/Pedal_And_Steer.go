@@ -12,9 +12,11 @@ type Team5Biker struct {
 	bikeVote uuid.UUID // uuid.UUID of voted lootbox from omars output
 }
 
+//for testing use any box in targetLootBoxID
+
 func (t5 *Team5Biker) DecideForce(targetLootBoxID uuid.UUID) {
 	fmt.Println("team5Agent: GetBike: t5.BaseBiker.GetBike(): ", t5.BaseBiker.GetBike())
-	t5.BaseBiker.DecideForce(targetLootBoxID) // Pass the UUID to BaseBiker's DecideForce
+	return t5.BaseBiker.DecideForce(targetLootBoxID) // Pass the UUID to BaseBiker's DecideForce
 }
 
 // so this bassically adjusts the force depending on the energy of the agent
