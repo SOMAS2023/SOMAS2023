@@ -270,19 +270,8 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 
 // func (a *AgentTwo) deci
 
-// To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
-func (a *AgentTwo) DecideForce() {
-	// Pedal, Brake, Turning
-	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
-	// GetVotedLootbox() -> get voted lootbox from gamestates
-	// GetOptimalLootbox() -> get optimal lootbox for ourself from gamestates
-	// probabilityOfConformity = selfSocialCapital
-	// Generate random number between 0 and 1
-	// if random number < probabilityOfConformity, then conform
-	// else, don't conform
-
-	// CalculateForceAndSteer(Lootbox) -> calculate force and steer towards lootbox
-	// set a.forces.steerbike == True
+func (a *AgentTwo) GetPreviousAction() {
+	// -> get previous action of all bikes and bikers from last 5 gamestates
 
 	lootBoxlocation := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
 	//update agent's trustworthiness every round pretty much at the start of each epoch
@@ -305,6 +294,23 @@ func (a *AgentTwo) DecideForce() {
 			a.actions = append(a.actions, action)
 		}
 	}
+}
+
+// To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
+func (a *AgentTwo) DecideForce() {
+	// Pedal, Brake, Turning
+	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
+	// GetVotedLootbox() -> get voted lootbox from gamestates
+	// GetOptimalLootbox() -> get optimal lootbox for ourself from gamestates
+	// probabilityOfConformity = selfSocialCapital
+	// Generate random number between 0 and 1
+	// if random number < probabilityOfConformity, then conform
+	// else, don't conform
+
+	// CalculateForceAndSteer(Lootbox) -> calculate force and steer towards lootbox
+	// set a.forces.steerbike == True
+
+	a.GetPreviousAction()
 
 	a.gameLoopNumber++
 	// fmt.Println(actions)
@@ -316,6 +322,17 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 	// proposal to change bike to a goal bike
 	return uuid.UUID{}
 }
+
+// this function will be used by GetTeamAgent to get the ref to the BaseBiker
+// func GetTeam2Biker(totColours utils.Colour, bikeId uuid.UUID) *AgentTwo {
+// 	return &AgentTwo{
+// 		BaseAgent:    AgentTwo.NewAgent[IBaseBiker](),
+// 		soughtColour: utils.GenerateRandomColour(),
+// 		onBike:       true,
+// 		energyLevel:  1.0,
+// 		points:       0,
+// 	}
+// }
 
 // NOTES ------------------------------------------------------------
 
