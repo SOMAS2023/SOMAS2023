@@ -4,9 +4,12 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
+	"os"
 )
 
 func (s *Server) RunGameLoop() {
@@ -22,6 +25,8 @@ func (s *Server) RunGameLoop() {
 
 	// Move the mega bikes
 	for _, bike := range s.GetMegaBikes() {
+		// update mass dependent on number of agents on bike
+		bike.UpdateMass()
 		s.MovePhysicsObject(bike)
 	}
 
@@ -30,6 +35,12 @@ func (s *Server) RunGameLoop() {
 
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
+
+	// Punish bikeless agents
+	s.punishBikelessAgents()
+
+	// Check if agents died
+	s.unaliveAgents()
 
 	// Replenish objects
 	s.replenishLootBoxes()
@@ -66,6 +77,7 @@ func (s *Server) GetLeavingDecisions() {
 			// it will be added to the desired one (if accepted) at the beginning of next loop
 			if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
 				s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+				delete(s.megaBikeRiders, agent.GetID())
 			}
 		default:
 			panic("agent decided invalid action")
@@ -87,7 +99,7 @@ func (s *Server) ProcessJoiningRequests() {
 			responses = append(responses, agent.DecideJoining(pendingAgents))
 		}
 		// 3. accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
-		acceptedRanked := GetAcceptanceRanking(responses)
+		acceptedRanked := voting.GetAcceptanceRanking(responses)
 		totalSeatsFilled := len(s.megaBikes[bike].GetAgents())
 		emptySpaces := 8 - totalSeatsFilled
 		for _, accepted := range acceptedRanked[:emptySpaces] {
@@ -114,6 +126,7 @@ func (s *Server) RunActionProcess() {
 	for _, agent := range s.GetAgentMap() {
 		// agents that have decided to stay on the bike (and that haven't been kicked off it)
 		// will participate in the voting for the directions
+		// ---------------------------VOTING ROUTINE - STEP 1 ---------------------
 		if agent.GetBikeStatus() {
 			s.GetDirectionProposals(agent, proposedDirections)
 		}
@@ -122,7 +135,7 @@ func (s *Server) RunActionProcess() {
 	// pass the pitched directions of a bike to all agents on that bike and get their final vote
 	for bikeID, proposals := range proposedDirections {
 		// ---------------------------VOTING ROUTINE - STEP 2 ---------------------
-		finalVotes := s.GetProposalsRankings(bikeID, proposals)
+		finalVotes := s.GetProposalsDist(bikeID, proposals)
 
 		// ---------------------------VOTING ROUTINE - STEP 3 --------------
 		direction := s.GetWinningDirection(finalVotes)
@@ -135,7 +148,6 @@ func (s *Server) RunActionProcess() {
 			agent.UpdateEnergyLevel(-energyLost)
 		}
 	}
-
 }
 
 func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
@@ -156,14 +168,14 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 	po.SetPhysicalState(finalState)
 }
 
-func (s *Server) GetProposalsRankings(bikeID uuid.UUID, proposals []uuid.UUID) []utils.LootboxVoteMap {
+func (s *Server) GetProposalsDist(bikeID uuid.UUID, proposals []uuid.UUID) []voting.LootboxVoteMap {
 	// ----------------------------- VOTING ROUTINE - STEP 2 -----------------
 	// get second vote given everyone's proposal
 	// the finalVote can either be a ranking of proposed directions or a map from proposal to vote (between 0,1)
 	// we will try implementing both, the infrastructure should be the same
 	agentsOnBike := s.megaBikes[bikeID].GetAgents()
 	// server collates all vote distributions from each agent into a list of final votes
-	finalVotes := make([]utils.LootboxVoteMap, len(agentsOnBike))
+	finalVotes := make([]voting.LootboxVoteMap, len(agentsOnBike))
 
 	for _, agent := range s.megaBikes[bikeID].GetAgents() {
 		finalVotes = append(finalVotes, agent.FinalDirectionVote(proposals))
@@ -171,21 +183,35 @@ func (s *Server) GetProposalsRankings(bikeID uuid.UUID, proposals []uuid.UUID) [
 	return finalVotes
 }
 
-func (s *Server) GetWinningDirection(finalVotes []utils.LootboxVoteMap) uuid.UUID {
+func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UUID {
 	// get overall winner direction using chosen voting strategy
 
 	// this allows to get a slice of the interface from that of the specific type
 	// this way we can substitute agent.FInalDirectionVote with another function that returns
 	// another type of voting type which still implements INormaliseVoteMap
-	IfinalVotes := make([]utils.INormaliseVoteMap, len(finalVotes))
+	IfinalVotes := make([]voting.IVoter, len(finalVotes))
 	for i, v := range finalVotes {
 		IfinalVotes[i] = v
 	}
 
-	return WinnerFromDist(IfinalVotes)
+	return voting.WinnerFromDist(IfinalVotes)
 }
 
 func (s *Server) LootboxCheckAndDistributions() {
+
+	// checks how many bikes have looted one lootbox to split it between them
+	looted := make(map[uuid.UUID]int)
+	for _, megabike := range s.GetMegaBikes() {
+		for lootid, lootbox := range s.GetLootBoxes() {
+			if megabike.CheckForCollision(lootbox) {
+				if value, ok := looted[lootid]; ok {
+					looted[lootid] = value + 1
+				} else {
+					looted[lootid] = 1
+				}
+			}
+		}
+	}
 	for bikeid, megabike := range s.GetMegaBikes() {
 		for lootid, lootbox := range s.GetLootBoxes() {
 			if megabike.CheckForCollision(lootbox) {
@@ -194,41 +220,86 @@ func (s *Server) LootboxCheckAndDistributions() {
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
+				allAllocations := make([]voting.IdVoteMap, totAgents)
 				for _, agent := range agents {
-					// this function allows the agent to decide on its allocation parameters
-					// these are the parameters that we want to be considered while carrying out
-					// the elected protocol for resource allocation
-					agent.DecideAllocationParameters()
+					// the agents return their ideal lootbox split by assigning a number between 0 and 1 to
+					// each biker on their bike (including themselves)
+					allAllocations = append(allAllocations, agent.DecideAllocation())
+				}
 
-					// in the MVP  the allocation parameters are ignored and
-					// the utility share will simply be 1 / the number of agents on the bike
-					utilityShare := 1.0 / float64(totAgents)
-					lootShare := utilityShare * lootbox.GetTotalResources()
+				Iallocations := make([]voting.IVoter, len(allAllocations))
+				for i, v := range allAllocations {
+					Iallocations[i] = v
+				}
+				// TODO handle error
+				winningAllocation, _ := voting.CumulativeDist(Iallocations)
+				bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
+				for agentID, allocation := range winningAllocation {
+					lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
+					agent := s.GetAgentMap()[agentID]
 					// Allocate loot based on the calculated utility share
 					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 					agent.UpdateEnergyLevel(lootShare)
-
 					// Allocate points if the box is of the right colour
 					if agent.GetColour() == lootbox.GetColour() {
-						agent.UpdatePoints(1)
+						agent.UpdatePoints(utils.PointsFromSameColouredLootBox)
 					}
 				}
 			}
+		}
+	}
+
+	// despawn lootboxes that have been looted
+	for id, loot := range looted {
+		if loot > 0 {
+			delete(s.lootBoxes, id)
+		}
+	}
+}
+
+func (s *Server) unaliveAgents() {
+	for id, agent := range s.GetAgentMap() {
+		if agent.GetEnergyLevel() < 0 {
+			fmt.Printf("Agent %s got game ended\n", id)
+			s.RemoveAgent(agent)
+			if bikeId, ok := s.megaBikeRiders[id]; ok {
+				s.megaBikes[bikeId].RemoveAgent(id)
+				delete(s.megaBikeRiders, id)
+			}
+		}
+	}
+}
+
+func (s *Server) punishBikelessAgents() {
+	for id, agent := range s.GetAgentMap() {
+		if _, ok := s.megaBikeRiders[id]; !ok {
+			// Agent is not on a bike
+			agent.UpdateEnergyLevel(utils.LimboEnergyPenalty)
 		}
 	}
 }
 
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
+	gameStates := make([]GameStateDump, 0, s.GetIterations())
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
 		fmt.Printf("Main game loop running...\n\n")
 		s.RunGameLoop()
+		gameStates = append(gameStates, s.NewGameStateDump())
 		fmt.Printf("\nMain game loop finished.\n\n")
 		fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
+	}
+	file, err := os.Create("game_dump.json")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	if err := json.NewEncoder(file).Encode(gameStates); err != nil {
+		panic(err)
 	}
 }

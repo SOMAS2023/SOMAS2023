@@ -1,0 +1,76 @@
+jsonFormat = 
+{
+	gameloop: {
+		loopNo: 0,
+		bikes: {
+			bike: {
+				id: BIKEID,
+				agents: {
+					agent: {
+						id: ID, // AgentID
+						groupID: GROUPID, // ID for group, new attribute for displaying the behaviour of specific group's agents
+						bikeID: BIKEID, // ID of bike
+						colour: COLOUR, // Colour the agent is trying to go for
+						position: COORDINATES,
+						points: POINTS
+						energy: ENERGY
+						bikes: {
+							acceptBikers: {
+								True, // True/False for every new member of bike
+								False
+								},
+							leaveBike: True/False,
+							joinBike: 0x0/BIKEID, // 0x0 if not leaving bike
+							bikeVote: {
+								True, // True/False for every member of bike, vote to keep on
+								True,
+								True,
+								False
+							},
+						},
+						forces: {
+							pedal: FORCE
+							turn:  FORCE
+							brake: FORCE
+						},
+						lootboxChoice:  LOOTBOXID
+						lootDistribution: {
+							0.1,
+							0.4,
+							0.5,
+							0.0
+						},
+					},
+					agent: {...}
+				},
+			}
+			// Agents not on a bike should all be on a bike with ID 0
+		}
+		lootboxes: {
+			lootbox: {
+				id: ID
+				position: COORDINATES
+				colour: COLOUR
+			},
+			lootbox : {...}
+		},
+		audi: {
+			target: BIKEID,
+			position: COORDINATES,
+		}
+	},
+}
+	
+
+
+jsonFormat = {
+	gameLoopNo: 0
+	agent: {
+		id: 0x1
+		groupid: 0x1
+		colour: "black"
+		leaveBike: 
+		
+		
+	}
+}

@@ -8,4 +8,5 @@ IGameState is an interface for GameState that objects will use to get the curren
 type IGameState interface {
 	GetLootBoxes() map[uuid.UUID]ILootBox
 	GetMegaBikes() map[uuid.UUID]IMegaBike
+	GetAudi() IAudi
 }

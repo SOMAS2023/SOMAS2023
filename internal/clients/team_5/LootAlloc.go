@@ -1,4 +1,4 @@
-package LootAlloc
+package team5Agent
 
 import (
 	"github.com/google/uuid"
@@ -6,8 +6,8 @@ import (
 	"SOMAS2023/internal/common/objects"
 )
 
-func calculateResourceAllocation(gameState objects.IGameState, self objects.IBaseBiker, method string) map[uuid.UUID]float32 {
-	allocations := make(map[uuid.UUID]float32)
+func calculateResourceAllocation(gameState objects.IGameState, self objects.IBaseBiker, method string) map[uuid.UUID]float64 {
+	allocations := make(map[uuid.UUID]float64)
 
 	//how to get id of my megabike?
 	var bikeID uuid.UUID
@@ -41,8 +41,8 @@ func getBikeIdFromGameState(self objects.IBaseBiker, gameState objects.IGameStat
 	return uuid.Nil
 }
 
-func generateAllocation(agent objects.IBaseBiker, self objects.IBaseBiker, method string) float32 {
-	var value float32
+func generateAllocation(agent objects.IBaseBiker, self objects.IBaseBiker, method string) float64 {
+	var value float64
 
 	switch method {
 	case "equal":
@@ -64,7 +64,7 @@ func generateAllocation(agent objects.IBaseBiker, self objects.IBaseBiker, metho
 
 }
 
-func normaliseMap(m map[uuid.UUID]float32) map[uuid.UUID]float32 {
+func normaliseMap(m map[uuid.UUID]float64) map[uuid.UUID]float64 {
 	sum := sumMap(m)
 
 	for id, val := range m {
@@ -74,8 +74,8 @@ func normaliseMap(m map[uuid.UUID]float32) map[uuid.UUID]float32 {
 	return m
 }
 
-func sumMap(m map[uuid.UUID]float32) float32 {
-	var sum float32 = 0
+func sumMap(m map[uuid.UUID]float64) float64 {
+	var sum float64 = 0
 	for _, val := range m {
 		sum += val
 	}
