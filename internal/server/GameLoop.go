@@ -61,7 +61,7 @@ func (s *Server) HandleKickoutProcess(megaBike *objects.MegaBike) {
 		for agentID, votes := range agentsVoteCounts {
 			if votes > len(bike.GetAgents())/2 {
 				bike.RemoveAgent(agentID)
-				
+
 				if agent, ok := s.GetAgentMap()[agentID]; ok {
 					agent.ToggleOnBike()
 					//if kickedoutagent is the leader, need to select one new
