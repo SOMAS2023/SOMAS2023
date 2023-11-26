@@ -260,7 +260,8 @@ func (bb *BaseBiker) GetGameState() IGameState {
 
 // Returns the other agents on your bike :)
 func (bb *BaseBiker) GetFellowBikers() []IBaseBiker {
-	bike := bb.gameState.GetMegaBikes()[bb.megaBikeId]
+	bikes := bb.gameState.GetMegaBikes()
+	bike := bikes[bb.GetBike()]
 	fellowBikers := bike.GetAgents()
 	return fellowBikers
 }

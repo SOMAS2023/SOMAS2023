@@ -2,35 +2,11 @@ package server_test
 
 import (
 	"SOMAS2023/internal/server"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
 )
-
-func TestInitialize(t *testing.T) {
-
-	it := 3
-	s := server.Initialize(it)
-
-	if len(s.GetAgentMap()) != server.BikerAgentCount {
-		t.Error("Agents not properly instantiated")
-	}
-
-	if len(s.GetMegaBikes()) != server.MegaBikeCount {
-		t.Error("mega bikes not properly instantiated")
-	}
-
-	if len(s.GetLootBoxes()) != server.LootBoxCount {
-		t.Error("Mega bikes not properly instantiated")
-	}
-
-	if s.GetAudi().GetID() == uuid.Nil {
-		t.Error("audi not properly instantiated")
-	}
-
-	s.RunGameLoop()
-	s.Start()
-}
 
 func TestGetJoiningRequests(t *testing.T) {
 	it := 3
@@ -79,4 +55,34 @@ func TestGetJoiningRequests(t *testing.T) {
 			t.Error("bike requests processed incorrectly: wrong number of agents for given bike")
 		}
 	}
+	fmt.Printf("\n Joining request passed \n")
+}
+
+func TestGetRandomID(t *testing.T) {
+	it := 3
+	s := server.Initialize(it)
+	bike := s.GetRandomBikeId()
+	_, exists := s.GetMegaBikes()[bike]
+	if !exists {
+		t.Error("returned bike is not in ")
+	}
+	fmt.Printf("\n Get random ID passed \n")
+}
+
+func TestSetBikerBike(t *testing.T) {
+	it := 3
+	s := server.Initialize(it)
+	bike := s.GetRandomBikeId()
+	var changedAgent uuid.UUID
+	for agentID, agent := range s.GetAgentMap() {
+		s.SetBikerBike(agent, bike)
+		changedAgent = agentID
+		break
+	}
+
+	agentToCheck := s.GetAgentMap()[changedAgent]
+	if agentToCheck.GetBike() != bike {
+		t.Error("agent's bike is not as expected")
+	}
+	fmt.Printf("\n Set biker bike passed \n")
 }

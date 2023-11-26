@@ -2,6 +2,7 @@ package server
 
 import (
 	"SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/utils"
 
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
 	"github.com/google/uuid"
@@ -17,6 +18,9 @@ type IBaseBikerServer interface {
 	GetLootBoxes() map[uuid.UUID]objects.ILootBox
 	GetAudi() objects.IAudi
 	GetJoiningRequests() map[uuid.UUID][]uuid.UUID
+	GetRandomBikeId() uuid.UUID
+	SetBikerBike(biker objects.IBaseBiker, bike uuid.UUID)
+	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
 }
 
 type Server struct {
@@ -43,6 +47,7 @@ func Initialize(iterations int) IBaseBikerServer {
 	// Randomly allocate bikers to bikes
 	for _, biker := range server.GetAgentMap() {
 		server.SetBikerBike(biker, server.GetRandomBikeId())
+
 	}
 
 	return server
