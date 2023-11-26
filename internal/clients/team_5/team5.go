@@ -35,5 +35,5 @@ func (t5 *team5Agent) GetBike() uuid.UUID {
 
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
-	return calculateResourceAllocation(t5.GetGameState(), t5, t5.resourceAllocationMethod)
+	return calculateResourceAllocation(t5.GetGameState(), t5)
 }

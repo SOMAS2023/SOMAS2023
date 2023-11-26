@@ -6,19 +6,18 @@ import (
 	"SOMAS2023/internal/common/objects"
 )
 
-func calculateResourceAllocation(gameState objects.IGameState, self objects.IBaseBiker, method string) map[uuid.UUID]float64 {
+func calculateResourceAllocation(gameState objects.IGameState, b *team5Agent) map[uuid.UUID]float64 {
 	allocations := make(map[uuid.UUID]float64)
 
 	//how to get id of my megabike?
 	var bikeID uuid.UUID
-	// bikeID = self.GetmegaBikeId
-	bikeID = getBikeIdFromGameState(self, gameState)
+	bikeID = b.GetBike()
 
 	bike := gameState.GetMegaBikes()[bikeID]
 	agentsOnBike := bike.GetAgents()
 
 	for _, agent := range agentsOnBike {
-		allocations[agent.GetID()] = generateAllocation(agent, self, method)
+		allocations[agent.GetID()] = generateAllocation(agent, b)
 	}
 
 	allocations = normaliseMap(allocations)
@@ -27,12 +26,12 @@ func calculateResourceAllocation(gameState objects.IGameState, self objects.IBas
 }
 
 // gets Bike ID from gamestate, to be removed after getter added to basebiker
-func getBikeIdFromGameState(self objects.IBaseBiker, gameState objects.IGameState) uuid.UUID {
+func getBikeIdFromGameState(b *team5Agent, gameState objects.IGameState) uuid.UUID {
 	bikes := gameState.GetMegaBikes()
 
 	for id, bike := range bikes {
 		for _, agent := range bike.GetAgents() {
-			if agent.GetID() == self.GetID() {
+			if agent.GetID() == b.GetID() {
 				return id
 			}
 		}
@@ -41,14 +40,14 @@ func getBikeIdFromGameState(self objects.IBaseBiker, gameState objects.IGameStat
 	return uuid.Nil
 }
 
-func generateAllocation(agent objects.IBaseBiker, self objects.IBaseBiker, method string) float64 {
+func generateAllocation(agent objects.IBaseBiker, b *team5Agent) float64 {
 	var value float64
 
-	switch method {
+	switch b.resourceAllocationMethod {
 	case "equal":
 		value = 1
 	case "greedy":
-		if agent.GetID() == self.GetID() {
+		if agent.GetID() == b.GetID() {
 			value = 1
 		} else {
 			value = 0
