@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func ProposeDirection(gameState objects.IGameState, b *team5Agent) uuid.UUID {
+func lootBoxPref(gameState objects.IGameState, b *team5Agent) uuid.UUID {
 	preferenceMap := make(map[uuid.UUID]float64)
 
 	// Get the megabike, agent and lootboxes
