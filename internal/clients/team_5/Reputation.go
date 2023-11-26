@@ -1,45 +1,83 @@
-package reputation
+package team5Agent
 
 import (
 	// Assuming this package contains the IMegaBike interface
 	"SOMAS2023/internal/common/objects"
+	"fmt"
 	"math"
 
 	"github.com/google/uuid"
 )
-
-// AgentReputation defines the structure for an agent's reputation
-type AgentReputation struct {
-	Contribution  float64
-	SurvivalScore float64
-	//If colours are visible, can be used as another factor (i.e matching colour)
-}
-
-func (agentRep *AgentReputation) normaliseRep() float64 { //private
-	maxContribution, maxSurvival := 100.0, 100.0
-	normContribution := agentRep.Contribution / maxContribution
-	normSurvival := agentRep.SurvivalScore / maxSurvival
-	finalRep := (normContribution + normSurvival) / 2
-	return math.Min(math.Max(finalRep, 0), 1)
-}
 
 type ReputationSystem struct {
 	agentReputations map[uuid.UUID]float64
 	gameState        objects.IGameState
 }
 
-// returns rep system pointer with empty map (pass as argument to rest of the functions)
+// Creates and initialises map of reputations to 0
 func NewRepSystem(gameState objects.IGameState) *ReputationSystem {
+	agentReputations := make(map[uuid.UUID]float64)
+	megaBikes := gameState.GetMegaBikes()
+	for _, mb := range megaBikes {
+		// Iterate through all agents on each MegaBike
+		for _, agent := range mb.GetAgents() {
+			// Set initial reputation to 0.5 for each agent
+			agentReputations[agent.GetID()] = 0.5
+		}
+	}
+
 	return &ReputationSystem{
-		agentReputations: make(map[uuid.UUID]float64),
+		agentReputations: agentReputations,
 		gameState:        gameState,
 	}
 }
 
-// updates the reputation of an agent
-func (repSystem *ReputationSystem) UpdateAgentReputation(agentID uuid.UUID, rep AgentReputation) {
-	repSystem.agentReputations[agentID] = rep.normaliseRep()
+func (repSystem *ReputationSystem) GetAgentReputation(agentID uuid.UUID) (float64, error) {
+	rep, exists := repSystem.agentReputations[agentID]
+	if !exists {
+		return 0, fmt.Errorf("agent with UUID %s not found", agentID)
+	}
+	return rep, nil
 }
+
+// Most important 3 functions:
+
+// Reputation calculation currently just based on energy and force
+func (repSystem *ReputationSystem) calculateReputationOfAgent(agentID uuid.UUID) float64 {
+	averagePedalForce := repSystem.getAverageForceOfAgents()
+	averageEnergy := repSystem.getAverageEnergyOfAgents()
+
+	agentPedalForce := repSystem.getForceOfOneAgent(agentID)
+	agentEnergy := repSystem.getEnergyOfOneAgent(agentID)
+
+	forceDeviation := agentPedalForce / averagePedalForce //fraction of agentMetric/averageMetric
+	energyDeviation := agentEnergy / averageEnergy
+
+	combinedDeviation := (forceDeviation + energyDeviation) / 2 // keeps it in range [0,1]
+
+	// get current reputation of the agent
+	currentRep, exists := repSystem.agentReputations[agentID]
+	if !exists {
+		currentRep = 0.5 // Default to 0.5 if not found
+	}
+
+	weight := 0.2 //maximum change per round
+	newRep := currentRep + (combinedDeviation-1)*weight
+	return math.Min(math.Max(newRep, 0), 1) //capped at 0 and 1
+}
+
+func (repSystem *ReputationSystem) updateReputationOfAllAgents() {
+	for agentID := range repSystem.agentReputations {
+		newRep := repSystem.calculateReputationOfAgent(agentID)
+		repSystem.agentReputations[agentID] = newRep
+	}
+}
+
+func (repSystem *ReputationSystem) updateGameState(gameState objects.IGameState) {
+	repSystem.gameState = gameState
+}
+
+//Useful helper functions:
 
 func (repSystem *ReputationSystem) calculateMegaBikeReputation(megaBikeID uuid.UUID) float64 {
 	megaBikes := repSystem.gameState.GetMegaBikes() // Get all MegaBikes from the game state (game state not complete rn so this won't work)
@@ -54,19 +92,80 @@ func (repSystem *ReputationSystem) calculateMegaBikeReputation(megaBikeID uuid.U
 	}
 
 	var totalRep float64
-	for _, agent := range agents { // '_' is the index
+	for _, agent := range agents { // _ is index
 		totalRep += repSystem.agentReputations[agent.GetID()]
 	}
 	return math.Min(math.Max(totalRep/float64(len(agents)), 0), 1) //restricts to range [0,1]
 }
 
-// calculates the average reputation of all agents on a MegaBike
-func (repSystem *ReputationSystem) CalculateAllMegaBikeReputations() map[uuid.UUID]float64 {
-	megaBikes := repSystem.gameState.GetMegaBikes() // from IGameState
-	megaBikeReputations := make(map[uuid.UUID]float64)
-
-	for megaBikeID := range megaBikes {
-		megaBikeReputations[megaBikeID] = repSystem.calculateMegaBikeReputation(megaBikeID)
+func (repSystem *ReputationSystem) getAveragePedalSpeedOfMegaBike(megaBikeID uuid.UUID) float64 {
+	megaBikes := repSystem.gameState.GetMegaBikes()
+	megaBike, exists := megaBikes[megaBikeID]
+	if !exists {
+		return 0
 	}
-	return megaBikeReputations
+	agents := megaBike.GetAgents()
+	var totalPedalSpeed float64
+	for _, agent := range agents {
+		totalPedalSpeed += agent.GetForces().Pedal
+	}
+	return totalPedalSpeed / float64(len(agents))
+}
+
+// Functions used in calculating the reputation value:
+func (repSystem *ReputationSystem) getAverageEnergyOfAgents() float64 {
+	megaBikes := repSystem.gameState.GetMegaBikes()
+	var totalEnergy float64
+	var totalAgents float64
+	for _, megaBike := range megaBikes {
+		agents := megaBike.GetAgents()
+		for _, agent := range agents {
+			totalEnergy += agent.GetEnergyLevel()
+			totalAgents++
+		}
+	}
+	return totalEnergy / totalAgents
+}
+
+func (repSystem *ReputationSystem) getAverageForceOfAgents() float64 {
+	megaBikes := repSystem.gameState.GetMegaBikes()
+	var totalForce float64
+	var totalAgents float64
+	for _, megaBike := range megaBikes {
+		agents := megaBike.GetAgents()
+		for _, agent := range agents {
+			forceOfAgent := agent.GetForces().Pedal
+			if forceOfAgent > 0 { //only add force if agent is pedalling
+				totalForce += forceOfAgent
+				totalAgents++
+			}
+		}
+	}
+	return totalForce / totalAgents
+}
+
+func (repSystem *ReputationSystem) getEnergyOfOneAgent(agentID uuid.UUID) float64 {
+	megaBikes := repSystem.gameState.GetMegaBikes()
+	for _, megaBike := range megaBikes {
+		agents := megaBike.GetAgents()
+		for _, agent := range agents {
+			if agent.GetID() == agentID {
+				return agent.GetEnergyLevel()
+			}
+		}
+	}
+	return 0
+}
+
+func (repSystem *ReputationSystem) getForceOfOneAgent(agentID uuid.UUID) float64 {
+	megaBikes := repSystem.gameState.GetMegaBikes()
+	for _, megaBike := range megaBikes {
+		agents := megaBike.GetAgents()
+		for _, agent := range agents {
+			if agent.GetID() == agentID {
+				return agent.GetForces().Pedal
+			}
+		}
+	}
+	return 0
 }
