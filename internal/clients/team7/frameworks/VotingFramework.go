@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	//voting "SOMAS2023/internal/common/voting"
 )
 
 // This map can hold any type of data as the value
@@ -34,13 +35,14 @@ const (
 )
 
 type VoteInputs struct {
-	DecisionType   VoteType    // Type of vote that needs to be made
-	Candidates     []uuid.UUID // Map of choices [Dummy map for now]
-	VoteParameters Map         // Parameters for the vote
+	DecisionType   VoteType      // Type of vote that needs to be made
+	Candidates     []interface{} // Map of choices [Dummy map for now]
+	VoteParameters Map           // Parameters for the vote
 }
 
+// A vote could be a map of any type to any type. So keep generic for now until infrastructure give specifics types.
 type Vote struct {
-	result map[uuid.UUID]interface{}
+	result map[interface{}]interface{}
 }
 
 type VotingFramework struct {
