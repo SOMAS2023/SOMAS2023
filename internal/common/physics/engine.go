@@ -41,7 +41,7 @@ func GetNewPosition(coordinates utils.Coordinates, velocity float64, orientation
 func ComputeOrientation(src utils.Coordinates, target utils.Coordinates) float64 {
 	xDiff := target.X - src.X
 	yDiff := target.Y - src.Y
-	return math.Atan(yDiff/xDiff) / math.Pi
+	return math.Atan2(yDiff,xDiff) / math.Pi
 }
 
 // ComputeDistance is to compute the L2 distance from source to target
@@ -51,16 +51,12 @@ func ComputeDistance(src utils.Coordinates, target utils.Coordinates) float64 {
 
 // This function is to be called from the server only
 func GenerateNewState(initialState utils.PhysicalState, force float64, orientation float64) utils.PhysicalState {
+	var finalState utils.PhysicalState = initialState
 	acceleration := CalcAcceleration(force, initialState.Mass, initialState.Velocity)
 	velocity := CalcVelocity(acceleration, initialState.Velocity)
 	coordinates := GetNewPosition(initialState.Position, velocity, orientation)
-
-	finalState := utils.PhysicalState{
-		Position:     coordinates,
-		Acceleration: acceleration,
-		Velocity:     velocity,
-		Mass:         initialState.Mass,
-	}
-
+	finalState.Position = coordinates
+	finalState.Acceleration = acceleration
+	finalState.Velocity = velocity
 	return finalState
 }
