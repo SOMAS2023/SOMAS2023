@@ -27,7 +27,7 @@ func TestRulerElectionDictator(t *testing.T) {
 		}
 	}
 	// the actual logic of get winner from dist will be tested elsewhere
-	fmt.Printf("\nruler election passed \n")
+	fmt.Printf("\nRuler election passed \n")
 
 }
 
@@ -49,7 +49,7 @@ func TestRulerElectionLeader(t *testing.T) {
 		}
 	}
 	// the actual logic of get winner from dist will be tested elsewhere
-	fmt.Printf("\nruler election leader passed \n")
+	fmt.Printf("\nRuler election leader passed \n")
 
 }
 
@@ -82,7 +82,7 @@ func TestRunRulerActionDictator(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nruler action passed \n")
+	fmt.Printf("\nRuler action passed \n")
 
 }
 
@@ -115,7 +115,7 @@ func TestRunRulerActionLeader(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nruler action  leader passed \n")
+	fmt.Printf("\nRuler action  leader passed \n")
 }
 
 func TestRunDemocratingAction(t *testing.T) {
@@ -137,5 +137,5 @@ func TestRunDemocratingAction(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\ndemocratic action passed \n")
+	fmt.Printf("\nDemocratic action passed \n")
 }

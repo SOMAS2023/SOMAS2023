@@ -49,18 +49,19 @@ func (s *Server) RunBikeSwitch() {
 	// check if agents want ot leave the bike on this round
 	s.GetLeavingDecisions()
 	//process the kickout request
-	s.HandleKickoutProcess(objects.GetMegaBike())
+	s.HandleKickoutProcess()
 	// process joining requests from last round
 	s.ProcessJoiningRequests()
 
 }
 
-func (s *Server) HandleKickoutProcess(megaBike *objects.MegaBike) {
+func (s *Server) HandleKickoutProcess() {
 	for _, bike := range s.GetMegaBikes() {
-		agentsVoteCounts := megaBike.KickOutAgent()
+		agentsVoteCounts := bike.KickOutAgent()
 		for agentID, votes := range agentsVoteCounts {
 			if votes > len(bike.GetAgents())/2 {
 				bike.RemoveAgent(agentID)
+				delete(s.megaBikeRiders, agentID)
 
 				if agent, ok := s.GetAgentMap()[agentID]; ok {
 					agent.ToggleOnBike()
@@ -113,16 +114,32 @@ func (s *Server) ProcessJoiningRequests() {
 		agents := s.megaBikes[bike].GetAgents()
 
 		responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
-		for _, agent := range agents {
-			responses = append(responses, agent.DecideJoining(pendingAgents))
-		}
-		// 3. accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
-		acceptedRanked := voting.GetAcceptanceRanking(responses)
-		totalSeatsFilled := len(s.megaBikes[bike].GetAgents())
-		emptySpaces := 8 - totalSeatsFilled
-		for _, accepted := range acceptedRanked[:emptySpaces] {
-			s.GetAgentMap()[accepted].ToggleOnBike()
-			s.SetBikerBike(s.GetAgentMap()[accepted], bike)
+		if len(agents) == 0 {
+			for i, pendingAgent := range pendingAgents {
+				if i <= utils.BikersOnBike {
+					acceptedAgent := s.GetAgentMap()[pendingAgent]
+					acceptedAgent.ToggleOnBike()
+					s.SetBikerBike(acceptedAgent, bike)
+				} else {
+					break
+				}
+			}
+
+		} else {
+			for i, agent := range agents {
+				responses[i] = agent.DecideJoining(pendingAgents)
+			}
+			// 3. accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
+			acceptedRanked := voting.GetAcceptanceRanking(responses)
+			totalSeatsFilled := len(s.megaBikes[bike].GetAgents())
+			emptySpaces := 8 - totalSeatsFilled
+
+			for i := 0; i < min(emptySpaces, len(acceptedRanked)); i++ {
+				accepted := acceptedRanked[i]
+				acceptedAgent := s.GetAgentMap()[accepted]
+				acceptedAgent.ToggleOnBike()
+				s.SetBikerBike(acceptedAgent, bike)
+			}
 		}
 	}
 }
@@ -131,8 +148,8 @@ func (s *Server) RunActionProcess() {
 	// vote on governance
 
 	for _, bike := range s.GetMegaBikes() {
-		votes := make([]voting.GovernanceVote, len(bike.GetAgents()))
 		agents := bike.GetAgents()
+		votes := make([]voting.GovernanceVote, len(agents))
 		if len(agents) != 0 {
 			for i, agent := range agents {
 				votes[i] = agent.DecideGovernance()

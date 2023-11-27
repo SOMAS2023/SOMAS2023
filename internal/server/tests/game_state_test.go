@@ -55,7 +55,7 @@ func TestGetJoiningRequests(t *testing.T) {
 			t.Error("bike requests processed incorrectly: wrong number of agents for given bike")
 		}
 	}
-	fmt.Printf("\n Joining request passed \n")
+	fmt.Printf("\nJoining request passed \n")
 }
 
 func TestGetRandomID(t *testing.T) {
@@ -66,7 +66,7 @@ func TestGetRandomID(t *testing.T) {
 	if !exists {
 		t.Error("returned bike is not in ")
 	}
-	fmt.Printf("\n Get random ID passed \n")
+	fmt.Printf("\nGet random ID passed \n")
 }
 
 func TestSetBikerBike(t *testing.T) {
@@ -84,5 +84,5 @@ func TestSetBikerBike(t *testing.T) {
 	if agentToCheck.GetBike() != bike {
 		t.Error("agent's bike is not as expected")
 	}
-	fmt.Printf("\n Set biker bike passed \n")
+	fmt.Printf("\nSet biker bike passed \n")
 }

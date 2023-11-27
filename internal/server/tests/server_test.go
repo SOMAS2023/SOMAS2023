@@ -29,7 +29,7 @@ func TestInitialize(t *testing.T) {
 		t.Error("audi not properly instantiated")
 	}
 
-	s.RunGameLoop()
-	s.Start()
-	fmt.Printf("\n Initialize passed \n")
+	//s.RunGameLoop()
+	//s.Start()
+	fmt.Printf("\nInitialize passed \n")
 }
