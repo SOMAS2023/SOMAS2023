@@ -308,7 +308,7 @@ func leaderStrategyAdjustment(selected uuid.UUID, gameState IGameState) uuid.UUI
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
-func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
+func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, currentVotes voting.LootboxVoteMap) voting.LootboxVoteMap {
 	votes := make(voting.LootboxVoteMap)
 
 	distance_threshold := 30
@@ -355,16 +355,53 @@ func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMa
 		}
 	}
 
-	// Cast vote
-	for _, proposal := range proposals {
-		if proposal == chosenBox {
-			votes[proposal] = 1.0 // Full vote for the chosen box
-		} else {
-			votes[proposal] = 0.0 // No vote for the other boxes
-		}
+	// // Cast vote
+	// for _, proposal := range proposals {
+	// 	if proposal == chosenBox {
+	// 		votes[proposal] = 1.0 // Full vote for the chosen box
+	// 	} else {
+	// 		votes[proposal] = 0.0 // No vote for the other boxes
+	// 	}
+	// }
+
+	//NB!!!
+	// these above can be possibly replaced by previous storage of preference ***
+	totalVoters := len(currentVotes)                              // Assuming you have a way to get the total number of voters
+	leadingOption, secondOption := getTopTwoOptions(currentVotes) // Implement this method to find top two voted options
+
+	// Decide on strategic voting
+	if chosenBox != leadingOption && chosenBox != secondOption && currentVotes[leadingOption]-currentVotes[secondOption] > float64(totalVoters)/4 {
+		// Vote for the leading option if the preferred option is not leading and the lead is significant
+		votes[leadingOption] = 1.0
+	} else if chosenBox == secondOption && currentVotes[leadingOption]-currentVotes[secondOption] < float64(totalVoters)/4 {
+		votes[secondOption] = 1.0
+	} else {
+		// Otherwise, vote for the preferred option
+		votes[chosenBox] = 1.0
 	}
 
 	return votes
+}
+
+func getTopTwoOptions(currentVotes voting.LootboxVoteMap) (uuid.UUID, uuid.UUID) {
+	var maxVoteID, secondMaxVoteID uuid.UUID
+	maxVote, secondMaxVote := -1.0, -1.0
+
+	for id, votes := range currentVotes {
+		if votes > maxVote {
+			// Update second max
+			secondMaxVoteID = maxVoteID
+			secondMaxVote = maxVote
+			// Update max
+			maxVoteID = id
+			maxVote = votes
+		} else if votes > secondMaxVote {
+			secondMaxVoteID = id
+			secondMaxVote = votes
+		}
+	}
+
+	return maxVoteID, secondMaxVoteID
 }
 
 // through this function the agent submits their desired allocation of resources
