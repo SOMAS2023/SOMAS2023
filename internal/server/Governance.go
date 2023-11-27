@@ -11,22 +11,7 @@ import (
 func (s *Server) RunRulerAction(bike objects.IMegaBike, governance utils.Governance) uuid.UUID {
 	// vote for dictator
 	agents := bike.GetAgents()
-	votes := make([]voting.IdVoteMap, len(agents))
-	for i, agent := range agents {
-		switch governance {
-		case utils.Dictatorship:
-			votes[i] = agent.VoteDictator()
-		case utils.Leadership:
-			votes[i] = agent.VoteLeader()
-		}
-	}
-
-	IVotes := make([]voting.IVoter, len(votes))
-	for i, vote := range votes {
-		IVotes[i] = vote
-	}
-
-	ruler := voting.WinnerFromDist(IVotes)
+	ruler := s.RulerElection(agents, governance)
 	// communicate dictator
 	bike.SetRuler(ruler)
 	// get dictators direction choice

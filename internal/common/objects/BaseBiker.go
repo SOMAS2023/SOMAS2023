@@ -312,7 +312,11 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 	totOptions := len(proposals)
 	normalDist := 1.0 / float64(totOptions)
 	for _, proposal := range proposals {
-		votes[proposal] = normalDist
+		if val, ok := votes[proposal]; ok {
+			votes[proposal] = val + normalDist
+		} else {
+			votes[proposal] = normalDist
+		}
 	}
 	return votes
 }

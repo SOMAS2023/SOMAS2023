@@ -133,29 +133,31 @@ func (s *Server) RunActionProcess() {
 	for _, bike := range s.GetMegaBikes() {
 		votes := make([]voting.GovernanceVote, len(bike.GetAgents()))
 		agents := bike.GetAgents()
-		for i, agent := range agents {
-			votes[i] = agent.DecideGovernance()
-		}
+		if len(agents) != 0 {
+			for i, agent := range agents {
+				votes[i] = agent.DecideGovernance()
+			}
 
-		// get the direction for this round (either the voted on or what's decided by the leader/ dictator)
-		// for now it's actually just the elected lootbox (will change to accomodate for other proposal types)
-		var direction uuid.UUID
-		electedGovernance, _ := voting.WinnerFromGovernance(votes)
-		bike.SetGovernance(electedGovernance)
-		switch electedGovernance {
-		case utils.Democracy:
-			direction = s.RunDemocraticAction(bike)
-		case utils.Dictatorship:
-			direction = s.RunRulerAction(bike, electedGovernance)
-		case utils.Leadership:
-			direction = s.RunRulerAction(bike, electedGovernance)
-		}
+			// get the direction for this round (either the voted on or what's decided by the leader/ dictator)
+			// for now it's actually just the elected lootbox (will change to accomodate for other proposal types)
+			var direction uuid.UUID
+			electedGovernance, _ := voting.WinnerFromGovernance(votes)
+			bike.SetGovernance(electedGovernance)
+			switch electedGovernance {
+			case utils.Democracy:
+				direction = s.RunDemocraticAction(bike)
+			case utils.Dictatorship:
+				direction = s.RunRulerAction(bike, electedGovernance)
+			case utils.Leadership:
+				direction = s.RunRulerAction(bike, electedGovernance)
+			}
 
-		for _, agent := range agents {
-			agent.DecideForce(direction)
-			// deplete energy
-			energyLost := agent.GetForces().Pedal * utils.MovingDepletion
-			agent.UpdateEnergyLevel(-energyLost)
+			for _, agent := range agents {
+				agent.DecideForce(direction)
+				// deplete energy
+				energyLost := agent.GetForces().Pedal * utils.MovingDepletion
+				agent.UpdateEnergyLevel(-energyLost)
+			}
 		}
 	}
 }
