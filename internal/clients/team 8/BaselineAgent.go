@@ -2,7 +2,6 @@ package team_8
 
 import (
 	"SOMAS2023/internal/common/objects"
-	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"math"
 
@@ -189,118 +188,7 @@ func (bb *Agent8) ChangeBike() uuid.UUID {
 // default implementation returns the id of the nearest lootbox
 // Alex
 func (bb *Agent8) ProposeDirection() uuid.UUID {
-	lootBoxes := bb.GetGameState().GetLootBoxes()
-	preferences := make(map[uuid.UUID]float64)
-	softmaxPreferences := make(map[uuid.UUID]float64)
-
-	// Calculate preferences
-	for _, lootBox := range lootBoxes {
-		distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
-		colorPreference := calculateColorPreference(bb.GetColour(), lootBox.GetColour())
-		energyWeighting := calculateEnergyWeighting(bb.GetEnergyLevel())
-
-		preferences[lootBox.GetID()] = colorPreference + distance*energyWeighting
-	}
-
-	// Apply softmax to convert preferences to a probability distribution
-	softmaxPreferences = softmax(preferences)
-
-	// Rank loot boxes based on preferences
-	rankedLootBoxes := rankByPreference(softmaxPreferences)
-
-	// Select the top choice(s) based on ranking
-	selectedLootBox := selectTopChoices(rankedLootBoxes, bb.GetGameState().GetVotingListLength())
-
-	// Consider social dilemma factors if applicable
-	finalSelection := considerSocialDilemma(selectedLootBox, bb.GetGameState())
-
-	// If the biker is a leader, adjust the final selection accordingly
-	//if bb.isLeader() {
-	//	finalSelection = leaderStrategyAdjustment(finalSelection, bb.gameState)
-	//}
-
-	return finalSelection
-}
-
-// calculateDistance computes the Euclidean distance between two points
-func calculateDistance(a, b utils.Coordinates) float64 {
-	return math.Sqrt(math.Pow(a.X-b.X, 2) + math.Pow(a.Y-b.Y, 2))
-}
-
-// calculateColorPreference returns 1 if the colors match, 0 otherwise
-func calculateColorPreference(agentColor, boxColor utils.Colour) float64 {
-	if agentColor == boxColor {
-		return 1
-	}
-	return 0
-}
-
-// calculateEnergyWeighting adjusts the distance preference based on the agent's energy level
-func calculateEnergyWeighting(energyLevel float64) float64 {
-	// Assuming the energy level is between 0 and 1, inverse it to give higher weight to closer loot boxes when energy is low
-	return 1 - energyLevel
-}
-
-// softmax applies the softmax function to the preferences to get a probability distribution
-func softmax(preferences map[uuid.UUID]float64) map[uuid.UUID]float64 {
-	sum := 0.0
-	for _, pref := range preferences {
-		sum += math.Exp(pref)
-	}
-
-	softmaxPreferences := make(map[uuid.UUID]float64)
-	for id, pref := range preferences {
-		softmaxPreferences[id] = math.Exp(pref) / sum
-	}
-
-	return softmaxPreferences
-}
-
-// rankByPreference sorts the loot boxes by preference
-func rankByPreference(preferences map[uuid.UUID]float64) []uuid.UUID {
-	type kv struct {
-		ID         uuid.UUID
-		Preference float64
-	}
-
-	var sorted []kv
-	for id, pref := range preferences {
-		sorted = append(sorted, kv{id, pref})
-	}
-
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].Preference > sorted[j].Preference
-	})
-
-	var rankedIDs []uuid.UUID
-	for _, kv := range sorted {
-		rankedIDs = append(rankedIDs, kv.ID)
-	}
-
-	return rankedIDs
-}
-
-func selectTopChoices(rankedIDs []uuid.UUID, numChoices int) uuid.UUID {
-	if len(rankedIDs) == 0 {
-		return uuid.Nil // No loot boxes available
-	}
-	if numChoices > len(rankedIDs) {
-		numChoices = len(rankedIDs)
-	}
-	// For this example, just select the top choice
-	return rankedIDs[0]
-}
-
-// considerSocialDilemma adjusts the selection based on social factors
-func considerSocialDilemma(selected uuid.UUID, gameState IGameState) uuid.UUID {
-	// Placeholder: The actual implementation would depend on the social dilemma factors considered in the game
-	return selected
-}
-
-// leaderStrategyAdjustment adjusts the selection if the agent is a leader
-func leaderStrategyAdjustment(selected uuid.UUID, gameState IGameState) uuid.UUID {
-	// Placeholder: The actual implementation would depend on the leader's strategy in the game
-	return selected
+	return uuid.New()
 }
 
 // //  Nemo started
@@ -308,100 +196,214 @@ func leaderStrategyAdjustment(selected uuid.UUID, gameState IGameState) uuid.UUI
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
-func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, currentVotes voting.LootboxVoteMap) voting.LootboxVoteMap {
-	votes := make(voting.LootboxVoteMap)
+// NB: One vote system
 
-	distance_threshold := 30
-	energy_threshold := 30
+// func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, currentVotes voting.LootboxVoteMap) voting.LootboxVoteMap {
+// 	votes := make(voting.LootboxVoteMap)
+
+// 	distance_threshold := 30
+// 	energy_threshold := 30
+// 	currLocation := bb.GetLocation()
+// 	var chosenBox uuid.UUID
+// 	minDistance := math.MaxFloat64
+// 	foundDesiredColor := false
+
+// 	// Check for desired color within the distance range
+// 	for _, proposal := range proposals {
+// 		for _, lootBox := range bb.GetGameState().GetLootBoxes() {
+// 			if lootBox.GetID() == proposal {
+// 				// x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
+// 				// // distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
+// 				// distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+// 				distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
+
+// 				if distance <= float64(distance_threshold) && lootBox.GetColour() == bb.GetColour() {
+// 					if distance < minDistance {
+// 						minDistance = distance
+// 						chosenBox = proposal
+// 						foundDesiredColor = true
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	// If no desired color found within range or energy level is low, vote for the closest loot box
+// 	if !foundDesiredColor || bb.GetEnergyLevel() < float64(energy_threshold) {
+// 		for _, proposal := range proposals {
+// 			for _, lootBox := range bb.GetGameState().GetLootBoxes() {
+// 				if lootBox.GetID() == proposal {
+// 					x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
+// 					distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+
+// 					if distance < minDistance {
+// 						minDistance = distance
+// 						chosenBox = proposal
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	// // Cast vote
+// 	// for _, proposal := range proposals {
+// 	// 	if proposal == chosenBox {
+// 	// 		votes[proposal] = 1.0 // Full vote for the chosen box
+// 	// 	} else {
+// 	// 		votes[proposal] = 0.0 // No vote for the other boxes
+// 	// 	}
+// 	// }
+
+// 	//NB!!!
+// 	// these above can be possibly replaced by previous storage of preference ***
+// 	totalVoters := len(currentVotes)                              // Assuming you have a way to get the total number of voters
+// 	leadingOption, secondOption := getTopTwoOptions(currentVotes) // Implement this method to find top two voted options
+
+// 	// Decide on strategic voting
+// 	if chosenBox != leadingOption && chosenBox != secondOption && currentVotes[leadingOption]-currentVotes[secondOption] > float64(totalVoters)/4 {
+// 		// Vote for the leading option if the preferred option is not leading and the lead is significant
+// 		votes[leadingOption] = 1.0
+// 	} else if chosenBox == secondOption && currentVotes[leadingOption]-currentVotes[secondOption] < float64(totalVoters)/3 {
+// 		votes[secondOption] = 1.0
+// 	} else {
+// 		// Otherwise, vote for the preferred option
+// 		votes[chosenBox] = 1.0
+// 	}
+
+// 	return votes
+// }
+
+// for 1 voting system
+// func getTopTwoOptions(currentVotes voting.LootboxVoteMap) (uuid.UUID, uuid.UUID) {
+// 	var maxVoteID, secondMaxVoteID uuid.UUID
+// 	maxVote, secondMaxVote := -1.0, -1.0
+
+// 	for id, votes := range currentVotes {
+// 		if votes > maxVote {
+// 			// Update second max
+// 			secondMaxVoteID = maxVoteID
+// 			secondMaxVote = maxVote
+// 			// Update max
+// 			maxVoteID = id
+// 			maxVote = votes
+// 		} else if votes > secondMaxVote {
+// 			secondMaxVoteID = id
+// 			secondMaxVote = votes
+// 		}
+// 	}
+
+// 	return maxVoteID, secondMaxVoteID
+// }
+
+// calculate preference score(preference voting)
+func (bb *Agent8) calculatePreferenceScores(proposals []uuid.UUID) map[uuid.UUID]float64 {
+	scores := make(map[uuid.UUID]float64)
 	currLocation := bb.GetLocation()
-	var chosenBox uuid.UUID
-	minDistance := math.MaxFloat64
-	foundDesiredColor := false
+	var distances []float64
+	distanceToBox := make(map[float64]uuid.UUID)
 
-	// Check for desired color within the distance range
+	// Calculate distances to each loot box and sort them
 	for _, proposal := range proposals {
 		for _, lootBox := range bb.GetGameState().GetLootBoxes() {
 			if lootBox.GetID() == proposal {
-				// x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
-				// // distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
-				// distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
-				distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
-
-				if distance <= float64(distance_threshold) && lootBox.GetColour() == bb.GetColour() {
-					if distance < minDistance {
-						minDistance = distance
-						chosenBox = proposal
-						foundDesiredColor = true
-					}
-				}
+				x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
+				distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+				distances = append(distances, distance)
+				distanceToBox[distance] = proposal
 			}
 		}
 	}
+	sort.Float64s(distances)
 
-	// If no desired color found within range or energy level is low, vote for the closest loot box
-	if !foundDesiredColor || bb.GetEnergyLevel() < float64(energy_threshold) {
-		for _, proposal := range proposals {
-			for _, lootBox := range bb.GetGameState().GetLootBoxes() {
-				if lootBox.GetID() == proposal {
-					x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
-					distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
-
-					if distance < minDistance {
-						minDistance = distance
-						chosenBox = proposal
-					}
-				}
-			}
+	// Scoring mechanism
+	if bb.GetEnergyLevel() < 30 || !bb.hasDesiredColorInRange(proposals, 30) {
+		// Score based on distance
+		score := float64(len(distances))
+		for _, distance := range distances {
+			scores[distanceToBox[distance]] = score
+			score--
 		}
-	}
-
-	// // Cast vote
-	// for _, proposal := range proposals {
-	// 	if proposal == chosenBox {
-	// 		votes[proposal] = 1.0 // Full vote for the chosen box
-	// 	} else {
-	// 		votes[proposal] = 0.0 // No vote for the other boxes
-	// 	}
-	// }
-
-	//NB!!!
-	// these above can be possibly replaced by previous storage of preference ***
-	totalVoters := len(currentVotes)                              // Assuming you have a way to get the total number of voters
-	leadingOption, secondOption := getTopTwoOptions(currentVotes) // Implement this method to find top two voted options
-
-	// Decide on strategic voting
-	if chosenBox != leadingOption && chosenBox != secondOption && currentVotes[leadingOption]-currentVotes[secondOption] > float64(totalVoters)/4 {
-		// Vote for the leading option if the preferred option is not leading and the lead is significant
-		votes[leadingOption] = 1.0
-	} else if chosenBox == secondOption && currentVotes[leadingOption]-currentVotes[secondOption] < float64(totalVoters)/4 {
-		votes[secondOption] = 1.0
 	} else {
-		// Otherwise, vote for the preferred option
-		votes[chosenBox] = 1.0
+		// Score based on color and distance
+		score := float64(len(distances))
+		for _, distance := range distances {
+			lootBoxID := distanceToBox[distance]
+			lootBoxColor := bb.GetGameState().GetLootBoxes()[lootBoxID].GetColour()
+			if lootBoxColor == bb.GetColour() {
+				scores[lootBoxID] = score
+				score--
+			}
+		}
+		for _, distance := range distances {
+			lootBoxID := distanceToBox[distance]
+			if scores[lootBoxID] == 0 { // Only score loot boxes that haven't been scored yet
+				scores[lootBoxID] = score
+				score--
+			}
+		}
+	}
+
+	return scores
+}
+
+// Check color in range:
+func (bb *Agent8) hasDesiredColorInRange(proposals []uuid.UUID, rangeThreshold float64) bool {
+	currLocation := bb.GetLocation()
+	for _, proposal := range proposals {
+		for _, lootBox := range bb.GetGameState().GetLootBoxes() {
+			if lootBox.GetID() == proposal {
+				x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
+				distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+				if distance <= rangeThreshold && lootBox.GetColour() == bb.GetColour() {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// Multi-voting system
+func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, overallScores voting.LootboxVoteMap) voting.LootboxVoteMap {
+	votes := make(voting.LootboxVoteMap)
+
+	// Calculate the biker's individual preference scores
+	preferenceScores := bb.calculatePreferenceScores(proposals)
+
+	// Combine individual preferences with overall scores
+	combinedScores := make(map[uuid.UUID]float64)
+	for _, proposal := range proposals {
+		combinedScore := preferenceScores[proposal] + overallScores[proposal]
+		combinedScores[proposal] = combinedScore
+	}
+
+	// Sort the loot boxes based on the combined score
+	sortedBoxes := sortLootBoxesByScore(combinedScores)
+
+	// Assign scores based on ranking (6 for the top, then 5, 4, etc.)
+	score := len(proposals)
+	for _, boxID := range sortedBoxes {
+		votes[boxID] = float64(score)
+		score--
 	}
 
 	return votes
 }
 
-func getTopTwoOptions(currentVotes voting.LootboxVoteMap) (uuid.UUID, uuid.UUID) {
-	var maxVoteID, secondMaxVoteID uuid.UUID
-	maxVote, secondMaxVote := -1.0, -1.0
-
-	for id, votes := range currentVotes {
-		if votes > maxVote {
-			// Update second max
-			secondMaxVoteID = maxVoteID
-			secondMaxVote = maxVote
-			// Update max
-			maxVoteID = id
-			maxVote = votes
-		} else if votes > secondMaxVote {
-			secondMaxVoteID = id
-			secondMaxVote = votes
-		}
+// sort loot boxes by their scores
+func sortLootBoxesByScore(combinedScores map[uuid.UUID]float64) []uuid.UUID {
+	// Create a slice of boxes to sort
+	var boxes []uuid.UUID
+	for boxID := range combinedScores {
+		boxes = append(boxes, boxID)
 	}
 
-	return maxVoteID, secondMaxVoteID
+	// Sort the slice based on scores
+	sort.Slice(boxes, func(i, j int) bool {
+		return combinedScores[boxes[i]] > combinedScores[boxes[j]]
+	})
+
+	return boxes
 }
 
 // through this function the agent submits their desired allocation of resources
