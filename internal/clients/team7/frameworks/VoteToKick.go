@@ -1,16 +1,29 @@
 package frameworks
 
 //"github.com/google/uuid"
+import (
+	"fmt"
+)
 
 func VoteToKickWrapper(voteInputs VoteInputs) Vote {
 	var vote map[interface{}]interface{}
 	var threshold ScoreType
 	var agent_score ScoreType
+	var vote_decision interface{}
 	threshold = 0.5 // TODO: This could come from voteParameters in VoteInputs.
 
 	for _, agent_id := range voteInputs.Candidates {
 		agent_score = VoteToKickScore(agent_id)
-		vote_decision := VoteToKickYesNo(agent_score, threshold)
+		switch voteInputs.VoteParameters {
+		case Proportion:
+			vote_decision = agent_score
+		case YesNo:
+			vote_decision = VoteToKickYesNo(agent_score, threshold)
+		default:
+			fmt.Println("New decision type!")
+			vote_decision = agent_score
+		}
+
 		vote[agent_id] = vote_decision
 	}
 
