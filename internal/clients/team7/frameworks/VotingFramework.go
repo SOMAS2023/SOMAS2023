@@ -37,7 +37,7 @@ const (
 type VoteInputs struct {
 	DecisionType   VoteType      // Type of vote that needs to be made
 	Candidates     []interface{} // Map of choices [Dummy map for now]
-	VoteParameters Map           // Parameters for the vote
+	VoteParameters VoteParameter // Parameters for the vote
 }
 
 // A vote could be a map of any type to any type. So keep generic for now until infrastructure give specifics types.
