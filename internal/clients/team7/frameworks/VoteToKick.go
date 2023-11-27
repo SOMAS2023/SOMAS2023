@@ -1,11 +1,9 @@
 package frameworks
 
-import (
-	"github.com/google/uuid"
-)
+//"github.com/google/uuid"
 
 func VoteToKickWrapper(voteInputs VoteInputs) Vote {
-	var vote map[uuid.UUID]interface{}
+	var vote map[interface{}]interface{}
 	var threshold ScoreType
 	var agent_score ScoreType
 	threshold = 0.5 // TODO: This could come from voteParameters in VoteInputs.
@@ -20,7 +18,7 @@ func VoteToKickWrapper(voteInputs VoteInputs) Vote {
 }
 
 // Assign a score to express approval/disapproval of a proposal.
-func VoteToKickScore(agent_id uuid.UUID) ScoreType {
+func VoteToKickScore(agent_id interface{}) ScoreType {
 	var score ScoreType
 	score = 0.8 //TODO: Simple implementation for now. Will depend on factors such as opinion of agent and our agent's personality.
 	return score
