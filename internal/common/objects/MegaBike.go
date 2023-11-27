@@ -12,6 +12,7 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
+	KickOutAgent() map[uuid.UUID]int
 	GetGovernance() utils.Governance
 	GetRuler() uuid.UUID
 	SetGovernance(governance utils.Governance)
@@ -21,9 +22,10 @@ type IMegaBike interface {
 // MegaBike will have the following forces
 type MegaBike struct {
 	*PhysicsObject
-	agents     []IBaseBiker
-	governance utils.Governance
-	ruler      uuid.UUID
+	agents         []IBaseBiker
+	kickedOutCount int
+	governance     utils.Governance
+	ruler          uuid.UUID
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
@@ -113,6 +115,34 @@ func (mb *MegaBike) UpdateOrientation() {
 	} else if mb.orientation < -1.0 {
 		mb.orientation += 2
 	}
+}
+
+// get the count of kicked out agents
+func (mb *MegaBike) GetKickedOutCount() int {
+	return mb.kickedOutCount
+}
+
+func (mb *MegaBike) KickOutAgent() map[uuid.UUID]int {
+	voteCount := make(map[uuid.UUID]int)
+	// Count votes for each agent
+	for _, agent := range mb.agents {
+		agentVotes := agent.VoteForKickout() // Assuming this now returns map[uuid.UUID]int
+		for agentID, votes := range agentVotes {
+			voteCount[agentID] += votes
+		}
+	}
+
+	// Find all agents with votes > half the number of agents
+	agentsToKickOut := make(map[uuid.UUID]int)
+	for agentID, votes := range voteCount {
+		if votes > len(mb.agents)/2 {
+			agentsToKickOut[agentID] = votes
+		}
+	}
+
+	mb.kickedOutCount += len(agentsToKickOut)
+
+	return agentsToKickOut
 }
 
 func (mb *MegaBike) GetGovernance() utils.Governance {

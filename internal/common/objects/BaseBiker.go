@@ -32,6 +32,7 @@ type IBaseBiker interface {
 	ProposeDirection() uuid.UUID                                    // ** returns the id of the desired lootbox based on internal strategy
 	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
+	VoteForKickout() map[uuid.UUID]int
 	VoteDictator() voting.IdVoteMap
 	VoteLeader() voting.IdVoteMap
 	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
@@ -309,6 +310,22 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 		votes[proposal] = normalDist
 	}
 	return votes
+}
+
+func (bb *BaseBiker) VoteForKickout() map[uuid.UUID]int {
+	voteResults := make(map[uuid.UUID]int)
+	bikeID := bb.GetBike()
+
+	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if agentID != bb.GetID() {
+			// random votes to other agents
+			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
+		}
+	}
+
+	return voteResults
 }
 
 // defaults to voting for first agent in the list
