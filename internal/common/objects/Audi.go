@@ -3,12 +3,14 @@ package objects
 import (
 	phy "SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
+	"github.com/google/uuid"
 	"math"
 )
 
 type IAudi interface {
 	IPhysicsObject
 	UpdateGameState(state IGameState)
+	GetTargetID() uuid.UUID
 }
 
 type Audi struct {
@@ -71,4 +73,12 @@ func (audi *Audi) ComputeTarget() {
 // Updates gameState member variable
 func (audi *Audi) UpdateGameState(state IGameState) {
 	audi.gameState = state
+}
+
+func (audi *Audi) GetTargetID() uuid.UUID {
+	if audi.target != nil {
+		return audi.target.GetID()
+	} else {
+		return uuid.UUID{}
+	}
 }

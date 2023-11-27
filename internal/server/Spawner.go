@@ -26,7 +26,8 @@ func (s *Server) spawnLootBox() {
 }
 
 func (s *Server) replenishLootBoxes() {
-	for i := 0; i < LootBoxCount-len(s.lootBoxes); i++ {
+	count := LootBoxCount - len(s.lootBoxes)
+	for i := 0; i < count; i++ {
 		s.spawnLootBox()
 	}
 }
