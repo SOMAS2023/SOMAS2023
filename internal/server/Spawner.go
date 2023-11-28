@@ -1,6 +1,7 @@
 package server
 
 import (
+	t3 "SOMAS2023/internal/clients/team_3"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 
@@ -17,7 +18,7 @@ func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBike
 }
 
 func BikerAgentGenerator() objects.IBaseBiker {
-	return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
+	return t3.IBaselineAgent(objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New()))
 }
 
 func (s *Server) spawnLootBox() {

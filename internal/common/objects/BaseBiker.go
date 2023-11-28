@@ -47,6 +47,7 @@ type IBaseBiker interface {
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	UpdateGameState(gameState IGameState)  // sets the gameState field at the beginning of each round
 	ToggleOnBike()                         // called when removing or adding a biker on a bike
+	GetGameState() IGameState              // toGetGameState out of objects package
 }
 
 type BikerAction int
@@ -64,7 +65,7 @@ type BaseBiker struct {
 	points                           int
 	forces                           utils.Forces
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
-	GameState                        IGameState // updated by the server at every round
+	gameState                        IGameState // updated by the server at every round
 	allocationParams                 ResourceAllocationParams
 }
 
@@ -102,7 +103,7 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 // the biker itself doesn't technically have a location (as it's on the map only when it's on a bike)
 // in fact this function is only called when the biker needs to make a decision about the pedaling forces
 func (bb *BaseBiker) GetLocation() utils.Coordinates {
-	megaBikes := bb.GameState.GetMegaBikes()
+	megaBikes := bb.gameState.GetMegaBikes()
 	return megaBikes[bb.megaBikeId].GetPosition()
 }
 
@@ -114,7 +115,7 @@ func (bb *BaseBiker) nearestLoot() uuid.UUID {
 	shortestDist := math.MaxFloat64
 	var nearestBox uuid.UUID
 	var currDist float64
-	for _, loot := range bb.GameState.GetLootBoxes() {
+	for _, loot := range bb.gameState.GetLootBoxes() {
 		x, y := loot.GetPosition().X, loot.GetPosition().Y
 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
 		if currDist < shortestDist {
@@ -223,7 +224,7 @@ func (bb *BaseBiker) SetForces(forces utils.Forces) {
 }
 
 func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
-	bb.GameState = gameState
+	bb.gameState = gameState
 }
 
 func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
