@@ -6,7 +6,7 @@ import random
 import colorsys
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton, UILabel
+from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
@@ -30,11 +30,16 @@ class GameScreen:
         self.jsonData = None
         self.maxRound = 0
         self.bikeColourMap = {}
+        self.manager = None
+        self.playSpeed = 1
+        self.isPlaying = False
+        self.playEvent = pygame.USEREVENT + 100
 
     def init_ui(self, manager:pygame_gui.UIManager, screen:pygame_gui.core.UIContainer) -> dict:
         """
         Initialise the UI for the main menu screen
         """
+        self.manager = manager
         x, _ = make_center((DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]), (DIM["UI_WIDTH"], DIM["SCREEN_HEIGHT"]))
         self.elements["reset"] = UIButton(
             relative_rect=pygame.Rect((x, 10), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"])),
@@ -48,7 +53,21 @@ class GameScreen:
                 "bottom": "top",
             }
         )
-        topmargin = 250
+        #control information
+        self.elements["controls"] = ui_text_box.UITextBox(
+            relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]*3.5)),
+            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>",
+            manager=manager,
+            container=screen,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            },
+            object_id="#controls"
+        )
+        topmargin = 325
         # Round count
         self.elements["round_count"] = UILabel(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"])),
@@ -62,8 +81,22 @@ class GameScreen:
                 "bottom": "top",
             }
         )
+        self.elements["round_slider"] = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*2), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]//2)),
+            start_value=0,
+            value_range=(0, self.maxRound),
+            click_increment=self.maxRound//10,
+            manager=manager,
+            container=screen,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            }
+        )
         # Round controls
-        factor = 0.85
+        factor = 1
         x, _ = make_center((DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]), (DIM["UI_WIDTH"], DIM["SCREEN_HEIGHT"]))
         self.elements["increase_round"] = UIButton(
             relative_rect=pygame.Rect((x, topmargin), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
@@ -78,8 +111,49 @@ class GameScreen:
             }
         )
         self.elements["decrease_round"] = UIButton(
-            relative_rect=pygame.Rect((x, topmargin+2*DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
+            relative_rect=pygame.Rect((x, topmargin+2.5*DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
             text="Decrease Round",
+            manager=manager,
+            container=screen,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            }
+        )
+        # play pause button
+        self.elements["play_pause"] = UIButton(
+            relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*4), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
+            text="Play",
+            manager=manager,
+            container=screen,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            }
+        )
+        # play pause speed
+        self.elements["play_pause_speed"] = UILabel(
+            relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*4.5), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
+            text="1 Round/Sec",
+            manager=manager,
+            container=screen,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            }
+        )
+        # play pause speed
+        self.elements["play_pause_speed_slider"] = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*5), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
+            start_value=1,
+            value_range=(1, 10),
+            click_increment=1,
             manager=manager,
             container=screen,
             anchors={
@@ -116,18 +190,22 @@ class GameScreen:
         match event.type:
             case pygame.MOUSEBUTTONDOWN:
                 match event.button:
+                    # Mouse inputs
                     case 1:  # Left click
-                        self.dragging = True
+                        if event.pos < (DIM["GAME_SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]):
+                            self.dragging = True
                         self.mouseX, self.mouseY = event.pos
                         self.propagate_click(event.pos)
                     case 4:  # Scroll up
                         self.adjust_zoom(1.1, event.pos)
                     case 5:  # Scroll down
                         self.adjust_zoom(0.9, event.pos)
+            #Interact with UI
             case pygame.MOUSEBUTTONUP:
                 if event.button == 1:  # Left click
                     self.propagate_click((-1, -1))
                     self.dragging = False
+            #Pan screen
             case pygame.MOUSEMOTION:
                 if self.dragging:
                     mouseX, mouseY = event.pos
@@ -135,11 +213,63 @@ class GameScreen:
                     self.offsetX += mouseX - self.mouseX
                     self.offsetY += mouseY - self.mouseY
                     self.mouseX, self.mouseY = mouseX, mouseY
+            # Handle key presses
+            case pygame.KEYDOWN:
+                match event.key:
+                    # Space bar pause/plays
+                    case pygame.K_SPACE:
+                        self.toggle_play()
+                    # Arrow keys advance rounds
+                    case pygame.K_RIGHT:
+                        self.change_round(self.round + 1)
+                    case pygame.K_LEFT:
+                        self.change_round(self.round - 1)
+                    # Up down increases speed
+                    case pygame.K_UP:
+                        self.change_speed(self.playSpeed + 1)
+                    case pygame.K_DOWN:
+                        self.change_speed(self.playSpeed - 1)
+            # Handle UI buttons
             case pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.elements["increase_round"]:
                     self.change_round(self.round + 1)
                 elif event.ui_element == self.elements["decrease_round"]:
                     self.change_round(self.round - 1)
+                # Play pause
+                elif event.ui_element == self.elements["play_pause"]:
+                    self.toggle_play()
+            #Sliders
+            case pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+                if event.ui_element == self.elements["round_slider"]:
+                    self.change_round(event.value)
+                elif event.ui_element == self.elements["play_pause_speed_slider"]:
+                    self.change_speed(event.value)
+            case self.playEvent:
+                self.elements["round_slider"].set_current_value(self.round + 1)
+                self.change_round(self.round + 1)
+
+    def toggle_play(self) -> None:
+        """
+        Toggle the play/pause button
+        """
+        if self.isPlaying:
+            self.elements["play_pause"].set_text("Play")
+            self.isPlaying = False
+            pygame.time.set_timer(self.playEvent, 0)
+        else:
+            self.elements["play_pause"].set_text("Pause")
+            self.isPlaying = True
+            pygame.time.set_timer(self.playEvent, int(1000//self.playSpeed))
+
+    def change_speed(self, newSpeed:int) -> None:
+        """
+        Change the speed of the game
+        """
+        self.playSpeed = min(10, max(1, newSpeed))
+        self.elements["play_pause_speed_slider"].set_current_value(self.playSpeed)
+        self.elements["play_pause_speed"].set_text(f"{self.playSpeed} Round/Sec")
+        if self.isPlaying:
+            pygame.time.set_timer(self.playEvent, int(1000//self.playSpeed))
 
     def change_round(self, newRound:int) -> None:
         """
@@ -216,5 +346,7 @@ class GameScreen:
         """
         Set the data for the game screen
         """
+        if data is None:
+            return
         self.jsonData = data
         self.maxRound = len(data) - 1
