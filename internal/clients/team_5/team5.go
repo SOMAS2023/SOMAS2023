@@ -38,7 +38,7 @@ func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	return calculateResourceAllocation(t5.GetGameState(), t5)
 }
 
-func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]float64) voting.LootboxVoteMap {
+func (t5 *team5Agent) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
 	gameState := t5.GetGameState()
 	finalPreferences := CalculateLootBoxPreferences(gameState, t5 /*t5.cumulativePreferences*/)
 
