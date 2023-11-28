@@ -41,3 +41,13 @@ func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 func (t5 *team5Agent) ProposeDirection() uuid.UUID {
 	return lootBoxPref(t5.GetGameState(), t5)
 }
+
+func (t5 *team5Agent) GetGameState() objects.IGameState {
+    return t5.BaseBiker.GetGameState()
+}
+
+func (t5 *team5Agent) GetMegaBikeId() uuid.UUID {
+    return t5.BaseBiker.GetMegaBikeId()
+}
+
+

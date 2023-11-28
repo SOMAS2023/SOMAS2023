@@ -4,16 +4,67 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"github.com/google/uuid"
 	"fmt"
+	"math"
 )
 
 //for testing use any box in targetLootBoxID
 
+//i added a comment for the printstatement in get colour remember to remove and in the original decideforce fn in base biker remember to remove those
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
-	fmt.Println("team5Agent: GetBike: t5.BaseBiker.GetBike(): ", t5.BaseBiker.GetBike())
 	fmt.Println("testing 1")
 
-	t5.BaseBiker.DecideForce(targetLootBoxID) // Pass the UUID to BaseBiker's DecideForce
+	currLocation := t5.GetLocation()
+	fmt.Println("Current Location: ", currLocation)
+
+	nearestLoot := t5.ProposeDirection()
+	fmt.Println("Nearest Loot ID: ", nearestLoot)
+
+	currentLootBoxes := t5.GetGameState().GetLootBoxes()
+	fmt.Println("Number of Loot Boxes: ", len(currentLootBoxes))
+
+	if len(currentLootBoxes) > 0 {
+		targetPos := currentLootBoxes[nearestLoot].GetPosition()
+		fmt.Println("Target Position: ", targetPos)
+
+		deltaX := targetPos.X - currLocation.X
+		deltaY := targetPos.Y - currLocation.Y
+		fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
+
+		angle := math.Atan2(deltaX, deltaY)
+		normalisedAngle := angle / math.Pi
+		fmt.Println("Angle: ", angle, "Normalized Angle: ", normalisedAngle)
+
+		orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
+		fmt.Println("Bike Orientation: ", orientation)
+
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: normalisedAngle - orientation,
+		}
+		fmt.Println("Turning Decision: ", turningDecision)
+
+		nearestBoxForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		fmt.Println("Nearest Box Forces: ", nearestBoxForces)
+
+		t5.SetForces(nearestBoxForces)
+	} else {
+		idleForces := utils.Forces{
+			Pedal:   0.0,
+			Brake:   0.0,
+			Turning: utils.TurningDecision{SteerBike: false},
+		}
+		fmt.Println("Idle Forces: ", idleForces)
+
+		t5.SetForces(idleForces)
+	}
 }
+
+	
+
 
 // so this bassically adjusts the force depending on the energy of the agent
 func (t5 *team5Agent) calculatePedalForceBasedOnEnergy() float64 {
