@@ -2,6 +2,7 @@ package team_8
 
 import (
 	"SOMAS2023/internal/common/objects"
+	"math/rand"
 
 	"SOMAS2023/internal/common/voting"
 	"math"
@@ -156,109 +157,154 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 	return uuid.New()
 }
 
+// -------------------------------------------------------------------------------------------------------------------
+// DecideAction helper functions
+
+// calculateAverageUtilityPercentage calculates the average of utility levels and returns the percentage
+// the utilitylevels need additional parameters to calculate
+func (bb *Agent8) calculateAverageUtility(utilityLevels []float64) float64 {
+	var sum float64
+	for _, value := range utilityLevels {
+		sum += value
+	}
+	average_utility := sum / float64(len(utilityLevels))
+	return average_utility
+}
+
+// calculatePercentageSameGoal calculates the percentage of agents with the same goal
+func (bb *Agent8) calculatePercentageSameGoal(agentGoals []int, targetGoal int) float64 {
+	var countSameGoal int
+	for _, goal := range agentGoals {
+		if goal == targetGoal {
+			countSameGoal++
+		}
+	}
+	totalAgents := len(agentGoals)
+	if totalAgents == 0 {
+		return 0.0
+	}
+	percentage := (float64(countSameGoal) / float64(totalAgents))
+	return percentage
+}
+
+// calculateProbabilitySatisfiedLoops calculates the probability of having 'true' in the array
+func (bb *Agent8) calculateProbabilitySatisfiedLoops(turns []bool) float64 {
+	var countTrue int
+	for _, result := range turns {
+		if result {
+			countTrue++
+		}
+	}
+	totalTurns := len(turns)
+	if totalTurns == 0 {
+		return 0.0
+	}
+	probability := float64(countTrue) / float64(totalTurns)
+	return probability
+}
+
+func (bb *Agent8) calculateValueJudgement(utilityLevels []float64, agentGoals []int, targetGoal int, turns []bool) float64 {
+	/* Example usage
+	utilityLevels := []float64{80.0, 90.0, 75.0, 85.0}
+	agentGoals := []int{1, 2, 1, 1, 2, 2, 1, 1, 2, 2}
+	targetGoal := 1
+	turns := []bool{true, false, true, true, false, true, true, false, true}*/
+	averageUtility := bb.calculateAverageUtility(utilityLevels)
+	percentageSameGoal := bb.calculatePercentageSameGoal(agentGoals, targetGoal)
+	probabilitySatisfiedLoops := bb.calculateProbabilitySatisfiedLoops(turns)
+
+	// Calculate the average score
+	averageScore := (averageUtility + percentageSameGoal + probabilitySatisfiedLoops) / 3
+	return averageScore
+}
+
+func (bb *Agent8) calculateCostInCollectiveImprovement(decisions []bool) float64 {
+	var countFalse int
+	for _, decision := range decisions {
+		if !decision {
+			countFalse++
+		}
+	}
+
+	totalDecisions := len(decisions)
+	if totalDecisions == 0 {
+		return 0.0
+	}
+
+	percentage := (float64(countFalse) / float64(totalDecisions))
+	return percentage
+}
+
+func (bb *Agent8) calculatePercentageLowEnergyAgents(energyLevels []int, threshold int) float64 {
+	var countLowEnergy int
+
+	// Count the number of agents with energy levels below the threshold
+	for _, energyLevel := range energyLevels {
+		if energyLevel < threshold {
+			countLowEnergy++
+		}
+	}
+
+	// Calculate the percentage
+	totalAgents := len(energyLevels)
+	if totalAgents == 0 {
+		return 0.0
+	}
+
+	percentage := (float64(countLowEnergy) / float64(totalAgents))
+	return percentage
+}
+
+func (bb *Agent8) calculateAverageOfCostAndPercentage(decisions []bool, energyLevels []int, threshold int) float64 {
+
+	/*Example usage
+	decisions := []bool{true, false, false, true, true, false, false, true}
+	energyLevels := []int{80, 45, 60, 30, 70, 40, 55, 75, 90}
+	threshold := 50
+
+	// Calculate the average of values returned by calculateCostInCollectiveImprovement and calculatePercentageLowEnergyAgents
+	averageResult := calculateAverageOfCostAndPercentage(decisions, energyLevels, threshold)*/
+	costPercentage := bb.calculateCostInCollectiveImprovement(decisions)
+	percentageLowEnergy := bb.calculatePercentageLowEnergyAgents(energyLevels, threshold)
+
+	// Calculate the average
+	averageResult := (costPercentage + percentageLowEnergy) / 2
+	return averageResult
+}
+
+func (bb *Agent8) DecideAction() objects.BikerAction {
+	// Example usage: assume the game has run 9 iteration
+	// requires a set of instances of Agent8
+	utilityLevels := []float64{80.0, 90.0, 75.0, 85.0, 45.0, 35.0, 60.0, 70.0, 65.0}
+	agentGoals := []int{1, 2, 1, 1, 2, 2, 1, 1, 2}
+	targetGoal := 1
+	turns := []bool{true, false, true, true, false, true, true, false, true}
+	decisions := []bool{true, false, false, true, true, false, false, true, false}
+	energyLevels := []int{80, 45, 60, 30, 70, 40, 55, 75, 90}
+	EnergyThreshold := 50
+
+	// Find quantified ‘Value-judgement’
+	valueJudgement := bb.calculateValueJudgement(utilityLevels, agentGoals, targetGoal, turns)
+
+	// Scale the ‘Cost in the collective improvement’
+	AverageOfCost := bb.calculateAverageOfCostAndPercentage(decisions, energyLevels, EnergyThreshold)
+
+	// Find the overall ‘changeBike’ coefficient
+	changeBikeCoefficient := 0.6*valueJudgement - 0.4*AverageOfCost
+
+	// Make a decision based on the calculated coefficients
+	// rand.Float64() to be deicided
+	if rand.Float64() > changeBikeCoefficient {
+		return objects.ChangeBike
+	}
+
+	// Default action
+	return objects.Pedal
+}
+
+//-------------------------------------------------------------------------------------------------------------------------
+
 // //  Nemo started
-
-// this function will contain the agent's strategy on deciding which direction to go to
-// the default implementation returns an equal distribution over all options
-// this will also be tried as returning a rank of options
-// NB: One vote system
-
-// func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, currentVotes voting.LootboxVoteMap) voting.LootboxVoteMap {
-// 	votes := make(voting.LootboxVoteMap)
-
-// 	distance_threshold := 30
-// 	energy_threshold := 30
-// 	currLocation := bb.GetLocation()
-// 	var chosenBox uuid.UUID
-// 	minDistance := math.MaxFloat64
-// 	foundDesiredColor := false
-
-// 	// Check for desired color within the distance range
-// 	for _, proposal := range proposals {
-// 		for _, lootBox := range bb.GetGameState().GetLootBoxes() {
-// 			if lootBox.GetID() == proposal {
-// 				// x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
-// 				// // distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
-// 				// distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
-// 				distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
-
-// 				if distance <= float64(distance_threshold) && lootBox.GetColour() == bb.GetColour() {
-// 					if distance < minDistance {
-// 						minDistance = distance
-// 						chosenBox = proposal
-// 						foundDesiredColor = true
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	// If no desired color found within range or energy level is low, vote for the closest loot box
-// 	if !foundDesiredColor || bb.GetEnergyLevel() < float64(energy_threshold) {
-// 		for _, proposal := range proposals {
-// 			for _, lootBox := range bb.GetGameState().GetLootBoxes() {
-// 				if lootBox.GetID() == proposal {
-// 					x, y := lootBox.GetPosition().X, lootBox.GetPosition().Y
-// 					distance := math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
-
-// 					if distance < minDistance {
-// 						minDistance = distance
-// 						chosenBox = proposal
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	// // Cast vote
-// 	// for _, proposal := range proposals {
-// 	// 	if proposal == chosenBox {
-// 	// 		votes[proposal] = 1.0 // Full vote for the chosen box
-// 	// 	} else {
-// 	// 		votes[proposal] = 0.0 // No vote for the other boxes
-// 	// 	}
-// 	// }
-
-// 	//NB!!!
-// 	// these above can be possibly replaced by previous storage of preference ***
-// 	totalVoters := len(currentVotes)                              // Assuming you have a way to get the total number of voters
-// 	leadingOption, secondOption := getTopTwoOptions(currentVotes) // Implement this method to find top two voted options
-
-// 	// Decide on strategic voting
-// 	if chosenBox != leadingOption && chosenBox != secondOption && currentVotes[leadingOption]-currentVotes[secondOption] > float64(totalVoters)/4 {
-// 		// Vote for the leading option if the preferred option is not leading and the lead is significant
-// 		votes[leadingOption] = 1.0
-// 	} else if chosenBox == secondOption && currentVotes[leadingOption]-currentVotes[secondOption] < float64(totalVoters)/3 {
-// 		votes[secondOption] = 1.0
-// 	} else {
-// 		// Otherwise, vote for the preferred option
-// 		votes[chosenBox] = 1.0
-// 	}
-
-// 	return votes
-// }
-
-// for 1 voting system
-// func getTopTwoOptions(currentVotes voting.LootboxVoteMap) (uuid.UUID, uuid.UUID) {
-// 	var maxVoteID, secondMaxVoteID uuid.UUID
-// 	maxVote, secondMaxVote := -1.0, -1.0
-
-// 	for id, votes := range currentVotes {
-// 		if votes > maxVote {
-// 			// Update second max
-// 			secondMaxVoteID = maxVoteID
-// 			secondMaxVote = maxVote
-// 			// Update max
-// 			maxVoteID = id
-// 			maxVote = votes
-// 		} else if votes > secondMaxVote {
-// 			secondMaxVoteID = id
-// 			secondMaxVote = votes
-// 		}
-// 	}
-
-// 	return maxVoteID, secondMaxVoteID
-// }
 
 // calculate preference score(preference voting)
 func (bb *Agent8) calculatePreferenceScores(proposals []uuid.UUID) map[uuid.UUID]float64 {
