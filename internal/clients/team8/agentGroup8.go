@@ -151,12 +151,6 @@ func (bb *Agent8) ChangeBike() uuid.UUID {
 	return winningBikeID
 }
 
-// default implementation returns the id of the nearest lootbox
-// Alex
-func (bb *Agent8) ProposeDirection() uuid.UUID {
-	return uuid.New()
-}
-
 // DecideAction helper functions
 
 // calculateAverageUtilityPercentage calculates the average of utility levels and returns the percentage
@@ -393,4 +387,28 @@ func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
 	distribution := make(map[uuid.UUID]float64)
 	return distribution
 
+}
+
+// --------------------------------------------------------------------------------------------------------------
+func (bb *Agent8) ProposeDirection() uuid.UUID {
+	lootBoxes := bb.GetGameState().GetLootBoxes()
+	preferences := make(map[uuid.UUID]float64)
+	softmaxPreferences := make(map[uuid.UUID]float64)
+
+	// Calculate preferences
+	for _, lootBox := range lootBoxes {
+		distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
+		colorPreference := calculateColorPreference(bb.GetColour(), lootBox.GetColour())
+		energyWeighting := calculateEnergyWeighting(bb.GetEnergyLevel())
+
+		preferences[lootBox.GetID()] = colorPreference + distance*energyWeighting
+	}
+
+	// Apply softmax to convert preferences to a probability distribution
+	softmaxPreferences = softmax(preferences)
+
+	// Rank loot boxes based on preferences
+	rankedLootBoxes := rankByPreference(softmaxPreferences)
+
+	return rankedLootBoxes[0]
 }
