@@ -48,3 +48,20 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 
 	biker.SetForces(navOutput)
 }
+
+/*
+// Ally will update this as soon as the infrastructure is merged!
+
+// VOTING FUNCTIONS
+func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+	voteInputs := frameworks.VoteInputs{
+		DecisionType:   frameworks.VoteToAcceptNewAgent,
+		Candidates:     pendingAgents,
+		VoteParameters: frameworks.YesNo,
+	}
+
+	voteOutput := biker.votingFramework.GetDecision(voteInputs)
+
+	return voteOutput
+}
+*/
