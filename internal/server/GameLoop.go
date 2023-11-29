@@ -299,12 +299,5 @@ func (s *Server) Start() {
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
 	}
-	// file, err := os.Create("game_dump.json")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer file.Close()
-	// if err := json.NewEncoder(file).Encode(gameStates); err != nil {
-	// 	panic(err)
-	// }
+	s.outputResults(gameStates)
 }
