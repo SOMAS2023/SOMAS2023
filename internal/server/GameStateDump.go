@@ -7,28 +7,30 @@ import (
 )
 
 type GameStateDump struct {
-	Bikes     []BikeDump    `json:"bikes"`
-	LootBoxes []LootBoxDump `json:"loot_boxes"`
-	Audi      AudiDump      `json:"audi"`
+	Agents    map[uuid.UUID]AgentDump   `json:"agents"`
+	Bikes     map[uuid.UUID]BikeDump    `json:"bikes"`
+	LootBoxes map[uuid.UUID]LootBoxDump `json:"loot_boxes"`
+	Audi      AudiDump                  `json:"audi"`
 }
 
 type PhysicsObjectDump struct {
-	ID            uuid.UUID           `json:"id"`
 	PhysicalState utils.PhysicalState `json:"physical_state"`
 }
 
 type BikeDump struct {
 	PhysicsObjectDump
-	Agents []AgentDump `json:"agents"`
+	AgentIDs []uuid.UUID `json:"agent_ids"`
 }
 
 type AgentDump struct {
-	ID                       uuid.UUID                        `json:"id"`
 	Forces                   utils.Forces                     `json:"forces"`
 	EnergyLevel              float64                          `json:"energy_level"`
+	Points                   int                              `json:"points"`
 	ResourceAllocationParams objects.ResourceAllocationParams `json:"resource_allocation_params"`
 	Colour                   string                           `json:"colour"`
 	Location                 utils.Coordinates                `json:"location"`
+	OnBike                   bool                             `json:"on_bike"`
+	BikeID                   uuid.UUID                        `json:"bike_id"`
 }
 
 type LootBoxDump struct {
@@ -39,50 +41,59 @@ type LootBoxDump struct {
 
 type AudiDump struct {
 	PhysicsObjectDump
+	ID         uuid.UUID `json:"id"`
 	TargetBike uuid.UUID `json:"target_bike"`
 }
 
 func newPhysicsObjectDump(physicsObject objects.IPhysicsObject) PhysicsObjectDump {
 	return PhysicsObjectDump{
-		ID:            physicsObject.GetID(),
 		PhysicalState: physicsObject.GetPhysicalState(),
 	}
 }
 
 func (s *Server) NewGameStateDump() GameStateDump {
-	bikes := make([]BikeDump, 0, len(s.megaBikes))
-	for _, bike := range s.megaBikes {
-		agents := make([]AgentDump, 0, len(bike.GetAgents()))
-		for _, agent := range bike.GetAgents() {
-			agents = append(agents, AgentDump{
-				ID:                       agent.GetID(),
-				Forces:                   agent.GetForces(),
-				EnergyLevel:              agent.GetEnergyLevel(),
-				ResourceAllocationParams: agent.GetResourceAllocationParams(),
-				Colour:                   agent.GetColour().String(),
-				Location:                 agent.GetLocation(),
-			})
+	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
+	for id, agent := range s.GetAgentMap() {
+		agents[id] = AgentDump{
+			Forces:                   agent.GetForces(),
+			EnergyLevel:              agent.GetEnergyLevel(),
+			Points:                   agent.GetPoints(),
+			ResourceAllocationParams: agent.GetResourceAllocationParams(),
+			Colour:                   agent.GetColour().String(),
+			Location:                 agent.GetLocation(),
+			OnBike:                   agent.GetBikeStatus(),
+			BikeID:                   agent.GetBike(),
 		}
-		bikes = append(bikes, BikeDump{
-			PhysicsObjectDump: newPhysicsObjectDump(bike),
-			Agents:            agents,
-		})
 	}
 
-	lootBoxes := make([]LootBoxDump, 0, len(s.lootBoxes))
-	for _, lootBox := range s.lootBoxes {
-		lootBoxes = append(lootBoxes, LootBoxDump{
+	bikes := make(map[uuid.UUID]BikeDump, len(s.megaBikes))
+	for id, bike := range s.megaBikes {
+		agentIDs := make([]uuid.UUID, 0, len(bike.GetAgents()))
+		for _, agent := range bike.GetAgents() {
+			agentIDs = append(agentIDs, agent.GetID())
+		}
+		bikes[id] = BikeDump{
+			PhysicsObjectDump: newPhysicsObjectDump(bike),
+			AgentIDs:          agentIDs,
+		}
+	}
+
+	lootBoxes := make(map[uuid.UUID]LootBoxDump, len(s.lootBoxes))
+	for id, lootBox := range s.lootBoxes {
+		lootBoxes[id] = LootBoxDump{
 			PhysicsObjectDump: newPhysicsObjectDump(lootBox),
 			TotalResources:    lootBox.GetTotalResources(),
 			Colour:            lootBox.GetColour().String(),
-		})
+		}
 	}
 
 	return GameStateDump{
+		Agents:    agents,
 		Bikes:     bikes,
 		LootBoxes: lootBoxes,
 		Audi: AudiDump{
 			PhysicsObjectDump: newPhysicsObjectDump(s.audi),
+			ID:                s.audi.GetID(),
 			TargetBike:        s.audi.GetTargetID(),
 		},
 	}
