@@ -17,18 +17,6 @@ type Agent8 struct {
 	color       string
 }
 
-// type BaseBiker struct {
-// 	// Fields from your existing structure
-// 	ID               uuid.UUID
-// 	soughtColour     string // Assuming utils.Colour is a string type
-// 	onBike           bool
-// 	energyLevel      float64
-// 	points           int
-// 	megaBikeId       uuid.UUID
-// 	gameState        IGameState
-// 	allocationParams ResourceAllocationParams
-// }
-
 type Colour string
 
 // determine the forces (pedalling, breaking and turning)
@@ -40,134 +28,44 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	//TODO： need to be implemented
 }
 
-// AgentRanking holds an agent's UUID and their energy level
-type AgentRanking struct {
-	ID          uuid.UUID
-	energyLevel float64
-}
+func UuidToAgentMap(pendingAgents []uuid.UUID, megaBikes map[uuid.UUID]objects.IMegaBike) map[uuid.UUID]objects.IBaseBiker {
+	agentMap := make(map[uuid.UUID]objects.IBaseBiker)
 
-type AgentBordaRank struct {
-	ID         uuid.UUID
-	BordaPoint float64
-}
-
-func RankAgentsWithEnergy(pendingAgents []uuid.UUID, weight float64) []AgentBordaRank {
-	type agentWithEnergy struct {
-		ID          uuid.UUID
-		EnergyLevel float64
-	}
-
-	var agentsWithEnergy []agentWithEnergy
-	for _, agentID := range pendingAgents {
-		agent := GetAgentByUUID(agentID)
-		agentsWithEnergy = append(agentsWithEnergy, agentWithEnergy{ID: agentID, EnergyLevel: agent.energyLevel})
-	}
-
-	// Sorting agents by energy level in descending order
-	sort.Slice(agentsWithEnergy, func(i, j int) bool {
-		return agentsWithEnergy[i].EnergyLevel > agentsWithEnergy[j].EnergyLevel
-	})
-
-	var AgentsScore []AgentBordaRank
-	totalAgents := len(agentsWithEnergy)
-	for i, agent := range agentsWithEnergy {
-		bordaPoint := float64(totalAgents-i) * weight // Calculate Borda point
-		AgentsScore = append(AgentsScore, AgentBordaRank{ID: agent.ID, BordaPoint: bordaPoint})
-	}
-
-	return AgentsScore
-}
-
-func SumBordaScores(canons ...[]AgentBordaRank) map[uuid.UUID]float64 {
-	summedScores := make(map[uuid.UUID]float64)
-
-	// Iterate over each canon
-	for _, canon := range canons {
-		// Iterate over each agent's Borda score in the canon
-		for _, agentRank := range canon {
-			// Sum the scores for each agent
-			summedScores[agentRank.ID] += agentRank.BordaPoint
+	for _, megaBike := range megaBikes {
+		for _, agent := range megaBike.GetAgents() {
+			for _, uuid := range pendingAgents {
+				if agent.GetID() == uuid {
+					agentMap[uuid] = agent
+				}
+			}
 		}
 	}
 
-	return summedScores
-}
-
-func AssignPointsBasedOnColor(agentsMap map[uuid.UUID]*Agent8, ourAgentColor string, weighting float64) []AgentBordaRank {
-	var ranks []AgentBordaRank
-	totalAgents := float64(len(agentsMap))
-	for id, agent := range agentsMap {
-		points := 0.0
-		if agent.color == ourAgentColor {
-			points = totalAgents * weighting / 2 // Assign points if the color matches
-		}
-		ranks = append(ranks, AgentBordaRank{ID: id, BordaPoint: points})
-	}
-	return ranks
-}
-
-func (bb *Agent8) CalculateSingleAgentScore(agentID uuid.UUID, threshold float64) map[uuid.UUID]bool {
-	agent := GetAgentByUUID(agentID)
-
-	colorValue := 0.0
-	energyScore := 0.0
-	if agent.color == bb.color {
-		colorValue = 1.0
-	}
-	if agent.energyLevel > bb.energyLevel {
-		energyScore = 1.0
-	}
-
-	totalScore := energyScore + colorValue
-
-	decisions := make(map[uuid.UUID]bool)
-	decisions[agentID] = totalScore >= threshold
-
-	return decisions
+	return agentMap
 }
 
 // an agent will have to rank the agents that are trying to join and that they will try to
-func (bb *Agent8) DecideJoining(pendingAgents []uuid.UUID,
+func (bb *Agent8) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+	var threshold float64 = 0.2
+	decision := make(map[uuid.UUID]bool)
+	agentMap := UuidToAgentMap(pendingAgents, bb.GetGameState().GetMegaBikes())
 
-// n int, // number of agents we want to allow to join the bike
-) map[uuid.UUID]bool {
-
-	decisions := make(map[uuid.UUID]bool)
-
-	if len(pendingAgents) == 0 {
-		agentID := uuid.UUID{}
-		decisions := bb.CalculateSingleAgentScore(agentID, 1)
-
-		return decisions
-
-	} else {
-		agentsMap := make(map[uuid.UUID]*Agent8)
-
-		// Functions for various canons
-		// Weighting for each canon should be confirmed afterwards
-		AgentsScore_energy := RankAgentsWithEnergy(pendingAgents, 0.3)
-		ownAgentColor := bb.color
-		AgentScore_color := AssignPointsBasedOnColor(agentsMap, ownAgentColor, 0.7)
-		// AgentsScore_reputation := ()
-
-		// sum weighted scores from different canons
-		summedScores := SumBordaScores(AgentsScore_energy, AgentScore_color)
-
-		// rank agents and select the best agent
-		var summedRankings []AgentBordaRank
-		for id, score := range summedScores {
-			summedRankings = append(summedRankings, AgentBordaRank{ID: id, BordaPoint: score})
+	for uuid, agent := range agentMap {
+		var score float64
+		if agent.GetColour() == bb.GetColour() {
+			score = (agent.GetEnergyLevel() - bb.CalculateAverageEnergy(bb.GetBike())) / bb.CalculateAverageEnergy(bb.GetBike())
+		} else {
+			score = 0.5 * (agent.GetEnergyLevel() - bb.CalculateAverageEnergy(bb.GetBike())) / bb.CalculateAverageEnergy(bb.GetBike())
+		}
+		if score >= threshold {
+			decision[uuid] = true
+		} else {
+			decision[uuid] = false
 		}
 
-		sort.Slice(summedRankings, func(i, j int) bool {
-			return summedRankings[i].BordaPoint > summedRankings[j].BordaPoint
-		})
-
-		for i, agentRank := range summedRankings {
-			decisions[agentRank.ID] = i < 1 // this should be the n from input afterwards
-		}
 	}
-	return decisions
+
+	return decision
 }
 
 // decide which bike to go to
@@ -394,7 +292,7 @@ func (bb *Agent8) calculatePreferenceScores(proposals []uuid.UUID) map[uuid.UUID
 	sort.Float64s(distances)
 
 	// Scoring mechanism
-	if bb.GetEnergyLevel() < 30 || !bb.hasDesiredColorInRange(proposals, 30) {
+	if bb.GetEnergyLevel() < 0.3 || !bb.hasDesiredColorInRange(proposals, 30) {
 		// Score based on distance
 		score := float64(len(distances))
 		for _, distance := range distances {
