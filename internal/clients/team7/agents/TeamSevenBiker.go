@@ -66,12 +66,17 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 		return voteOutput
 	}
 */
+// VOTING FUNCTIONS
+
+// Vote on whether to accept new agent onto bike.
 func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	voteInputs := frameworks.VoteInputs{
 		DecisionType: frameworks.VoteToAcceptNewAgent,
 		//Candidates.AgentCandidate:     pendingAgents,
 		VoteParameters: frameworks.YesNo,
 	}
+	// Candidate type for this vote is a list of agent UUIDs.
+	// Therefore only use Candidates.AgentCandidate in VoteToAcceptWrapper function.
 	voteInputs.Candidates.AgentCandidate = pendingAgents
 	voteOutput := frameworks.VoteToAcceptWrapper(voteInputs)
 

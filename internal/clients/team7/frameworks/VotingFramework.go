@@ -8,6 +8,7 @@ import (
 // This map can hold any type of data as the value
 type Map map[uuid.UUID]interface{}
 
+// This map can be used for votes where we return a agent UUIDs mapped to boolean.
 type MapIdBool map[uuid.UUID]bool
 
 // Define VoteTypes
@@ -34,8 +35,13 @@ const (
 
 )
 
+// CandidateType allows us to deal with different candidate types depending on the type f vote being called.
 type CandidateType struct {
-	AgentCandidate []uuid.UUID
+	AgentCandidate []uuid.UUID // Candidates are a list of agent UUIDs
+	//Add more
+	// e.g.
+	// GovernanceCandidate []int // In future may have to vote on governance. e.g. democracy=0 or dictatorship=1
+
 }
 type VoteInputs struct {
 	DecisionType     VoteType      // Type of vote that needs to be made
