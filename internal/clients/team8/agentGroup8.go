@@ -2,7 +2,7 @@ package team_8
 
 import (
 	"SOMAS2023/internal/common/objects"
-	voting "SOMAS2023/internal/common/voting"
+	"SOMAS2023/internal/common/voting"
 
 	"math/rand"
 
@@ -28,7 +28,6 @@ type Agent8 struct {
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	//TODO： need to be implemented
-	return
 }
 
 // an agent will have to rank the agents that are trying to join and that they will try to
