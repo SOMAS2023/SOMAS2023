@@ -28,8 +28,10 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	//TODO： need to be implemented
 }
 
-func UuidToAgentMap(pendingAgents []uuid.UUID, megaBikes map[uuid.UUID]objects.IMegaBike) map[uuid.UUID]objects.IBaseBiker {
+// the function is used to map uuid of agents to real baseAgent object
+func (bb *Agent8) UuidToAgentMap(pendingAgents []uuid.UUID) map[uuid.UUID]objects.IBaseBiker {
 	agentMap := make(map[uuid.UUID]objects.IBaseBiker)
+	megaBikes := bb.GetGameState().GetMegaBikes()
 
 	for _, megaBike := range megaBikes {
 		for _, agent := range megaBike.GetAgents() {
@@ -48,7 +50,7 @@ func UuidToAgentMap(pendingAgents []uuid.UUID, megaBikes map[uuid.UUID]objects.I
 func (bb *Agent8) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	var threshold float64 = 0.2
 	decision := make(map[uuid.UUID]bool)
-	agentMap := UuidToAgentMap(pendingAgents, bb.GetGameState().GetMegaBikes())
+	agentMap := bb.UuidToAgentMap(pendingAgents)
 
 	for uuid, agent := range agentMap {
 		var score float64
@@ -70,19 +72,6 @@ func (bb *Agent8) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 
 // decide which bike to go to
 // for now it just returns a random uuid
-
-// CalculateGiniIndexFromAB calculates the Gini index using the given values of A and B.
-func CalculateGiniIndexFromAB(A, B float64) float64 {
-	// Ensure that the denominator is not zero to avoid division by zero
-	if A+B == 0 {
-		return 0.0 // or handle this case according to your requirements
-	}
-
-	// Calculate the Gini index
-	giniIndex := A / (A + B)
-
-	return giniIndex
-}
 
 // CalculateAverageEnergy calculates the average energy level for agents on a specific bike.
 func (bb *Agent8) CalculateAverageEnergy(bikeID uuid.UUID) float64 {
