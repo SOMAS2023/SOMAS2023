@@ -51,7 +51,7 @@ func CumulativeDist(voters []IVoter) (map[uuid.UUID]float64, error) {
 	if len(voters) == 0 {
 		panic("no votes provided")
 	}
-
+	// Vote checks for each voter
 	aggregateVotes := make(map[uuid.UUID]float64)
 	for _, IVoter := range voters {
 		if math.Abs(SumOfValues(IVoter)-1.0) > utils.Epsilon {
@@ -62,8 +62,10 @@ func CumulativeDist(voters []IVoter) (map[uuid.UUID]float64, error) {
 			aggregateVotes[id] += vote
 		}
 	}
-	// TODO normalise
-
+	// normalising step for all voters involved
+	for agentId, vote := range aggregateVotes {
+		aggregateVotes[agentId] = vote / float64(len(voters))
+	}
 	return aggregateVotes, nil
 }
 
