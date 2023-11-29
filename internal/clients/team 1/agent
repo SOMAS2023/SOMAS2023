@@ -135,25 +135,20 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	}
 
 	selfishAllocation := make(map[uuid.UUID]float)
-	// selfishAllocation[bb.GetID()] := 1.0 - bb.GetEnergyLevel() //distribute max amount to ourselves
-	//remaining energy available = 1 - (1 - bb.GetEnergyLevel()) = bb.GetEnergyLevel()
 	for _, agent := range fellowBikers{
-		//energyNeed := bb.GetEnergyLevel() - agent.GetEnergyLevel
-		energyNeed := agent.GetResourceAllocationParams.resourceDemand//1.0 - agent.GetEnergyLevel() 
+		energyNeed := agent.GetResourceAllocationParams.resourceDemand
 		selfishAllocation[agent.GetID()] := energyNeed
-		//sumEnergyNeeds := sumEnergyNeeds + energyNeed
 	}
 	sumEnergyNeeds -= (1.0-bb.GetEnergyLevel()) // remove our energy need from the sum
 
 	for _, agentId:= range selfishAllocation {
-		if agentId != bb.GetID()//if agent.GetID() != bb.GetID(){
+		if agentId != bb.GetID(){//if agent.GetID() != bb.GetID(){
 			selfishAllocation[agentId] := (selfishAllocation[agentId]/sumEnergyNeeds)*bb.GetEnergyLevel() //NB assuming energy is 0-1
 		}
 	}
 
 	//3/4) Look in success vector to see relative success of each agent and calculate selfishness score using suc-rel chart (0-1)
 	'''TI - Around line 350, we have Soma`s pseudocode on agent opinion held in bb.Opinion.opinion, lets assume its normalized between 0-1'''
-	//selfishnessScore := 0.5 // Initial value
 	selfishnessScore := make(map[uuid.UUID]float)
 	runningScore := 0.0
 	for _, agent := range fellowBikers {
@@ -166,9 +161,7 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 			runningScore = runningScore + selfishnessScore[id]
 		}
 	}
-	/*if runningScore > 0.0 {
-		selfishnessScore = runningScore / len(fellowBikers)//this finds the average of all the selfishness scores
-	}*/
+
 	selfishnessScore[bb.GetID()] := runningScore/(len(fellowBikers)-1)
 	
 	//5) Linearly interpolate between selfish and helpful allocations based on selfishness score
@@ -176,13 +169,12 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 	runningDistribution := 0.0
 	for _, agent := range fellowBikers {
 		id := agent.GetID()
-		//distribution[id] := (selfishnessScore * selfishAllocation[id]) + ((1.0 - selfishnessScore) * helpfulAllocation[id]) //NB This is already 0-1
 		distribution := (selfishnessScore[id]*selfishAllocation[id]) + ((1.0 - selfishnessScore[id]) * helpfulAllocation[id])
 		distribution[id] := distribution
 		runningDistribution := runningDistribution + distribution
 	}
-	for _, agentId:= range distribution {
-			distribution[agentId] := distribution[agentId]/runningDistribution//ensures distribution sums to 1
+	for _, agentId := range distribution {
+		distribution[agentId] := distribution[agentId]/runningDistribution // Normalise!
 	}
 	return distribution
 
