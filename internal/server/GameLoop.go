@@ -5,11 +5,9 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
-	"os"
 )
 
 func (s *Server) RunGameLoop() {
@@ -35,6 +33,9 @@ func (s *Server) RunGameLoop() {
 
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
+
+	// Punish bikeless agents
+	s.punishBikelessAgents()
 
 	// Check if agents died
 	s.unaliveAgents()
@@ -74,6 +75,7 @@ func (s *Server) GetLeavingDecisions() {
 			// it will be added to the desired one (if accepted) at the beginning of next loop
 			if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
 				s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+				delete(s.megaBikeRiders, agent.GetID())
 			}
 		default:
 			panic("agent decided invalid action")
@@ -216,30 +218,37 @@ func (s *Server) LootboxCheckAndDistributions() {
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
-				allAllocations := make([]voting.IdVoteMap, totAgents)
-				for _, agent := range agents {
-					// the agents return their ideal lootbox split by assigning a number between 0 and 1 to
-					// each biker on their bike (including themselves)
-					allAllocations = append(allAllocations, agent.DecideAllocation())
-				}
+				if totAgents > 0 {
+					fmt.Printf("Total agents: %d \n", totAgents)
+					allAllocations := make([]voting.IdVoteMap, totAgents)
+					for _, agent := range agents {
+						// the agents return their ideal lootbox split by assigning a number between 0 and 1 to
+						// each biker on their bike (including themselves)
+						allAllocations = append(allAllocations, agent.DecideAllocation())
+					}
+					if totAgents <= len(allAllocations) {
+						allAllocations = allAllocations[totAgents:]
+					}
 
-				Iallocations := make([]voting.IVoter, len(allAllocations))
-				for i, v := range allAllocations {
-					Iallocations[i] = v
-				}
-				// TODO handle error
-				winningAllocation, _ := voting.CumulativeDist(Iallocations)
-				bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
+					Iallocations := make([]voting.IVoter, len(allAllocations))
+					for i, v := range allAllocations {
+						Iallocations[i] = v
+					}
+					// TODO handle error
+					winningAllocation, _ := voting.CumulativeDist(Iallocations)
+					bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
-				for agentID, allocation := range winningAllocation {
-					lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
-					agent := s.GetAgentMap()[agentID]
-					// Allocate loot based on the calculated utility share
-					fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
-					agent.UpdateEnergyLevel(lootShare)
-					// Allocate points if the box is of the right colour
-					if agent.GetColour() == lootbox.GetColour() {
-						agent.UpdatePoints(utils.PointsFromSameColouredLootBox)
+					for agentID, allocation := range winningAllocation {
+						fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
+						lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
+						agent := s.GetAgentMap()[agentID]
+						// Allocate loot based on the calculated utility share
+						fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
+						agent.UpdateEnergyLevel(lootShare)
+						// Allocate points if the box is of the right colour
+						if agent.GetColour() == lootbox.GetColour() {
+							agent.UpdatePoints(utils.PointsFromSameColouredLootBox)
+						}
 					}
 				}
 			}
@@ -267,6 +276,15 @@ func (s *Server) unaliveAgents() {
 	}
 }
 
+func (s *Server) punishBikelessAgents() {
+	for id, agent := range s.GetAgentMap() {
+		if _, ok := s.megaBikeRiders[id]; !ok {
+			// Agent is not on a bike
+			agent.UpdateEnergyLevel(utils.LimboEnergyPenalty)
+		}
+	}
+}
+
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
 	gameStates := make([]GameStateDump, 0, s.GetIterations())
@@ -281,12 +299,5 @@ func (s *Server) Start() {
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
 	}
-	file, err := os.Create("game_dump.json")
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	if err := json.NewEncoder(file).Encode(gameStates); err != nil {
-		panic(err)
-	}
+	s.outputResults(gameStates)
 }
