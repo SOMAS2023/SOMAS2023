@@ -25,6 +25,10 @@ func (env *EnvironmentHandler) GetLootBoxesByColour(colour utils.Colour) []objec
 	return matchingLootBoxes
 }
 
+func (env *EnvironmentHandler) GetLootboxById(id uuid.UUID) objects.ILootBox {
+	return env.GameState.GetLootBoxes()[id]
+}
+
 func (env *EnvironmentHandler) GetCurrentBike() objects.IMegaBike {
 	return env.GameState.GetMegaBikes()[env.CurrentBikeId]
 }
@@ -38,6 +42,10 @@ func (env *EnvironmentHandler) GetBikeAgentsByBikeId(bikeId uuid.UUID) []objects
 	bike := megaBikes[bikeId]
 	return bike.GetAgents()
 }
+
+// func (env *EnvironmentHandler) GetBikeLeaderId() uuid.UUID {
+// 	TODO: Implement once we have leaders
+// }
 
 func (env *EnvironmentHandler) GetNearestLootBox() objects.ILootBox {
 	X, Y := env.GetCurrentBike().GetPosition().X, env.GetCurrentBike().GetPosition().Y
@@ -54,20 +62,6 @@ func (env *EnvironmentHandler) GetNearestLootBox() objects.ILootBox {
 	}
 
 	return nearestLootBox
-}
-
-func (env *EnvironmentHandler) GetBikerListByAgentIds(agentIds []uuid.UUID) []objects.IBaseBiker {
-	var bikers []objects.IBaseBiker
-	for _, bike := range env.GameState.GetMegaBikes() {
-		for _, agent := range bike.GetAgents() {
-			for _, agentId := range agentIds {
-				if agentId == agent.GetID() {
-					bikers = append(bikers, agent)
-				}
-			}
-		}
-	}
-	return bikers
 }
 
 func NewEnvironmentHandler(gameState objects.IGameState, bikeId uuid.UUID, agentId uuid.UUID) *EnvironmentHandler {

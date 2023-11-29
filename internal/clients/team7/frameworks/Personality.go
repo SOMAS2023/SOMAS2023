@@ -5,20 +5,47 @@ package frameworks
   be used to modulate and control how agents make decisions, and how they perceive and
   interact with other agents.
 */
+import (
+	"math/rand"
+	"time"
+)
+
 type Personality struct {
-	SelfConfidence    float64 // Measure of self-confidence
-	Compassion        float64 // Measure of compassion which modulates decisions
-	PositiveTrustStep float64 // Rate at which trust is gained
-	NegativeTrustStep float64 // Rate at which trust is lost
-	Trustworthiness   float64 // Measure of trustworthiness to control truth and lies
+	SelfConfidence    float64
+	Compassion        float64
+	PositiveTrustStep float64
+	NegativeTrustStep float64
+	Trustworthiness   float64
+	// The following four should add up to 1
+	Egalitarian float64
+	Selfish     float64
+	Judgemental float64
+	Utilitarian float64
 }
 
 func NewDefaultPersonality() *Personality {
-	return &Personality{
-		SelfConfidence:    1,   // Confident in own decisions
-		Compassion:        0.5, // Neutral compassion
-		PositiveTrustStep: 0.1, // Trust is gained slowly
-		NegativeTrustStep: 0.1, // Trust is lost slowly
-		Trustworthiness:   1,   // Will never lie
+	p := &Personality{
+		SelfConfidence:    1,
+		Compassion:        0.5,
+		PositiveTrustStep: 0.1,
+		NegativeTrustStep: 0.1,
+		Trustworthiness:   1,
+	}
+	randomizeTraits(p)
+	return p
+}
+
+func randomizeTraits(p *Personality) {
+	rand.Seed(time.Now().UnixNano())
+	choice := rand.Intn(4)
+	switch choice {
+	case 0:
+		p.Egalitarian = 1
+	case 1:
+		p.Selfish = 1
+	case 2:
+		p.Judgemental = 1
+	case 3:
+		p.Utilitarian = 1
 	}
 }
