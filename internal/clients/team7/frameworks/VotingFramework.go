@@ -1,14 +1,15 @@
 package frameworks
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 	//voting "SOMAS2023/internal/common/voting"
 )
 
 // This map can hold any type of data as the value
 type Map map[uuid.UUID]interface{}
+
+// This map can be used for votes where we return a agent UUIDs mapped to boolean.
+type MapIdBool map[uuid.UUID]bool
 
 // Define VoteTypes
 type VoteType int
@@ -34,9 +35,17 @@ const (
 
 )
 
+// CandidateType allows us to deal with different candidate types depending on the type f vote being called.
+type CandidateType struct {
+	AgentCandidate []uuid.UUID // Candidates are a list of agent UUIDs
+	//Add more
+	// e.g.
+	// GovernanceCandidate []int // In future may have to vote on governance. e.g. democracy=0 or dictatorship=1
+
+}
 type VoteInputs struct {
 	DecisionType     VoteType      // Type of vote that needs to be made
-	Candidates       []interface{} // Map of choices [Dummy map for now]
+	Candidates       CandidateType // Map of choices [Dummy map for now]
 	VoteParameters   VoteParameter // Parameters for the vote
 	TeamSevenBikerId uuid.UUID
 }
@@ -54,7 +63,7 @@ func NewVotingFramework() *VotingFramework {
 	return &VotingFramework{}
 }
 
-func (vf *VotingFramework) GetDecision(inputs VoteInputs) Vote {
+/*func (vf *VotingFramework) GetDecision(inputs VoteInputs) Vote {
 	fmt.Println("VotingFramework: GetDecision called")
 	fmt.Println("VotingFramework: Decision type: ", inputs.DecisionType)
 	fmt.Println("VotingFramework: Choice map: ", inputs.Candidates)
@@ -63,9 +72,9 @@ func (vf *VotingFramework) GetDecision(inputs VoteInputs) Vote {
 	voteResult := vf.deliberateVote(inputs)
 
 	return voteResult
-}
+}*/
 
-func (vf *VotingFramework) deliberateVote(voteInputs VoteInputs) Vote {
+/*func (vf *VotingFramework) deliberateVote(voteInputs VoteInputs) Vote {
 	var vote Vote
 	if voteInputs.DecisionType == VoteToKickAgent {
 		// TODO: Deliberate on whether to kick an agent
@@ -89,4 +98,4 @@ func (vf *VotingFramework) deliberateVote(voteInputs VoteInputs) Vote {
 		//vote = Vote{result: Map{"decision": true}}
 	}
 	return vote
-}
+}*/
