@@ -14,12 +14,17 @@ package team2
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"fmt"
 
 	// "SOMAS2023/internal/common/utils"
 	"math"
 
 	"github.com/google/uuid"
 )
+
+type IBaseBiker interface {
+	objects.IBaseBiker
+}
 
 type AgentTwo struct {
 	// BaseBiker represents a basic biker agent.
@@ -32,10 +37,41 @@ type AgentTwo struct {
 	GameIterations     int32                 // Keep track of game iterations
 	forgivenessCounter int32                 // Keep track of how many rounds we have been forgiving an agent
 	gameState          objects.IGameState    // updated by the server at every round
-	// megaBikeId uuid.UUID
-	bikeCounter    map[uuid.UUID]int32
-	actions        []Action
-	gameLoopNumber int // incremented at end of DecideForce
+	megaBikeId         uuid.UUID
+	bikeCounter        map[uuid.UUID]int32
+	actions            []Action
+	gameLoopNumber     int          // incremented at end of DecideForce
+	soughtColour       utils.Colour // the colour of the lootbox that the agent is currently seeking
+	onBike             bool
+	energyLevel        float64 // float between 0 and 1
+	points             int
+	forces             utils.Forces
+	allocationParams   objects.ResourceAllocationParams
+}
+
+func NewBaseTeam2Biker(agentId uuid.UUID) *AgentTwo {
+	color := utils.GenerateRandomColour()
+	baseBiker := objects.GetBaseBiker(color, agentId)
+	return &AgentTwo{
+		BaseBiker:          baseBiker,
+		SocialCapital:      make(map[uuid.UUID]float64),
+		Trust:              make(map[uuid.UUID]float64),
+		Institution:        make(map[uuid.UUID]float64),
+		Network:            make(map[uuid.UUID]float64),
+		GameIterations:     0,
+		forgivenessCounter: 0,
+		gameState:          nil,
+		megaBikeId:         uuid.UUID{},
+		bikeCounter:        make(map[uuid.UUID]int32),
+		actions:            make([]Action, 0),
+		gameLoopNumber:     0,
+		soughtColour:       color,
+		onBike:             false,
+		energyLevel:        1.0,
+		points:             0,
+		forces:             utils.Forces{},
+		allocationParams:   objects.ResourceAllocationParams{},
+	}
 }
 
 const (
@@ -158,6 +194,7 @@ func (a *AgentTwo) ChooseOptimalBike() uuid.UUID {
 	// - N and the Social Capital Threshold could be varied.
 
 	currentBikeID := a.GetBike()
+	a.gameState = a.GetGameState()
 
 	for bikeID, bike := range a.gameState.GetMegaBikes() {
 		for _, agent := range bike.GetAgents() {
@@ -191,13 +228,20 @@ func (a *AgentTwo) ChooseOptimalBike() uuid.UUID {
 // TODO: Create a function to calculate expected gain
 
 func (a *AgentTwo) DecideAction() objects.BikerAction {
+	fmt.Println("DecideAction entering")
 	// lootBoxlocation := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
 	//update agent's trustworthiness every round pretty much at the start of each epoch
-	for _, bike := range a.gameState.GetMegaBikes() {
+	a.gameState = a.GetGameState()
+
+	// fmt.Println("DecideAction megabikes: ", a.gameState.GetMegaBikes())
+	for _, bike := range a.GetGameState().GetMegaBikes() {
+		// fmt.Println("DecideAction bike: ", bike.GetID(), " ", bike.GetAgents())
 		for _, agent := range bike.GetAgents() {
 			// get the force for the agent with agentID in actions
 			agentID := agent.GetID()
+			// fmt.Println("DecideAction agentID: ", agentID)
 			for _, action := range a.actions {
+				// fmt.Println("DecideAction action: ", action)
 				if action.AgentID == agentID {
 					// update trustworthiness
 					a.updateTrustworthiness(agentID, forcesToVectorConversion(action.Force), action.lootBoxlocation)
@@ -206,16 +250,19 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 			// a.updateTrustworthiness(agent.GetID(), forcesToVectorConversion(), lootBoxlocation)
 		}
 	}
-
+	// a.gameState.GetMegaBikes()[a.GetBike()].GetAgents()[0].GetForces()
 	// Check energy level, if below threshold, don't change bike
-	energyThreshold := 0.2
+	// energyThreshold := 0.2
+	// fmt.Println("OUTSIDE FOR LOOP: ", a.GetEnergyLevel(), energyThreshold, a.ChooseOptimalBike(), a.GetBike())
 
-	if (a.GetEnergyLevel() < energyThreshold) || (a.ChooseOptimalBike() == a.GetBike()) {
-		return objects.Pedal
-	} else {
-		// random for now, changeBike changes to a random uuid for now.
-		return objects.ChangeBike
-	}
+	// TODO: ChangeBike is broken in GameLoop
+	// if (a.GetEnergyLevel() < energyThreshold) || (a.ChooseOptimalBike() == a.GetBike()) {
+	// 	return objects.Pedal
+	// } else {
+	// 	// random for now, changeBike changes to a random uuid for now.
+	// 	return objects.ChangeBike
+	// }
+	return objects.Pedal
 
 	// TODO: When we have access to limbo/void then we can worry about these
 	// Utility = expected gain - cost of changing bike(no of rounds in the void * energy level drain)
@@ -223,52 +270,50 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 }
 
 // TODO: Once the MVP is complete, we can start thinking about this and then feed it into DecideForce
-// func (a *AgentTwo) CalcExpectedGainForLootbox(lootboxID uuid.UUID) float64 {
-// 	// Implement this method
-// 	// Calculate gain of going for a given lootbox(box colour and distance to it), to decide the action (e.g. pedal, brake, turn) to take
+func (a *AgentTwo) CalcExpectedGainForLootbox(lootboxID uuid.UUID) float64 {
+	// Implement this method
+	// Calculate gain of going for a given lootbox(box colour and distance to it), to decide the action (e.g. pedal, brake, turn) to take
 
-// 	// a.GetEnergyLevel()
-// 	// energyLost := agent.GetForces().Pedal * utils.MovingDepletion
+	// a.GetEnergyLevel()
+	// energyLost := agent.GetForces().Pedal * utils.MovingDepletion
 
-// 	//What the server uses to drain energy from us for moving
-// 	// for _, agent := range s.megaBikes[bikeID].GetAgents() {
-// 	// 	agent.DecideForce(direction)
-// 	// 	// deplete energy
-// 	// 	energyLost := agent.GetForces().Pedal * utils.MovingDepletion
-// 	// 	agent.UpdateEnergyLevel(-energyLost)
-// 	// }
+	//What the server uses to drain energy from us for moving
+	// for _, agent := range s.megaBikes[bikeID].GetAgents() {
+	// 	agent.DecideForce(direction)
+	// 	// deplete energy
+	// 	energyLost := agent.GetForces().Pedal * utils.MovingDepletion
+	// 	agent.UpdateEnergyLevel(-energyLost)
+	// }
 
-// 	// energy from lootbox - energy from pedalling
+	// energy from lootbox - energy from pedalling
 
-// 	currLocation := a.GetLocation()
-// 	targetPos := a.gameState.GetLootBoxes()[lootboxID].GetPosition()
+	currLocation := a.GetLocation()
+	targetPos := a.gameState.GetLootBoxes()[lootboxID].GetPosition()
 
-// 	deltaX := targetPos.X - currLocation.X
-// 	deltaY := targetPos.Y - currLocation.Y
-// 	angle := math.Atan2(deltaX, deltaY)
-// 	angleInDegrees := angle * math.Pi / 180
+	deltaX := targetPos.X - currLocation.X
+	deltaY := targetPos.Y - currLocation.Y
+	angle := math.Atan2(deltaX, deltaY)
+	angleInDegrees := angle * math.Pi / 180
 
-// 	// Default BaseBiker will always
-// 	turningDecision := utils.TurningDecision{
-// 		SteerBike:     true,
-// 		SteeringForce: angleInDegrees,
-// 	}
+	// Default BaseBiker will always
+	turningDecision := utils.TurningDecision{
+		SteerBike:     true,
+		SteeringForce: angleInDegrees,
+	}
 
-// 	lootboxForces := utils.Forces{
-// 		Pedal:   utils.BikerMaxForce,
-// 		Brake:   0.0,
-// 		Turning: turningDecision,
-// 	}
+	lootboxForces := utils.Forces{
+		Pedal:   utils.BikerMaxForce,
+		Brake:   0.0,
+		Turning: turningDecision,
+	}
 
-// 	energyFromLootbox := a.gameState.GetLootBoxes()[lootboxID].GetTotalResources()
-// 	energyToPedal := lootboxForces.Pedal * utils.MovingDepletion //Moving depleteion is a constant 1 atm. TODO: Change this to a variable and check how Pedal relates to energy depletion
+	energyFromLootbox := a.gameState.GetLootBoxes()[lootboxID].GetTotalResources()
+	energyToPedal := lootboxForces.Pedal * utils.MovingDepletion //Moving depleteion is a constant 1 atm. TODO: Change this to a variable and check how Pedal relates to energy depletion
 
-// 	expectedGain := energyFromLootbox - energyToPedal
+	expectedGain := energyFromLootbox - energyToPedal
 
-// 	return expectedGain
-// }
-
-// func (a *AgentTwo) deci
+	return expectedGain
+}
 
 func (a *AgentTwo) GetPreviousAction() {
 	// -> get previous action of all bikes and bikers from last 5 gamestates
@@ -296,8 +341,28 @@ func (a *AgentTwo) GetPreviousAction() {
 	}
 }
 
+// returns the nearest lootbox with respect to the agent's bike current position
+// in the MVP this is used to determine the pedalling forces as all agent will be
+// aiming to get to the closest lootbox by default
+func (a *AgentTwo) nearestLoot() uuid.UUID {
+	currLocation := a.GetLocation()
+	shortestDist := math.MaxFloat64
+	var nearestBox uuid.UUID
+	var currDist float64
+	for _, loot := range a.gameState.GetLootBoxes() {
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
+		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+		if currDist < shortestDist {
+			nearestBox = loot.GetID()
+			shortestDist = currDist
+		}
+	}
+	return nearestBox
+}
+
 // To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
-func (a *AgentTwo) DecideForce() {
+func (a *AgentTwo) DecideForce(direction uuid.UUID) {
+	fmt.Println("DecideForce entering")
 	// Pedal, Brake, Turning
 	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
 	// GetVotedLootbox() -> get voted lootbox from gamestates
@@ -311,8 +376,67 @@ func (a *AgentTwo) DecideForce() {
 	// set a.forces.steerbike == True
 
 	a.GetPreviousAction()
+	a.gameState = a.GetGameState()
+
+	// NEAREST BOX STRATEGY (MVP)
+	currLocation := a.GetLocation()
+	nearestLoot := a.nearestLoot()
+	currentLootBoxes := a.gameState.GetLootBoxes()
+	fmt.Println("DecideForce entering")
+	fmt.Println("nearestLoot: ", nearestLoot)
+	fmt.Println("currentLootBoxes: ", currentLootBoxes)
+	fmt.Println("currLocation: ", currLocation)
+
+	// Check if there are lootboxes available and move towards closest one
+	if len(currentLootBoxes) > 0 {
+		targetPos := currentLootBoxes[nearestLoot].GetPosition()
+		fmt.Println("targetPos: ", targetPos)
+		deltaX := targetPos.X - currLocation.X
+		deltaY := targetPos.Y - currLocation.Y
+		angle := math.Atan2(deltaX, deltaY)
+		normalisedAngle := angle / math.Pi
+
+		// Default BaseBiker will always
+		fmt.Println(a.gameState.GetMegaBikes()[a.GetBike()].GetOrientation())
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: normalisedAngle - a.gameState.GetMegaBikes()[a.GetBike()].GetOrientation(),
+		}
+		fmt.Println("turningDecision: ", turningDecision)
+
+		nearestBoxForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		a.forces = nearestBoxForces
+	} else { // otherwise move away from audi
+		audiPos := a.GetGameState().GetAudi().GetPosition()
+
+		deltaX := audiPos.X - currLocation.X
+		deltaY := audiPos.Y - currLocation.Y
+
+		// Steer in opposite direction to audi
+		angle := math.Atan2(-deltaX, -deltaY)
+		normalisedAngle := angle / math.Pi
+
+		// Default BaseBiker will always
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: normalisedAngle,
+		}
+
+		escapeAudiForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		a.forces = escapeAudiForces
+	}
 
 	a.gameLoopNumber++
+	fmt.Println("gameLoopNumber ", a.gameLoopNumber)
+	fmt.Println("GameIterations ", a.GameIterations)
 	// fmt.Println(actions)
 }
 
@@ -322,39 +446,3 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 	// proposal to change bike to a goal bike
 	return uuid.UUID{}
 }
-
-// this function will be used by GetTeamAgent to get the ref to the BaseBiker
-// func GetTeam2Biker(totColours utils.Colour, bikeId uuid.UUID) *AgentTwo {
-// 	return &AgentTwo{
-// 		BaseAgent:    AgentTwo.NewAgent[IBaseBiker](),
-// 		soughtColour: utils.GenerateRandomColour(),
-// 		onBike:       true,
-// 		energyLevel:  1.0,
-// 		points:       0,
-// 	}
-// }
-
-// NOTES ------------------------------------------------------------
-
-// 1) Decide on giving agent to access the gameState -> getGameState()
-
-// 2) Those function should only be called by the server, not by the agent
-
-// func (a *AgentTwo) UpdateEnergyLevel(energyLevel float64) { // TODO: TO BE CHECKED WITH TEAM LEADERS!!!!!
-// 	// Implement this
-// 	// should not be able to call this, server calls this
-// }
-
-// func (a *AgentTwo) GetResourceAllocationParams() objects.ResourceAllocationParams { // TODO: TO BE CHECKED WITH TEAM LEADERS!!!!!
-// 	// Implement this method
-// 	// SERVER CALLS THIS, agent should just ask for a specific demand
-// 	// STAGE 4: how we want to proporsion the energy bar distribution
-// 	return objects.ResourceAllocationParams{}
-// }
-
-// func (a *AgentTwo) SetAllocationParameters(params objects.ResourceAllocationParams) { // TODO: TO BE CHECKED WITH TEAM LEADERS!!!!!
-// 	// Implement this method
-// 	// should not be able to call this, server calls this
-// }
-
-// Founding processes: need to consider this for the wednesday meeting.
