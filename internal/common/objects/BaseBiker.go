@@ -3,6 +3,7 @@ package objects
 import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
+	"fmt"
 	"math"
 
 	"math/rand"
@@ -32,11 +33,12 @@ type IBaseBiker interface {
 	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
 
-	GetForces() utils.Forces                               // returns forces for current round
-	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
-	GetLocation() utils.Coordinates                        // gets the agent's location
-	GetBike() uuid.UUID                                    // tells the biker which bike it is on
-	GetEnergyLevel() float64                               // returns the energy level of the agent
+	GetForces() utils.Forces        // returns forces for current round
+	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
+	GetLocation() utils.Coordinates // gets the agent's location
+	GetBike() uuid.UUID             // tells the biker which bike it is on
+	GetEnergyLevel() float64        // returns the energy level of the agent
+	GetPoints() int
 	GetResourceAllocationParams() ResourceAllocationParams // returns set allocation parameters
 	GetBikeStatus() bool                                   // returns whether the biker is on a bike or not
 
@@ -72,6 +74,10 @@ func (bb *BaseBiker) GetEnergyLevel() float64 {
 	return bb.energyLevel
 }
 
+func (bb *BaseBiker) GetPoints() int {
+	return bb.points
+}
+
 // the function will be called by the server to:
 // - reduce the energy level based on the force spent pedalling (energyLevel will be neg.ve)
 // - increase the energy level after a lootbox has been looted (energyLevel will be pos.ve)
@@ -80,6 +86,7 @@ func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
+	fmt.Println("regular agent: GetColour: t5.regular.GetColour(): ", bb.soughtColour)
 	return bb.soughtColour
 }
 
