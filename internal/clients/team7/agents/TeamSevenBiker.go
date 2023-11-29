@@ -53,15 +53,27 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 // Ally will update this as soon as the infrastructure is merged!
 
 // VOTING FUNCTIONS
+
+	func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+		voteInputs := frameworks.VoteInputs{
+			DecisionType:   frameworks.VoteToAcceptNewAgent,
+			Candidates:     pendingAgents,
+			VoteParameters: frameworks.YesNo,
+		}
+
+		voteOutput := biker.votingFramework.GetDecision(voteInputs)
+
+		return voteOutput
+	}
+*/
 func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	voteInputs := frameworks.VoteInputs{
-		DecisionType:   frameworks.VoteToAcceptNewAgent,
-		Candidates:     pendingAgents,
+		DecisionType: frameworks.VoteToAcceptNewAgent,
+		//Candidates.AgentCandidate:     pendingAgents,
 		VoteParameters: frameworks.YesNo,
 	}
-
-	voteOutput := biker.votingFramework.GetDecision(voteInputs)
+	voteInputs.Candidates.AgentCandidate = pendingAgents
+	voteOutput := frameworks.VoteToAcceptWrapper(voteInputs)
 
 	return voteOutput
 }
-*/
