@@ -157,7 +157,6 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 	return uuid.New()
 }
 
-// -------------------------------------------------------------------------------------------------------------------
 // DecideAction helper functions
 
 // calculateAverageUtilityPercentage calculates the average of utility levels and returns the percentage
@@ -302,8 +301,6 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 	return objects.Pedal
 }
 
-//-------------------------------------------------------------------------------------------------------------------------
-
 // //  Nemo started
 
 // calculate preference score(preference voting)
@@ -387,36 +384,6 @@ func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, overallScores voting
 	softmaxScores := softmax(combinedScores)
 
 	return softmaxScores
-}
-
-// sort loot boxes by their scores
-func sortLootBoxesByScore(combinedScores map[uuid.UUID]float64) []uuid.UUID {
-	// Create a slice of boxes to sort
-	var boxes []uuid.UUID
-	for boxID := range combinedScores {
-		boxes = append(boxes, boxID)
-	}
-
-	// Sort the slice based on scores
-	sort.Slice(boxes, func(i, j int) bool {
-		return combinedScores[boxes[i]] > combinedScores[boxes[j]]
-	})
-
-	return boxes
-}
-
-func softmax(preferences map[uuid.UUID]float64) map[uuid.UUID]float64 {
-	sum := 0.0
-	for _, pref := range preferences {
-		sum += math.Exp(pref)
-	}
-
-	softmaxPreferences := make(map[uuid.UUID]float64)
-	for id, pref := range preferences {
-		softmaxPreferences[id] = math.Exp(pref) / sum
-	}
-
-	return softmaxPreferences
 }
 
 // through this function the agent submits their desired allocation of resources
