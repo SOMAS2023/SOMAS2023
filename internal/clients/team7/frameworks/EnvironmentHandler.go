@@ -1,4 +1,4 @@
-package agents
+package frameworks
 
 import (
 	objects "SOMAS2023/internal/common/objects"

@@ -1,4 +1,4 @@
-package agents
+package frameworks
 
 /*
   A personality is a set of traits that define how an agent behaves. These traits can

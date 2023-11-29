@@ -19,8 +19,8 @@ type BaseTeamSevenBiker struct {
 	opinionFramework      *frameworks.OpinionFramework
 	socialNetwork         *frameworks.SocialNetwork
 	votingFramework       *frameworks.VotingFramework
-	environmentHandler    *EnvironmentHandler
-	personality           *Personality
+	environmentHandler    *frameworks.EnvironmentHandler
+	personality           *frameworks.Personality
 }
 
 // Produce new BaseTeamSevenBiker
@@ -33,8 +33,8 @@ func NewBaseTeamSevenBiker(agentId uuid.UUID) *BaseTeamSevenBiker {
 		opinionFramework:      frameworks.NewOpinionFramework(frameworks.OpinionFrameworkInputs{}),
 		socialNetwork:         frameworks.NewSocialNetwork(),
 		votingFramework:       frameworks.NewVotingFramework(),
-		environmentHandler:    NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetMegaBikeId(), agentId),
-		personality:           NewDefaultPersonality(),
+		environmentHandler:    frameworks.NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetMegaBikeId(), agentId),
+		personality:           frameworks.NewDefaultPersonality(),
 	}
 }
 
