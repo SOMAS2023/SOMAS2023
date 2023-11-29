@@ -376,29 +376,17 @@ func (bb *Agent8) hasDesiredColorInRange(proposals []uuid.UUID, rangeThreshold f
 
 // Multi-voting system
 func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, overallScores voting.LootboxVoteMap) voting.LootboxVoteMap {
-	votes := make(voting.LootboxVoteMap)
-
 	// Calculate the biker's individual preference scores
 	preferenceScores := bb.calculatePreferenceScores(proposals)
 
-	// Combine individual preferences with overall scores
 	combinedScores := make(map[uuid.UUID]float64)
 	for _, proposal := range proposals {
 		combinedScore := preferenceScores[proposal] + overallScores[proposal]
 		combinedScores[proposal] = combinedScore
 	}
+	softmaxScores := softmax(combinedScores)
 
-	// Sort the loot boxes based on the combined score
-	sortedBoxes := sortLootBoxesByScore(combinedScores)
-
-	// Assign scores based on ranking (6 for the top, then 5, 4, etc.)
-	score := len(proposals)
-	for _, boxID := range sortedBoxes {
-		votes[boxID] = float64(score)
-		score--
-	}
-
-	return votes
+	return softmaxScores
 }
 
 // sort loot boxes by their scores
@@ -415,6 +403,20 @@ func sortLootBoxesByScore(combinedScores map[uuid.UUID]float64) []uuid.UUID {
 	})
 
 	return boxes
+}
+
+func softmax(preferences map[uuid.UUID]float64) map[uuid.UUID]float64 {
+	sum := 0.0
+	for _, pref := range preferences {
+		sum += math.Exp(pref)
+	}
+
+	softmaxPreferences := make(map[uuid.UUID]float64)
+	for id, pref := range preferences {
+		softmaxPreferences[id] = math.Exp(pref) / sum
+	}
+
+	return softmaxPreferences
 }
 
 // through this function the agent submits their desired allocation of resources
