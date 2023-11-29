@@ -7,7 +7,7 @@ import (
 )
 
 type NavigationInputs struct {
-	DesiredLootbox  utils.Coordinates
+	Destination     utils.Coordinates
 	CurrentLocation utils.Coordinates
 }
 
@@ -24,26 +24,32 @@ type NavigationDecisionFramework struct {
 
 func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) utils.Forces {
 	ndf.inputs = &inputs
-	// Get distances between current location and desired lootbox
-	dx := ndf.inputs.DesiredLootbox.X - ndf.inputs.CurrentLocation.X
-	dy := ndf.inputs.DesiredLootbox.Y - ndf.inputs.CurrentLocation.Y
 
-	angle_radians := math.Atan2(dy, dx)
+	turningForce := ndf.GetTurnAngle(inputs)
+	turningInput := utils.TurningDecision{SteerBike: true, SteeringForce: turningForce}
+	pedallingForce := float64(1)
+	brakingForce := float64(0)
 
-	// Normalize angle to be between -1 and 1
-	turning_force := angle_radians / math.Pi
-	turning_input := utils.TurningDecision{SteerBike: true, SteeringForce: turning_force}
-	pedalling_force := float64(1)
-	braking_force := float64(0)
-
-	forces := utils.Forces{Pedal: pedalling_force, Brake: braking_force, Turning: turning_input}
+	forces := utils.Forces{Pedal: pedallingForce, Brake: brakingForce, Turning: turningInput}
 
 	fmt.Println("NavigationDecisionFramework: GetDecision called")
 	fmt.Println("NavigationDecisionFramework: Current location: ", ndf.inputs.CurrentLocation)
-	fmt.Println("NavigationDecisionFramework: Desired lootbox: ", ndf.inputs.DesiredLootbox)
+	fmt.Println("NavigationDecisionFramework: Desired lootbox: ", ndf.inputs.Destination)
 	fmt.Println("NavigationDecisionFramework: Forces: ", forces)
 
 	return forces
+}
+
+func (ndf *NavigationDecisionFramework) GetTurnAngle(inputs NavigationInputs) float64 {
+	// Get distances between current location and desired lootbox
+	dx := ndf.inputs.Destination.X - ndf.inputs.CurrentLocation.X
+	dy := ndf.inputs.Destination.Y - ndf.inputs.CurrentLocation.Y
+
+	angleRadians := math.Atan2(dy, dx)
+
+	// Normalize angle to be between -1 and 1
+	turningForce := angleRadians / math.Pi
+	return turningForce
 }
 
 func NewNavigationDecisionFramework() *NavigationDecisionFramework {

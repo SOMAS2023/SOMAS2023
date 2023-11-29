@@ -41,7 +41,7 @@ func GetNewPosition(coordinates utils.Coordinates, velocity float64, orientation
 func ComputeOrientation(src utils.Coordinates, target utils.Coordinates) float64 {
 	xDiff := target.X - src.X
 	yDiff := target.Y - src.Y
-	return math.Atan(yDiff/xDiff) / math.Pi
+	return math.Atan2(yDiff, xDiff) / math.Pi
 }
 
 // ComputeDistance is to compute the L2 distance from source to target
