@@ -34,13 +34,12 @@ type AgentTwo struct {
 	Trust              map[uuid.UUID]float64 // Trust of other agents
 	Institution        map[uuid.UUID]float64 // Institution of other agents
 	Network            map[uuid.UUID]float64 // Network of other agents
-	GameIterations     int32                 // Keep track of game iterations
+	GameIterations     int32                 // Keep track of game iterations // TODO: WHAT IS THIS?
 	forgivenessCounter int32                 // Keep track of how many rounds we have been forgiving an agent
 	gameState          objects.IGameState    // updated by the server at every round
 	megaBikeId         uuid.UUID
 	bikeCounter        map[uuid.UUID]int32
 	actions            []Action
-	gameLoopNumber     int          // incremented at end of DecideForce
 	soughtColour       utils.Colour // the colour of the lootbox that the agent is currently seeking
 	onBike             bool
 	energyLevel        float64 // float between 0 and 1
@@ -64,7 +63,6 @@ func NewBaseTeam2Biker(agentId uuid.UUID) *AgentTwo {
 		megaBikeId:         uuid.UUID{},
 		bikeCounter:        make(map[uuid.UUID]int32),
 		actions:            make([]Action, 0),
-		gameLoopNumber:     0,
 		soughtColour:       color,
 		onBike:             false,
 		energyLevel:        1.0,
@@ -84,8 +82,8 @@ type Action struct {
 	AgentID         uuid.UUID
 	Action          string
 	Force           utils.Forces
-	GameLoop        int
-	lootBoxlocation Vector
+	GameLoop        int32
+	lootBoxlocation Vector //utils.Coordinates
 }
 
 // TODO: function CalculateSocialCapital
@@ -158,6 +156,8 @@ func (a *AgentTwo) updateTrustworthiness(agentID uuid.UUID, actualAction, expect
 		a.forgivenessCounter = 0
 		a.Trust[agentID] = (a.Trust[agentID]*float64(a.GameIterations) + normalisedTrustworthiness) / (float64(a.GameIterations) + 1)
 	}
+
+	fmt.Println("Trust: ", a.Trust)
 
 }
 
@@ -241,7 +241,7 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 			agentID := agent.GetID()
 			// fmt.Println("DecideAction agentID: ", agentID)
 			for _, action := range a.actions {
-				// fmt.Println("DecideAction action: ", action)
+				fmt.Println("DecideAction action: ", action)
 				if action.AgentID == agentID {
 					// update trustworthiness
 					a.updateTrustworthiness(agentID, forcesToVectorConversion(action.Force), action.lootBoxlocation)
@@ -318,7 +318,10 @@ func (a *AgentTwo) CalcExpectedGainForLootbox(lootboxID uuid.UUID) float64 {
 func (a *AgentTwo) GetPreviousAction() {
 	// -> get previous action of all bikes and bikers from last 5 gamestates
 
-	lootBoxlocation := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
+	// nearestLoot := a.nearestLoot()
+	// currentLootBoxes := a.gameState.GetLootBoxes()
+	// lootBoxlocation := currentLootBoxes[nearestLoot].GetPosition()
+	lootBoxlocation_vector := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
 	//update agent's trustworthiness every round pretty much at the start of each epoch
 	for _, bike := range a.gameState.GetMegaBikes() {
 		for _, agent := range bike.GetAgents() {
@@ -327,8 +330,8 @@ func (a *AgentTwo) GetPreviousAction() {
 				AgentID:         agent.GetID(),
 				Action:          "DecideForce",
 				Force:           agent.GetForces(),
-				GameLoop:        a.gameLoopNumber, // record the game loop number
-				lootBoxlocation: lootBoxlocation,
+				GameLoop:        a.GameIterations, // record the game loop number
+				lootBoxlocation: lootBoxlocation_vector,
 			}
 			// If we have more than 5 actions, remove the oldest one
 			if len(a.actions) >= 5 {
@@ -384,8 +387,8 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	currentLootBoxes := a.gameState.GetLootBoxes()
 	fmt.Println("DecideForce entering")
 	fmt.Println("nearestLoot: ", nearestLoot)
-	fmt.Println("currentLootBoxes: ", currentLootBoxes)
-	fmt.Println("currLocation: ", currLocation)
+	// fmt.Println("currentLootBoxes: ", currentLootBoxes)
+	fmt.Println("currLocation: ", currLocation, " bike: ", a.GetBike(), " energy: ", a.GetEnergyLevel(), " points: ", a.GetPoints())
 
 	// Check if there are lootboxes available and move towards closest one
 	if len(currentLootBoxes) > 0 {
@@ -402,7 +405,7 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 			SteerBike:     true,
 			SteeringForce: normalisedAngle - a.gameState.GetMegaBikes()[a.GetBike()].GetOrientation(),
 		}
-		fmt.Println("turningDecision: ", turningDecision)
+		// fmt.Println("turningDecision: ", turningDecision)
 
 		nearestBoxForces := utils.Forces{
 			Pedal:   utils.BikerMaxForce,
@@ -410,6 +413,7 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 			Turning: turningDecision,
 		}
 		a.forces = nearestBoxForces
+		a.SetForces(a.forces)
 	} else { // otherwise move away from audi
 		audiPos := a.GetGameState().GetAudi().GetPosition()
 
@@ -434,8 +438,7 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 		a.forces = escapeAudiForces
 	}
 
-	a.gameLoopNumber++
-	fmt.Println("gameLoopNumber ", a.gameLoopNumber)
+	a.GameIterations++
 	fmt.Println("GameIterations ", a.GameIterations)
 	// fmt.Println(actions)
 }
