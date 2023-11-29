@@ -7,7 +7,6 @@ import (
 	"SOMAS2023/internal/common/voting"
 	"github.com/google/uuid"
 	"math"
-	"math/rand"
 	"sort"
 )
 
@@ -21,27 +20,50 @@ type SmartAgent struct {
 	targetLootBox objects.ILootBox
 	reputationMap map[uuid.UUID]reputation
 
-	lootBoxCnt      float64
-	energySpent     float64
-	lastEnergyLevel float64
+	lootBoxCnt                     float64
+	energySpent                    float64
+	lastEnergyLevel                float64
+	satisfactionOfRecentAllocation float64
 }
 
 // DecideAction only pedal
 func (agent *SmartAgent) DecideAction() objects.BikerAction {
 	if agent.GetEnergyLevel() < agent.lastEnergyLevel {
 		agent.energySpent += agent.lastEnergyLevel - agent.GetEnergyLevel()
+	} else {
+		agent.recalculateSatisfaction()
 	}
 	agent.lastEnergyLevel = agent.GetEnergyLevel()
 
 	agent.updateRepMap()
+
 	return objects.Pedal
 }
 
-// DecideForces randomly based on current energyLevel
+// DecideForces considering Hegselmann-Krause model, Ramirez-Cano-Pitt model and Satisfaction
 func (agent *SmartAgent) DecideForces(direction uuid.UUID) {
-	energyLevel := agent.GetEnergyLevel() // 当前能量
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetAgents()
+	scores := make(map[uuid.UUID]float64)
+	totalScore := 0.0
+	for _, others := range agentsOnBike {
+		id := others.GetID()
+		rep := agent.reputationMap[id]
+		score := rep.isSameColor/ // Cognitive dimension: is same belief?
+			+rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
+			+rep.recentContribution // Forgiveness: forgive agents pedal harder recently
+		scores[others.GetID()] = score
+		totalScore += score
+	}
 
-	pedalForce := rand.Float64() * energyLevel // 使用 rand 包生成随机的 pedal 力量，可以根据需要调整范围
+	for id, score := range scores {
+		scores[id] = score / totalScore
+	}
+
+	pedalForce := 0.0
+	for id, weight := range scores {
+		pedalForce += weight * agent.reputationMap[id].lastPedal
+	}
+	pedalForce /= agent.satisfactionOfRecentAllocation
 
 	// 因为force是一个struct,包括pedal, brake,和turning，因此需要一起定义，不能够只有pedal
 	forces := utils.Forces{
@@ -122,7 +144,7 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox []objects.ILootBox)
 	return rank, nil
 }
 
-// rankAgentReputation if self energy level is low (below average cost for a lootBox), we follow 'Smallest First', else 'Ration'
+// scoreAgentsForAllocation if self energy level is low (below average cost for a lootBox), we follow 'Smallest First', else 'Ration'
 func (agent *SmartAgent) scoreAgentsForAllocation(agentsOnBike []objects.IBaseBiker) (map[uuid.UUID]float64, error) {
 	scores := make(map[uuid.UUID]float64)
 	totalScore := 0.0
@@ -171,4 +193,37 @@ func (agent *SmartAgent) updateRepMap() {
 			agent.reputationMap[otherAgent.GetID()] = rep
 		}
 	}
+}
+
+func (agent *SmartAgent) recalculateSatisfaction() {
+	scores := []float64{}
+
+	totalScore := 0.0
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetAgents()
+	for _, others := range agentsOnBike {
+		id := others.GetID()
+		rep := agent.reputationMap[id]
+		score := rep.isSameColor/ // Cognitive dimension: is same belief?
+			+rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
+			+rep.recentContribution/ // Forgiveness: forgive agents pedal harder recently
+			-rep.energyGain/ // Equality: Agents received more energy before should get less this time
+			+rep.energyRemain // Need: Agents with lower energyLevel require more, try to meet their need
+		scores[others.GetID()] = score
+		totalScore += score
+	}
+}
+
+func measureOrder(input []float64) float64 {
+	inversionCnt := 0.0
+	size := len(input)
+	for i, n := range input {
+		j := i + 1
+		for j < size {
+			if n > input[j] { // 升序为正序
+				inversionCnt += 1
+			}
+			j += 1
+		}
+	}
+	return 1.0 - 2.0*inversionCnt/float64(size*(size-1))
 }
