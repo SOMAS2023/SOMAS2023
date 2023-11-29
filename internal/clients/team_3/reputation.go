@@ -36,7 +36,7 @@ func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor util
 
 	// update score
 	rep.recentContribution = normalize(pedal)
-	rep.historyContribution = normalize(rep.historyContribution)
+	rep.historyContribution = normalize(rep.pedalCnt)
 	rep.energyRemain = normalize(rep.lastEnergyLevel)
 	rep.energyGain = normalize(rep.energyReceivedCnt)
 	rep.lootBoxGet = normalize(rep.lootBoxGetCnt)
