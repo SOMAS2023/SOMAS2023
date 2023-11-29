@@ -69,8 +69,6 @@ class Visualiser:
                 "bottom": "top",
             }
         )
-        # Game screen UI elements
-        # self.UIElements["game_screen"] = self.gameScreenManager.init_ui(self.manager, self.UIscreen)
 
     def switch_screen(self, newScreen:str) -> None:
         """
