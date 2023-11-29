@@ -2,17 +2,12 @@ package team_8
 
 import (
 	"SOMAS2023/internal/common/objects"
-	utils "SOMAS2023/internal/common/utils"
 
 	"github.com/google/uuid"
 )
 
 type Agent8 struct {
 	*objects.BaseBiker
-	ID           uuid.UUID
-	soughtColour utils.Colour
-	energyLevel  float64
-	gameState    IGameState
 }
 
 // type BaseBiker struct {
@@ -45,14 +40,10 @@ func CalculateGiniIndexFromAB(A, B float64) float64 {
 	return giniIndex
 }
 
-func (bb *Agent8) GetEnergyLevel() float64 {
-	return bb.energyLevel
-}
-
 // CalculateAverageEnergy calculates the average energy level for agents on a specific bike.
 func (bb *Agent8) CalculateAverageEnergy(bikeID uuid.UUID) float64 {
 	// Step 1: Get fellowBikers from the specified bike
-	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
 
 	// Step 2: Ensure there is at least one agent
 	if len(fellowBikers) == 0 {
@@ -62,7 +53,7 @@ func (bb *Agent8) CalculateAverageEnergy(bikeID uuid.UUID) float64 {
 	// Step 3: Calculate the sum of energy levels
 	sum := 0.0
 	for _, agent := range fellowBikers {
-		sum += agent.energyLevel
+		sum += agent.GetEnergyLevel()
 	}
 
 	// Step 4: Calculate the average
@@ -71,17 +62,13 @@ func (bb *Agent8) CalculateAverageEnergy(bikeID uuid.UUID) float64 {
 	return average
 }
 
-func (bb *Agent8) GetColour() utils.Colour {
-	return bb.soughtColour
-}
-
 // CountAgentsWithSameColour counts the number of agents with the same colour as the reference agent on a specific bike.
 func (bb *Agent8) CountAgentsWithSameColour(bikeID uuid.UUID) int {
 	// Step 1: Get reference colour from the BaseBiker
 	referenceColour := bb.GetColour()
 
 	// Step 2: Get fellowBikers from the specified bike
-	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
 
 	// Step 3: Ensure there is at least one agent
 	if len(fellowBikers) == 0 {
@@ -91,7 +78,7 @@ func (bb *Agent8) CountAgentsWithSameColour(bikeID uuid.UUID) int {
 	// Step 4: Count agents with the same colour as the reference agent
 	count := 0
 	for _, agent := range fellowBikers {
-		if agent.soughtColour == referenceColour {
+		if agent.GetColour() == referenceColour {
 			count++
 		}
 	}
@@ -101,7 +88,7 @@ func (bb *Agent8) CountAgentsWithSameColour(bikeID uuid.UUID) int {
 
 func (bb *Agent8) ChangeBike() uuid.UUID {
 	// Get all the bikes from the game state
-	megaBikes := bb.gameState.GetMegaBikes()
+	megaBikes := bb.GetGameState().GetMegaBikes()
 
 	// Initialize a map to store Borda scores for each bike
 	bordaScores := make(map[uuid.UUID]float64)
@@ -111,7 +98,7 @@ func (bb *Agent8) ChangeBike() uuid.UUID {
 		// Calculate the Borda score for the current bike
 		bordaScore := bb.CalculateAverageEnergy(bikeID) +
 			float64(bb.CountAgentsWithSameColour(bikeID)) +
-			CalculateGiniIndexFromAB(float64(bb.CountAgentsWithSameColour(bikeID)), float64(len(megaBikes.GetAgents())))
+			CalculateGiniIndexFromAB(float64(bb.CountAgentsWithSameColour(bikeID)), float64(len(megabike.GetAgents())))
 
 		// Store the Borda score in the map
 		bordaScores[bikeID] = bordaScore
