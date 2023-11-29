@@ -260,7 +260,8 @@ func (bb *BaseBiker) GetGameState() IGameState {
 
 // Returns the other agents on your bike :)
 func (bb *BaseBiker) GetFellowBikers() []IBaseBiker {
-	bike := bb.gameState.GetMegaBikes()[bb.megaBikeId]
+	bikes := bb.gameState.GetMegaBikes()
+	bike := bikes[bb.GetBike()]
 	fellowBikers := bike.GetAgents()
 	return fellowBikers
 }
@@ -311,7 +312,11 @@ func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVot
 	totOptions := len(proposals)
 	normalDist := 1.0 / float64(totOptions)
 	for _, proposal := range proposals {
-		votes[proposal] = normalDist
+		if val, ok := votes[proposal]; ok {
+			votes[proposal] = val + normalDist
+		} else {
+			votes[proposal] = normalDist
+		}
 	}
 	return votes
 }
