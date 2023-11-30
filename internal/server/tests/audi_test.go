@@ -9,7 +9,7 @@ import (
 )
 
 func TestAudiCollisionProcess(t *testing.T) {
-	it := 1
+	it := 2
 	s := server.Initialize(it)
 	nAgentToDelete := 0
 	for _, anyBike := range s.GetMegaBikes() {
