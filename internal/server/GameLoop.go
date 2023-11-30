@@ -41,8 +41,12 @@ func (s *Server) RunGameLoop() {
 	s.unaliveAgents()
 
 	// Replenish objects
-	s.replenishLootBoxes()
-	s.replenishMegaBikes()
+	if utils.ReplenishLootBoxes {
+		s.replenishLootBoxes()
+	}
+	if utils.ReplenishMegaBikes {
+		s.replenishMegaBikes()
+	}
 }
 
 func (s *Server) RunBikeSwitch() {
@@ -284,10 +288,6 @@ func (s *Server) unaliveAgents() {
 		if agent.GetEnergyLevel() < 0 {
 			fmt.Printf("Agent %s got game ended\n", id)
 			s.RemoveAgent(agent)
-			if bikeId, ok := s.megaBikeRiders[id]; ok {
-				s.megaBikes[bikeId].RemoveAgent(id)
-				delete(s.megaBikeRiders, id)
-			}
 		}
 	}
 }
@@ -315,12 +315,5 @@ func (s *Server) Start() {
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
 	}
-	// file, err := os.Create("game_dump.json")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer file.Close()
-	// if err := json.NewEncoder(file).Encode(gameStates); err != nil {
-	// 	panic(err)
-	// }
+	s.outputResults(gameStates)
 }

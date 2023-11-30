@@ -13,11 +13,35 @@ type kv struct {
 	Value float64
 }
 
-func Plurality(voteList []map[uuid.UUID]float64) uuid.UUID {
+type voteMethods int
+
+const (
+	PLURALITY voteMethods = iota
+	RUNOFF
+	BORDACOUNT
+	INSTANTRUNOFF
+	APPROVAL
+	COPELANDSCORING
+)
+
+func Plurality(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		Plurality:
 			Each voter selects one candidate and the candidate with the most first-placed votes is the winner.
 	*/
+
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
@@ -47,13 +71,25 @@ func Plurality(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func Runoff(voteList []map[uuid.UUID]float64) uuid.UUID {
+func Runoff(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		Runoff:
 			1st round: 	each voter selects one candidate, and the two candidates with most first-placed votes are identified.
 						If either already has a majority, this candidate is declared the winner.
 			2nd round: 	each voter selects one candidate, the candidate with most votes now is the winner.
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
@@ -110,12 +146,24 @@ func Runoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func BordaCount(voteList []map[uuid.UUID]float64) uuid.UUID {
+func BordaCount(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		BordaCount:
 			Each voter rank order all the candidates. With n candidates being ranked k scores (n-k)+1 Borda points.
 			The candidate with the highest Borda Score is the winner
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
@@ -175,12 +223,24 @@ func BordaCount(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func InstantRunoff(voteList []map[uuid.UUID]float64) uuid.UUID {
+func InstantRunoff(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		InstantRunoff:
 			Each voter rank orders all candidates, and the candidate with the least number of first-place votes is eliminate.
 			This is repeated until only one candidate remains
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	eliminateVote := make(map[uuid.UUID]bool)
 	var winner uuid.UUID
@@ -233,12 +293,24 @@ func InstantRunoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func Approval(voteList []map[uuid.UUID]float64) uuid.UUID {
+func Approval(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		Approval:
 			A ballot represents not a linear rank order of decreasing preference,
 			but rather represents the set of candidates who are 'equally acceptable' to the voter
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
@@ -263,13 +335,24 @@ func Approval(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func CopelandScoring(voteList []map[uuid.UUID]float64) uuid.UUID {
+func CopelandScoring(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		CopelandScoring:
 			Each voter submits a ballot with a linear rank order.
 			A win-loss record, the Copeland Score, is calculated for each candidate.
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
 
+	// start
 	// the map to store the winning score for each lootbox
 	scores := make(map[uuid.UUID]int)
 
