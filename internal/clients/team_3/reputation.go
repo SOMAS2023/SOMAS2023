@@ -17,29 +17,31 @@ type reputation struct {
 	energyRemain float64
 
 	// memory or counter
-	pedalCnt          float64
-	lastEnergyLevel   float64
-	energyReceivedCnt float64
-	lootBoxGetCnt     float64
+	_lastPedal         float64
+	_pedalCnt          float64
+	_lastEnergyLevel   float64
+	_recentEnergyGain  float64
+	_energyReceivedCnt float64
+	_lootBoxGetCnt     float64
 }
 
 func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor utils.Colour) {
 	// update memory
-	pedal := biker.GetForces().Pedal - biker.GetForces().Brake
-	rep.pedalCnt += pedal
-	if biker.GetEnergyLevel() > rep.lastEnergyLevel {
-		gain := biker.GetEnergyLevel() - rep.lastEnergyLevel
-		rep.energyReceivedCnt += gain
-		rep.lootBoxGetCnt += 1
+	rep._lastPedal = biker.GetForces().Pedal - biker.GetForces().Brake
+	rep._pedalCnt += rep._lastPedal
+	if biker.GetEnergyLevel() > rep._lastEnergyLevel {
+		rep._recentEnergyGain = biker.GetEnergyLevel() - rep._lastEnergyLevel
+		rep._energyReceivedCnt += rep._recentEnergyGain
+		rep._lootBoxGetCnt += 1
 	}
-	rep.lastEnergyLevel = biker.GetEnergyLevel()
+	rep._lastEnergyLevel = biker.GetEnergyLevel()
 
 	// update score
-	rep.recentContribution = normalize(pedal)
-	rep.historyContribution = normalize(rep.pedalCnt)
-	rep.energyRemain = normalize(rep.lastEnergyLevel)
-	rep.energyGain = normalize(rep.energyReceivedCnt)
-	rep.lootBoxGet = normalize(rep.lootBoxGetCnt)
+	rep.recentContribution = normalize(rep._lastPedal)
+	rep.historyContribution = normalize(rep.historyContribution)
+	rep.energyRemain = normalize(rep._lastEnergyLevel)
+	rep.energyGain = normalize(rep._energyReceivedCnt)
+	rep.lootBoxGet = normalize(rep._lootBoxGetCnt)
 	if biker.GetColour() == preferredColor {
 		rep.isSameColor = 1
 	} else {
