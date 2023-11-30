@@ -58,7 +58,10 @@ func (sn *SocialNetwork) updateTrustLevels(input SocialNetworkUpdateInput) {
 		}
 	}
 
-	DistancePenaltyMap := sn.CalcDistributionPenalties(input.AgentResourceVotes, input.AgentEnergyLevels)
+	DistributionPenaltyMap := make(map[uuid.UUID]float64)
+	if len(input.AgentResourceVotes) > 0 {
+		DistributionPenaltyMap = sn.CalcDistributionPenalties(input.AgentResourceVotes, input.AgentEnergyLevels)
+	}
 	PedallingPenaltyMap := sn.CalcPedallingPenalties(input.AgentDecisions, input.AgentEnergyLevels)
 	OrientationPenaltyMap := sn.CalcTurningPenalties(input.AgentDecisions, input.BikeTurnAngle)
 	BrakingPenaltyMap := sn.CalcBrakingPenalties(input.AgentDecisions)
@@ -71,11 +74,23 @@ func (sn *SocialNetwork) updateTrustLevels(input SocialNetworkUpdateInput) {
 	W_dlp := 1.0
 
 	for _, agentId := range agentIds {
-		updatedTrust := (W_dp * DistancePenaltyMap[agentId]) +
-			(W_pp * PedallingPenaltyMap[agentId]) +
+		_, exists := sn.socialNetwork[agentId]
+		if !exists {
+			sn.socialNetwork[agentId] = &SocialConnection{
+				connectionAge:      0,
+				trustLevels:        []float64{},
+				isActiveConnection: true,
+			}
+		}
+
+		updatedTrust := (W_pp * PedallingPenaltyMap[agentId]) +
 			(W_op * OrientationPenaltyMap[agentId]) +
 			(W_bp * BrakingPenaltyMap[agentId]) +
 			(W_dlp * DifferentLootPenaltyMap[agentId])
+
+		if len(input.AgentResourceVotes) > 0 {
+			updatedTrust += (W_dp * DistributionPenaltyMap[agentId])
+		}
 
 		trustLevels := sn.socialNetwork[agentId].trustLevels
 		if len(trustLevels) < maxTrustIterations {

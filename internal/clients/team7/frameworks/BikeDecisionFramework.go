@@ -3,7 +3,8 @@ package frameworks
 import (
 	objects "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
-	"fmt"
+
+	"github.com/google/uuid"
 )
 
 // There will be different times when a decision needs to be made.
@@ -19,32 +20,47 @@ const (
 // All inputs needed for the decisions around staying on a bike or joining a new bike.
 // Not all inputs will be needed for all decisions.
 type BikeDecisionInputs struct {
-	decisionType    BikeDecisionType   // Type of decision that needs to be made
-	currentLocation utils.Coordinates  // Current location of the biker
-	availableBikes  []objects.MegaBike // List of available bikes
+	DecisionType                   BikeDecisionType                // Type of decision that needs to be made
+	CurrentLocation                utils.Coordinates               // Current location of the biker
+	AvailableBikes                 map[uuid.UUID]objects.IMegaBike // Map of available bikes
+	PreviousDistancesFromProposals []float64
 }
 
 type BikeDecision struct {
-	leaveBike bool
+	LeaveBike bool
 }
 
 type BikeDecisionFramework struct {
 	IDecisionFramework[BikeDecisionInputs, BikeDecision]
-	inputs *BikeDecisionInputs
 }
 
 func (bdf *BikeDecisionFramework) GetDecision(inputs BikeDecisionInputs) BikeDecision {
-	bdf.inputs = &inputs
-	fmt.Println("BikeDecisionFramework: GetDecision called")
-	fmt.Println("BikeDecisionFramework: Current location: ", bdf.inputs.currentLocation)
-	fmt.Println("BikeDecisionFramework: Available bikes: ", bdf.inputs.availableBikes)
-	fmt.Println("BikeDecisionFramework: Decision type: ", bdf.inputs.decisionType)
+	if inputs.DecisionType == StayOrLeaveBike {
+		distances := inputs.PreviousDistancesFromProposals
+		// find gradient of distances
+		if len(distances) == 0 {
+			return BikeDecision{LeaveBike: false}
+		}
 
-	return BikeDecision{leaveBike: false}
+		gradient := make([]float64, len(distances)-1)
+		for i := 0; i < len(distances)-1; i++ {
+			gradient[i] = distances[i+1] - distances[i]
+		}
+
+		// Check if last 3 gradient values are positive
+		// If so, leave bike
+		if len(gradient) >= 3 {
+			if gradient[len(gradient)-1] > 0 && gradient[len(gradient)-2] > 0 && gradient[len(gradient)-3] > 0 {
+				return BikeDecision{LeaveBike: true}
+			}
+		} else {
+			return BikeDecision{LeaveBike: false}
+		}
+	}
+
+	return BikeDecision{}
 }
 
 func NewBikeDecisionFramework() *BikeDecisionFramework {
-	return &BikeDecisionFramework{
-		inputs: &BikeDecisionInputs{},
-	}
+	return &BikeDecisionFramework{}
 }

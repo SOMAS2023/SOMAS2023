@@ -7,6 +7,7 @@ import (
 )
 
 type NavigationInputs struct {
+	IsDestination   bool
 	Destination     utils.Coordinates
 	CurrentLocation utils.Coordinates
 }
@@ -41,6 +42,9 @@ func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) uti
 }
 
 func (ndf *NavigationDecisionFramework) GetTurnAngle(inputs NavigationInputs) float64 {
+	if !inputs.IsDestination {
+		return 0
+	}
 	// Get distances between current location and desired lootbox
 	dx := ndf.inputs.Destination.X - ndf.inputs.CurrentLocation.X
 	dy := ndf.inputs.Destination.Y - ndf.inputs.CurrentLocation.Y
