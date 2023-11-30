@@ -41,8 +41,12 @@ func (s *Server) RunGameLoop() {
 	s.unaliveAgents()
 
 	// Replenish objects
-	s.replenishLootBoxes()
-	s.replenishMegaBikes()
+	if utils.ReplenishLootBoxes {
+		s.replenishLootBoxes()
+	}
+	if utils.ReplenishMegaBikes {
+		s.replenishMegaBikes()
+	}
 }
 
 func (s *Server) RunBikeSwitch() {
