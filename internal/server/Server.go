@@ -40,6 +40,7 @@ type Server struct {
 	// helps with efficiently managing ridership status
 	megaBikeRiders map[uuid.UUID]uuid.UUID
 	audi           objects.IAudi
+	deadAgents     map[uuid.UUID]objects.IBaseBiker
 }
 
 func Initialize(iterations int) IBaseBikerServer {

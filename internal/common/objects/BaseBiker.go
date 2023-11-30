@@ -55,10 +55,13 @@ type IBaseBiker interface {
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	UpdateGameState(gameState IGameState)  // sets the gameState field at the beginning of each round
 	ToggleOnBike()                         // called when removing or adding a biker on a bike
+	ResetPoints()
 
 	GetReputation() map[uuid.UUID]float64 // get reputation value of all other agents
 	QueryReputation(uuid.UUID) float64    // query for reputation value of specific agent with UUID
 	SetReputation(uuid.UUID, float64)     // set reputation value of specific agent with UUID
+
+	ChooseFoundingInstitution() utils.governance // choose founding institution
 }
 
 type BikerAction int
@@ -94,6 +97,9 @@ func (bb *BaseBiker) GetPoints() int {
 // - increase the energy level after a lootbox has been looted (energyLevel will be pos.ve)
 func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 	bb.energyLevel += energyLevel
+	if bb.energyLevel > 1.0 {
+		bb.energyLevel = 1.0
+	}
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
@@ -317,6 +323,10 @@ func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
 	governanceRanking[utils.Dictatorship] = 0.0
 	governanceRanking[utils.Leadership] = 0.0
 	return governanceRanking
+}
+
+func (bb *BaseBiker) ResetPoints() {
+	bb.poins = 0
 }
 
 // this function will contain the agent's strategy on deciding which direction to go to

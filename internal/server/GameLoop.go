@@ -132,7 +132,8 @@ func (s *Server) ProcessJoiningRequests() {
 			// 3. accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
 			acceptedRanked := voting.GetAcceptanceRanking(responses)
 			totalSeatsFilled := len(s.megaBikes[bike].GetAgents())
-			emptySpaces := 8 - totalSeatsFilled
+			// emptySpaces := 8 - totalSeatsFilled
+			emptySpaces := utils.BikersOnBike - totalSeatsFilled
 
 			for i := 0; i < min(emptySpaces, len(acceptedRanked)); i++ {
 				accepted := acceptedRanked[i]
@@ -283,6 +284,9 @@ func (s *Server) unaliveAgents() {
 	for id, agent := range s.GetAgentMap() {
 		if agent.GetEnergyLevel() < 0 {
 			fmt.Printf("Agent %s got game ended\n", id)
+			// add agent to dead agent map
+			s.deadAgents[id] = agent
+			// remove agent from agent map
 			s.RemoveAgent(agent)
 			if bikeId, ok := s.megaBikeRiders[id]; ok {
 				s.megaBikes[bikeId].RemoveAgent(id)
