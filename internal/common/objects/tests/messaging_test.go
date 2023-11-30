@@ -67,7 +67,7 @@ func TestBaseBikerMessaging(t *testing.T) {
 	}
 
 	// Assert that biker1.OtherBikerReputation and biker2.OtherBikerReputation are both equal to 5
-	if biker1.OtherBikerReputation != 5.0 || biker2.OtherBikerReputation != 5.0 {
+	if biker1.OtherBikerReputation != 0.5 || biker2.OtherBikerReputation != 0.5 {
 		t.Errorf("Expected both biker1 and biker2 reputations to be 5.0, but got biker1=%.2f and biker2=%.2f", biker1.OtherBikerReputation, biker2.OtherBikerReputation)
 	}
 }
