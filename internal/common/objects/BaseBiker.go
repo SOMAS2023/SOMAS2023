@@ -8,6 +8,7 @@ import (
 	"math/rand"
 
 	baseAgent "github.com/MattSScott/basePlatformSOMAS/BaseAgent"
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -57,6 +58,12 @@ type IBaseBiker interface {
 	GetReputation() map[uuid.UUID]float64 // get reputation value of all other agents
 	QueryReputation(uuid.UUID) float64    // query for reputation value of specific agent with UUID
 	SetReputation(uuid.UUID, float64)     // set reputation value of specific agent with UUID
+
+	HandleKickOffMessage(msg KickOffAgentMessage)
+	HandleReputationMessage(msg ReputationOfAgentMessage)
+	HandleJoiningMessage(msg JoiningAgentMessage)
+	HandleLootboxMessage(msg LootboxMessage)
+	HandleGovernanceMessage(msg GovernanceMessage)
 }
 
 type BikerAction int
@@ -373,6 +380,83 @@ func (bb *BaseBiker) VoteLeader() voting.IdVoteMap {
 func (bb *BaseBiker) LeadDirection() uuid.UUID {
 	nearest := bb.nearestLoot()
 	return nearest
+}
+
+// Gets all messages that were sent to this biker agent
+func (bb *BaseBiker) GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker] {
+	reputationMsg := bb.GetReputationMessage()
+	kickOffMsg := bb.GetKickOffMessage()
+	lootboxMsg := bb.GetLootboxMessage()
+	joiningMsg := bb.GetJoiningMessage()
+	governceMsg := bb.GetGoverenceMessage()
+	return []messaging.IMessage[IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg}
+}
+
+func (bb *BaseBiker) GetKickOffMessage() KickOffAgentMessage {
+	return KickOffAgentMessage{
+		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		agentId:     uuid.Nil,
+		kickOff:     false,
+	}
+}
+
+func (bb *BaseBiker) GetReputationMessage() ReputationOfAgentMessage {
+	return ReputationOfAgentMessage{
+		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		agentId:     uuid.Nil,
+		reputation:  1.0,
+	}
+}
+
+func (bb *BaseBiker) GetJoiningMessage() JoiningAgentMessage {
+	return JoiningAgentMessage{
+		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		agentId:     uuid.Nil,
+		bikeId:      uuid.Nil,
+	}
+}
+func (bb *BaseBiker) GetLootboxMessage() LootboxMessage {
+	return LootboxMessage{
+		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		lootboxId:   uuid.Nil,
+	}
+}
+
+func (bb *BaseBiker) GetGoverenceMessage() GovernanceMessage {
+	return GovernanceMessage{
+		BaseMessage:  messaging.BaseMessage[IBaseBiker]{},
+		bikeId:       uuid.Nil,
+		governanceId: 0,
+	}
+}
+
+func (bb *BaseBiker) HandleKickOffMessage(msg KickOffAgentMessage) {
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.agentId
+	// kickOff := msg.kickOff
+}
+
+func (bb *BaseBiker) HandleReputationMessage(msg ReputationOfAgentMessage) {
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.agentId
+	// reputation := msg.reputation
+}
+
+func (bb *BaseBiker) HandleJoiningMessage(msg JoiningAgentMessage) {
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.agentId
+	// bikeId := msg.bikeId
+}
+
+func (bb *BaseBiker) HandleLootboxMessage(msg LootboxMessage) {
+	// sender := msg.BaseMessage.GetSender()
+	// lootboxId := msg.lootboxId
+}
+
+func (bb *BaseBiker) HandleGovernanceMessage(msg GovernanceMessage) {
+	// sender := msg.BaseMessage.GetSender()
+	// bikeId := msg.bikeId
+	// governanceId := msg.governanceId
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
