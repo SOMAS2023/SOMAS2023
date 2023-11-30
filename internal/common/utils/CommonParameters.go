@@ -35,3 +35,20 @@ const LimboEnergyPenalty float64 = -0.25 // amount of energy lost per round when
 Resources - Points and Energy
 */
 const PointsFromSameColouredLootBox = 5.0
+
+
+/*
+
+*/
+type voteMethods int
+
+const (
+	PLURALITY voteMethods = iota
+	RUNOFF
+	BORDACOUNT
+	INSTANTRUNOFF
+	APPROVAL
+	COPELANDSCORING
+)
+
+const VoteAction voteMethods = PLURALITY

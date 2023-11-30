@@ -79,6 +79,26 @@ func SumOfValues(voteMap IVoter) float64 {
 
 // Returns the normalized vote outcome (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
+func getVotingMap(voters []IVoter) (map[uuid.UUID]float64, error) {
+	if len(voters) == 0 {
+		panic("no votes provided")
+	}
+	// Vote checks for each voter
+	aggregateVotes := make(map[uuid.UUID]map[uuid.UUID]float64)
+	for _, IVoter := range voters {
+		if math.Abs(SumOfValues(IVoter)-1.0) > utils.Epsilon {
+			for agentId, vote := range aggregateVotes {
+				aggregateVotes[agentId] = vote / float64(len(voters))
+			}
+		}
+		votes := IVoter.GetVotes()
+		VoterID := IVoter.
+		aggregateVotes[VoterID] = votes
+	}
+	return aggregateVotes
+}
+
+
 func CumulativeDist(voters []IVoter) (map[uuid.UUID]float64, error) {
 	if len(voters) == 0 {
 		panic("no votes provided")
@@ -103,10 +123,17 @@ func CumulativeDist(voters []IVoter) (map[uuid.UUID]float64, error) {
 
 // returns the winner accoring to chosen voting strategy (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
-func WinnerFromDist(voters []IVoter) uuid.UUID {
+func WinnerFromDist(voters map[uuid.UUID]IVoter) uuid.UUID {
 	// TODO handle the error
+	votermap := getVotingMap(voters)
+	switch utils.VoteAction {
+	case utils.PLURALITY:
+		aggregateVotes := Plurality(votermap) 
+	case utils.RUNOFF:
+		ag
+	}
 	aggregateVotes, _ := CumulativeDist(voters)
-
+	
 	var randomWinner, winner uuid.UUID
 	maxVote := 0.0
 	for id, vote := range aggregateVotes {

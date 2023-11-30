@@ -60,10 +60,10 @@ func (s *Server) RunDemocraticAction(bike objects.IMegaBike) uuid.UUID {
 	}
 
 	// pass the pitched directions of a bike to all agents on that bike and get their final vote
-	finalVotes := make([]voting.LootboxVoteMap, len(agents))
-	for i, agent := range agents {
+	finalVotes := make(map[uuid.UUID]voting.LootboxVoteMap)
+	for _, agent := range agents {
 		// ---------------------------VOTING ROUTINE - STEP 2 ---------------------
-		finalVotes[i] = agent.FinalDirectionVote((proposedDirections))
+		finalVotes[agent.GetID()] = agent.FinalDirectionVote((proposedDirections))
 	}
 
 	// ---------------------------VOTING ROUTINE - STEP 3 --------------
