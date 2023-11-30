@@ -62,6 +62,12 @@ func (audi *Audi) ComputeTarget() {
 		if bike.GetVelocity() != 0.0 {
 			continue
 		}
+		if !utils.AudiTargetEmpty {
+			agentsOnBike := bike.GetAgents()
+			if agentsOnBike == nil || len(agentsOnBike) == 0 {
+				continue
+			}
+		}
 		distance := phy.ComputeDistance(audi.coordinates, bike.GetPosition())
 		if distance < minDistance {
 			minDistance = distance
