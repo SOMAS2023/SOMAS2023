@@ -405,78 +405,108 @@ func (bb *BaseBiker) LeadDirection() uuid.UUID {
 	return nearest
 }
 
-// Gets all messages that were sent to this biker agent
-func (bb *BaseBiker) GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker] {
-	reputationMsg := bb.GetReputationMessage()
-	kickOffMsg := bb.GetKickOffMessage()
-	lootboxMsg := bb.GetLootboxMessage()
-	joiningMsg := bb.GetJoiningMessage()
-	governceMsg := bb.GetGoverenceMessage()
-	return []messaging.IMessage[IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg}
+// Send messages to server which will be sent to the reciepients of the messages
+func (bb *BaseBiker) SendMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker] {
+	// For team's agent add your own logic on chosing when your biker should send messages
+	wantToSendMsg := false
+	if wantToSendMsg {
+		reputationMsg := bb.CreateReputationMessage()
+		kickOffMsg := bb.CreateKickOffMessage()
+		lootboxMsg := bb.CreateLootboxMessage()
+		joiningMsg := bb.CreateJoiningMessage()
+		governceMsg := bb.CreateGoverenceMessage()
+		return []messaging.IMessage[IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg}
+	}
+	return []messaging.IMessage[IBaseBiker]{}
 }
 
-func (bb *BaseBiker) GetKickOffMessage() KickOffAgentMessage {
+func (bb *BaseBiker) CreateKickOffMessage() KickOffAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
 	return KickOffAgentMessage{
-		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
 		agentId:     uuid.Nil,
 		kickOff:     false,
 	}
 }
 
-func (bb *BaseBiker) GetReputationMessage() ReputationOfAgentMessage {
+func (bb *BaseBiker) CreateReputationMessage() ReputationOfAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
 	return ReputationOfAgentMessage{
-		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
 		agentId:     uuid.Nil,
 		reputation:  1.0,
 	}
 }
 
-func (bb *BaseBiker) GetJoiningMessage() JoiningAgentMessage {
+func (bb *BaseBiker) CreateJoiningMessage() JoiningAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
 	return JoiningAgentMessage{
-		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
 		agentId:     uuid.Nil,
 		bikeId:      uuid.Nil,
 	}
 }
-func (bb *BaseBiker) GetLootboxMessage() LootboxMessage {
+func (bb *BaseBiker) CreateLootboxMessage() LootboxMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
 	return LootboxMessage{
-		BaseMessage: messaging.BaseMessage[IBaseBiker]{},
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
 		lootboxId:   uuid.Nil,
 	}
 }
 
-func (bb *BaseBiker) GetGoverenceMessage() GovernanceMessage {
+func (bb *BaseBiker) CreateGoverenceMessage() GovernanceMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
 	return GovernanceMessage{
-		BaseMessage:  messaging.BaseMessage[IBaseBiker]{},
+		BaseMessage:  messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
 		bikeId:       uuid.Nil,
 		governanceId: 0,
 	}
 }
 
 func (bb *BaseBiker) HandleKickOffMessage(msg KickOffAgentMessage) {
+	// Team's agent should implement logic for handling (receiving) messages
+	// that were sent to them.
+
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.agentId
 	// kickOff := msg.kickOff
 }
 
 func (bb *BaseBiker) HandleReputationMessage(msg ReputationOfAgentMessage) {
+	// Team's agent should implement logic for handling (receiving) messages
+	// that were sent to them.
+
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.agentId
 	// reputation := msg.reputation
 }
 
 func (bb *BaseBiker) HandleJoiningMessage(msg JoiningAgentMessage) {
+	// Team's agent should implement logic for handling (receiving) messages
+	// that were sent to them.
+
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.agentId
 	// bikeId := msg.bikeId
 }
 
 func (bb *BaseBiker) HandleLootboxMessage(msg LootboxMessage) {
+	// Team's agent should implement logic for handling (receiving) messages
+	// that were sent to them.
+
 	// sender := msg.BaseMessage.GetSender()
 	// lootboxId := msg.lootboxId
 }
 
 func (bb *BaseBiker) HandleGovernanceMessage(msg GovernanceMessage) {
+	// Team's agent should implement logic for handling (receiving) messages
+	// that were sent to them.
+
 	// sender := msg.BaseMessage.GetSender()
 	// bikeId := msg.bikeId
 	// governanceId := msg.governanceId
