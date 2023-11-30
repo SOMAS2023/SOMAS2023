@@ -7,31 +7,31 @@ import (
 
 type ReputationOfAgentMessage struct {
 	messaging.BaseMessage[IBaseBiker]
-	agentId    uuid.UUID // agent who's reputation you are talking about
-	reputation float64   // your agent's reputation expected from 0-1
+	AgentId    uuid.UUID // agent who's reputation you are talking about
+	Reputation float64   // your agent's reputation expected from 0-1
 }
 
 type KickOffAgentMessage struct {
 	messaging.BaseMessage[IBaseBiker]
-	agentId uuid.UUID // agent who you do/do not want to kick off
-	kickOff bool      // true if you want to kick off, otherwise false
+	AgentId uuid.UUID // agent who you do/do not want to kick off
+	KickOff bool      // true if you want to kick off, otherwise false
 }
 
 type JoiningAgentMessage struct {
 	messaging.BaseMessage[IBaseBiker]
-	agentId uuid.UUID // agent who wants to join this bike. DOESN’T MOVE YOU ONTO THAT BIKE, IS DECLARING INTENTION
-	bikeId  uuid.UUID // the bike this agent wants to join
+	AgentId uuid.UUID // agent who wants to join this bike. DOESN’T MOVE YOU ONTO THAT BIKE, IS DECLARING INTENTION
+	BikeId  uuid.UUID // the bike this agent wants to join
 }
 
 type LootboxMessage struct {
 	messaging.BaseMessage[IBaseBiker]
-	lootboxId uuid.UUID // the lootbox that agent wants
+	LootboxId uuid.UUID // the lootbox that agent wants
 }
 
 type GovernanceMessage struct { //"I would like to operate under this governance system" NOTE: NOT VOTING TO CHANGE GOVERNMENT
 	messaging.BaseMessage[IBaseBiker]
-	bikeId       uuid.UUID // the bike this agent wants to join
-	governanceId int       // the governce type that this agent wants
+	BikeId       uuid.UUID // the bike this agent wants to join
+	GovernanceId int       // the governce type that this agent wants
 }
 
 func (msg ReputationOfAgentMessage) InvokeMessageHandler(agent IBaseBiker) {
