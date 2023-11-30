@@ -229,7 +229,7 @@ func (s *Server) AudiCollisionCheck() {
 				fmt.Printf("Agent %s killed by Audi \n", agentToDelete.GetID())
 				s.RemoveAgent(agentToDelete)
 			}
-			if utils.AudiRemoveMegaBike {
+			if utils.AudiRemovesMegaBike {
 				fmt.Printf("Megabike %s removed by Audi \n", megabike.GetID())
 				delete(s.megaBikes, megabike.GetID())
 			}
