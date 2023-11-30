@@ -40,4 +40,5 @@ const PointsFromSameColouredLootBox = 5.0
 Audi Behavior
 */
 const AudiTargetsEmptyMegaBike bool = false
+const AudiOnlyTargetsStationaryMegaBike bool = true // if false, targeting slowest
 const AudiRemovesMegaBike bool = false

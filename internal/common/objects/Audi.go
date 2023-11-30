@@ -57,22 +57,38 @@ func (audi *Audi) UpdateOrientation() {
 func (audi *Audi) ComputeTarget() {
 	// search for target
 	minDistance := math.Inf(1)
+	minVelocity := math.Inf(1)
 	audi.target = nil
 	for _, bike := range audi.gameState.GetMegaBikes() {
-		if bike.GetVelocity() != 0.0 {
-			continue
+		if utils.AudiOnlyTargetsStationaryMegaBike {
+			if bike.GetVelocity() != 0.0 {
+				continue
+			}
 		}
-		if !utils.AudiTargetEmpty {
+
+		if !utils.AudiTargetsEmptyMegaBike {
 			agentsOnBike := bike.GetAgents()
 			if agentsOnBike == nil || len(agentsOnBike) == 0 {
 				continue
 			}
 		}
-		distance := phy.ComputeDistance(audi.coordinates, bike.GetPosition())
-		if distance < minDistance {
-			minDistance = distance
-			audi.target = bike
+
+		// ignore faster bike
+		if bike.GetVelocity() > minVelocity {
+			continue
 		}
+
+		distance := phy.ComputeDistance(audi.coordinates, bike.GetPosition())
+		// minimize the velocity first
+		if bike.GetVelocity() < minVelocity {
+			audi.target = bike
+		} else if distance < minDistance { // if same velocity, then minimize distance
+			audi.target = bike
+		} else {
+			continue
+		}
+		minVelocity = audi.target.GetVelocity()
+		minDistance = distance
 	}
 }
 
