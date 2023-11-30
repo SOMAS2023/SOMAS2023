@@ -11,18 +11,20 @@ import (
 )
 
 func (s *Server) RunGameLoop() {
+	// Capture dump of starting state
+	gameState := s.NewGameStateDump()
 
 	// take care of agents that want to leave the bike and of the acceptance/ expulsion process
-	s.RunBikeSwitch()
+	s.RunBikeSwitch(gameState)
 
 	// get the direction decisions and pedalling forces
 	s.RunActionProcess()
 
 	// The Audi makes a decision
-	s.audi.UpdateGameState(s)
+	s.audi.UpdateGameState(gameState)
 
 	// Move the mega bikes
-	for _, bike := range s.GetMegaBikes() {
+	for _, bike := range s.megaBikes {
 		// update mass dependent on number of agents on bike
 		bike.UpdateMass()
 		s.MovePhysicsObject(bike)
@@ -51,9 +53,9 @@ func (s *Server) RunGameLoop() {
 	}
 }
 
-func (s *Server) RunBikeSwitch() {
+func (s *Server) RunBikeSwitch(gameState GameStateDump) {
 	// check if agents want ot leave the bike on this round
-	s.GetLeavingDecisions()
+	s.GetLeavingDecisions(gameState)
 	//process the kickout request
 	s.HandleKickoutProcess()
 	// process joining requests from last round
@@ -79,10 +81,10 @@ func (s *Server) HandleKickoutProcess() {
 	}
 }
 
-func (s *Server) GetLeavingDecisions() {
+func (s *Server) GetLeavingDecisions(gameState objects.IGameState) {
 	for agentId, agent := range s.GetAgentMap() {
 		fmt.Printf("Agent %s updating state \n", agentId)
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gameState)
 		agent.UpdateAgentInternalState()
 		switch agent.DecideAction() {
 		case objects.Pedal:
