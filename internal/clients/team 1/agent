@@ -132,7 +132,7 @@ func (bb *BaseBiker) DecideAllocation() voting.IdVoteMap {
 func (bb *BaseBiker) GetLocation() utils.Coordinates {
 	megaBikes := bb.gameState.GetMegaBikes()
 	return megaBikes[bb.megaBikeId].GetPosition()
-
+}
 // necessary functions:
 // for a box, see if we can reach it -> distance to box from us, our energy level -> function verifies if our energy means we can travel far enough to reach box
 	// to do the above, need a function that converts energy to reachable distance 
