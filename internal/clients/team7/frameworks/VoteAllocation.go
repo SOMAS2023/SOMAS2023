@@ -2,17 +2,31 @@ package frameworks
 
 import (
 	voting "SOMAS2023/internal/common/voting"
+
+	"github.com/google/uuid"
 )
 
-// Greedy implementation. Vote for our agent to get all of resource.
-func VoteOnAllocationWrapper(voteInputs VoteInputs) voting.IdVoteMap {
-	var vote voting.IdVoteMap // TODO: Import voting when rebase done and use IdVoteMap type.
+type VoteOnAllocationInput struct {
+	AgentCandidates []uuid.UUID
+	MyId            uuid.UUID
+}
 
-	for _, agent_id := range voteInputs.Candidates.AgentCandidate {
-		if agent_id == voteInputs.TeamSevenBikerId {
-			vote[agent_id] = 1
+type VoteOnAllocationHandler struct {
+	IDecisionFramework[VoteOnAllocationInput, voting.IdVoteMap]
+}
+
+func NewVoteOnAllocationHandler() *VoteOnAllocationHandler {
+	return &VoteOnAllocationHandler{}
+}
+
+func (voteHandler *VoteOnAllocationHandler) GetDecision(inputs VoteOnAllocationInput) voting.IdVoteMap {
+	vote := make(voting.IdVoteMap)
+
+	for _, agentId := range inputs.AgentCandidates {
+		if agentId == inputs.MyId {
+			vote[agentId] = 1
 		} else {
-			vote[agent_id] = 0
+			vote[agentId] = 0
 		}
 	}
 
