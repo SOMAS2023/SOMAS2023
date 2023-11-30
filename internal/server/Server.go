@@ -63,6 +63,15 @@ func Initialize(iterations int) IBaseBikerServer {
 	return server
 }
 
+func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
+	id := agent.GetID()
+	s.BaseServer.RemoveAgent(agent)
+	if bikeId, ok := s.megaBikeRiders[id]; ok {
+		s.megaBikes[bikeId].RemoveAgent(id)
+		delete(s.megaBikeRiders, id)
+	}
+}
+
 func (s *Server) outputResults(gameStates []GameStateDump) {
 	statisticsJson, err := json.MarshalIndent(CalculateStatistics(gameStates), "", "    ")
 	if err != nil {

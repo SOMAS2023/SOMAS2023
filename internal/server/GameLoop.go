@@ -288,10 +288,6 @@ func (s *Server) unaliveAgents() {
 			s.deadAgents[id] = agent
 			// remove agent from agent map
 			s.RemoveAgent(agent)
-			if bikeId, ok := s.megaBikeRiders[id]; ok {
-				s.megaBikes[bikeId].RemoveAgent(id)
-				delete(s.megaBikeRiders, id)
-			}
 		}
 	}
 }

@@ -222,10 +222,18 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 	}
 }
 
-// decide which bike to go to
-// for now it just returns a random uuid
+// decide which bike to go to. the base agent chooses a random bike
 func (bb *BaseBiker) ChangeBike() uuid.UUID {
-	return uuid.New()
+	megaBikes := bb.gameState.GetMegaBikes()
+	i, targetI := 0, rand.Intn(len(megaBikes))
+	// Go doesn't have a sensible way to do this...
+	for id := range megaBikes {
+		if i == targetI {
+			return id
+		}
+		i++
+	}
+	panic("no bikes")
 }
 
 func (bb *BaseBiker) SetBike(bikeId uuid.UUID) {
