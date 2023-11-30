@@ -25,8 +25,9 @@ type IBaseBikerServer interface {
 	SetBikerBike(biker objects.IBaseBiker, bike uuid.UUID)
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
 	RunRulerAction(bike objects.IMegaBike, governance utils.Governance) uuid.UUID
+	NewGameStateDump() GameStateDump
 	RunDemocraticAction(bike objects.IMegaBike) uuid.UUID
-	GetLeavingDecisions()
+	GetLeavingDecisions(gameState objects.IGameState)
 	HandleKickoutProcess()
 	ProcessJoiningRequests()
 	RunActionProcess()
