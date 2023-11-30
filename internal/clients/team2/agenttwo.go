@@ -241,7 +241,7 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 			agentID := agent.GetID()
 			// fmt.Println("DecideAction agentID: ", agentID)
 			for _, action := range a.actions {
-				fmt.Println("DecideAction action: ", action)
+				// fmt.Println("DecideAction action: ", action)
 				if action.AgentID == agentID {
 					// update trustworthiness
 					a.updateTrustworthiness(agentID, forcesToVectorConversion(action.Force), action.lootBoxlocation)
@@ -269,23 +269,21 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 	// no of rounds in the void = 1 + (distance to lootbox / speed of bike)
 }
 
+// find the number of agents on the bike
+func (a *AgentTwo) GetAgentNum(bikeID uuid.UUID) float64 {
+	var count = 0.0
+	for _, agent := range a.gameState.GetMegaBikes()[bikeID].GetAgents() {
+		// agentID := agent.GetID()
+		_ = agent.GetID()
+		count++
+	}
+	return count
+}
+
 // TODO: Once the MVP is complete, we can start thinking about this and then feed it into DecideForce
 func (a *AgentTwo) CalcExpectedGainForLootbox(lootboxID uuid.UUID) float64 {
 	// Implement this method
 	// Calculate gain of going for a given lootbox(box colour and distance to it), to decide the action (e.g. pedal, brake, turn) to take
-
-	// a.GetEnergyLevel()
-	// energyLost := agent.GetForces().Pedal * utils.MovingDepletion
-
-	//What the server uses to drain energy from us for moving
-	// for _, agent := range s.megaBikes[bikeID].GetAgents() {
-	// 	agent.DecideForce(direction)
-	// 	// deplete energy
-	// 	energyLost := agent.GetForces().Pedal * utils.MovingDepletion
-	// 	agent.UpdateEnergyLevel(-energyLost)
-	// }
-
-	// energy from lootbox - energy from pedalling
 
 	currLocation := a.GetLocation()
 	targetPos := a.gameState.GetLootBoxes()[lootboxID].GetPosition()
@@ -307,7 +305,8 @@ func (a *AgentTwo) CalcExpectedGainForLootbox(lootboxID uuid.UUID) float64 {
 		Turning: turningDecision,
 	}
 
-	energyFromLootbox := a.gameState.GetLootBoxes()[lootboxID].GetTotalResources()
+	// assumes loot is equally divided among all agents on the bike
+	energyFromLootbox := a.gameState.GetLootBoxes()[lootboxID].GetTotalResources() / a.GetAgentNum(a.GetBike())
 	energyToPedal := lootboxForces.Pedal * utils.MovingDepletion //Moving depleteion is a constant 1 atm. TODO: Change this to a variable and check how Pedal relates to energy depletion
 
 	expectedGain := energyFromLootbox - energyToPedal
@@ -363,9 +362,30 @@ func (a *AgentTwo) nearestLoot() uuid.UUID {
 	return nearestBox
 }
 
+func (a *AgentTwo) GetOptimalLootbox() uuid.UUID {
+	highestGain := 0.0
+	var lootboxID = uuid.UUID{}
+
+	for _, lootboxes := range a.gameState.GetLootBoxes() {
+		fmt.Println("lootbox id: ", lootboxes.GetID())
+		fmt.Println("lootbox reward: ", lootboxes.GetTotalResources())
+		fmt.Println("gain of lootbox: ", a.CalcExpectedGainForLootbox(lootboxes.GetID()))
+		fmt.Println("lootbox position: ", lootboxes.GetPosition())
+
+		// find the higest gain lootbox
+		if a.CalcExpectedGainForLootbox(lootboxes.GetID()) > highestGain {
+			highestGain = a.CalcExpectedGainForLootbox(lootboxes.GetID())
+			lootboxID = lootboxes.GetID()
+		}
+	}
+
+	return lootboxID
+}
+
 // To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
 func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	fmt.Println("DecideForce entering")
+	fmt.Println("agent energy before: ", a.GetEnergyLevel())
 	// Pedal, Brake, Turning
 	// GetPreviousAction() -> get previous action of all bikes and bikers from gamestates
 	// GetVotedLootbox() -> get voted lootbox from gamestates
@@ -390,6 +410,8 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	// fmt.Println("currentLootBoxes: ", currentLootBoxes)
 	fmt.Println("currLocation: ", currLocation, " bike: ", a.GetBike(), " energy: ", a.GetEnergyLevel(), " points: ", a.GetPoints())
 
+	// FIND THE OPTIMAL LOOTBOX AND MOVE TOWARDS IT
+	nearestLoot = a.GetOptimalLootbox()
 	// Check if there are lootboxes available and move towards closest one
 	if len(currentLootBoxes) > 0 {
 		targetPos := currentLootBoxes[nearestLoot].GetPosition()
@@ -440,6 +462,7 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 
 	a.GameIterations++
 	fmt.Println("GameIterations ", a.GameIterations)
+	fmt.Println("agent energy after: ", a.GetEnergyLevel())
 	// fmt.Println(actions)
 }
 
