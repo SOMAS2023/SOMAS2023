@@ -12,8 +12,9 @@ import (
 func TestRulerElectionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 	// pass gamestate
 	var ruler uuid.UUID
@@ -34,8 +35,9 @@ func TestRulerElectionDictator(t *testing.T) {
 func TestRulerElectionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 	// pass gamestate
 	var ruler uuid.UUID
@@ -56,8 +58,9 @@ func TestRulerElectionLeader(t *testing.T) {
 func TestRunRulerActionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
 	for _, bike := range s.GetMegaBikes() {
@@ -89,8 +92,9 @@ func TestRunRulerActionDictator(t *testing.T) {
 func TestRunRulerActionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
 	for _, bike := range s.GetMegaBikes() {
@@ -121,8 +125,9 @@ func TestRunRulerActionLeader(t *testing.T) {
 func TestRunDemocratingAction(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
 	for _, bike := range s.GetMegaBikes() {

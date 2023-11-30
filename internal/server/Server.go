@@ -25,11 +25,13 @@ type IBaseBikerServer interface {
 	SetBikerBike(biker objects.IBaseBiker, bike uuid.UUID)
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
 	RunRulerAction(bike objects.IMegaBike, governance utils.Governance) uuid.UUID
+	NewGameStateDump() GameStateDump
 	RunDemocraticAction(bike objects.IMegaBike) uuid.UUID
-	GetLeavingDecisions()
+	GetLeavingDecisions(gameState objects.IGameState)
 	HandleKickoutProcess()
 	ProcessJoiningRequests()
 	RunActionProcess()
+	AudiCollisionCheck()
 }
 
 type Server struct {
@@ -60,6 +62,15 @@ func Initialize(iterations int) IBaseBikerServer {
 	}
 
 	return server
+}
+
+func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
+	id := agent.GetID()
+	s.BaseServer.RemoveAgent(agent)
+	if bikeId, ok := s.megaBikeRiders[id]; ok {
+		s.megaBikes[bikeId].RemoveAgent(id)
+		delete(s.megaBikeRiders, id)
+	}
 }
 
 func (s *Server) outputResults(gameStates []GameStateDump) {

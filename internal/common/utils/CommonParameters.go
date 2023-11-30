@@ -10,6 +10,12 @@ const Epsilon float64 = 0.01 // tolerance for FP rounding and checking if == 1.0
 const BikersOnBike = 8
 
 /*
+Server Parameters
+*/
+const ReplenishLootBoxes bool = true
+const ReplenishMegaBikes bool = true
+
+/*
 Physics Parameters
 */
 const MassBike float64 = 1.0
@@ -33,5 +39,5 @@ const PointsFromSameColouredLootBox = 5.0
 /*
 Audi Behavior
 */
-const AudiTargetEmpty bool = false
-const AudiRemoveMegaBike bool = false
+const AudiTargetsEmptyMegaBike bool = false
+const AudiRemovesMegaBike bool = false
