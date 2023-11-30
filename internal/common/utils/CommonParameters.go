@@ -33,5 +33,5 @@ const PointsFromSameColouredLootBox = 5.0
 /*
 Audi Behavior
 */
-const AudiTargetEmpty bool = false
-const AudiRemoveMegaBike bool = false
+const AudiTargetsEmptyMegaBike bool = false
+const AudiRemovesMegaBike bool = false

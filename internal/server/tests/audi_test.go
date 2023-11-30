@@ -40,7 +40,7 @@ func TestAudiCollisionProcess(t *testing.T) {
 		t.Error("Audi didnt remove agents correctly")
 	}
 
-	if utils.AudiRemoveMegaBike {
+	if utils.AudiRemovesMegaBike {
 		// check if remove megaBike correctly
 		if nMegaBikesBefore-nMegaBikesAfter != 1 {
 			fmt.Printf("Before audi collision, number of megaBikes = %d \n", nMegaBikesBefore)
