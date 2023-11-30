@@ -11,8 +11,9 @@ func TestAudiCollisionProcess(t *testing.T) {
 	it := 100
 	s := server.Initialize(it)
 	nAgentToDelete := 0
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 	for _, anyBike := range s.GetMegaBikes() {
 		agentsOnBike := anyBike.GetAgents()
