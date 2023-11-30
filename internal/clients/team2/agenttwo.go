@@ -365,6 +365,7 @@ func (a *AgentTwo) nearestLoot() uuid.UUID {
 func (a *AgentTwo) GetOptimalLootbox() uuid.UUID {
 	highestGain := 0.0
 	var lootboxID = uuid.UUID{}
+	// m := make(map[uuid.UUID]float64)
 
 	for _, lootboxes := range a.gameState.GetLootBoxes() {
 		fmt.Println("lootbox id: ", lootboxes.GetID())
@@ -372,11 +373,12 @@ func (a *AgentTwo) GetOptimalLootbox() uuid.UUID {
 		fmt.Println("gain of lootbox: ", a.CalcExpectedGainForLootbox(lootboxes.GetID()))
 		fmt.Println("lootbox position: ", lootboxes.GetPosition())
 
-		// find the higest gain lootbox
+		// find the highest gain lootbox
 		if a.CalcExpectedGainForLootbox(lootboxes.GetID()) > highestGain {
 			highestGain = a.CalcExpectedGainForLootbox(lootboxes.GetID())
 			lootboxID = lootboxes.GetID()
 		}
+
 	}
 
 	return lootboxID
@@ -415,27 +417,24 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	// Check if there are lootboxes available and move towards closest one
 	if len(currentLootBoxes) > 0 {
 		targetPos := currentLootBoxes[nearestLoot].GetPosition()
-		fmt.Println("targetPos: ", targetPos)
+
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
-		angle := math.Atan2(deltaX, deltaY)
+		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
 
 		// Default BaseBiker will always
-		fmt.Println(a.gameState.GetMegaBikes()[a.GetBike()].GetOrientation())
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
 			SteeringForce: normalisedAngle - a.gameState.GetMegaBikes()[a.GetBike()].GetOrientation(),
 		}
-		// fmt.Println("turningDecision: ", turningDecision)
 
 		nearestBoxForces := utils.Forces{
 			Pedal:   utils.BikerMaxForce,
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		a.forces = nearestBoxForces
-		a.SetForces(a.forces)
+		a.SetForces(nearestBoxForces)
 	} else { // otherwise move away from audi
 		audiPos := a.GetGameState().GetAudi().GetPosition()
 
@@ -443,13 +442,21 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 		deltaY := audiPos.Y - currLocation.Y
 
 		// Steer in opposite direction to audi
-		angle := math.Atan2(-deltaX, -deltaY)
+		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
+
+		// Steer in opposite direction to audi
+		var flipAngle float64
+		if normalisedAngle < 0.0 {
+			flipAngle = normalisedAngle + 1.0
+		} else if normalisedAngle > 0.0 {
+			flipAngle = normalisedAngle - 1.0
+		}
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: normalisedAngle,
+			SteeringForce: flipAngle - a.gameState.GetMegaBikes()[a.megaBikeId].GetOrientation(),
 		}
 
 		escapeAudiForces := utils.Forces{
@@ -457,7 +464,7 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		a.forces = escapeAudiForces
+		a.SetForces(escapeAudiForces)
 	}
 
 	a.GameIterations++
