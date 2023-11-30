@@ -26,6 +26,7 @@ type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 
 	DecideGovernance() voting.GovernanceVote
+	ChooseFoundingInstitution() utils.Governance
 	DecideAction() BikerAction                                      // ** determines what action the agent is going to take this round. (changeBike or Pedal)
 	DecideForce(direction uuid.UUID)                                // ** defines the vector you pass to the bike: [pedal, brake, turning]
 	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      // ** decide whether to accept or not accept bikers, ranks the ones
@@ -60,8 +61,6 @@ type IBaseBiker interface {
 	GetReputation() map[uuid.UUID]float64 // get reputation value of all other agents
 	QueryReputation(uuid.UUID) float64    // query for reputation value of specific agent with UUID
 	SetReputation(uuid.UUID, float64)     // set reputation value of specific agent with UUID
-
-	ChooseFoundingInstitution() utils.governance // choose founding institution
 }
 
 type BikerAction int
@@ -333,8 +332,13 @@ func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
 	return governanceRanking
 }
 
+func (bb *BaseBiker) ChooseFoundingInstitution() utils.Governance {
+	// Change behaviour here to return different governance
+	return utils.Democracy
+}
+
 func (bb *BaseBiker) ResetPoints() {
-	bb.poins = 0
+	bb.points = 0
 }
 
 // this function will contain the agent's strategy on deciding which direction to go to

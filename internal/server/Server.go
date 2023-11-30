@@ -38,9 +38,10 @@ type Server struct {
 	megaBikes map[uuid.UUID]objects.IMegaBike
 	// megaBikeRiders is a mapping from Agent ID -> ID of the bike that they are riding
 	// helps with efficiently managing ridership status
-	megaBikeRiders map[uuid.UUID]uuid.UUID
-	audi           objects.IAudi
-	deadAgents     map[uuid.UUID]objects.IBaseBiker
+	megaBikeRiders  map[uuid.UUID]uuid.UUID
+	audi            objects.IAudi
+	deadAgents      map[uuid.UUID]objects.IBaseBiker
+	foundingChoices map[uuid.UUID]utils.Governance
 }
 
 func Initialize(iterations int) IBaseBikerServer {

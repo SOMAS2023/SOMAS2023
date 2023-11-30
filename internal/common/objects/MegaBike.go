@@ -37,6 +37,8 @@ func GetMegaBike() *MegaBike {
 	}
 }
 
+
+
 // adds
 func (mb *MegaBike) AddAgent(biker IBaseBiker) {
 	mb.agents = append(mb.agents, biker)

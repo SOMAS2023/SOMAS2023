@@ -161,3 +161,26 @@ func WinnerFromGovernance(voters []GovernanceVote) (utils.Governance, error) {
 
 	return winner, nil
 }
+
+// Need to check if the input param is expecting a vote that is just one governance type
+func tallyFoundingVotes(voters map[uuid.UUID]utils.Governance) (map[utils.Governance]int, error) {
+	// check if length of votes is greater than one
+	if len(voters) == 0 {
+		return nil, errors.New("no votes provided")
+	}
+
+	// Summing up the votes for each governance type
+	aggregateFoundingTotals := make(map[utils.Governance]int)
+	
+	// Get the governance type for each agent
+	for _, vote := range voters {
+		// Add to the tally for each governance type
+		if val, ok := aggregateFoundingTotals[vote]; ok {
+			aggregateFoundingTotals[vote] = val + 1
+		} else {
+			aggregateFoundingTotals[vote] = 1
+		}
+	}
+
+	return aggregateFoundingTotals, nil
+}
