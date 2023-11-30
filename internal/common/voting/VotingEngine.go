@@ -4,6 +4,7 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"errors"
 	"math"
+	"sort"
 
 	"github.com/google/uuid"
 )
@@ -33,9 +34,38 @@ func (ivm IdVoteMap) GetVotes() map[uuid.UUID]float64 {
 // this function will take in a list of maps from ids to their corresponding vote (yes/ no in the case of acceptance)
 // and retunr a list of ids that can be accepted according to some metric (ie more than half voted yes)
 // ranked according to a metric (ie overall number of yes's)
-func GetAcceptanceRanking([]map[uuid.UUID]bool) []uuid.UUID {
-	// TODO implement
-	panic("not implemented")
+func GetAcceptanceRanking(rankings []map[uuid.UUID]bool) []uuid.UUID {
+	// sum the number of acceptance rankings for all the agents
+	cumulativeRank := make(map[uuid.UUID]int)
+	quorum := len(rankings) / 2
+	for _, ranking := range rankings {
+		for agent, outcome := range ranking {
+			val, ok := cumulativeRank[agent]
+			if outcome && ok {
+				cumulativeRank[agent] = val + 1
+			} else if outcome {
+				cumulativeRank[agent] = 1
+			}
+		}
+	}
+	passedUnsorted := make(map[uuid.UUID]int)
+	for agent, val := range cumulativeRank {
+		if val > quorum {
+			passedUnsorted[agent] = val
+		}
+	}
+
+	// sort according to ranking
+	unsortedAcceptedList := make([]uuid.UUID, len(passedUnsorted))
+	i := 0
+	for key, _ := range passedUnsorted {
+		unsortedAcceptedList[i] = key
+		i += 1
+	}
+	sort.Slice(unsortedAcceptedList, func(i, j int) bool {
+		return passedUnsorted[unsortedAcceptedList[i]] > passedUnsorted[unsortedAcceptedList[j]]
+	})
+	return unsortedAcceptedList
 	// return make([]uuid.UUID, 0)
 }
 

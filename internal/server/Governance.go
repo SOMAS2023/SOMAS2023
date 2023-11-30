@@ -11,6 +11,22 @@ import (
 func (s *Server) RunRulerAction(bike objects.IMegaBike, governance utils.Governance) uuid.UUID {
 	// vote for dictator
 	agents := bike.GetAgents()
+	ruler := s.RulerElection(agents, governance)
+	// communicate dictator
+	bike.SetRuler(ruler)
+	// get dictators direction choice
+	rulerAgent := s.GetAgentMap()[ruler]
+	var direction uuid.UUID
+	switch governance {
+	case utils.Dictatorship:
+		direction = rulerAgent.DictateDirection()
+	case utils.Leadership:
+		direction = rulerAgent.LeadDirection()
+	}
+	return direction
+}
+
+func (s *Server) RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID {
 	votes := make([]voting.IdVoteMap, len(agents))
 	for i, agent := range agents {
 		switch governance {
@@ -27,18 +43,7 @@ func (s *Server) RunRulerAction(bike objects.IMegaBike, governance utils.Governa
 	}
 
 	ruler := voting.WinnerFromDist(IVotes)
-	// communicate dictator
-	bike.SetRuler(ruler)
-	// get dictators direction choice
-	rulerAgent := s.GetAgentMap()[ruler]
-	var direction uuid.UUID
-	switch governance {
-	case utils.Dictatorship:
-		direction = rulerAgent.DictateDirection()
-	case utils.Leadership:
-		direction = rulerAgent.LeadDirection()
-	}
-	return direction
+	return ruler
 }
 
 func (s *Server) RunDemocraticAction(bike objects.IMegaBike) uuid.UUID {

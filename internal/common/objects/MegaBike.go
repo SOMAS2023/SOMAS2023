@@ -110,6 +110,7 @@ func (mb *MegaBike) UpdateOrientation() {
 		mb.orientation += (averageTurning)
 	}
 	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
+
 	if mb.orientation > 1.0 {
 		mb.orientation -= 2
 	} else if mb.orientation < -1.0 {
