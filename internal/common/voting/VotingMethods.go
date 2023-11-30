@@ -13,6 +13,17 @@ type kv struct {
 	Value float64
 }
 
+type voteMethods int
+
+const (
+	PLURALITY voteMethods = iota
+	RUNOFF
+	BORDACOUNT
+	INSTANTRUNOFF
+	APPROVAL
+	COPELANDSCORING
+)
+
 func Plurality(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		Plurality:
