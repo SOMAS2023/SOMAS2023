@@ -2,9 +2,12 @@ package server
 
 import (
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"sort"
 
 	"github.com/google/uuid"
+	"math"
+	"slices"
 )
 
 func (s *Server) RunRoundLoop() {
@@ -69,20 +72,20 @@ func (s *Server) FoundingInstitutions() {
 	// tally the choices
 	// FoundingChoices := make([]voting.IVoter, len(allAllocations))
 	// FoundingAllocations is a map of governance method to number of agents that want that governance method
-	foundingTotals := voting.tallyFoundingVotes(s.foundingChoices)
+	foundingTotals, _ := voting.TallyFoundingVotes(s.foundingChoices)
 
 	// for each governance method, populate megabikes with the bikers who chose that governance method
 	govBikes := make(map[utils.Governance][]uuid.UUID)
 	bikesUsed := make([]uuid.UUID, 0)
 	for governanceMethod, numBikers := range foundingTotals {
-		megaBikesNeeded := math.ceil(float64(numBikers) / float64(utils.BikersOnBike))
+		megaBikesNeeded := int(math.Ceil(float64(numBikers) / float64(utils.BikersOnBike)))
 		govBikes[governanceMethod] = make([]uuid.UUID, megaBikesNeeded)
 		// get bikes for this governance
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
 			for !foundBike {
 				bike := s.GetRandomBikeId()
-				if !slice.Contains(bikesUsed, bike) {
+				if !slices.Contains(bikesUsed, bike) {
 					foundBike = true
 					bikesUsed = append(bikesUsed, bike)
 					govBikes[governanceMethod][i] = bike

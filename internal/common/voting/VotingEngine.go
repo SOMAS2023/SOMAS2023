@@ -163,7 +163,7 @@ func WinnerFromGovernance(voters []GovernanceVote) (utils.Governance, error) {
 }
 
 // Need to check if the input param is expecting a vote that is just one governance type
-func tallyFoundingVotes(voters map[uuid.UUID]utils.Governance) (map[utils.Governance]int, error) {
+func TallyFoundingVotes(voters map[uuid.UUID]utils.Governance) (map[utils.Governance]int, error) {
 	// check if length of votes is greater than one
 	if len(voters) == 0 {
 		return nil, errors.New("no votes provided")
