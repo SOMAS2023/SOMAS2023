@@ -30,6 +30,7 @@ type IBaseBikerServer interface {
 	HandleKickoutProcess()
 	ProcessJoiningRequests()
 	RunActionProcess()
+	AudiCollisionCheck()
 }
 
 type Server struct {

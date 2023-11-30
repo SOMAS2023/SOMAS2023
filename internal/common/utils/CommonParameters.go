@@ -29,3 +29,9 @@ const LimboEnergyPenalty float64 = -0.25 // amount of energy lost per round when
 Resources - Points and Energy
 */
 const PointsFromSameColouredLootBox = 5.0
+
+/*
+Audi Behavior
+*/
+const AudiTargetEmpty bool = false
+const AudiRemoveMegaBike bool = false
