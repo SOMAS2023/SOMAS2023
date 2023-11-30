@@ -61,7 +61,7 @@ func (agent *SmartAgent) DecideForces(direction uuid.UUID) {
 
 	pedalForce := 0.0
 	for id, weight := range scores {
-		pedalForce += weight * agent.reputationMap[id].lastPedal
+		pedalForce += weight * agent.reputationMap[id]._lastPedal
 	}
 	pedalForce /= agent.satisfactionOfRecentAllocation
 
@@ -196,11 +196,10 @@ func (agent *SmartAgent) updateRepMap() {
 }
 
 func (agent *SmartAgent) recalculateSatisfaction() {
-	scores := []float64{}
-
-	totalScore := 0.0
 	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetAgents()
-	for _, others := range agentsOnBike {
+	scores := make([]float64, len(agentsOnBike))
+	gains := make([]float64, len(agentsOnBike))
+	for idx, others := range agentsOnBike {
 		id := others.GetID()
 		rep := agent.reputationMap[id]
 		score := rep.isSameColor/ // Cognitive dimension: is same belief?
@@ -208,11 +207,16 @@ func (agent *SmartAgent) recalculateSatisfaction() {
 			+rep.recentContribution/ // Forgiveness: forgive agents pedal harder recently
 			-rep.energyGain/ // Equality: Agents received more energy before should get less this time
 			+rep.energyRemain // Need: Agents with lower energyLevel require more, try to meet their need
-		scores[others.GetID()] = score
-		totalScore += score
+		scores[idx] = score
+		gains[idx] = agent.reputationMap[id]._recentEnergyGain
 	}
+	sort.Slice(gains, func(i, j int) bool {
+		return scores[i] < scores[j]
+	})
+	agent.satisfactionOfRecentAllocation = measureOrder(gains)
 }
 
+// To measure how an array is well sorted, result normalized to 0~1
 func measureOrder(input []float64) float64 {
 	inversionCnt := 0.0
 	size := len(input)
