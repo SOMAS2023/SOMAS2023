@@ -83,7 +83,7 @@ type Action struct {
 	Action          string
 	Force           utils.Forces
 	GameLoop        int32
-	lootBoxlocation Vector //utils.Coordinates
+	lootBoxlocation ForceVector //utils.Coordinates
 }
 
 // TODO: function CalculateSocialCapital
@@ -104,28 +104,28 @@ func (a *AgentTwo) CalculateSocialCapital() {
 	}
 }
 
-type Vector struct {
+type ForceVector struct {
 	X float64
 	Y float64
 }
 
-func forcesToVectorConversion(force utils.Forces) Vector {
+func forcesToVectorConversion(force utils.Forces) ForceVector {
 	xCoordinate := force.Pedal * float64(math.Cos(float64(math.Pi*force.Turning.SteeringForce)))
 	yCoordinate := force.Pedal * float64(math.Sin(float64(math.Pi*force.Turning.SteeringForce)))
 
-	newVector := Vector{X: xCoordinate, Y: yCoordinate}
+	newVector := ForceVector{X: xCoordinate, Y: yCoordinate}
 	return newVector
 }
 
-func dotProduct(v1, v2 Vector) float64 {
+func dotProduct(v1, v2 ForceVector) float64 {
 	return v1.X*v2.X + v1.Y*v2.Y
 }
 
-func magnitude(v Vector) float64 {
+func magnitude(v ForceVector) float64 {
 	return math.Sqrt(v.X*v.X + v.Y*v.Y)
 }
 
-func cosineSimilarity(v1, v2 Vector) float64 {
+func cosineSimilarity(v1, v2 ForceVector) float64 {
 	return dotProduct(v1, v2) / (magnitude(v1) * magnitude(v2))
 }
 
@@ -133,7 +133,7 @@ const (
 	forgivenessFactor = 0.5
 )
 
-func (a *AgentTwo) updateTrustworthiness(agentID uuid.UUID, actualAction, expectedAction Vector) {
+func (a *AgentTwo) updateTrustworthiness(agentID uuid.UUID, actualAction, expectedAction ForceVector) {
 	// Calculates the cosine Similarity of actual and expected vectors. One issue is that it does not consider magnitude, only direction
 	// TODO: Take magnitude into account
 	similarity := cosineSimilarity(actualAction, expectedAction)
@@ -320,7 +320,7 @@ func (a *AgentTwo) GetPreviousAction() {
 	// nearestLoot := a.nearestLoot()
 	// currentLootBoxes := a.gameState.GetLootBoxes()
 	// lootBoxlocation := currentLootBoxes[nearestLoot].GetPosition()
-	lootBoxlocation_vector := Vector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
+	lootBoxlocation_vector := ForceVector{X: 0.0, Y: 0.0} // need to change this later on (possibly need to alter the updateTrustworthiness function)
 	//update agent's trustworthiness every round pretty much at the start of each epoch
 	for _, bike := range a.gameState.GetMegaBikes() {
 		for _, agent := range bike.GetAgents() {
