@@ -65,6 +65,9 @@ func Initialize(iterations int) IBaseBikerServer {
 
 func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
 	id := agent.GetID()
+	// add agent to dead agent map
+	s.deadAgents[id] = agent
+	// remove agent from agent map
 	s.BaseServer.RemoveAgent(agent)
 	if bikeId, ok := s.megaBikeRiders[id]; ok {
 		s.megaBikes[bikeId].RemoveAgent(id)

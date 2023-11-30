@@ -284,9 +284,6 @@ func (s *Server) unaliveAgents() {
 	for id, agent := range s.GetAgentMap() {
 		if agent.GetEnergyLevel() < 0 {
 			fmt.Printf("Agent %s got game ended\n", id)
-			// add agent to dead agent map
-			s.deadAgents[id] = agent
-			// remove agent from agent map
 			s.RemoveAgent(agent)
 		}
 	}
