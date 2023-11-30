@@ -3,6 +3,7 @@ package objects
 import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
+	"fmt"
 	"math"
 
 	"math/rand"
@@ -15,10 +16,10 @@ import (
 // These can change based on how we want the allocation to happend, for now they are taken from
 // the lecture slides, but more/less could be taken into account.
 type ResourceAllocationParams struct {
-	resourceNeed          float64 // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
-	resourceDemand        float64 // 0-1, how much energy the agent wants, might differ from resourceNeed
-	resourceProvision     float64 // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
-	resourceAppropriation float64 // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
+	ResourceNeed          float64 `json:"need"`          // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
+	ResourceDemand        float64 `json:"demand"`        // 0-1, how much energy the agent wants, might differ from ResourceNeed
+	ResourceProvision     float64 `json:"provision"`     // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
+	ResourceAppropriation float64 `json:"appropriation"` // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
 }
 
 type IBaseBiker interface {
@@ -32,16 +33,17 @@ type IBaseBiker interface {
 	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
 
-	GetForces() utils.Forces                               // returns forces for current round
-	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
-	GetLocation() utils.Coordinates                        // gets the agent's location
-	GetBike() uuid.UUID                                    // tells the biker which bike it is on
-	GetEnergyLevel() float64                               // returns the energy level of the agent
+	GetForces() utils.Forces        // returns forces for current round
+	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
+	GetLocation() utils.Coordinates // gets the agent's location
+	GetBike() uuid.UUID             // tells the biker which bike it is on
+	GetEnergyLevel() float64        // returns the energy level of the agent
+	GetPoints() int
 	GetResourceAllocationParams() ResourceAllocationParams // returns set allocation parameters
 	GetBikeStatus() bool                                   // returns whether the biker is on a bike or not
 
-	SetBike(uuid.UUID) // sets the megaBikeID. this is either the id of the bike that the agent is on or the one that it's trying to join
-
+	SetBike(uuid.UUID)                     // sets the megaBikeID. this is either the id of the bike that the agent is on or the one that it's trying to join
+	SetForces(forces utils.Forces)         // sets the forces (to be updated in DecideForces())
 	UpdateColour(totColours utils.Colour)  // called if a box of the desired colour has been looted
 	UpdatePoints(pointGained int)          // called by server
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
@@ -62,7 +64,6 @@ type BaseBiker struct {
 	onBike                           bool
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
-	alive                            bool
 	forces                           utils.Forces
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
 	gameState                        IGameState // updated by the server at every round
@@ -73,15 +74,19 @@ func (bb *BaseBiker) GetEnergyLevel() float64 {
 	return bb.energyLevel
 }
 
+func (bb *BaseBiker) GetPoints() int {
+	return bb.points
+}
+
 // the function will be called by the server to:
 // - reduce the energy level based on the force spent pedalling (energyLevel will be neg.ve)
 // - increase the energy level after a lootbox has been looted (energyLevel will be pos.ve)
 func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 	bb.energyLevel += energyLevel
-	bb.alive = bb.energyLevel > 0
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
+	fmt.Println("regular agent: GetColour: t5.regular.GetColour(): ", bb.soughtColour)
 	return bb.soughtColour
 }
 
@@ -152,13 +157,13 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
-		angle := math.Atan2(deltaX, deltaY)
-		angleInDegrees := angle * math.Pi / 180
+		angle := math.Atan2(deltaY, deltaX)
+		normalisedAngle := angle / math.Pi
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: angleInDegrees,
+			SteeringForce: normalisedAngle - bb.gameState.GetMegaBikes()[bb.megaBikeId].GetOrientation(),
 		}
 
 		nearestBoxForces := utils.Forces{
@@ -166,7 +171,7 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		bb.forces = nearestBoxForces
+		bb.SetForces(nearestBoxForces)
 	} else { // otherwise move away from audi
 		audiPos := bb.GetGameState().GetAudi().GetPosition()
 
@@ -174,13 +179,21 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 		deltaY := audiPos.Y - currLocation.Y
 
 		// Steer in opposite direction to audi
-		angle := math.Atan2(-deltaX, -deltaY)
-		angleInDegrees := angle * math.Pi / 180
+		angle := math.Atan2(deltaY, deltaX)
+		normalisedAngle := angle / math.Pi
+
+		// Steer in opposite direction to audi
+		var flipAngle float64
+		if normalisedAngle < 0.0 {
+			flipAngle = normalisedAngle + 1.0
+		} else if normalisedAngle > 0.0 {
+			flipAngle = normalisedAngle - 1.0
+		}
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: angleInDegrees,
+			SteeringForce: flipAngle - bb.gameState.GetMegaBikes()[bb.megaBikeId].GetOrientation(),
 		}
 
 		escapeAudiForces := utils.Forces{
@@ -188,14 +201,22 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		bb.forces = escapeAudiForces
+		bb.SetForces(escapeAudiForces)
 	}
 }
 
-// decide which bike to go to
-// for now it just returns a random uuid
+// decide which bike to go to. the base agent chooses a random bike
 func (bb *BaseBiker) ChangeBike() uuid.UUID {
-	return uuid.New()
+	megaBikes := bb.gameState.GetMegaBikes()
+	i, targetI := 0, rand.Intn(len(megaBikes))
+	// Go doesn't have a sensible way to do this...
+	for id := range megaBikes {
+		if i == targetI {
+			return id
+		}
+		i++
+	}
+	panic("no bikes")
 }
 
 func (bb *BaseBiker) SetBike(bikeId uuid.UUID) {
@@ -216,12 +237,12 @@ func (bb *BaseBiker) UpdatePoints(pointsGained int) {
 	bb.points += pointsGained
 }
 
-func (bb *BaseBiker) GetLifeStatus() bool {
-	return bb.alive
-}
-
 func (bb *BaseBiker) GetForces() utils.Forces {
 	return bb.forces
+}
+
+func (bb *BaseBiker) SetForces(forces utils.Forces) {
+	bb.forces = forces
 }
 
 func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
@@ -283,7 +304,6 @@ func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
-		alive:        true,
 	}
 }
 
@@ -295,6 +315,5 @@ func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
-		alive:        true,
 	}
 }

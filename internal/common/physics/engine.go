@@ -10,6 +10,9 @@ The Engine is responsible for calculating physics for the environment
 */
 
 func CalcAcceleration(f float64, m float64, v float64) float64 {
+	if m == 0 {
+		panic("zero mass")
+	}
 	return (f - CalcDrag(v)) / m
 }
 
@@ -38,7 +41,7 @@ func GetNewPosition(coordinates utils.Coordinates, velocity float64, orientation
 func ComputeOrientation(src utils.Coordinates, target utils.Coordinates) float64 {
 	xDiff := target.X - src.X
 	yDiff := target.Y - src.Y
-	return math.Atan(yDiff/xDiff) / math.Pi
+	return math.Atan2(yDiff, xDiff) / math.Pi
 }
 
 // ComputeDistance is to compute the L2 distance from source to target
@@ -56,6 +59,7 @@ func GenerateNewState(initialState utils.PhysicalState, force float64, orientati
 		Position:     coordinates,
 		Acceleration: acceleration,
 		Velocity:     velocity,
+		Mass:         initialState.Mass,
 	}
 
 	return finalState
