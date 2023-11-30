@@ -288,10 +288,6 @@ func (s *Server) unaliveAgents() {
 		if agent.GetEnergyLevel() < 0 {
 			fmt.Printf("Agent %s got game ended\n", id)
 			s.RemoveAgent(agent)
-			if bikeId, ok := s.megaBikeRiders[id]; ok {
-				s.megaBikes[bikeId].RemoveAgent(id)
-				delete(s.megaBikeRiders, id)
-			}
 		}
 	}
 }
