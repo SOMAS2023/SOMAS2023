@@ -8,8 +8,8 @@ from visualiser.util.Constants import LOOTBOX, OVERLAY, COLOURS
 from visualiser.entities.Common import Drawable
 
 class Lootbox(Drawable):
-    def __init__(self, jsonData:dict) -> None:
-        super().__init__(jsonData)
+    def __init__(self, lootboxid:str, jsonData:dict) -> None:
+        super().__init__(lootboxid, jsonData)
         self.colour = COLOURS[jsonData["colour"]]
         properties = {
             "Acceleration" : jsonData["physical_state"]["acceleration"],
@@ -34,9 +34,9 @@ class Lootbox(Drawable):
         # Add lootbox text
         font = pygame.font.SysFont(OVERLAY["FONT"], int(LOOTBOX["FONT_SIZE"] * zoom))
         if self.colour in (COLOURS["white"]):
-            text = font.render(self.id, True, "Black")
+            text = font.render("Lootbox", True, "Black")
         else:
-            text = font.render(self.id, True, "White")
+            text = font.render("Lootbox", True, "White")
         # center the text
         textX = (LOOTBOX["WIDTH"]*zoom - text.get_width()) / 2
         textY = (LOOTBOX["HEIGHT"]*zoom - text.get_height()) / 2
@@ -48,24 +48,15 @@ class Lootbox(Drawable):
         self.overlay = self.update_overlay(zoom)
         self.draw_overlay(screen)
 
-    def check_collision(self, mouseX: int, mouseY: int, offsetX: int, offsetY: int, zoom: float) -> bool:
+    def check_collision(self, mouseX: int, mouseY: int, zoom:float) -> bool:
         """
         Check if the mouse click intersects with the bike.
         """
-        return (self.trueX <= mouseX <= self.trueX + LOOTBOX["WIDTH"]) and \
-               (self.trueY <= mouseY <= self.trueY + LOOTBOX["HEIGHT"])
+        return (self.trueX <= mouseX <= self.trueX + LOOTBOX["WIDTH"]*zoom) and \
+               (self.trueY <= mouseY <= self.trueY + LOOTBOX["HEIGHT"]*zoom)
 
-    # def change_round(self, json:dict) -> None:
-    #     """
-    #     Change the current round for the agents
-    #     """
-    #     self.colour = COLOURS[json[self.id]["colour"]]
-    #     self.properties = {
-    #         "Position" : f"{json[self.id]['position']['x']}, {json[self.id]['position']['y']}",
-    #     }
-
-    def propagate_click(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> None:
+    def propagate_click(self, mouseX:int, mouseY:int, zoom:float) -> None:
         """
         Propagate the click
         """
-        self.click(mouseX, mouseY, offsetX, offsetY, zoom)
+        self.click(mouseX, mouseY, zoom)
