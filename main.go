@@ -7,5 +7,5 @@ import (
 
 func main() {
 	fmt.Println("Hello Agents")
-	server.Initialize(100).Start()
+	server.Initialize(1000).Start()
 }
