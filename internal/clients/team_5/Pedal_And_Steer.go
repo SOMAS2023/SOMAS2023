@@ -2,15 +2,16 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/utils"
+	"github.com/google/uuid"
 	"fmt"
 	"math"
-
-	"github.com/google/uuid"
 )
 
 //for testing use any box in targetLootBoxID
 
-// i added a comment for the printstatement in get colour remember to remove and in the original decideforce fn in base biker remember to remove those
+//i added a comment for the printstatement in get colour remember to remove and in the original decideforce fn in base biker remember to remove those
+
+// i think i found it divide the steering force by the amount of agents on the bike
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	fmt.Println("testing 1")
 
@@ -36,11 +37,14 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		fmt.Println("Angle: ", angle, "Normalized Angle: ", normalisedAngle)
 
 		orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
-		fmt.Println("Bike Orientation: ", orientation)
+		fmt.Println("Bike Orientation: ", orientation) 
+		turning_depending_on_agents_on_that_bike := (normalisedAngle - orientation)/(float64(len(t5.GetMegaBike())));
+		//and i can change this depending on how the enemy agents are turning
+		
 
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: normalisedAngle - orientation,
+			SteeringForce: turning_depending_on_agents_on_that_bike,
 		}
 		fmt.Println("Turning Decision: ", turningDecision)
 
@@ -63,6 +67,9 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		t5.SetForces(idleForces)
 	}
 }
+
+	
+
 
 // so this bassically adjusts the force depending on the energy of the agent
 func (t5 *team5Agent) calculatePedalForceBasedOnEnergy() float64 {
@@ -101,11 +108,17 @@ func (t5 *team5Agent) calculatePedalForceBasedOnEnergy() float64 {
 
 // add a function depends
 
+
 // 2.)speed of other bikes
-// and
+// and 
 // position of other bikes and how fast to peddle depending on that
 
 // 1.)so the lootbox is the direction but we may need to turn more if the bike doesnt turn enough.
 
+
+
 //have a meeting with others discuss what other fns i can implement nd what helps others
 // runs no issues
+
+
+
