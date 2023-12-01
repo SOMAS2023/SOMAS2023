@@ -5,3 +5,4 @@ game_dump.json
 .DS_store
 Test.py
 *.pyc
+venv
