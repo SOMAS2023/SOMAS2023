@@ -18,6 +18,7 @@ import (
 
 	// "SOMAS2023/internal/common/utils"
 	"math"
+	"sort"
 
 	"github.com/google/uuid"
 )
@@ -363,25 +364,62 @@ func (a *AgentTwo) nearestLoot() uuid.UUID {
 }
 
 func (a *AgentTwo) GetOptimalLootbox() uuid.UUID {
-	highestGain := 0.0
-	var lootboxID = uuid.UUID{}
+	// highestGain := 0.0
+	// var lootboxID = uuid.UUID{}
 	// m := make(map[uuid.UUID]float64)
-
-	for _, lootboxes := range a.gameState.GetLootBoxes() {
-		fmt.Println("lootbox id: ", lootboxes.GetID())
-		fmt.Println("lootbox reward: ", lootboxes.GetTotalResources())
-		fmt.Println("gain of lootbox: ", a.CalcExpectedGainForLootbox(lootboxes.GetID()))
-		fmt.Println("lootbox position: ", lootboxes.GetPosition())
-
-		// find the highest gain lootbox
-		if a.CalcExpectedGainForLootbox(lootboxes.GetID()) > highestGain {
-			highestGain = a.CalcExpectedGainForLootbox(lootboxes.GetID())
-			lootboxID = lootboxes.GetID()
-		}
-
+	var topLootboxes []struct {
+		ID    uuid.UUID
+		Gain  float64
+		Color utils.Colour
+	}
+	// agentColor := a.GetColour().String()
+	var top3Lootboxes []struct {
+		ID    uuid.UUID
+		Gain  float64
+		Color utils.Colour
 	}
 
-	return lootboxID
+	for _, lootbox := range a.gameState.GetLootBoxes() {
+		expectedGain := a.CalcExpectedGainForLootbox(lootbox.GetID())
+
+		// 	fmt.Println("lootbox id: ", lootbox.GetID())
+		// 	fmt.Println("lootbox reward: ", lootbox.GetTotalResources())
+		// 	fmt.Println("gain of lootbox: ", expectedGain)
+		// 	fmt.Println("lootbox position: ", lootbox.GetPosition())
+
+		// 	// find the highest gain lootbox
+		// 	if a.CalcExpectedGainForLootbox(lootbox.GetID()) > highestGain {
+		// 		highestGain = a.CalcExpectedGainForLootbox(lootbox.GetID())
+		// 		lootboxID = lootbox.GetID()
+		// 	}
+
+		// }
+
+		// return lootboxID
+		topLootboxes = append(topLootboxes, struct {
+			ID    uuid.UUID
+			Gain  float64
+			Color utils.Colour
+		}{ID: lootbox.GetID(), Gain: expectedGain, Color: lootbox.GetColour()})
+
+		// Sort the lootboxes by gain from the mapping
+	}
+	sort.Slice(topLootboxes, func(i, j int) bool {
+		return topLootboxes[i].Gain > topLootboxes[j].Gain
+	})
+
+	top3Lootboxes = topLootboxes
+	if len(topLootboxes) > 3 {
+		top3Lootboxes = topLootboxes[:3]
+	}
+	fmt.Println("top3: ", top3Lootboxes)
+	for _, top3 := range top3Lootboxes {
+		if top3.Color == a.GetColour() {
+			return top3.ID
+		}
+	}
+
+	return top3Lootboxes[0].ID
 }
 
 // To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
@@ -413,6 +451,7 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	fmt.Println("currLocation: ", currLocation, " bike: ", a.GetBike(), " energy: ", a.GetEnergyLevel(), " points: ", a.GetPoints())
 
 	// FIND THE OPTIMAL LOOTBOX AND MOVE TOWARDS IT
+	// nearestLoot = a.GetOptimalLootbox()
 	nearestLoot = a.GetOptimalLootbox()
 	// Check if there are lootboxes available and move towards closest one
 	if len(currentLootBoxes) > 0 {
