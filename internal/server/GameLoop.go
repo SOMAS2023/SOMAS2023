@@ -57,6 +57,7 @@ func (s *Server) RunBikeSwitch() {
 
 func (s *Server) HandleKickoutProcess() {
 	for _, bike := range s.GetMegaBikes() {
+		// the kickout process only happens democratically in level 0 and level 1
 		agentsVoteCounts := bike.KickOutAgent()
 		for agentID, votes := range agentsVoteCounts {
 			if votes > len(bike.GetAgents())/2 {
@@ -70,6 +71,8 @@ func (s *Server) HandleKickoutProcess() {
 			}
 
 		}
+		// in level 2 only the ruler can kick out people
+
 	}
 }
 
