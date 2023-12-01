@@ -163,7 +163,7 @@ func (s *Server) RunActionProcess() {
 			bike.SetGovernance(electedGovernance)
 			switch electedGovernance {
 			case utils.Democracy:
-				direction = s.RunDemocraticAction(bike)
+				direction = s.RunDemocraticAction(bike, electedGovernance, nil)
 			case utils.Dictatorship:
 				direction = s.RunRulerAction(bike, electedGovernance)
 			case utils.Leadership:
@@ -235,6 +235,17 @@ func (s *Server) LootboxCheckAndDistributions() {
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
+				// Trying to think of the most elegant way to allocate loot differently depending on the governance
+				// electedGovernance := megabike.GetGovernance()
+				// switch electedGovernance {
+				// case utils.Democracy:
+				// 	winningAllocation = []
+				// case utils.Dictatorship:
+				// 	winningAllocation = []
+				// case utils.Leadership:
+				// 	winningAllocation = []
+				// }
+
 				if totAgents > 0 {
 					fmt.Printf("Total agents: %d \n", totAgents)
 					allAllocations := make([]voting.IdVoteMap, totAgents)
@@ -252,6 +263,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 						Iallocations[i] = v
 					}
 					// TODO handle error
+
 					winningAllocation, _ := voting.CumulativeDist(Iallocations)
 					bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 

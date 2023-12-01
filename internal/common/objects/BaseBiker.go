@@ -39,6 +39,7 @@ type IBaseBiker interface {
 	VoteLeader() voting.IdVoteMap
 	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
 	LeadDirection() uuid.UUID
+	LeaderAgentWeights() map[uuid.UUID]float64 // ** called only when the agent is the leader
 
 	GetForces() utils.Forces        // returns forces for current round
 	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
@@ -335,6 +336,17 @@ func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
 func (bb *BaseBiker) ChooseFoundingInstitution() utils.Governance {
 	// Change behaviour here to return different governance
 	return utils.Democracy
+}
+
+// defaults to returning an equal distribution over all agents on the bike
+func (bb *BaseBiker) LeaderAgentWeights() map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	totAgents := len(bb.GetFellowBikers())
+	normalDist := 1.0 / float64(totAgents)
+	for id, _ := range weights {
+		weights[id] = normalDist
+	}
+	return weights
 }
 
 func (bb *BaseBiker) ResetPoints() {
