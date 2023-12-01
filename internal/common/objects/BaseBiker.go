@@ -39,7 +39,9 @@ type IBaseBiker interface {
 	VoteLeader() voting.IdVoteMap
 	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
 	LeadDirection() uuid.UUID
-	LeaderAgentWeights() map[uuid.UUID]float64 // ** called only when the agent is the leader
+	LeaderAgentWeights() map[uuid.UUID]float64   // ** called only when the agent is the leader
+	DecideKickoutWeights() map[uuid.UUID]float64 // ** decide weights for kickout voting (leader)
+	DecideKickOut() []uuid.UUID                  // ** decide which agents to kick out (dictator)
 
 	GetForces() utils.Forces        // returns forces for current round
 	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
@@ -422,6 +424,20 @@ func (bb *BaseBiker) VoteLeader() voting.IdVoteMap {
 func (bb *BaseBiker) LeadDirection() uuid.UUID {
 	nearest := bb.nearestLoot()
 	return nearest
+}
+
+// defaults to an equal distribution over all agents
+func (bb *BaseBiker) DecideKickoutWeights() map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	for id, _ := range weights {
+		weights[id] = 1.0
+	}
+	return weights
+}
+
+// only called when the agent is the dictator
+func (bb *BaseBiker) DecideKickOut() []uuid.UUID {
+	return (make([]uuid.UUID, 0))
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP

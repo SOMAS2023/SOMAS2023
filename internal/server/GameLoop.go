@@ -57,21 +57,51 @@ func (s *Server) RunBikeSwitch() {
 
 func (s *Server) HandleKickoutProcess() {
 	for _, bike := range s.GetMegaBikes() {
-		// the kickout process only happens democratically in level 0 and level 1
-		agentsVoteCounts := bike.KickOutAgent()
-		for agentID, votes := range agentsVoteCounts {
-			if votes > len(bike.GetAgents())/2 {
-				bike.RemoveAgent(agentID)
-				delete(s.megaBikeRiders, agentID)
+		agentsVotes := make([]uuid.UUID, 0)
 
-				if agent, ok := s.GetAgentMap()[agentID]; ok {
-					agent.ToggleOnBike()
-					//if kickedoutagent is the leader, need to select one new
-				}
+		// the kickout process only happens democratically in level 0 and level 1
+		switch bike.GetGovernance() {
+		case utils.Democracy:
+			// make map of weights of 1 for all agents on bike
+			agents := bike.GetAgents()
+			weights := make(map[uuid.UUID]float64)
+			for _, agent := range agents {
+				weights[agent.GetID()] = 1.0
 			}
 
+			// get which agents are getting kicked out
+			agentsVotes = bike.KickOutAgent(weights)
+
+		case utils.Leadership:
+			// get the map of weights from the leader
+			leader := s.GetAgentMap()[bike.GetRuler()]
+			weights := leader.DecideKickoutWeights()
+			// get which agents are getting kicked out
+			agentsVotes = bike.KickOutAgent(weights)
+
+		case utils.Dictatorship:
+			// in level 2 only the ruler can kick out people
+			dictator := s.GetAgentMap()[bike.GetRuler()]
+			agentsVotes = dictator.DecideKickOut()
 		}
-		// in level 2 only the ruler can kick out people
+
+		// perform kickout
+		leaderKickedOut := false
+		for _, agentID := range agentsVotes {
+			bike.RemoveAgent(agentID)
+			delete(s.megaBikeRiders, agentID)
+			if agent, ok := s.GetAgentMap()[agentID]; ok {
+				agent.ToggleOnBike()
+			}
+			// if the leader was kicked out vote for a new one
+			if agentID == bike.GetRuler() {
+				leaderKickedOut = true
+			}
+		}
+		if leaderKickedOut && bike.GetGovernance() == utils.Leadership {
+			bike.SetRuler(s.RulerElection(bike.GetAgents(), utils.Leadership))
+
+		}
 
 	}
 }

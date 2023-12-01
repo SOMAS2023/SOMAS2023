@@ -12,7 +12,7 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
-	KickOutAgent() map[uuid.UUID]int
+	KickOutAgent(weights map[uuid.UUID]float64) []uuid.UUID
 	GetGovernance() utils.Governance
 	GetRuler() uuid.UUID
 	SetGovernance(governance utils.Governance)
@@ -124,7 +124,7 @@ func (mb *MegaBike) GetKickedOutCount() int {
 }
 
 // only called for level 0 and level 1
-func (mb *MegaBike) KickOutAgent(weights map[uuid.UUID]float64) map[uuid.UUID]float64 {
+func (mb *MegaBike) KickOutAgent(weights map[uuid.UUID]float64) []uuid.UUID {
 	voteCount := make(map[uuid.UUID]float64)
 	// Count votes for each agent
 	for _, agent := range mb.agents {
@@ -140,10 +140,10 @@ func (mb *MegaBike) KickOutAgent(weights map[uuid.UUID]float64) map[uuid.UUID]fl
 	}
 
 	// Find all agents with votes > half the number of agents
-	agentsToKickOut := make(map[uuid.UUID]float64)
+	agentsToKickOut := make([]uuid.UUID, 0)
 	for agentID, votes := range voteCount {
 		if votes > float64(len(mb.agents))/2.0 {
-			agentsToKickOut[agentID] = votes
+			agentsToKickOut = append(agentsToKickOut, agentID)
 		}
 	}
 
