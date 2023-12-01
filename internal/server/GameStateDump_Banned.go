@@ -4,6 +4,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
@@ -58,7 +59,7 @@ func (a AgentDump) ProposeDirection() uuid.UUID {
 	panic(bannedFunctionErrorMessage)
 }
 
-func (a AgentDump) FinalDirectionVote([]uuid.UUID) voting.LootboxVoteMap {
+func (a AgentDump) FinalDirectionVote(map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	panic(bannedFunctionErrorMessage)
 }
 
