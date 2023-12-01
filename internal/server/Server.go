@@ -2,6 +2,9 @@ package server
 
 import (
 	"SOMAS2023/internal/common/objects"
+	"encoding/json"
+	"fmt"
+	"os"
 
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
 	"github.com/google/uuid"
@@ -41,4 +44,32 @@ func Initialize(iterations int) IBaseBikerServer {
 	}
 
 	return server
+}
+
+func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
+	id := agent.GetID()
+	s.BaseServer.RemoveAgent(agent)
+	if bikeId, ok := s.megaBikeRiders[id]; ok {
+		s.megaBikes[bikeId].RemoveAgent(id)
+		delete(s.megaBikeRiders, id)
+	}
+}
+
+func (s *Server) outputResults(gameStates []GameStateDump) {
+	statisticsJson, err := json.MarshalIndent(CalculateStatistics(gameStates), "", "    ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Statistics:\n" + string(statisticsJson))
+
+	file, err := os.Create("game_dump.json")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "    ")
+	if err := encoder.Encode(gameStates); err != nil {
+		panic(err)
+	}
 }
