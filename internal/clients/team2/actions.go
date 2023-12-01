@@ -169,6 +169,43 @@ func (a *AgentTwo) GetPreviousAction() {
 	}
 }
 
+func (a *AgentTwo) AvoidOwdi(lootboxID uuid.UUID) bool {
+	audiPos := a.GetGameState().GetAudi().GetPosition()
+	lootboxPos := a.GetGameState().GetLootBoxes()[lootboxID].GetPosition()
+	AudiRange := utils.Coordinates{
+		X: 5.0,
+		Y: 5.0,
+	}
+	fmt.Println("AudiRange: ", AudiRange)
+	fmt.Println("audiPosX-: ", audiPos.X-AudiRange.X)
+	fmt.Println("audiPosX+: ", audiPos.X+AudiRange.X)
+	fmt.Println("audiPosY-: ", audiPos.Y-AudiRange.Y)
+	fmt.Println("audiPosY+: ", audiPos.Y+AudiRange.Y)
+
+	if audiPos.X-AudiRange.X < 0 || audiPos.Y-AudiRange.Y < 0 || audiPos.X+AudiRange.X > utils.GridWidth || audiPos.Y+AudiRange.Y > utils.GridHeight {
+
+		AudiRange = utils.Coordinates{
+			X: 0.0,
+			Y: 0.0,
+		}
+	}
+	// if we are near an owdi we want to avoid it
+	if a.GetLocation().X > audiPos.X-AudiRange.X && a.GetLocation().X < audiPos.X+AudiRange.X && a.GetLocation().Y > audiPos.Y-AudiRange.Y && a.GetLocation().Y < audiPos.Y+AudiRange.Y {
+		fmt.Println("avoiding owdi")
+		return true
+	}
+
+	// if the lootbox is in the owdi's range we avoid it
+
+	if lootboxPos.X > audiPos.X-AudiRange.X && lootboxPos.X < audiPos.X+AudiRange.X && lootboxPos.Y > audiPos.Y-AudiRange.Y && lootboxPos.Y < audiPos.Y+AudiRange.Y {
+		fmt.Println("avoiding owdi")
+
+		return true
+	}
+
+	return false
+}
+
 // returns the nearest lootbox with respect to the agent's bike current position
 // in the MVP this is used to determine the pedalling forces as all agent will be
 // aiming to get to the closest lootbox by default
@@ -279,7 +316,8 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	// nearestLoot = a.GetOptimalLootbox()
 	nearestLoot = a.GetOptimalLootbox()
 	// Check if there are lootboxes available and move towards closest one
-	if len(currentLootBoxes) > 0 {
+	// if len(currentLootBoxes) > 0 {
+	if !a.AvoidOwdi(nearestLoot) {
 		targetPos := currentLootBoxes[nearestLoot].GetPosition()
 
 		deltaX := targetPos.X - currLocation.X
