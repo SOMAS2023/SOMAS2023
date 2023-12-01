@@ -205,18 +205,21 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 	po.SetPhysicalState(finalState)
 }
 
-func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UUID {
+func (s *Server) GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap) uuid.UUID {
 	// get overall winner direction using chosen voting strategy
 
 	// this allows to get a slice of the interface from that of the specific type
 	// this way we can substitute agent.FInalDirectionVote with another function that returns
 	// another type of voting type which still implements INormaliseVoteMap
-	IfinalVotes := make([]voting.IVoter, len(finalVotes))
+	IfinalVotes := make(map[uuid.UUID]voting.IVoter)
+	// TODO: need extra input "voteWeight". For now, we just initialise a unit weight for each agent
+	voteWeight := make(map[uuid.UUID]float64)
 	for i, v := range finalVotes {
 		IfinalVotes[i] = v
+		voteWeight[i] = 1
 	}
 
-	return voting.WinnerFromDist(IfinalVotes)
+	return voting.WinnerFromDist(IfinalVotes, voteWeight)
 }
 
 func (s *Server) AudiCollisionCheck() {

@@ -42,3 +42,19 @@ Audi Behavior
 const AudiTargetsEmptyMegaBike bool = false
 const AudiOnlyTargetsStationaryMegaBike bool = true // if false, targeting slowest
 const AudiRemovesMegaBike bool = false
+
+/*
+Voting Method Choice
+*/
+type voteMethods int
+
+const (
+	PLURALITY voteMethods = iota
+	RUNOFF
+	BORDACOUNT
+	INSTANTRUNOFF
+	APPROVAL
+	COPELANDSCORING
+)
+
+const VoteAction voteMethods = PLURALITY
