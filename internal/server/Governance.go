@@ -49,13 +49,13 @@ func (s *Server) RulerElection(agents []objects.IBaseBiker, governance utils.Gov
 func (s *Server) RunDemocraticAction(bike objects.IMegaBike) uuid.UUID {
 	// map of the proposed lootboxes by bike (for each bike a list of lootbox proposals is made, with one lootbox proposed by each agent on the bike)
 	agents := bike.GetAgents()
-	proposedDirections := make([]uuid.UUID, len(agents))
-	for i, agent := range agents {
+	proposedDirections := make(map[uuid.UUID]uuid.UUID)
+	for _, agent := range agents {
 		// agents that have decided to stay on the bike (and that haven't been kicked off it)
 		// will participate in the voting for the directions
 		// ---------------------------VOTING ROUTINE - STEP 1 ---------------------
 		if agent.GetBikeStatus() {
-			proposedDirections[i] = agent.ProposeDirection()
+			proposedDirections[agent.GetID()] = agent.ProposeDirection()
 		}
 	}
 
@@ -63,7 +63,7 @@ func (s *Server) RunDemocraticAction(bike objects.IMegaBike) uuid.UUID {
 	finalVotes := make([]voting.LootboxVoteMap, len(agents))
 	for i, agent := range agents {
 		// ---------------------------VOTING ROUTINE - STEP 2 ---------------------
-		finalVotes[i] = agent.FinalDirectionVote((proposedDirections))
+		finalVotes[i] = agent.FinalDirectionVote(proposedDirections)
 	}
 
 	// ---------------------------VOTING ROUTINE - STEP 3 --------------
