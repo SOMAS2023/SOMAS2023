@@ -1,9 +1,10 @@
 package team5Agent
 
 import (
-	"github.com/google/uuid"
-
 	"SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/utils"
+
+	"github.com/google/uuid"
 )
 
 func calculateResourceAllocation(gameState objects.IGameState, b *team5Agent) map[uuid.UUID]float64 {
@@ -25,21 +26,6 @@ func calculateResourceAllocation(gameState objects.IGameState, b *team5Agent) ma
 	return allocations
 }
 
-// gets Bike ID from gamestate, to be removed after getter added to basebiker
-func getBikeIdFromGameState(b *team5Agent, gameState objects.IGameState) uuid.UUID {
-	bikes := gameState.GetMegaBikes()
-
-	for id, bike := range bikes {
-		for _, agent := range bike.GetAgents() {
-			if agent.GetID() == b.GetID() {
-				return id
-			}
-		}
-	}
-
-	return uuid.Nil
-}
-
 func generateAllocation(agent objects.IBaseBiker, b *team5Agent) float64 {
 	var value float64
 
@@ -52,6 +38,12 @@ func generateAllocation(agent objects.IBaseBiker, b *team5Agent) float64 {
 		} else {
 			value = 0
 		}
+	case "needs":
+		value = 1 - agent.GetEnergyLevel()
+	case "contributions":
+		value = agent.GetForces().Pedal * utils.MovingDepletion
+	// case "rep":
+	// 	value = b.GetAgentReputation(agent.GetID())
 	default:
 		//default to equal
 		value = 1

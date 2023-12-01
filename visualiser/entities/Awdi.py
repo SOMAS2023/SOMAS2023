@@ -9,7 +9,7 @@ from visualiser.entities.Common import Drawable
 
 class Awdi(Drawable):
     def __init__(self, jsonData:dict) -> None:
-        super().__init__(jsonData)
+        super().__init__("audi", jsonData)
         self.colour = AWDI["COLOUR"]
         properties = {
             "Target" : jsonData["target_bike"],
@@ -45,24 +45,15 @@ class Awdi(Drawable):
         self.overlay = self.update_overlay(zoom)
         self.draw_overlay(screen)
 
-    def check_collision(self, mouseX: int, mouseY: int, offsetX: int, offsetY: int, zoom: float) -> bool:
+    def check_collision(self, mouseX: int, mouseY: int, zoom:float) -> bool:
         """
         Check if the mouse click intersects with the bike.
         """
-        return (self.trueX <= mouseX <= self.trueX + AWDI["SIZE"]) and \
-               (self.trueY <= mouseY <= self.trueY + AWDI["SIZE"])
+        return (self.trueX <= mouseX <= self.trueX + AWDI["SIZE"]*zoom) and \
+               (self.trueY <= mouseY <= self.trueY + AWDI["SIZE"]*zoom)
 
-    # def change_round(self, json:dict) -> None:
-    #     """
-    #     Change the current round for the awdi
-    #     """
-    #     self.properties = {
-    #         "Position" : f"{json['position']['x']}, {json['position']['y']}",
-    #         "Target" : json["target"],
-    #     }
-
-    def propagate_click(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> None:
+    def propagate_click(self, mouseX:int, mouseY:int, zoom:float) -> None:
         """
         Propagate the click
         """
-        self.click(mouseX, mouseY, offsetX, offsetY, zoom)
+        self.click(mouseX, mouseY, zoom)

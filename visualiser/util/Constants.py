@@ -5,7 +5,7 @@ Constants used for the visualiser.
 WINDOW_TITLE = "SOMAS Visualiser"
 FRAMERATE = 60
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
-COORDINATESCALE = 1.5
+COORDINATESCALE = 15
 PRECISION = 2
 # JSONPATH = "./internal/clients/team_5/visualiser/json/test2.json"
 JSONPATH = "game_dump.json"
@@ -42,7 +42,7 @@ AWDI = {
     "LINE_WIDTH": 2,
     "LINE_COLOUR": "#000000",
     "FONT_SIZE": 30,
-    "SIZE": 100,
+    "SIZE": 60,
 }
 AGENT = {
     "SIZE": 10,

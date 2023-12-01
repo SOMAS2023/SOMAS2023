@@ -9,14 +9,11 @@ from visualiser.util.Constants import AGENT, COLOURS, PRECISION
 from visualiser.entities.Common import Drawable
 
 class Agent(Drawable):
-    def __init__(self, x:int, y:int, colour:pygame.color, groupID, agentID, jsonData:dict) -> None:
-        super().__init__(jsonData, x, y)
+    def __init__(self, x:int, y:int, agentid:str, colour:pygame.color, groupID, jsonData:dict) -> None:
+        super().__init__(agentid, jsonData, x, y)
         self.colour = COLOURS[colour]
         self.radius = AGENT["SIZE"]
         self.groupID = groupID
-        self.id = agentID
-        self.x = x
-        self.y = y
         properties = {
             "Pedal" : jsonData["forces"]["pedal"],
             "Brake" : jsonData["forces"]["brake"],
@@ -28,7 +25,7 @@ class Agent(Drawable):
         }
         self.properties.update(properties)
 
-    def check_collision(self, mouseX:int, mouseY:int, offsetX:int, offsetY:int, zoom:float) -> bool:
+    def check_collision(self, mouseX:int, mouseY:int, zoom:float) -> bool:
         """
         Check if the mouse click intersects with the agent.
         """
@@ -57,13 +54,3 @@ class Agent(Drawable):
         textRect.center = (self.trueX, self.trueY)
         screen.blit(text, textRect)
         self.overlay = self.update_overlay(zoom)
-
-    def change_round(self, json:dict) -> None:
-        """
-        Change the agent's properties based on the round
-        """
-        self.colour = COLOURS[json["colour"]]
-        self.properties = {
-            "Points:" : json["points"],
-            "Energy" : json["energy"],
-        }

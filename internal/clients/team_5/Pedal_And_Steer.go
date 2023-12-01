@@ -2,14 +2,15 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/utils"
-	"github.com/google/uuid"
 	"fmt"
 	"math"
+
+	"github.com/google/uuid"
 )
 
 //for testing use any box in targetLootBoxID
 
-//i added a comment for the printstatement in get colour remember to remove and in the original decideforce fn in base biker remember to remove those
+// i added a comment for the printstatement in get colour remember to remove and in the original decideforce fn in base biker remember to remove those
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	fmt.Println("testing 1")
 
@@ -63,9 +64,6 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	}
 }
 
-	
-
-
 // so this bassically adjusts the force depending on the energy of the agent
 func (t5 *team5Agent) calculatePedalForceBasedOnEnergy() float64 {
 	ownEnergyLevel := t5.GetEnergyLevel()
@@ -103,14 +101,11 @@ func (t5 *team5Agent) calculatePedalForceBasedOnEnergy() float64 {
 
 // add a function depends
 
-
 // 2.)speed of other bikes
-// and 
+// and
 // position of other bikes and how fast to peddle depending on that
 
 // 1.)so the lootbox is the direction but we may need to turn more if the bike doesnt turn enough.
-
-
 
 //have a meeting with others discuss what other fns i can implement nd what helps others
 // runs no issues
