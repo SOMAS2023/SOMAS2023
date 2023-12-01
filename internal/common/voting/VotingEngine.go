@@ -34,21 +34,21 @@ func (ivm IdVoteMap) GetVotes() map[uuid.UUID]float64 {
 // this function will take in a list of maps from ids to their corresponding vote (yes/ no in the case of acceptance)
 // and retunr a list of ids that can be accepted according to some metric (ie more than half voted yes)
 // ranked according to a metric (ie overall number of yes's)
-func GetAcceptanceRanking(rankings []map[uuid.UUID]bool) []uuid.UUID {
+func GetAcceptanceRanking(rankings []map[uuid.UUID]bool, weights map[uuid.UUID]float64) []uuid.UUID {
 	// sum the number of acceptance rankings for all the agents
-	cumulativeRank := make(map[uuid.UUID]int)
-	quorum := len(rankings) / 2
+	cumulativeRank := make(map[uuid.UUID]float64)
+	quorum := float64(len(rankings)) / 2.0
 	for _, ranking := range rankings {
 		for agent, outcome := range ranking {
 			val, ok := cumulativeRank[agent]
 			if outcome && ok {
-				cumulativeRank[agent] = val + 1
+				cumulativeRank[agent] = val + weights[agent]
 			} else if outcome {
-				cumulativeRank[agent] = 1
+				cumulativeRank[agent] = 1.0
 			}
 		}
 	}
-	passedUnsorted := make(map[uuid.UUID]int)
+	passedUnsorted := make(map[uuid.UUID]float64)
 	for agent, val := range cumulativeRank {
 		if val > quorum {
 			passedUnsorted[agent] = val
@@ -171,7 +171,7 @@ func TallyFoundingVotes(voters map[uuid.UUID]utils.Governance) (map[utils.Govern
 
 	// Summing up the votes for each governance type
 	aggregateFoundingTotals := make(map[utils.Governance]int)
-	
+
 	// Get the governance type for each agent
 	for _, vote := range voters {
 		// Add to the tally for each governance type

@@ -143,36 +143,70 @@ func (s *Server) ProcessJoiningRequests() {
 	// 1. group agents that have onBike = false by the bike they are trying to join
 	bikeRequests := s.GetJoiningRequests()
 	// 2. pass to agents on each of the desired bikes a list of all agents trying to join
-	for bike, pendingAgents := range bikeRequests {
-		agents := s.megaBikes[bike].GetAgents()
-
-		responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+	for bikeID, pendingAgents := range bikeRequests {
+		agents := s.megaBikes[bikeID].GetAgents()
 		if len(agents) == 0 {
 			for i, pendingAgent := range pendingAgents {
 				if i <= utils.BikersOnBike {
 					acceptedAgent := s.GetAgentMap()[pendingAgent]
 					acceptedAgent.ToggleOnBike()
-					s.SetBikerBike(acceptedAgent, bike)
+					s.SetBikerBike(acceptedAgent, bikeID)
 				} else {
 					break
 				}
 			}
-
 		} else {
-			for i, agent := range agents {
-				responses[i] = agent.DecideJoining(pendingAgents)
+			bike := s.GetMegaBikes()[bikeID]
+			acceptedRanked := make([]uuid.UUID, 0)
+
+			switch bike.GetGovernance() {
+			case utils.Democracy:
+				// make map of weights of 1 for all agents on bike
+				weights := make(map[uuid.UUID]float64)
+				for _, agent := range agents {
+					weights[agent.GetID()] = 1.0
+				}
+
+				// get approval votes from each agent
+				responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				for i, agent := range agents {
+					responses[i] = agent.DecideJoining(pendingAgents)
+				}
+
+				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
+				acceptedRanked = voting.GetAcceptanceRanking(responses, weights)
+			case utils.Leadership:
+				// get the map of weights from the leader
+				leader := s.GetAgentMap()[bike.GetRuler()]
+				weights := leader.DecideJoiningWeights()
+
+				// get approval votes from each agent
+				responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				for i, agent := range agents {
+					responses[i] = agent.DecideJoining(pendingAgents)
+				}
+
+				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
+				acceptedRanked = voting.GetAcceptanceRanking(responses, weights)
+			case utils.Dictatorship:
+				dictator := s.GetAgentMap()[bike.GetRuler()]
+				acceptedRankedMap := dictator.DecideJoining(pendingAgents)
+				for agentID, accepted := range acceptedRankedMap {
+					if accepted {
+						acceptedRanked = append(acceptedRanked, agentID)
+					}
+				}
 			}
-			// 3. accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
-			acceptedRanked := voting.GetAcceptanceRanking(responses)
-			totalSeatsFilled := len(s.megaBikes[bike].GetAgents())
-			// emptySpaces := 8 - totalSeatsFilled
+
+			// run acceptance process
+			totalSeatsFilled := len(agents)
 			emptySpaces := utils.BikersOnBike - totalSeatsFilled
 
 			for i := 0; i < min(emptySpaces, len(acceptedRanked)); i++ {
 				accepted := acceptedRanked[i]
 				acceptedAgent := s.GetAgentMap()[accepted]
 				acceptedAgent.ToggleOnBike()
-				s.SetBikerBike(acceptedAgent, bike)
+				s.SetBikerBike(acceptedAgent, bikeID)
 			}
 		}
 	}
