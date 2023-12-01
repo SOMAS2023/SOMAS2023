@@ -123,6 +123,24 @@ func (a AgentDump) SetReputation(uuid.UUID, float64) {
 	panic(bannedFunctionErrorMessage)
 }
 
+func (a AgentDump) HandleGovernanceMessage(msg objects.GovernanceMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+func (a AgentDump) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+func (a AgentDump) HandleLootboxMessage(msg objects.LootboxMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) HandleKickOffMessage(msg objects.KickOffAgentMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
 func (b BikeDump) AddAgent(objects.IBaseBiker) {
 	panic(bannedFunctionErrorMessage)
 }
