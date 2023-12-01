@@ -13,32 +13,34 @@ import (
 
 // i think i found it divide the steering force by the amount of agents on the bike
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
-	fmt.Println("testing 1")
+	//fmt.Println("testing 1")
 
 	currLocation := t5.GetLocation()
-	fmt.Println("Current Location: ", currLocation)
+	//fmt.Println("Current Location: ", currLocation)
 
 	nearestLoot := t5.ProposeDirection()
-	fmt.Println("Nearest Loot ID: ", nearestLoot)
+	//fmt.Println("Nearest Loot ID: ", nearestLoot)
 
 	currentLootBoxes := t5.GetGameState().GetLootBoxes()
-	fmt.Println("Number of Loot Boxes: ", len(currentLootBoxes))
+	//fmt.Println("Number of Loot Boxes: ", len(currentLootBoxes))
 
 	if len(currentLootBoxes) > 0 {
 		targetPos := currentLootBoxes[nearestLoot].GetPosition()
-		fmt.Println("Target Position: ", targetPos)
+		//fmt.Println("Target Position: ", targetPos)
 
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
 		fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
 
-		angle := math.Atan2(deltaX, deltaY)
+		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
-		fmt.Println("Angle: ", angle, "Normalized Angle: ", normalisedAngle)
+		
 
 		orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
-		fmt.Println("Bike Orientation: ", orientation) 
-		turning_depending_on_agents_on_that_bike := (normalisedAngle - orientation)/(float64(len(t5.GetMegaBike())));
+		//fmt.Println("Bike Orientation: ", orientation) 
+		turning_depending_on_agents_on_that_bike := (normalisedAngle - orientation);
+		///(float64(len(t5.GetMegaBike())));
+		fmt.Println("Angle: ", angle, "Normalized Angle: ", normalisedAngle, " bike orientation ", orientation, "turning_depending_on_agents_on_that_bike ", turning_depending_on_agents_on_that_bike )
 		//and i can change this depending on how the enemy agents are turning
 		
 
@@ -46,7 +48,7 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 			SteerBike:     true,
 			SteeringForce: turning_depending_on_agents_on_that_bike,
 		}
-		fmt.Println("Turning Decision: ", turningDecision)
+		//fmt.Println("Turning Decision: ", turningDecision)
 
 		nearestBoxForces := utils.Forces{
 			Pedal:   utils.BikerMaxForce,

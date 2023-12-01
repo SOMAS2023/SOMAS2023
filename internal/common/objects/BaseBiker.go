@@ -3,7 +3,7 @@ package objects
 import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
-	"fmt"
+	//"fmt"
 	"math"
 
 	"math/rand"
@@ -86,7 +86,7 @@ func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
-	fmt.Println("regular agent: GetColour: t5.regular.GetColour(): ", bb.soughtColour)
+	//fmt.Println("regular agent: GetColour: t5.regular.GetColour(): ", bb.soughtColour)
 	return bb.soughtColour
 }
 
