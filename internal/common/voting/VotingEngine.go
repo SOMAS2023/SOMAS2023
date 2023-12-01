@@ -4,9 +4,12 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"errors"
 	"math"
+	"sort"
 
 	"github.com/google/uuid"
 )
+
+type GovernanceVote map[utils.Governance]float64
 
 // Generic IVoter type to accept different outputs
 type IVoter interface {
@@ -31,9 +34,38 @@ func (ivm IdVoteMap) GetVotes() map[uuid.UUID]float64 {
 // this function will take in a list of maps from ids to their corresponding vote (yes/ no in the case of acceptance)
 // and retunr a list of ids that can be accepted according to some metric (ie more than half voted yes)
 // ranked according to a metric (ie overall number of yes's)
-func GetAcceptanceRanking([]map[uuid.UUID]bool) []uuid.UUID {
-	// TODO implement
-	panic("not implemented")
+func GetAcceptanceRanking(rankings []map[uuid.UUID]bool) []uuid.UUID {
+	// sum the number of acceptance rankings for all the agents
+	cumulativeRank := make(map[uuid.UUID]int)
+	quorum := len(rankings) / 2
+	for _, ranking := range rankings {
+		for agent, outcome := range ranking {
+			val, ok := cumulativeRank[agent]
+			if outcome && ok {
+				cumulativeRank[agent] = val + 1
+			} else if outcome {
+				cumulativeRank[agent] = 1
+			}
+		}
+	}
+	passedUnsorted := make(map[uuid.UUID]int)
+	for agent, val := range cumulativeRank {
+		if val > quorum {
+			passedUnsorted[agent] = val
+		}
+	}
+
+	// sort according to ranking
+	unsortedAcceptedList := make([]uuid.UUID, len(passedUnsorted))
+	i := 0
+	for key, _ := range passedUnsorted {
+		unsortedAcceptedList[i] = key
+		i += 1
+	}
+	sort.Slice(unsortedAcceptedList, func(i, j int) bool {
+		return passedUnsorted[unsortedAcceptedList[i]] > passedUnsorted[unsortedAcceptedList[j]]
+	})
+	return unsortedAcceptedList
 	// return make([]uuid.UUID, 0)
 }
 
@@ -90,4 +122,42 @@ func WinnerFromDist(voters []IVoter) uuid.UUID {
 	}
 
 	return winner
+}
+
+func WinnerFromGovernance(voters []GovernanceVote) (utils.Governance, error) {
+	// check if length of votes is greater than one
+	if len(voters) == 0 {
+		return utils.Invalid, errors.New("no votes provided")
+	}
+
+	// Summing up the votes for each governance type
+	for _, vote := range voters {
+		sum := 0.0
+		for _, votes := range vote {
+			sum += votes
+		}
+		if sum > 1.0 {
+			return utils.Invalid, errors.New("distribution doesn't sum to 1")
+		}
+	}
+
+	var voteTotals = make(map[utils.Governance]float64)
+	var winner utils.Governance
+	var highestVotes float64
+
+	// Summing up the votes for each governance type
+	for _, vote := range voters {
+		for governance, votes := range vote {
+			voteTotals[governance] += votes
+		}
+	}
+	// Finding the governance type with the highest votes
+	for governance, votes := range voteTotals {
+		if votes > highestVotes {
+			highestVotes = votes
+			winner = governance
+		}
+	}
+
+	return winner, nil
 }
