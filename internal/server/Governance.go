@@ -27,22 +27,25 @@ func (s *Server) RunRulerAction(bike objects.IMegaBike, governance utils.Governa
 }
 
 func (s *Server) RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID {
-	votes := make([]voting.IdVoteMap, len(agents))
-	for i, agent := range agents {
+	// TODO: need extra input "voteWeight". For now, we just initialise a unit weight for each agent
+	votes := make(map[uuid.UUID]voting.IdVoteMap, len(agents))
+	voteWeight := make(map[uuid.UUID]float64)
+	for _, agent := range agents {
+		voteWeight[agent.GetID()] = 1
 		switch governance {
 		case utils.Dictatorship:
-			votes[i] = agent.VoteDictator()
+			votes[agent.GetID()] = agent.VoteDictator()
 		case utils.Leadership:
-			votes[i] = agent.VoteLeader()
+			votes[agent.GetID()] = agent.VoteLeader()
 		}
 	}
 
-	IVotes := make([]voting.IVoter, len(votes))
+	IVotes := make(map[uuid.UUID]voting.IVoter, len(votes))
 	for i, vote := range votes {
 		IVotes[i] = vote
 	}
 
-	ruler := voting.WinnerFromDist(IVotes)
+	ruler := voting.WinnerFromDist(IVotes, voteWeight)
 	return ruler
 }
 
@@ -60,10 +63,10 @@ func (s *Server) RunDemocraticAction(bike objects.IMegaBike) uuid.UUID {
 	}
 
 	// pass the pitched directions of a bike to all agents on that bike and get their final vote
-	finalVotes := make([]voting.LootboxVoteMap, len(agents))
-	for i, agent := range agents {
+	finalVotes := make(map[uuid.UUID]voting.LootboxVoteMap, len(agents))
+	for _, agent := range agents {
 		// ---------------------------VOTING ROUTINE - STEP 2 ---------------------
-		finalVotes[i] = agent.FinalDirectionVote(proposedDirections)
+		finalVotes[agent.GetID()] = agent.FinalDirectionVote(proposedDirections)
 	}
 
 	// ---------------------------VOTING ROUTINE - STEP 3 --------------
