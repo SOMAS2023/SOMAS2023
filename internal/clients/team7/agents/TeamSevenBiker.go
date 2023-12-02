@@ -211,4 +211,17 @@ func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
 
 	return voteOutput
 }
+
+// Vote on Dictator
+func (biker *BaseTeamSevenBiker) VoteDictator() voting.IdVoteMap {
+	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
+
+	voteInputs := frameworks.VoteOnAgentsInput{
+		AgentCandidates: agentIds,
+	}
+	voteHandler := frameworks.NewVoteOnDictatorHandler()
+	voteOutput := voteHandler.GetDecision(voteInputs)
+
+	return voteOutput
+}
 */
