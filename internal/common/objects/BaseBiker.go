@@ -3,12 +3,12 @@ package objects
 import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
-	"fmt"
 	"math"
 
 	"math/rand"
 
 	baseAgent "github.com/MattSScott/basePlatformSOMAS/BaseAgent"
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -49,6 +49,16 @@ type IBaseBiker interface {
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	UpdateGameState(gameState IGameState)  // sets the gameState field at the beginning of each round
 	ToggleOnBike()                         // called when removing or adding a biker on a bike
+
+	// FOR MESSAGING - ours
+	HandleKickOffMessage(msg KickOffAgentMessage)
+	HandleReputationMessage(msg ReputationOfAgentMessage)
+	HandleJoiningMessage(msg JoiningAgentMessage)
+	HandleLootboxMessage(msg LootboxMessage)
+	HandleGovernanceMessage(msg GovernanceMessage)
+	HandleForcesMessage(msg ForcesMessage)
+
+	GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker]
 }
 
 type BikerAction int
@@ -86,7 +96,7 @@ func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
-	fmt.Println("regular agent: GetColour: t5.regular.GetColour(): ", bb.soughtColour)
+	// fmt.Println("regular agent: GetColour: t5.regular.GetColour(): ", bb.soughtColour)
 	return bb.soughtColour
 }
 
@@ -316,4 +326,151 @@ func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 		energyLevel:  1.0,
 		points:       0,
 	}
+}
+
+//
+//
+//
+//
+// FOR MESSAGING - ours
+
+// Returns the other agents on your bike :)
+func (bb *BaseBiker) GetFellowBikers() []IBaseBiker {
+	bikes := bb.gameState.GetMegaBikes()
+	bike := bikes[bb.GetBike()]
+	fellowBikers := bike.GetAgents()
+	return fellowBikers
+}
+
+// This function updates all the messages for that agent i.e. both sending and receiving.
+// And returns the new messages from other agents to your agent
+func (bb *BaseBiker) GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker] {
+	// For team's agent add your own logic on chosing when your biker should send messages
+	wantToSendMsg := false
+	if wantToSendMsg {
+		reputationMsg := bb.CreateReputationMessage()
+		kickOffMsg := bb.CreateKickOffMessage()
+		lootboxMsg := bb.CreateLootboxMessage()
+		joiningMsg := bb.CreateJoiningMessage()
+		governceMsg := bb.CreateGoverenceMessage()
+		forcesMsg := bb.CreateForcesMessage()
+		return []messaging.IMessage[IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg}
+	}
+	return []messaging.IMessage[IBaseBiker]{}
+}
+
+func (bb *BaseBiker) CreateKickOffMessage() KickOffAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return KickOffAgentMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		KickOff:     false,
+	}
+}
+
+func (bb *BaseBiker) CreateReputationMessage() ReputationOfAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return ReputationOfAgentMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		Reputation:  1.0,
+	}
+}
+
+func (bb *BaseBiker) CreateJoiningMessage() JoiningAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return JoiningAgentMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		BikeId:      uuid.Nil,
+	}
+}
+
+func (bb *BaseBiker) CreateLootboxMessage() LootboxMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return LootboxMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		LootboxId:   uuid.Nil,
+	}
+}
+
+func (bb *BaseBiker) CreateGoverenceMessage() GovernanceMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return GovernanceMessage{
+		BaseMessage:  messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		BikeId:       uuid.Nil,
+		GovernanceId: 0,
+	}
+}
+
+func (bb *BaseBiker) HandleKickOffMessage(msg KickOffAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// kickOff := msg.KickOff
+}
+
+func (bb *BaseBiker) HandleReputationMessage(msg ReputationOfAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// reputation := msg.Reputation
+}
+
+func (bb *BaseBiker) HandleJoiningMessage(msg JoiningAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// bikeId := msg.BikeId
+}
+
+func (bb *BaseBiker) HandleLootboxMessage(msg LootboxMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// lootboxId := msg.LootboxId
+}
+
+func (bb *BaseBiker) HandleGovernanceMessage(msg GovernanceMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// bikeId := msg.BikeId
+	// governanceId := msg.GovernanceId
+}
+
+// OUR FORCES MESSAGE
+
+func (bb *BaseBiker) CreateForcesMessage() ForcesMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return ForcesMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		AgentForces: utils.Forces{
+			Pedal: 0.0,
+			Brake: 0.0,
+			Turning: utils.TurningDecision{
+				SteerBike:     false,
+				SteeringForce: 0.0,
+			},
+		},
+	}
+}
+
+func (bb *BaseBiker) HandleForcesMessage(msg ForcesMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// agentForces := msg.AgentForces
+
 }
