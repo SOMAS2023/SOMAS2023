@@ -27,7 +27,7 @@ type AgentTwo struct {
 	*objects.BaseBiker
 	// CalculateSocialCapitalOtherAgent: (trustworthiness - cosine distance, social networks - friends, institutions - num of rounds on a bike)
 	SocialCapital      map[uuid.UUID]float64 // Social Captial of other agents
-	Trust              map[uuid.UUID]float64 // Trust of other agents
+	Reputation         map[uuid.UUID]float64 // Reputation of other agents
 	Institution        map[uuid.UUID]float64 // Institution of other agents
 	Network            map[uuid.UUID]float64 // Network of other agents
 	GameIterations     int32                 // Keep track of game iterations // TODO: WHAT IS THIS?

@@ -70,7 +70,8 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 				// fmt.Println("DecideAction action: ", action)
 				if action.AgentID == agentID {
 					// update trustworthiness
-					a.updateTrustworthiness(agentID, forcesToVectorConversion(action.Force), action.lootBoxlocation)
+					// Needs to be updated so that a.NearLootbox() is replaced with the lootbox location that the agent says that they're going for
+					a.updateReputation(agentID, a.GetOptimalLootbox(), a.nearestLoot())
 				}
 			}
 			// a.updateTrustworthiness(agent.GetID(), forcesToVectorConversion(), lootBoxlocation)
