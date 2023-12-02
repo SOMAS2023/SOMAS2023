@@ -79,33 +79,45 @@ func SumOfValues(voteMap IVoter) float64 {
 
 // Returns the normalized vote outcome (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
-func CumulativeDist(voters []IVoter) (map[uuid.UUID]float64, error) {
+func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) (map[uuid.UUID]float64, error) {
 	if len(voters) == 0 {
 		panic("no votes provided")
 	}
 	// Vote checks for each voter
 	aggregateVotes := make(map[uuid.UUID]float64)
-	for _, IVoter := range voters {
+
+	// initialise votes to 0.0
+	for voter, _ := range voters {
+		aggregateVotes[voter] = 0.0
+	}
+
+	for voter, IVoter := range voters {
 		if math.Abs(SumOfValues(IVoter)-1.0) > utils.Epsilon {
 			return nil, errors.New("distribution doesn't sum to 1")
 		}
+		weight := weights[voter]
 		votes := IVoter.GetVotes()
 		for id, vote := range votes {
-			aggregateVotes[id] += vote
+			aggregateVotes[id] += weight * vote
 		}
+	}
+
+	normalizeFactor := 0.0
+	for _, vote := range aggregateVotes {
+		normalizeFactor += vote
 	}
 	// normalising step for all voters involved
 	for agentId, vote := range aggregateVotes {
-		aggregateVotes[agentId] = vote / float64(len(voters))
+		aggregateVotes[agentId] = vote / normalizeFactor
 	}
 	return aggregateVotes, nil
 }
 
 // returns the winner accoring to chosen voting strategy (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
-func WinnerFromDist(voters []IVoter) uuid.UUID {
+func WinnerFromDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) uuid.UUID {
 	// TODO handle the error
-	aggregateVotes, _ := CumulativeDist(voters)
+	aggregateVotes, _ := CumulativeDist(voters, weights)
 
 	var randomWinner, winner uuid.UUID
 	maxVote := 0.0

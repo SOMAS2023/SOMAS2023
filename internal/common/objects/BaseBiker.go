@@ -25,8 +25,7 @@ type ResourceAllocationParams struct {
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 
-	DecideGovernance() voting.GovernanceVote
-	ChooseFoundingInstitution() utils.Governance
+	DecideGovernance() utils.Governance
 	DecideAction() BikerAction                                      // ** determines what action the agent is going to take this round. (changeBike or Pedal)
 	DecideForce(direction uuid.UUID)                                // ** defines the vector you pass to the bike: [pedal, brake, turning]
 	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      // ** decide whether to accept or not accept bikers, ranks the ones
@@ -37,13 +36,15 @@ type IBaseBiker interface {
 	VoteForKickout() map[uuid.UUID]int
 	VoteDictator() voting.IdVoteMap
 	VoteLeader() voting.IdVoteMap
-	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
+
+	// dictator functions
+	DictateDirection() uuid.UUID                // ** called only when the agent is the dictator
+	DecideKickOut() []uuid.UUID                 // ** decide which agents to kick out (dictator)
+	DecideDictatorAllocation() voting.IdVoteMap // ** decide the allocation (dictator)
+
+	// leader functions
 	LeadDirection() uuid.UUID
-	LeaderAgentWeights() map[uuid.UUID]float64     // ** called only when the agent is the leader
-	DecideKickoutWeights() map[uuid.UUID]float64   // ** decide weights for kickout voting (leader)
-	DecideKickOut() []uuid.UUID                    // ** decide which agents to kick out (dictator)
-	DecideJoiningWeights() map[uuid.UUID]float64   // ** decide weights for kickout voting (leader)
-	DecideDirectionWeights() map[uuid.UUID]float64 // ** decide weights for kickout voting (leader)
+	DecideWeights(action utils.Action) map[uuid.UUID]float64 // decide on weights for various actions
 
 	GetForces() utils.Forces        // returns forces for current round
 	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
@@ -328,29 +329,9 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 	return decision
 }
 
-// base biker defaults to democracy
-func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
-	governanceRanking := make(voting.GovernanceVote)
-	governanceRanking[utils.Democracy] = 1.0
-	governanceRanking[utils.Dictatorship] = 0.0
-	governanceRanking[utils.Leadership] = 0.0
-	return governanceRanking
-}
-
-func (bb *BaseBiker) ChooseFoundingInstitution() utils.Governance {
+func (bb *BaseBiker) DecideGovernance() utils.Governance {
 	// Change behaviour here to return different governance
 	return utils.Democracy
-}
-
-// defaults to returning an equal distribution over all agents on the bike
-func (bb *BaseBiker) LeaderAgentWeights() map[uuid.UUID]float64 {
-	weights := make(map[uuid.UUID]float64)
-	totAgents := len(bb.GetFellowBikers())
-	normalDist := 1.0 / float64(totAgents)
-	for id, _ := range weights {
-		weights[id] = normalDist
-	}
-	return weights
 }
 
 func (bb *BaseBiker) ResetPoints() {
@@ -428,26 +409,8 @@ func (bb *BaseBiker) LeadDirection() uuid.UUID {
 	return nearest
 }
 
-// defaults to an equal distribution over all agents
-func (bb *BaseBiker) DecideKickoutWeights() map[uuid.UUID]float64 {
-	weights := make(map[uuid.UUID]float64)
-	for id, _ := range weights {
-		weights[id] = 1.0
-	}
-	return weights
-}
-
-// defaults to an equal distribution over all agents
-func (bb *BaseBiker) DecideJoiningWeights() map[uuid.UUID]float64 {
-	weights := make(map[uuid.UUID]float64)
-	for id, _ := range weights {
-		weights[id] = 1.0
-	}
-	return weights
-}
-
-// defaults to an equal distribution over all agents
-func (bb *BaseBiker) DecideDirectionWeights() map[uuid.UUID]float64 {
+// defaults to an equal distribution over all agents for all actions
+func (bb *BaseBiker) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	weights := make(map[uuid.UUID]float64)
 	for id, _ := range weights {
 		weights[id] = 1.0
@@ -458,6 +421,18 @@ func (bb *BaseBiker) DecideDirectionWeights() map[uuid.UUID]float64 {
 // only called when the agent is the dictator
 func (bb *BaseBiker) DecideKickOut() []uuid.UUID {
 	return (make([]uuid.UUID, 0))
+}
+
+// only called when the agent is the dictator
+func (bb *BaseBiker) DecideDictatorAllocation() voting.IdVoteMap {
+	bikeID := bb.GetBike()
+	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	distribution := make(voting.IdVoteMap)
+	equalDist := 1.0 / float64(len(fellowBikers))
+	for _, agent := range fellowBikers {
+		distribution[agent.GetID()] = equalDist
+	}
+	return distribution
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP

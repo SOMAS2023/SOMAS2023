@@ -97,11 +97,8 @@ func (mb *MegaBike) UpdateOrientation() {
 		// will not have an impact on the direction of the bike.
 		turningDecision := agent.GetForces().Turning
 		if turningDecision.SteerBike {
-			// Only dictators can steer if Governance is set to dictatorship
-			if (mb.governance != utils.Dictatorship) || (agent.GetID() == mb.ruler) {
-				numOfSteeringAgents += 1
-				totalTurning += float64(turningDecision.SteeringForce)
-			}
+			numOfSteeringAgents += 1
+			totalTurning += float64(turningDecision.SteeringForce)
 		}
 	}
 	// Do not update orientation if no biker want to steer
@@ -112,9 +109,9 @@ func (mb *MegaBike) UpdateOrientation() {
 	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
 
 	if mb.orientation > 1.0 {
-		mb.orientation -= 2
+		mb.orientation -= 2.0
 	} else if mb.orientation < -1.0 {
-		mb.orientation += 2
+		mb.orientation += 2.0
 	}
 }
 

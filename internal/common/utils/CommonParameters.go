@@ -11,6 +11,7 @@ const BikersOnBike = 8
 const ReplenishEnergyAtRound = true
 const ResetPointsAtRound = true
 const RespawnAtRound = true
+const RoundIterations = 100
 
 /*
 Physics Parameters
