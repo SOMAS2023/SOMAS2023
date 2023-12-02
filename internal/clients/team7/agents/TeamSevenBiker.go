@@ -174,12 +174,7 @@ func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uu
 
 // Vote on allocation of resources
 func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
-	fellowBikers := biker.environmentHandler.GetAgentsOnCurrentBike()
-
-	agentIds := make([]uuid.UUID, len(fellowBikers))
-	for _, fellowBiker := range fellowBikers {
-		agentIds = append(agentIds, fellowBiker.GetID())
-	}
+	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
 
 	voteInputs := frameworks.VoteOnAllocationInput{
 		AgentCandidates: agentIds,
@@ -206,12 +201,7 @@ func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uu
 // TODO: Uncomment when infrastructure have merged the new voting methods.
 /*
 func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
-	fellowBikers := biker.environmentHandler.GetAgentsOnCurrentBike()
-
-	agentIds := make([]uuid.UUID, len(fellowBikers))
-	for _, fellowBiker := range fellowBikers {
-		agentIds = append(agentIds, fellowBiker.GetID())
-	}
+	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
 		AgentCandidates: agentIds,
