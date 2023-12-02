@@ -21,7 +21,7 @@ func TestCalculateSocialCapital(t *testing.T) {
 	testAgentID := uuid.New()
 
 	// Set up predefined values for trust, institution, and network
-	agent.Trust[testAgentID] = 0.8
+	agent.Reputation[testAgentID] = 0.8
 	agent.Institution[testAgentID] = 0.3
 	agent.Network[testAgentID] = 0.5
 

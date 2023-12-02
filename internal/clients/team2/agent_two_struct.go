@@ -24,7 +24,7 @@ func NewBaseTeam2Biker(agentId uuid.UUID) *AgentTwo {
 	return &AgentTwo{
 		BaseBiker:          baseBiker,
 		SocialCapital:      make(map[uuid.UUID]float64),
-		Trust:              make(map[uuid.UUID]float64),
+		Reputation:         make(map[uuid.UUID]float64),
 		Institution:        make(map[uuid.UUID]float64),
 		Network:            make(map[uuid.UUID]float64),
 		GameIterations:     0,
