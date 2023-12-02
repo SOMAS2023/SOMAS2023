@@ -68,7 +68,6 @@ type IBaseBiker interface {
 	HandleGovernanceMessage(msg GovernanceMessage)
 
 	GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker]
-	GetGameState() IGameState // toGetGameState out of objects package
 }
 
 type BikerAction int
