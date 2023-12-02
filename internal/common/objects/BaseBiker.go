@@ -3,11 +3,13 @@ package objects
 import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
+	"fmt"
 	"math"
 
 	"math/rand"
 
 	baseAgent "github.com/MattSScott/basePlatformSOMAS/BaseAgent"
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -24,19 +26,26 @@ type ResourceAllocationParams struct {
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 
-	DecideAction() BikerAction                                      // ** determines what action the agent is going to take this round. (changeBike or Pedal)
-	DecideForce(direction uuid.UUID)                                // ** defines the vector you pass to the bike: [pedal, brake, turning]
-	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      // ** decide whether to accept or not accept bikers, ranks the ones
-	ChangeBike() uuid.UUID                                          // ** called when biker wants to change bike, it will choose which bike to try and join
-	ProposeDirection() uuid.UUID                                    // ** returns the id of the desired lootbox based on internal strategy
-	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
-	DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
+	DecideGovernance() voting.GovernanceVote
+	DecideAction() BikerAction                                                  // ** determines what action the agent is going to take this round. (changeBike or Pedal)
+	DecideForce(direction uuid.UUID)                                            // ** defines the vector you pass to the bike: [pedal, brake, turning]
+	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool                  // ** decide whether to accept or not accept bikers, ranks the ones
+	ChangeBike() uuid.UUID                                                      // ** called when biker wants to change bike, it will choose which bike to try and join
+	ProposeDirection() uuid.UUID                                                // ** returns the id of the desired lootbox based on internal strategy
+	FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
+	DecideAllocation() voting.IdVoteMap                                         // ** decide the allocation parameters
+	VoteForKickout() map[uuid.UUID]int
+	VoteDictator() voting.IdVoteMap
+	VoteLeader() voting.IdVoteMap
+	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
+	LeadDirection() uuid.UUID
 
-	GetForces() utils.Forces                               // returns forces for current round
-	GetColour() utils.Colour                               // returns the colour of the lootbox that the agent is currently seeking
-	GetLocation() utils.Coordinates                        // gets the agent's location
-	GetBike() uuid.UUID                                    // tells the biker which bike it is on
-	GetEnergyLevel() float64                               // returns the energy level of the agent
+	GetForces() utils.Forces        // returns forces for current round
+	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
+	GetLocation() utils.Coordinates // gets the agent's location
+	GetBike() uuid.UUID             // tells the biker which bike it is on
+	GetEnergyLevel() float64        // returns the energy level of the agent
+	GetPoints() int
 	GetResourceAllocationParams() ResourceAllocationParams // returns set allocation parameters
 	GetBikeStatus() bool                                   // returns whether the biker is on a bike or not
 
@@ -47,7 +56,19 @@ type IBaseBiker interface {
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	UpdateGameState(gameState IGameState)  // sets the gameState field at the beginning of each round
 	ToggleOnBike()                         // called when removing or adding a biker on a bike
-	GetGameState() IGameState              // toGetGameState out of objects package
+
+	GetReputation() map[uuid.UUID]float64 // get reputation value of all other agents
+	QueryReputation(uuid.UUID) float64    // query for reputation value of specific agent with UUID
+	SetReputation(uuid.UUID, float64)     // set reputation value of specific agent with UUID
+
+	HandleKickOffMessage(msg KickOffAgentMessage)
+	HandleReputationMessage(msg ReputationOfAgentMessage)
+	HandleJoiningMessage(msg JoiningAgentMessage)
+	HandleLootboxMessage(msg LootboxMessage)
+	HandleGovernanceMessage(msg GovernanceMessage)
+
+	GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker]
+	GetGameState() IGameState // toGetGameState out of objects package
 }
 
 type BikerAction int
@@ -67,10 +88,15 @@ type BaseBiker struct {
 	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
 	gameState                        IGameState // updated by the server at every round
 	allocationParams                 ResourceAllocationParams
+	reputation                       map[uuid.UUID]float64 // record reputation for other agents in float
 }
 
 func (bb *BaseBiker) GetEnergyLevel() float64 {
 	return bb.energyLevel
+}
+
+func (bb *BaseBiker) GetPoints() int {
+	return bb.points
 }
 
 // the function will be called by the server to:
@@ -81,6 +107,7 @@ func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
+	fmt.Println("regular agent: GetColour: t5.regular.GetColour(): ", bb.soughtColour)
 	return bb.soughtColour
 }
 
@@ -151,7 +178,7 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
-		angle := math.Atan2(deltaX, deltaY)
+		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
 
 		// Default BaseBiker will always
@@ -173,13 +200,21 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 		deltaY := audiPos.Y - currLocation.Y
 
 		// Steer in opposite direction to audi
-		angle := math.Atan2(-deltaX, -deltaY)
+		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
+
+		// Steer in opposite direction to audi
+		var flipAngle float64
+		if normalisedAngle < 0.0 {
+			flipAngle = normalisedAngle + 1.0
+		} else if normalisedAngle > 0.0 {
+			flipAngle = normalisedAngle - 1.0
+		}
 
 		// Default BaseBiker will always
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: normalisedAngle,
+			SteeringForce: flipAngle - bb.gameState.GetMegaBikes()[bb.megaBikeId].GetOrientation(),
 		}
 
 		escapeAudiForces := utils.Forces{
@@ -191,10 +226,18 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 	}
 }
 
-// decide which bike to go to
-// for now it just returns a random uuid
+// decide which bike to go to. the base agent chooses a random bike
 func (bb *BaseBiker) ChangeBike() uuid.UUID {
-	return uuid.New()
+	megaBikes := bb.gameState.GetMegaBikes()
+	i, targetI := 0, rand.Intn(len(megaBikes))
+	// Go doesn't have a sensible way to do this...
+	for id := range megaBikes {
+		if i == targetI {
+			return id
+		}
+		i++
+	}
+	panic("no bikes")
 }
 
 func (bb *BaseBiker) SetBike(bikeId uuid.UUID) {
@@ -248,8 +291,32 @@ func (bb *BaseBiker) GetGameState() IGameState {
 	return bb.gameState
 }
 
-func (bb *BaseBiker) GetMegaBikeId() uuid.UUID {
-	return bb.megaBikeId
+// Returns the other agents on your bike :)
+func (bb *BaseBiker) GetFellowBikers() []IBaseBiker {
+	bikes := bb.gameState.GetMegaBikes()
+	bike := bikes[bb.GetBike()]
+	fellowBikers := bike.GetAgents()
+	return fellowBikers
+}
+
+// GetReputation map from agent, need to check if nil when call this function
+func (bb *BaseBiker) GetReputation() map[uuid.UUID]float64 {
+	return bb.reputation
+}
+
+// QueryReputation of specific agent with given ID, if there is no record for given agentID then return 0
+func (bb *BaseBiker) QueryReputation(agentId uuid.UUID) float64 {
+	if bb.reputation == nil {
+		return 0
+	}
+	return bb.reputation[agentId]
+}
+
+func (bb *BaseBiker) SetReputation(agentId uuid.UUID, reputation float64) {
+	if bb.reputation == nil {
+		bb.reputation = make(map[uuid.UUID]float64)
+	}
+	bb.reputation[agentId] = reputation
 }
 
 // an agent will have to rank the agents that are trying to join and that they will try to
@@ -261,17 +328,187 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 	return decision
 }
 
+// base biker defaults to democracy
+func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
+	governanceRanking := make(voting.GovernanceVote)
+	governanceRanking[utils.Democracy] = 1.0
+	governanceRanking[utils.Dictatorship] = 0.0
+	governanceRanking[utils.Leadership] = 0.0
+	return governanceRanking
+}
+
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
-func (bb *BaseBiker) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
+func (bb *BaseBiker) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	votes := make(voting.LootboxVoteMap)
 	totOptions := len(proposals)
 	normalDist := 1.0 / float64(totOptions)
 	for _, proposal := range proposals {
-		votes[proposal] = normalDist
+		if val, ok := votes[proposal]; ok {
+			votes[proposal] = val + normalDist
+		} else {
+			votes[proposal] = normalDist
+		}
 	}
 	return votes
+}
+
+func (bb *BaseBiker) VoteForKickout() map[uuid.UUID]int {
+	voteResults := make(map[uuid.UUID]int)
+	bikeID := bb.GetBike()
+
+	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if agentID != bb.GetID() {
+			// random votes to other agents
+			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
+		}
+	}
+
+	return voteResults
+}
+
+// defaults to voting for first agent in the list
+func (bb *BaseBiker) VoteDictator() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+}
+
+func (bb *BaseBiker) DictateDirection() uuid.UUID {
+	nearest := bb.nearestLoot()
+	return nearest
+}
+
+// defaults to voting for first agent in the list
+func (bb *BaseBiker) VoteLeader() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+}
+
+func (bb *BaseBiker) LeadDirection() uuid.UUID {
+	nearest := bb.nearestLoot()
+	return nearest
+}
+
+// This function updates all the messages for that agent i.e. both sending and receiving.
+// And returns the new messages from other agents to your agent
+func (bb *BaseBiker) GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker] {
+	// For team's agent add your own logic on chosing when your biker should send messages
+	wantToSendMsg := false
+	if wantToSendMsg {
+		reputationMsg := bb.CreateReputationMessage()
+		kickOffMsg := bb.CreateKickOffMessage()
+		lootboxMsg := bb.CreateLootboxMessage()
+		joiningMsg := bb.CreateJoiningMessage()
+		governceMsg := bb.CreateGoverenceMessage()
+		return []messaging.IMessage[IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg}
+	}
+	return []messaging.IMessage[IBaseBiker]{}
+}
+
+func (bb *BaseBiker) CreateKickOffMessage() KickOffAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return KickOffAgentMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		KickOff:     false,
+	}
+}
+
+func (bb *BaseBiker) CreateReputationMessage() ReputationOfAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return ReputationOfAgentMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		Reputation:  1.0,
+	}
+}
+
+func (bb *BaseBiker) CreateJoiningMessage() JoiningAgentMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return JoiningAgentMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		BikeId:      uuid.Nil,
+	}
+}
+func (bb *BaseBiker) CreateLootboxMessage() LootboxMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return LootboxMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		LootboxId:   uuid.Nil,
+	}
+}
+
+func (bb *BaseBiker) CreateGoverenceMessage() GovernanceMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return GovernanceMessage{
+		BaseMessage:  messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		BikeId:       uuid.Nil,
+		GovernanceId: 0,
+	}
+}
+
+func (bb *BaseBiker) HandleKickOffMessage(msg KickOffAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// kickOff := msg.KickOff
+}
+
+func (bb *BaseBiker) HandleReputationMessage(msg ReputationOfAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// reputation := msg.Reputation
+}
+
+func (bb *BaseBiker) HandleJoiningMessage(msg JoiningAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// bikeId := msg.BikeId
+}
+
+func (bb *BaseBiker) HandleLootboxMessage(msg LootboxMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// lootboxId := msg.LootboxId
+}
+
+func (bb *BaseBiker) HandleGovernanceMessage(msg GovernanceMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// bikeId := msg.BikeId
+	// governanceId := msg.GovernanceId
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP
