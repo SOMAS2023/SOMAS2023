@@ -1,8 +1,9 @@
 package frameworks
 
 import (
+	voting "SOMAS2023/internal/common/voting"
+
 	"github.com/google/uuid"
-	//voting "SOMAS2023/internal/common/voting"
 )
 
 // This map can hold any type of data as the value
@@ -17,4 +18,16 @@ type ScoreType float64
 
 type VoteOnAgentsInput struct {
 	AgentCandidates []uuid.UUID
+}
+
+// Expected to return votes which sum to 1 for some voting types.
+// This function normalises vote map to sum to 1.
+func NormaliseVote(agentScoreMap voting.IdVoteMap, totalScore float64) voting.IdVoteMap {
+	normalisedVoteMap := make(voting.IdVoteMap)
+	// Find the sum of all the scores.
+	for agentId, agentScore := range agentScoreMap {
+		normalisedVoteMap[agentId] = agentScore / totalScore
+	}
+
+	return normalisedVoteMap
 }

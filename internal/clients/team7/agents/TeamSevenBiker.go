@@ -201,3 +201,24 @@ func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uu
 
 	return voteOutput
 }
+
+// Vote on Leader
+// TODO: Uncomment when infrastructure have merged the new voting methods.
+/*
+func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
+	fellowBikers := biker.environmentHandler.GetAgentsOnCurrentBike()
+
+	agentIds := make([]uuid.UUID, len(fellowBikers))
+	for _, fellowBiker := range fellowBikers {
+		agentIds = append(agentIds, fellowBiker.GetID())
+	}
+
+	voteInputs := frameworks.VoteOnAgentsInput{
+		AgentCandidates: agentIds,
+	}
+	voteHandler := frameworks.NewVoteOnLeaderHandler()
+	voteOutput := voteHandler.GetDecision(voteInputs)
+
+	return voteOutput
+}
+*/
