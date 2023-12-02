@@ -14,6 +14,12 @@ const RespawnAtRound = true
 const RoundIterations = 100
 
 /*
+Server Parameters
+*/
+const ReplenishLootBoxes bool = true
+const ReplenishMegaBikes bool = true
+
+/*
 Physics Parameters
 */
 const MassBike float64 = 1.0
@@ -36,3 +42,26 @@ const LeadershipDemocracyPenalty float64 = 0.025  // amount of energy lost per v
 Resources - Points and Energy
 */
 const PointsFromSameColouredLootBox = 5.0
+
+/*
+Audi Behavior
+*/
+const AudiTargetsEmptyMegaBike bool = false
+const AudiOnlyTargetsStationaryMegaBike bool = true // if false, targeting slowest
+const AudiRemovesMegaBike bool = false
+
+/*
+Voting Method Choice
+*/
+type voteMethods int
+
+const (
+	PLURALITY voteMethods = iota
+	RUNOFF
+	BORDACOUNT
+	INSTANTRUNOFF
+	APPROVAL
+	COPELANDSCORING
+)
+
+const VoteAction voteMethods = PLURALITY

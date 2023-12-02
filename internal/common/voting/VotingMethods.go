@@ -13,24 +13,37 @@ type kv struct {
 	Value float64
 }
 
-func Plurality(voteList []map[uuid.UUID]float64) uuid.UUID {
+func Plurality(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		Plurality:
 			Each voter selects one candidate and the candidate with the most first-placed votes is the winner.
 	*/
+
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
 	for _, preference := range voteList {
 		var maxPreference float64
 		var firstLootBoxChoice uuid.UUID
-		for lootBox, key := range preference {
-			if key > maxPreference {
+		for lootBox, value := range preference {
+			if value > maxPreference {
 				firstLootBoxChoice = lootBox
-				maxPreference = key
+				maxPreference = value
 			}
 		}
-		voteCount[firstLootBoxChoice]++
+		voteCount[firstLootBoxChoice] += maxPreference
 	}
 
 	// final step: we need to find the winner with highest count number in map.
@@ -47,13 +60,25 @@ func Plurality(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func Runoff(voteList []map[uuid.UUID]float64) uuid.UUID {
+func Runoff(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		Runoff:
 			1st round: 	each voter selects one candidate, and the two candidates with most first-placed votes are identified.
 						If either already has a majority, this candidate is declared the winner.
 			2nd round: 	each voter selects one candidate, the candidate with most votes now is the winner.
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
@@ -62,13 +87,13 @@ func Runoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 	for _, preference := range voteList {
 		var maxPreference float64
 		var firstLootBoxChoice uuid.UUID
-		for lootBox, key := range preference {
-			if key > maxPreference {
+		for lootBox, value := range preference {
+			if value > maxPreference {
 				firstLootBoxChoice = lootBox
-				maxPreference = key
+				maxPreference = value
 			}
 		}
-		voteCount[firstLootBoxChoice]++
+		voteCount[firstLootBoxChoice] += maxPreference
 	}
 
 	// find the two candidates with most first-placed votes
@@ -92,12 +117,12 @@ func Runoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 		return winner1
 	} else {
 		// ----- second round -----
-		voteCount := make(map[uuid.UUID]int)
+		voteCount := make(map[uuid.UUID]float64)
 		for _, preference := range voteList {
 			if preference[winner1] > preference[winner2] {
-				voteCount[winner1]++
+				voteCount[winner1] += preference[winner1]
 			} else {
-				voteCount[winner2]++
+				voteCount[winner2] += preference[winner2]
 			}
 		}
 		if voteCount[winner1] > voteCount[winner2] {
@@ -110,25 +135,37 @@ func Runoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func BordaCount(voteList []map[uuid.UUID]float64) uuid.UUID {
+func BordaCount(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		BordaCount:
 			Each voter rank order all the candidates. With n candidates being ranked k scores (n-k)+1 Borda points.
 			The candidate with the highest Borda Score is the winner
 	*/
+	//initialise the votes with weights
+	voteListMap := make(map[uuid.UUID]map[uuid.UUID]float64)
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteListMap[agent] = weightedvotes
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
 	// initialise the map with all candidates
-	for _, preference := range voteList {
+	for _, preference := range voteListMap {
 		for key := range preference {
 			voteCount[key] = 0
 		}
 	}
 
 	// covert the unodered map into ordered list
-	var ss [][]kv
-	for _, preference := range voteList {
+	ss := make(map[uuid.UUID][]kv)
+	for agent, preference := range voteListMap {
 		var s []kv
 		for k, v := range preference {
 			// ignore the lootbox if value is 0
@@ -141,15 +178,15 @@ func BordaCount(voteList []map[uuid.UUID]float64) uuid.UUID {
 			// in the order from large to small
 			return s[i].Value > s[j].Value
 		})
-		ss = append(ss, s)
+		ss[agent] = s
 	}
 
 	// calculate the Borda score for each candidates
-	for _, sortedList := range ss {
+	for agent, sortedList := range ss {
 		usedKeys := make(map[uuid.UUID]bool)
 		for i, kv := range sortedList {
 			score := float64(len(voteCount)) - float64(i) + 1
-			voteCount[kv.Key] += score
+			voteCount[kv.Key] += score * voteWeight[agent]
 			usedKeys[kv.Key] = true
 		}
 
@@ -175,12 +212,24 @@ func BordaCount(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func InstantRunoff(voteList []map[uuid.UUID]float64) uuid.UUID {
+func InstantRunoff(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		InstantRunoff:
 			Each voter rank orders all candidates, and the candidate with the least number of first-place votes is eliminate.
 			This is repeated until only one candidate remains
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	eliminateVote := make(map[uuid.UUID]bool)
 	var winner uuid.UUID
@@ -209,7 +258,7 @@ func InstantRunoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 					firstLootBoxChoice = key
 				}
 			}
-			voteCount[firstLootBoxChoice]++
+			voteCount[firstLootBoxChoice] += maxScore
 		}
 
 		// eliminate the lootbox with least votes
@@ -233,24 +282,36 @@ func InstantRunoff(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func Approval(voteList []map[uuid.UUID]float64) uuid.UUID {
+func Approval(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		Approval:
 			A ballot represents not a linear rank order of decreasing preference,
 			but rather represents the set of candidates who are 'equally acceptable' to the voter
 	*/
+	//initialise the votes with weights
+	var voteList []map[uuid.UUID]float64
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteList = append(voteList, weightedvotes)
+	}
+
+	// start
 	voteCount := make(map[uuid.UUID]float64)
 	var winner uuid.UUID
 
 	for _, preference := range voteList {
 		for key, value := range preference {
 			if value > 0 {
-				voteCount[key]++
+				voteCount[key] += value
 			}
 		}
 	}
 
-	// find the lootbox with
+	// find the lootbox with max score
 	var maxVotes float64
 
 	for lootBox, votes := range voteCount {
@@ -263,18 +324,29 @@ func Approval(voteList []map[uuid.UUID]float64) uuid.UUID {
 	return winner
 }
 
-func CopelandScoring(voteList []map[uuid.UUID]float64) uuid.UUID {
+func CopelandScoring(voteMap map[uuid.UUID]map[uuid.UUID]float64, voteWeight map[uuid.UUID]float64) uuid.UUID {
 	/*
 		CopelandScoring:
 			Each voter submits a ballot with a linear rank order.
 			A win-loss record, the Copeland Score, is calculated for each candidate.
 	*/
+	//initialise the votes with weights
+	voteListMap := make(map[uuid.UUID]map[uuid.UUID]float64)
+	for agent, votes := range voteMap {
+		weight := voteWeight[agent]
+		weightedvotes := make(map[uuid.UUID]float64)
+		for key, value := range votes {
+			weightedvotes[key] = value * weight
+		}
+		voteListMap[agent] = weightedvotes
+	}
 
+	// start
 	// the map to store the winning score for each lootbox
-	scores := make(map[uuid.UUID]int)
+	scores := make(map[uuid.UUID]float64)
 
 	// iterate the voting
-	for _, vote := range voteList {
+	for agent, vote := range voteListMap {
 		for candidate1, score1 := range vote {
 			for candidate2, score2 := range vote {
 				// do not compare with itself
@@ -284,18 +356,18 @@ func CopelandScoring(voteList []map[uuid.UUID]float64) uuid.UUID {
 
 				// update the score of each lootbox
 				if score1 > score2 {
-					scores[candidate1]++
-					scores[candidate2]--
+					scores[candidate1] += voteWeight[agent]
+					scores[candidate2] -= voteWeight[agent]
 				} else if score1 < score2 {
-					scores[candidate1]--
-					scores[candidate2]++
+					scores[candidate1] -= voteWeight[agent]
+					scores[candidate2] += voteWeight[agent]
 				}
 			}
 		}
 	}
 
 	// find the lootbox with the highest score
-	var maxScore int
+	var maxScore float64
 	var maxCandidate uuid.UUID
 	for candidate, score := range scores {
 		if score > maxScore || maxCandidate == uuid.Nil {

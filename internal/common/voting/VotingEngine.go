@@ -113,24 +113,43 @@ func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) 
 	return aggregateVotes, nil
 }
 
-// returns the winner accoring to chosen voting strategy (assumes all the maps contain a voting between 0-1
-// for each option, and that all the votings sum to 1)
-func WinnerFromDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) uuid.UUID {
-	// TODO handle the error
-	aggregateVotes, _ := CumulativeDist(voters, weights)
-
-	var randomWinner, winner uuid.UUID
-	maxVote := 0.0
-	for id, vote := range aggregateVotes {
-		randomWinner = id
-		if vote > maxVote {
-			maxVote = vote
-			winner = id
+// return the votesMap
+func GetVotesMap(voters map[uuid.UUID]IVoter) (map[uuid.UUID]map[uuid.UUID]float64, error) {
+	if len(voters) == 0 {
+		panic("no votes provided")
+	}
+	// Vote checks for each voter
+	VotesOfAgents := make(map[uuid.UUID]map[uuid.UUID]float64)
+	for agentID, IVoter := range voters {
+		if math.Abs(SumOfValues(IVoter)-1.0) > utils.Epsilon {
+			return nil, errors.New("distribution doesn't sum to 1")
 		}
+		votes := IVoter.GetVotes()
+		VotesOfAgents[agentID] = votes
 	}
 
-	if winner == uuid.Nil {
-		winner = randomWinner
+	return VotesOfAgents, nil
+}
+
+// returns the winner accoring to chosen voting strategy (assumes all the maps contain a voting between 0-1
+// for each option, and that all the votings sum to 1)
+func WinnerFromDist(voters map[uuid.UUID]IVoter, voteWeight map[uuid.UUID]float64) uuid.UUID {
+	// TODO handle the error
+	VotesOfAgents, _ := GetVotesMap(voters)
+	var winner uuid.UUID
+	switch utils.VoteAction {
+	case utils.PLURALITY:
+		winner = Plurality(VotesOfAgents, voteWeight)
+	case utils.RUNOFF:
+		winner = Runoff(VotesOfAgents, voteWeight)
+	case utils.BORDACOUNT:
+		winner = BordaCount(VotesOfAgents, voteWeight)
+	case utils.INSTANTRUNOFF:
+		winner = InstantRunoff(VotesOfAgents, voteWeight)
+	case utils.APPROVAL:
+		winner = Approval(VotesOfAgents, voteWeight)
+	case utils.COPELANDSCORING:
+		winner = CopelandScoring(VotesOfAgents, voteWeight)
 	}
 	// TODO call group 8 voting function
 	return winner

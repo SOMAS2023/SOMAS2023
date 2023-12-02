@@ -26,10 +26,12 @@ type IBaseBikerServer interface {
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
 	RunRulerAction(bike objects.IMegaBike) uuid.UUID
 	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID
-	GetLeavingDecisions()
+	NewGameStateDump() GameStateDump
+	GetLeavingDecisions(gameState objects.IGameState)
 	HandleKickoutProcess()
 	ProcessJoiningRequests()
 	RunActionProcess()
+	AudiCollisionCheck()
 }
 
 type Server struct {
