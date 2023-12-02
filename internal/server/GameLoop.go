@@ -213,36 +213,41 @@ func (s *Server) ProcessJoiningRequests() {
 }
 
 func (s *Server) RunActionProcess() {
-	// vote on governance
 
 	for _, bike := range s.GetMegaBikes() {
 		agents := bike.GetAgents()
-		votes := make([]voting.GovernanceVote, len(agents))
-		if len(agents) != 0 {
-			for i, agent := range agents {
-				votes[i] = agent.DecideGovernance()
-			}
 
-			// get the direction for this round (either the voted on or what's decided by the leader/ dictator)
-			// for now it's actually just the elected lootbox (will change to accomodate for other proposal types)
-			var direction uuid.UUID
-			electedGovernance, _ := voting.WinnerFromGovernance(votes)
-			bike.SetGovernance(electedGovernance)
-			switch electedGovernance {
-			case utils.Democracy:
-				direction = s.RunDemocraticAction(bike, electedGovernance, nil)
-			case utils.Dictatorship:
-				direction = s.RunRulerAction(bike, electedGovernance)
-			case utils.Leadership:
-				direction = s.RunRulerAction(bike, electedGovernance)
-			}
-
+		// get the direction for this round (either the voted on or what's decided by the leader/ dictator)
+		// for now it's actually just the elected lootbox (will change to accomodate for other proposal types)
+		var direction uuid.UUID
+		electedGovernance := bike.GetGovernance()
+		switch electedGovernance {
+		case utils.Democracy:
+			// make map of weights of 1 for all agents on bike
+			weights := make(map[uuid.UUID]float64)
 			for _, agent := range agents {
-				agent.DecideForce(direction)
-				// deplete energy
-				energyLost := agent.GetForces().Pedal * utils.MovingDepletion
-				agent.UpdateEnergyLevel(-energyLost)
+				weights[agent.GetID()] = 1.0
 			}
+			direction = s.RunDemocraticAction(bike, weights)
+			for _, agent := range agents {
+				agent.UpdateEnergyLevel(-utils.DeliberativeDemocracyPenalty)
+			}
+		case utils.Leadership:
+			// get weights from leader
+			leader := s.GetAgentMap()[bike.GetRuler()]
+			weights := leader.DecideDirectionWeights()
+			direction = s.RunDemocraticAction(bike, weights)
+			for _, agent := range agents {
+				agent.UpdateEnergyLevel(-utils.LeadershipDemocracyPenalty)
+			}
+		case utils.Dictatorship:
+		}
+
+		for _, agent := range agents {
+			agent.DecideForce(direction)
+			// deplete energy
+			energyLost := agent.GetForces().Pedal * utils.MovingDepletion
+			agent.UpdateEnergyLevel(-energyLost)
 		}
 	}
 }
@@ -265,7 +270,7 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 	po.SetPhysicalState(finalState)
 }
 
-func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UUID {
+func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID {
 	// get overall winner direction using chosen voting strategy
 
 	// this allows to get a slice of the interface from that of the specific type
@@ -276,6 +281,7 @@ func (s *Server) GetWinningDirection(finalVotes []voting.LootboxVoteMap) uuid.UU
 		IfinalVotes[i] = v
 	}
 
+	// TODO integrate voting functions from group 8
 	return voting.WinnerFromDist(IfinalVotes)
 }
 

@@ -39,10 +39,11 @@ type IBaseBiker interface {
 	VoteLeader() voting.IdVoteMap
 	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
 	LeadDirection() uuid.UUID
-	LeaderAgentWeights() map[uuid.UUID]float64   // ** called only when the agent is the leader
-	DecideKickoutWeights() map[uuid.UUID]float64 // ** decide weights for kickout voting (leader)
-	DecideKickOut() []uuid.UUID                  // ** decide which agents to kick out (dictator)
-	DecideJoiningWeights() map[uuid.UUID]float64 // ** decide weights for kickout voting (leader)
+	LeaderAgentWeights() map[uuid.UUID]float64     // ** called only when the agent is the leader
+	DecideKickoutWeights() map[uuid.UUID]float64   // ** decide weights for kickout voting (leader)
+	DecideKickOut() []uuid.UUID                    // ** decide which agents to kick out (dictator)
+	DecideJoiningWeights() map[uuid.UUID]float64   // ** decide weights for kickout voting (leader)
+	DecideDirectionWeights() map[uuid.UUID]float64 // ** decide weights for kickout voting (leader)
 
 	GetForces() utils.Forces        // returns forces for current round
 	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
@@ -438,6 +439,15 @@ func (bb *BaseBiker) DecideKickoutWeights() map[uuid.UUID]float64 {
 
 // defaults to an equal distribution over all agents
 func (bb *BaseBiker) DecideJoiningWeights() map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	for id, _ := range weights {
+		weights[id] = 1.0
+	}
+	return weights
+}
+
+// defaults to an equal distribution over all agents
+func (bb *BaseBiker) DecideDirectionWeights() map[uuid.UUID]float64 {
 	weights := make(map[uuid.UUID]float64)
 	for id, _ := range weights {
 		weights[id] = 1.0

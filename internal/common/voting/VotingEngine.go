@@ -120,7 +120,7 @@ func WinnerFromDist(voters []IVoter) uuid.UUID {
 	if winner == uuid.Nil {
 		winner = randomWinner
 	}
-
+	// TODO call group 8 voting function
 	return winner
 }
 
