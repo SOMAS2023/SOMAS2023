@@ -1,7 +1,9 @@
 package team2
 
 import (
+	"SOMAS2023/internal/common/utils"
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -49,10 +51,50 @@ func (a *AgentTwo) updateTrustworthiness(agentID uuid.UUID, actualAction, expect
 
 }
 
-// func (a *AgentTwo) updateInstitution(agentID uuid.UUID) float64 {
+// Get the direction to the voted lootbox
+func (a *AgentTwo) GetVotedLootboxForces(lootboxID uuid.UUID) utils.Forces {
+	lootbox := a.gameState.GetLootBoxes()[lootboxID]
+	lootboxPositionX, lootboxPositionY := lootbox.GetPosition().X, lootbox.GetPosition().Y
+	agentPositionX, agentPositionY := a.GetLocation().X, a.GetLocation().Y
+	deltaX := lootboxPositionX - agentPositionX
+	deltaY := lootboxPositionY - agentPositionY
+	angle := math.Atan2(deltaY, deltaX)
+	normalisedAngle := angle / math.Pi
+	turningDecision := utils.TurningDecision{
+		SteerBike:     true,
+		SteeringForce: normalisedAngle - a.gameState.GetMegaBikes()[a.GetBike()].GetOrientation(),
+	}
+	return utils.Forces{
+		Pedal:   utils.BikerMaxForce,
+		Brake:   0.0,
+		Turning: turningDecision,
+	}
+}
 
-// 	// return 0.5 // This is just a placeholder value
-// }
+// Called by Events to obtain Event Value for update Institution
+// Assume what they broadcast is the truth
+// TODO: Obtain actual action performed from messaging
+// 1. Rule Adhereance (Follow leader biker/ dictator)
+func (a *AgentTwo) RuleAdhereanceValue(agentID uuid.UUID, expectedAction, actualAction utils.Forces) float64 {
+
+	actualVector := forcesToVectorConversion(actualAction)
+	expectedVector := forcesToVectorConversion(expectedAction)
+	similarity := cosineSimilarity(actualVector, expectedVector)
+
+	forceApplied := actualAction.Pedal
+	return similarity * forceApplied
+}
+
+// Assume institution rules is only broadcasted within the same bike
+// Events to update Institution
+// 1. Rule Adhereance (Follow leader biker/ dictator )
+// 2. Voting
+// 3. Kicked out of bike
+// 4. Accepted to bike
+// 5. Role Assignment (Voted to be leader/ Dictator)
+func (a *AgentTwo) updateInstitution(agentID uuid.UUID, weight float64, EventValue float64) {
+	a.Institution[agentID] += EventValue * weight
+}
 
 // func (a *AgentTwo) updateNetwork(agentID uuid.UUID) float64 {
 // 	// return 0.5 // This is just a placeholder value
