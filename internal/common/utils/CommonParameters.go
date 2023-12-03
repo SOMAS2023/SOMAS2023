@@ -8,9 +8,9 @@ const GridWidth float64 = 75.0
 const CollisionThreshold float64 = 7.0
 const Epsilon float64 = 0.01 // tolerance for FP rounding and checking if == 1.0
 const BikersOnBike = 8
-const ReplenishEnergyAtRound = true
-const ResetPointsAtRound = true
-const RespawnAtRound = true
+const ReplenishEnergyEveryRound = true
+const ResetPointsEveryRound = true
+const RespawnEveryRound = true
 const RoundIterations = 100
 
 /*

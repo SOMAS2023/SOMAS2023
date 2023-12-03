@@ -96,11 +96,7 @@ func (s *Server) HandleKickoutProcess() {
 		// perform kickout
 		leaderKickedOut := false
 		for _, agentID := range agentsVotes {
-			bike.RemoveAgent(agentID)
-			delete(s.megaBikeRiders, agentID)
-			if agent, ok := s.GetAgentMap()[agentID]; ok {
-				agent.ToggleOnBike()
-			}
+			s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 			// if the leader was kicked out vote for a new one
 			if agentID == bike.GetRuler() {
 				leaderKickedOut = true
@@ -130,15 +126,7 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) {
 
 			// the request is handled at the beginning of the next round, so the moving
 			// will only be finalised then
-			agent.SetBike(agent.ChangeBike())
-			agent.ToggleOnBike()
-
-			// the biker needs to be removed from the current bike as well
-			// it will be added to the desired one (if accepted) at the beginning of next loop
-			if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
-				s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
-				delete(s.megaBikeRiders, agent.GetID())
-			}
+			s.RemoveAgentFromBike(agent)
 		default:
 			panic("agent decided invalid action")
 		}
@@ -157,8 +145,7 @@ func (s *Server) ProcessJoiningRequests() {
 			for i, pendingAgent := range pendingAgents {
 				if i <= utils.BikersOnBike {
 					acceptedAgent := s.GetAgentMap()[pendingAgent]
-					acceptedAgent.ToggleOnBike()
-					s.SetBikerBike(acceptedAgent, bikeID)
+					s.AddAgentToBike(acceptedAgent)
 				} else {
 					break
 				}
@@ -213,8 +200,7 @@ func (s *Server) ProcessJoiningRequests() {
 			for i := 0; i < min(emptySpaces, len(acceptedRanked)); i++ {
 				accepted := acceptedRanked[i]
 				acceptedAgent := s.GetAgentMap()[accepted]
-				acceptedAgent.ToggleOnBike()
-				s.SetBikerBike(acceptedAgent, bikeID)
+				s.AddAgentToBike(acceptedAgent)
 			}
 		}
 	}

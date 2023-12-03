@@ -35,14 +35,14 @@ func (s *Server) ResetGameState() {
 	}
 
 	// respawn people who died in previous round (conditional)
-	if utils.RespawnAtRound {
+	if utils.RespawnEveryRound && utils.ReplenishEnergyEveryRound {
 		for _, agent := range s.deadAgents {
 			s.AddAgent(agent)
 		}
 	}
 
 	// replenish energy (conditional)
-	if utils.ReplenishEnergyAtRound {
+	if utils.ReplenishEnergyEveryRound {
 		for _, agent := range s.GetAgentMap() {
 			agent.UpdateEnergyLevel(1.0)
 		}
@@ -52,7 +52,7 @@ func (s *Server) ResetGameState() {
 	clear(s.deadAgents)
 
 	// zero the points (conditional)
-	if utils.ResetPointsAtRound {
+	if utils.ResetPointsEveryRound {
 		for _, agent := range s.GetAgentMap() {
 			agent.ResetPoints()
 		}

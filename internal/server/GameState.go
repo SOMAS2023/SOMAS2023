@@ -19,18 +19,6 @@ func (s *Server) GetAudi() objects.IAudi {
 	return s.audi
 }
 
-func (s *Server) SetBikerBike(biker objects.IBaseBiker, bikeId uuid.UUID) {
-	// Remove the agent from the old bike, if it was on one
-	if oldBikeId, ok := s.megaBikeRiders[biker.GetID()]; ok {
-		s.megaBikes[oldBikeId].RemoveAgent(biker.GetID())
-	}
-
-	// Add the agent to the new bike
-	s.megaBikes[bikeId].AddAgent(biker)
-	s.megaBikeRiders[biker.GetID()] = bikeId
-	biker.SetBike(bikeId)
-}
-
 // get a map of megaBikeIDs mapping to the ids of all Bikers that are trying to join it
 func (s *Server) GetJoiningRequests() map[uuid.UUID][]uuid.UUID {
 	// iterate over all agents, if their onBike is false add to the map their id in correspondance of that of their desired bike

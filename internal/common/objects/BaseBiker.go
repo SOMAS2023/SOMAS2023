@@ -34,7 +34,6 @@ type IBaseBiker interface {
 	DecideDictatorAllocation() voting.IdVoteMap // ** decide the allocation (dictator)
 
 	// leader functions
-	LeadDirection() uuid.UUID
 	DecideWeights(action utils.Action) map[uuid.UUID]float64 // decide on weights for various actions
 
 	GetForces() utils.Forces        // returns forces for current round
@@ -397,16 +396,12 @@ func (bb *BaseBiker) VoteLeader() voting.IdVoteMap {
 	return votes
 }
 
-func (bb *BaseBiker) LeadDirection() uuid.UUID {
-	nearest := bb.nearestLoot()
-	return nearest
-}
-
 // defaults to an equal distribution over all agents for all actions
 func (bb *BaseBiker) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	weights := make(map[uuid.UUID]float64)
-	for id, _ := range weights {
-		weights[id] = 1.0
+	agents := bb.GetFellowBikers()
+	for _, agent := range agents {
+		weights[agent.GetID()] = 1.0
 	}
 	return weights
 }

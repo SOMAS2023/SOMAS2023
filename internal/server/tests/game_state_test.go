@@ -69,13 +69,14 @@ func TestGetRandomID(t *testing.T) {
 	fmt.Printf("\nGet random ID passed \n")
 }
 
-func TestSetBikerBike(t *testing.T) {
+func TestAddAgentToBike(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	bike := s.GetRandomBikeId()
 	var changedAgent uuid.UUID
 	for agentID, agent := range s.GetAgentMap() {
-		s.SetBikerBike(agent, bike)
+		agent.SetBike(bike)
+		s.AddAgentToBike(agent)
 		changedAgent = agentID
 		break
 	}
