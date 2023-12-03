@@ -4,8 +4,9 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/server"
 	"fmt"
-	"github.com/google/uuid"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestAudiCollisionProcess(t *testing.T) {
