@@ -8,6 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
+func avgComponentValue(component map[uuid.UUID]float64) float64 {
+	var sum float64
+	for _, value := range component {
+		sum += value
+	}
+	return sum / float64(len(component))
+}
+
+//////
+/// Reputation
+//////
+
 // TODO: function CalculateSocialCapital
 func (a *AgentTwo) CalculateSocialCapital() {
 	// Implement this method
@@ -53,6 +65,10 @@ func (a *AgentTwo) updateReputation(agentID uuid.UUID, ourDesiredLootbox uuid.UU
 	// We retain a moving average of their reputation to not drastically make a change
 	// If they are the same, we increase their reputation
 
+	if _, ok := a.Reputation[agentID]; !ok {
+		a.Reputation[agentID] = avgComponentValue(a.Reputation)
+	}
+
 	if ourDesiredLootbox == theirDesiredLootbox {
 		// If they are the same, we increase their reputation
 		a.Reputation[agentID] = (a.Reputation[agentID]*float64(a.GameIterations) + 1) / (float64(a.GameIterations) + 1)
@@ -68,11 +84,11 @@ func (a *AgentTwo) updateReputation(agentID uuid.UUID, ourDesiredLootbox uuid.UU
 /// Networks
 /// ///
 
-func (a *AgentTwo) UpdateSocNetAgent(agentId uuid.UUID, amt float64, weight float64) {
-	if _, ok := a.Network[agentId]; !ok {
-		a.Network[agentId] = 0.0
+func (a *AgentTwo) UpdateSocNetAgent(agentID uuid.UUID, amt float64, weight float64) {
+	if _, ok := a.Network[agentID]; !ok {
+		a.Network[agentID] = avgComponentValue(a.Network)
 	}
-	a.Network[agentId] += amt * weight
+	a.Network[agentID] += amt * weight
 }
 
 //////
@@ -121,7 +137,11 @@ func (a *AgentTwo) RuleAdhereanceValue(agentID uuid.UUID, expectedAction, actual
 // 4. Accepted to bike
 // 5. Role Assignment (Voted to be leader/ Dictator)
 func (a *AgentTwo) updateInstitution(agentID uuid.UUID, weight float64, EventValue float64) {
+	if _, ok := a.Institution[agentID]; !ok {
+		a.Institution[agentID] = avgComponentValue(a.Institution)
+	}
 	a.Institution[agentID] += EventValue * weight
+	// Add failsafe if agent doesn't exist in institution map
 }
 
 // // func (a *AgentTwo) updateInstitution(agentID uuid.UUID) float64 {
