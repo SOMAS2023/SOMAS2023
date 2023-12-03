@@ -27,8 +27,7 @@ func TestCalculateSocialCapital(t *testing.T) {
 
 	agent.CalculateSocialCapital()
 
-	expectedSocialCapital := TrustWeight*0.8 + InstitutionWeight*0.3 + NetworkWeight*0.5
-	assert.Equal(t, expectedSocialCapital, agent.SocialCapital[testAgentID])
+	assert.Equal(t, 2.0, agent.SocialCapital[testAgentID]) // 2 due to min/max scaling.
 }
 
 func TestForcesToVectorConversion(t *testing.T) {
