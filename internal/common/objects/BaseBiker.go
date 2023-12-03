@@ -62,6 +62,7 @@ type IBaseBiker interface {
 	HandleJoiningMessage(msg JoiningAgentMessage)
 	HandleLootboxMessage(msg LootboxMessage)
 	HandleGovernanceMessage(msg GovernanceMessage)
+	HandleForcesMessage(msg ForcesMessage)
 
 	GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker]
 }
@@ -434,7 +435,8 @@ func (bb *BaseBiker) GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBike
 		lootboxMsg := bb.CreateLootboxMessage()
 		joiningMsg := bb.CreateJoiningMessage()
 		governceMsg := bb.CreateGoverenceMessage()
-		return []messaging.IMessage[IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg}
+		forcesMsg := bb.CreateForcesMessage()
+		return []messaging.IMessage[IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg}
 	}
 	return []messaging.IMessage[IBaseBiker]{}
 }
@@ -487,6 +489,23 @@ func (bb *BaseBiker) CreateGoverenceMessage() GovernanceMessage {
 	}
 }
 
+func (bb *BaseBiker) CreateForcesMessage() ForcesMessage {
+	// Currently this returns a default message which sends to all bikers on the biker agent's bike
+	// For team's agent, add your own logic to communicate with other agents
+	return ForcesMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		AgentId:     uuid.Nil,
+		AgentForces: utils.Forces{
+			Pedal: 0.0,
+			Brake: 0.0,
+			Turning: utils.TurningDecision{
+				SteerBike:     false,
+				SteeringForce: 0.0,
+			},
+		},
+	}
+}
+
 func (bb *BaseBiker) HandleKickOffMessage(msg KickOffAgentMessage) {
 	// Team's agent should implement logic for handling other biker messages that were sent to them.
 
@@ -524,6 +543,15 @@ func (bb *BaseBiker) HandleGovernanceMessage(msg GovernanceMessage) {
 	// sender := msg.BaseMessage.GetSender()
 	// bikeId := msg.BikeId
 	// governanceId := msg.GovernanceId
+}
+
+func (bb *BaseBiker) HandleForcesMessage(msg ForcesMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// agentForces := msg.AgentForces
+
 }
 
 // this function is going to be called by the server to instantiate bikers in the MVP

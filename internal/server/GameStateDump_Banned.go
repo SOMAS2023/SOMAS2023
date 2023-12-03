@@ -141,6 +141,10 @@ func (a AgentDump) HandleKickOffMessage(msg objects.KickOffAgentMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 
+func (a AgentDump) HandleForcesMessage(msg objects.ForcesMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
 func (a AgentDump) DecideDictatorAllocation() voting.IdVoteMap {
 	panic(bannedFunctionErrorMessage)
 }
