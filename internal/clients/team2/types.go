@@ -16,6 +16,8 @@ const (
 
 const (
 	SocialEventWeight_AgentSentMsg = 1
+
+	SocialEventValue_AgentSentMsg = 1
 )
 
 // Constants related to the calculation of Institution
