@@ -45,7 +45,7 @@ func TestGetJoiningRequests(t *testing.T) {
 	}
 
 	// 3. check that joining requests reflect the previous actions
-	bikeRequests := s.GetJoiningRequests()
+	bikeRequests := s.GetJoiningRequests(make([]uuid.UUID, 0))
 	if len(bikeRequests) != len(requests) {
 		t.Error("bike requests processed incorrectly: empty")
 	}

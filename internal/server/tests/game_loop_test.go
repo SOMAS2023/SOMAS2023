@@ -101,7 +101,7 @@ func TestProcessJoiningRequests(t *testing.T) {
 	// check that all of them are now on bikes
 	// check that there are no bikers left with on bike = false
 
-	s.ProcessJoiningRequests()
+	s.ProcessJoiningRequests(make([]uuid.UUID, 0))
 	for bikeID, agents := range requests {
 		bike := s.GetMegaBikes()[bikeID]
 		for _, agent := range agents {

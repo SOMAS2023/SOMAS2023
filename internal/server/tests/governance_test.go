@@ -69,7 +69,7 @@ func TestRunRulerActionDictator(t *testing.T) {
 			// make them vote for the dictator (assume that function works properly)
 			// get the dictator id (or check what it should be given the MVP strategy, this must be deterministic though)
 			ruler := s.RulerElection(agents, utils.Dictatorship)
-			direction := s.RunRulerAction(bike, utils.Dictatorship)
+			direction := s.RunRulerAction(bike)
 			// set the force of the dictator
 			// check that the function works for it
 
@@ -103,7 +103,7 @@ func TestRunRulerActionLeader(t *testing.T) {
 			// make them vote for the dictator (assume that function works properly)
 			// get the dictator id (or check what it should be given the MVP strategy, this must be deterministic though)
 			ruler := s.RulerElection(agents, utils.Leadership)
-			direction := s.RunRulerAction(bike, utils.Leadership)
+			direction := s.RunRulerAction(bike)
 			// set the force of the dictator
 			// check that the function works for it
 
@@ -134,7 +134,11 @@ func TestRunDemocratingAction(t *testing.T) {
 		agents := bike.GetAgents()
 		if len(agents) != 0 {
 
-			direction := s.RunDemocraticAction(bike)
+			weights := make(map[uuid.UUID]float64)
+			for _, agent := range agents {
+				weights[agent.GetID()] = 1.0
+			}
+			direction := s.RunDemocraticAction(bike, weights)
 
 			_, exists := s.GetLootBoxes()[direction]
 			if !exists {
