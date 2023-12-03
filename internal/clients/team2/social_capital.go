@@ -29,7 +29,7 @@ func (a *AgentTwo) CalculateSocialCapital() {
 		institution := normInstitution[agentID]
 		reputation := normReputation[agentID]
 
-		newSocialCapital := TrustWeight*reputation + InstitutionWeight*institution + NetworkWeight*network
+		newSocialCapital := ReputationWeight*reputation + InstitutionWeight*institution + NetworkWeight*network
 
 		// if the current socialCapital is smaller than the previous socialCapital AND the forgiveness counter is less than or equal to 3, then we increase the forgiveness counter
 		if a.SocialCapital[agentID] > newSocialCapital && a.forgivenessCounter <= 3 { // If they were trustworthy in prev rounds, we feel remorse and we forgive them
@@ -103,7 +103,7 @@ func (a *AgentTwo) GetVotedLootboxForces(lootboxID uuid.UUID) utils.Forces {
 // Assume what they broadcast is the truth
 // TODO: Obtain actual action performed from messaging
 // 1. Rule Adhereance (Follow leader biker/ dictator)
-func (a *AgentTwo) RuleAdhereanceValue(agentID uuid.UUID, expectedAction, actualAction utils.Forces) float64 {
+func (a *AgentTwo) RuleAdherenceValue(agentID uuid.UUID, expectedAction, actualAction utils.Forces) float64 {
 
 	actualVector := forcesToVectorConversion(actualAction)
 	expectedVector := forcesToVectorConversion(expectedAction)

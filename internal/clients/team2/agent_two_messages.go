@@ -53,7 +53,7 @@ func (a *AgentTwo) HandleForcesMessage(msg obj.ForcesMessage) {
 	optimalLootbox := a.votedDirection
 	optimalForces := a.GetVotedLootboxForces(optimalLootbox)
 
-	EventValue := a.RuleAdhereanceValue(agentId, optimalForces, agentForces)
+	EventValue := a.RuleAdherenceValue(agentId, optimalForces, agentForces)
 
 	a.UpdateSocNetAgent(agentId, 1, SocialEventWeight_AgentSentMsg)
 	a.updateInstitution(agentId, InstitutionEventWeight_Adhereance, EventValue)
