@@ -20,15 +20,15 @@ type IBaseBikerServer interface {
 	GetMegaBikes() map[uuid.UUID]objects.IMegaBike
 	GetLootBoxes() map[uuid.UUID]objects.ILootBox
 	GetAudi() objects.IAudi
-	GetJoiningRequests() map[uuid.UUID][]uuid.UUID
+	GetJoiningRequests([]uuid.UUID) map[uuid.UUID][]uuid.UUID
 	GetRandomBikeId() uuid.UUID
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
 	RunRulerAction(bike objects.IMegaBike) uuid.UUID
 	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID
 	NewGameStateDump() GameStateDump
-	GetLeavingDecisions(gameState objects.IGameState)
-	HandleKickoutProcess()
-	ProcessJoiningRequests()
+	GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID
+	HandleKickoutProcess() []uuid.UUID
+	ProcessJoiningRequests(inLimbo []uuid.UUID)
 	RunActionProcess()
 	AudiCollisionCheck()
 	AddAgentToBike(agent objects.IBaseBiker)
@@ -57,12 +57,6 @@ func Initialize(iterations int) IBaseBikerServer {
 	}
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
-
-	// Randomly allocate bikers to bikes
-	for _, biker := range server.GetAgentMap() {
-		biker.SetBike(server.GetRandomBikeId())
-		server.AddAgentToBike(biker)
-	}
 
 	return server
 }

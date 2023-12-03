@@ -54,16 +54,19 @@ func (s *Server) RunRoundLoop() {
 }
 
 func (s *Server) RunBikeSwitch(gameState GameStateDump) {
+	inLimbo := make([]uuid.UUID, 0)
 	// check if agents want ot leave the bike on this round
-	s.GetLeavingDecisions(gameState)
+	changeBike := s.GetLeavingDecisions(gameState)
+	inLimbo = append(inLimbo, changeBike...)
 	//process the kickout request
-	s.HandleKickoutProcess()
-	// process joining requests from last round
-	s.ProcessJoiningRequests()
-
+	kickedOff := s.HandleKickoutProcess()
+	inLimbo = append(inLimbo, kickedOff...)
+	// process the joining request
+	s.ProcessJoiningRequests(inLimbo)
 }
 
-func (s *Server) HandleKickoutProcess() {
+func (s *Server) HandleKickoutProcess() []uuid.UUID {
+	allKicked := make([]uuid.UUID, 0)
 	for _, bike := range s.GetMegaBikes() {
 		agentsVotes := make([]uuid.UUID, 0)
 
@@ -95,7 +98,9 @@ func (s *Server) HandleKickoutProcess() {
 
 		// perform kickout
 		leaderKickedOut := false
+		allKicked = append(allKicked, agentsVotes...)
 		for _, agentID := range agentsVotes {
+			fmt.Println("kicking out someone")
 			s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 			// if the leader was kicked out vote for a new one
 			if agentID == bike.GetRuler() {
@@ -108,9 +113,11 @@ func (s *Server) HandleKickoutProcess() {
 		}
 
 	}
+	return allKicked
 }
 
-func (s *Server) GetLeavingDecisions(gameState objects.IGameState) {
+func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
+	leavingAgents := make([]uuid.UUID, 0)
 	for agentId, agent := range s.GetAgentMap() {
 		fmt.Printf("Agent %s updating state \n", agentId)
 		agent.UpdateGameState(gameState)
@@ -126,18 +133,20 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) {
 
 			// the request is handled at the beginning of the next round, so the moving
 			// will only be finalised then
+			leavingAgents = append(leavingAgents, agentId)
 			s.RemoveAgentFromBike(agent)
 		default:
 			panic("agent decided invalid action")
 		}
 	}
+	return leavingAgents
 }
 
-func (s *Server) ProcessJoiningRequests() {
+func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 
 	// -------------------------- PROCESS JOINING REQUESTS -------------------------
 	// 1. group agents that have onBike = false by the bike they are trying to join
-	bikeRequests := s.GetJoiningRequests()
+	bikeRequests := s.GetJoiningRequests(inLimbo)
 	// 2. pass to agents on each of the desired bikes a list of all agents trying to join
 	for bikeID, pendingAgents := range bikeRequests {
 		agents := s.megaBikes[bikeID].GetAgents()
