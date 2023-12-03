@@ -3,6 +3,7 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"math/rand"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -20,12 +21,13 @@ func (s *Server) GetAudi() objects.IAudi {
 }
 
 // get a map of megaBikeIDs mapping to the ids of all Bikers that are trying to join it
-func (s *Server) GetJoiningRequests() map[uuid.UUID][]uuid.UUID {
+func (s *Server) GetJoiningRequests(inLimbo []uuid.UUID) map[uuid.UUID][]uuid.UUID {
 	// iterate over all agents, if their onBike is false add to the map their id in correspondance of that of their desired bike
 	bikeRequests := make(map[uuid.UUID][]uuid.UUID)
 
 	for agentID, agent := range s.GetAgentMap() {
-		if !agent.GetBikeStatus() {
+		// don't process joining requests of agents in limbo
+		if !agent.GetBikeStatus() && !slices.Contains(inLimbo, agentID) {
 			bike := agent.GetBike()
 			if ids, ok := bikeRequests[bike]; ok {
 				bikeRequests[bike] = append(ids, agentID)

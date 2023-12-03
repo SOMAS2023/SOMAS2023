@@ -115,7 +115,8 @@ func (s *Server) FoundingInstitutions() {
 			chosenBike := bikesAvailable[0]
 			// add agent to bike
 			agentInt := s.GetAgentMap()[agent]
-			s.GetMegaBikes()[chosenBike].AddAgent(agentInt)
+			agentInt.SetBike(chosenBike)
+			s.AddAgentToBike(agentInt)
 		}
 	}
 
