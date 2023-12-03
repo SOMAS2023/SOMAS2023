@@ -84,11 +84,11 @@ func (a *AgentTwo) updateReputation(agentID uuid.UUID, ourDesiredLootbox uuid.UU
 /// Networks
 /// ///
 
-func (a *AgentTwo) UpdateSocNetAgent(agentID uuid.UUID, amt float64, weight float64) {
+func (a *AgentTwo) UpdateSocNetAgent(agentID uuid.UUID, eventValue float64, weight float64) {
 	if _, ok := a.Network[agentID]; !ok {
 		a.Network[agentID] = avgComponentValue(a.Network)
 	}
-	a.Network[agentID] += amt * weight
+	a.Network[agentID] += eventValue * weight
 }
 
 //////
