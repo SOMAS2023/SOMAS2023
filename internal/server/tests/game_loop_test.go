@@ -14,11 +14,12 @@ func TestGetLeavingDecisions(t *testing.T) {
 	// nor in the megabike riders
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
-	s.GetLeavingDecisions()
+	s.GetLeavingDecisions(gs)
 
 	for _, agent := range s.GetAgentMap() {
 		if !agent.GetBikeStatus() {
@@ -38,8 +39,9 @@ func TestGetLeavingDecisions(t *testing.T) {
 func TestHandleKickout(t *testing.T) {
 	it := 6
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
 	s.HandleKickoutProcess()
@@ -99,7 +101,7 @@ func TestProcessJoiningRequests(t *testing.T) {
 	// check that all of them are now on bikes
 	// check that there are no bikers left with on bike = false
 
-	s.ProcessJoiningRequests()
+	s.ProcessJoiningRequests(make([]uuid.UUID, 0))
 	for bikeID, agents := range requests {
 		bike := s.GetMegaBikes()[bikeID]
 		for _, agent := range agents {
@@ -125,8 +127,9 @@ func TestProcessJoiningRequests(t *testing.T) {
 func TestRunActionProcess(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 	s.RunActionProcess()
 	// check all agents have lost energy (proportionally to how much they have pedalled)

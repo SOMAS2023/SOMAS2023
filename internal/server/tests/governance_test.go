@@ -12,8 +12,9 @@ import (
 func TestRulerElectionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 	// pass gamestate
 	var ruler uuid.UUID
@@ -34,8 +35,9 @@ func TestRulerElectionDictator(t *testing.T) {
 func TestRulerElectionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 	// pass gamestate
 	var ruler uuid.UUID
@@ -56,8 +58,9 @@ func TestRulerElectionLeader(t *testing.T) {
 func TestRunRulerActionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
 	for _, bike := range s.GetMegaBikes() {
@@ -66,7 +69,7 @@ func TestRunRulerActionDictator(t *testing.T) {
 			// make them vote for the dictator (assume that function works properly)
 			// get the dictator id (or check what it should be given the MVP strategy, this must be deterministic though)
 			ruler := s.RulerElection(agents, utils.Dictatorship)
-			direction := s.RunRulerAction(bike, utils.Dictatorship)
+			direction := s.RunRulerAction(bike)
 			// set the force of the dictator
 			// check that the function works for it
 
@@ -89,8 +92,9 @@ func TestRunRulerActionDictator(t *testing.T) {
 func TestRunRulerActionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
 	for _, bike := range s.GetMegaBikes() {
@@ -99,7 +103,7 @@ func TestRunRulerActionLeader(t *testing.T) {
 			// make them vote for the dictator (assume that function works properly)
 			// get the dictator id (or check what it should be given the MVP strategy, this must be deterministic though)
 			ruler := s.RulerElection(agents, utils.Leadership)
-			direction := s.RunRulerAction(bike, utils.Leadership)
+			direction := s.RunRulerAction(bike)
 			// set the force of the dictator
 			// check that the function works for it
 
@@ -121,15 +125,20 @@ func TestRunRulerActionLeader(t *testing.T) {
 func TestRunDemocratingAction(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(s)
+		agent.UpdateGameState(gs)
 	}
 
 	for _, bike := range s.GetMegaBikes() {
 		agents := bike.GetAgents()
 		if len(agents) != 0 {
 
-			direction := s.RunDemocraticAction(bike)
+			weights := make(map[uuid.UUID]float64)
+			for _, agent := range agents {
+				weights[agent.GetID()] = 1.0
+			}
+			direction := s.RunDemocraticAction(bike, weights)
 
 			_, exists := s.GetLootBoxes()[direction]
 			if !exists {
