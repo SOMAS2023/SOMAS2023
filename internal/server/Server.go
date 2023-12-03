@@ -32,6 +32,7 @@ type IBaseBikerServer interface {
 	RunActionProcess()
 	AudiCollisionCheck()
 	AddAgentToBike(agent objects.IBaseBiker)
+	FoundingInstitutions()
 }
 
 type Server struct {
