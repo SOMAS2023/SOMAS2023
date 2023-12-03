@@ -77,3 +77,12 @@ const (
 	Dictatorship
 	Invalid
 )
+
+type Action int
+
+const (
+	Kickout Action = iota
+	Joining
+	Direction
+	Allocation
+)

@@ -35,7 +35,7 @@ func (a AgentDump) UpdateAgentInternalState() {
 	panic(bannedFunctionErrorMessage)
 }
 
-func (a AgentDump) DecideGovernance() voting.GovernanceVote {
+func (a AgentDump) DecideGovernance() utils.Governance {
 	panic(bannedFunctionErrorMessage)
 }
 
@@ -141,6 +141,22 @@ func (a AgentDump) HandleKickOffMessage(msg objects.KickOffAgentMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 
+func (a AgentDump) DecideDictatorAllocation() voting.IdVoteMap {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) DecideKickOut() []uuid.UUID {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) ResetPoints() {
+	panic(bannedFunctionErrorMessage)
+}
+
 func (b BikeDump) AddAgent(objects.IBaseBiker) {
 	panic(bannedFunctionErrorMessage)
 }
@@ -153,7 +169,7 @@ func (b BikeDump) UpdateMass() {
 	panic(bannedFunctionErrorMessage)
 }
 
-func (b BikeDump) KickOutAgent() map[uuid.UUID]int {
+func (b BikeDump) KickOutAgent(weights map[uuid.UUID]float64) []uuid.UUID {
 	panic(bannedFunctionErrorMessage)
 }
 

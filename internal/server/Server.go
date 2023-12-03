@@ -22,16 +22,16 @@ type IBaseBikerServer interface {
 	GetAudi() objects.IAudi
 	GetJoiningRequests() map[uuid.UUID][]uuid.UUID
 	GetRandomBikeId() uuid.UUID
-	SetBikerBike(biker objects.IBaseBiker, bike uuid.UUID)
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
-	RunRulerAction(bike objects.IMegaBike, governance utils.Governance) uuid.UUID
+	RunRulerAction(bike objects.IMegaBike) uuid.UUID
+	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID
 	NewGameStateDump() GameStateDump
-	RunDemocraticAction(bike objects.IMegaBike) uuid.UUID
 	GetLeavingDecisions(gameState objects.IGameState)
 	HandleKickoutProcess()
 	ProcessJoiningRequests()
 	RunActionProcess()
 	AudiCollisionCheck()
+	AddAgentToBike(agent objects.IBaseBiker)
 }
 
 type Server struct {
@@ -40,8 +40,10 @@ type Server struct {
 	megaBikes map[uuid.UUID]objects.IMegaBike
 	// megaBikeRiders is a mapping from Agent ID -> ID of the bike that they are riding
 	// helps with efficiently managing ridership status
-	megaBikeRiders map[uuid.UUID]uuid.UUID
-	audi           objects.IAudi
+	megaBikeRiders  map[uuid.UUID]uuid.UUID
+	audi            objects.IAudi
+	deadAgents      map[uuid.UUID]objects.IBaseBiker
+	foundingChoices map[uuid.UUID]utils.Governance
 }
 
 func Initialize(iterations int) IBaseBikerServer {
@@ -57,8 +59,8 @@ func Initialize(iterations int) IBaseBikerServer {
 
 	// Randomly allocate bikers to bikes
 	for _, biker := range server.GetAgentMap() {
-		server.SetBikerBike(biker, server.GetRandomBikeId())
-
+		biker.SetBike(server.GetRandomBikeId())
+		server.AddAgentToBike(biker)
 	}
 
 	return server
@@ -66,10 +68,40 @@ func Initialize(iterations int) IBaseBikerServer {
 
 func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
 	id := agent.GetID()
+	// add agent to dead agent map
+	s.deadAgents[id] = agent
+	// remove agent from agent map
 	s.BaseServer.RemoveAgent(agent)
 	if bikeId, ok := s.megaBikeRiders[id]; ok {
 		s.megaBikes[bikeId].RemoveAgent(id)
 		delete(s.megaBikeRiders, id)
+	}
+}
+
+func (s *Server) AddAgentToBike(agent objects.IBaseBiker) {
+	// Remove the agent from the old bike, if it was on one
+	if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
+		s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+	}
+
+	// set agent on desired bike
+	bikeId := agent.GetBike()
+	s.megaBikes[bikeId].AddAgent(agent)
+	s.megaBikeRiders[agent.GetID()] = bikeId
+	if !agent.GetBikeStatus() {
+		agent.ToggleOnBike()
+	}
+}
+
+func (s *Server) RemoveAgentFromBike(agent objects.IBaseBiker) {
+	bike := s.megaBikes[agent.GetBike()]
+	bike.RemoveAgent(agent.GetID())
+	agent.ToggleOnBike()
+	// get new destination for agent
+	agent.SetBike(agent.ChangeBike())
+
+	if _, ok := s.megaBikeRiders[agent.GetID()]; ok {
+		delete(s.megaBikeRiders, agent.GetID())
 	}
 }
 

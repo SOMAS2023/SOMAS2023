@@ -3,8 +3,9 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"github.com/google/uuid"
 	"maps"
+
+	"github.com/google/uuid"
 )
 
 type GameStateDump struct {
@@ -30,17 +31,16 @@ type BikeDump struct {
 }
 
 type AgentDump struct {
-	ID                       uuid.UUID                        `json:"-"`
-	Forces                   utils.Forces                     `json:"forces"`
-	EnergyLevel              float64                          `json:"energy_level"`
-	Points                   int                              `json:"points"`
-	ResourceAllocationParams objects.ResourceAllocationParams `json:"resource_allocation_params"`
-	Colour                   utils.Colour                     `json:"-"`
-	ColourString             string                           `json:"colour"`
-	Location                 utils.Coordinates                `json:"location"`
-	OnBike                   bool                             `json:"on_bike"`
-	BikeID                   uuid.UUID                        `json:"bike_id"`
-	Reputation               map[uuid.UUID]float64            `json:"reputation"`
+	ID           uuid.UUID             `json:"-"`
+	Forces       utils.Forces          `json:"forces"`
+	EnergyLevel  float64               `json:"energy_level"`
+	Points       int                   `json:"points"`
+	Colour       utils.Colour          `json:"-"`
+	ColourString string                `json:"colour"`
+	Location     utils.Coordinates     `json:"location"`
+	OnBike       bool                  `json:"on_bike"`
+	BikeID       uuid.UUID             `json:"bike_id"`
+	Reputation   map[uuid.UUID]float64 `json:"reputation"`
 }
 
 type LootBoxDump struct {
@@ -69,17 +69,16 @@ func (s *Server) NewGameStateDump() GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
 		agents[id] = AgentDump{
-			ID:                       agent.GetID(),
-			Forces:                   agent.GetForces(),
-			EnergyLevel:              agent.GetEnergyLevel(),
-			Points:                   agent.GetPoints(),
-			ResourceAllocationParams: agent.GetResourceAllocationParams(),
-			Colour:                   agent.GetColour(),
-			ColourString:             agent.GetColour().String(),
-			Location:                 s.megaBikes[agent.GetBike()].GetPosition(),
-			OnBike:                   agent.GetBikeStatus(),
-			BikeID:                   agent.GetBike(),
-			Reputation:               maps.Clone(agent.GetReputation()),
+			ID:           agent.GetID(),
+			Forces:       agent.GetForces(),
+			EnergyLevel:  agent.GetEnergyLevel(),
+			Points:       agent.GetPoints(),
+			Colour:       agent.GetColour(),
+			ColourString: agent.GetColour().String(),
+			Location:     s.megaBikes[agent.GetBike()].GetPosition(),
+			OnBike:       agent.GetBikeStatus(),
+			BikeID:       agent.GetBike(),
+			Reputation:   maps.Clone(agent.GetReputation()),
 		}
 	}
 

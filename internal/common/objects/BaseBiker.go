@@ -13,20 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// this struct holds the allocation parameters that we want the allocation protocol to take into account
-// These can change based on how we want the allocation to happend, for now they are taken from
-// the lecture slides, but more/less could be taken into account.
-type ResourceAllocationParams struct {
-	ResourceNeed          float64 `json:"need"`          // 0-1, how much energy the agent needs, could be set to 1 - energyLevel
-	ResourceDemand        float64 `json:"demand"`        // 0-1, how much energy the agent wants, might differ from ResourceNeed
-	ResourceProvision     float64 `json:"provision"`     // 0-1, how much energy the agent has given to reach a goal (could be either the sum of pedaling forces since last lootbox, or the latest pedalling force, or something else
-	ResourceAppropriation float64 `json:"appropriation"` // 0-1, the proportion of what the server allocates that the agent actually gets, for MVP, set to 1
-}
-
 type IBaseBiker interface {
 	baseAgent.IAgent[IBaseBiker]
 
-	DecideGovernance() voting.GovernanceVote
+	DecideGovernance() utils.Governance
 	DecideAction() BikerAction                                                  // ** determines what action the agent is going to take this round. (changeBike or Pedal)
 	DecideForce(direction uuid.UUID)                                            // ** defines the vector you pass to the bike: [pedal, brake, turning]
 	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool                  // ** decide whether to accept or not accept bikers, ranks the ones
@@ -37,8 +27,14 @@ type IBaseBiker interface {
 	VoteForKickout() map[uuid.UUID]int
 	VoteDictator() voting.IdVoteMap
 	VoteLeader() voting.IdVoteMap
-	DictateDirection() uuid.UUID // ** called only when the agent is the dictator
-	LeadDirection() uuid.UUID
+
+	// dictator functions
+	DictateDirection() uuid.UUID                // ** called only when the agent is the dictator
+	DecideKickOut() []uuid.UUID                 // ** decide which agents to kick out (dictator)
+	DecideDictatorAllocation() voting.IdVoteMap // ** decide the allocation (dictator)
+
+	// leader functions
+	DecideWeights(action utils.Action) map[uuid.UUID]float64 // decide on weights for various actions
 
 	GetForces() utils.Forces        // returns forces for current round
 	GetColour() utils.Colour        // returns the colour of the lootbox that the agent is currently seeking
@@ -46,8 +42,7 @@ type IBaseBiker interface {
 	GetBike() uuid.UUID             // tells the biker which bike it is on
 	GetEnergyLevel() float64        // returns the energy level of the agent
 	GetPoints() int
-	GetResourceAllocationParams() ResourceAllocationParams // returns set allocation parameters
-	GetBikeStatus() bool                                   // returns whether the biker is on a bike or not
+	GetBikeStatus() bool // returns whether the biker is on a bike or not
 
 	SetBike(uuid.UUID)                     // sets the megaBikeID. this is either the id of the bike that the agent is on or the one that it's trying to join
 	SetForces(forces utils.Forces)         // sets the forces (to be updated in DecideForces())
@@ -56,6 +51,7 @@ type IBaseBiker interface {
 	UpdateEnergyLevel(energyLevel float64) // increase the energy level of the agent by the allocated lootbox share or decrease by expended energy
 	UpdateGameState(gameState IGameState)  // sets the gameState field at the beginning of each round
 	ToggleOnBike()                         // called when removing or adding a biker on a bike
+	ResetPoints()
 
 	GetReputation() map[uuid.UUID]float64 // get reputation value of all other agents
 	QueryReputation(uuid.UUID) float64    // query for reputation value of specific agent with UUID
@@ -84,9 +80,8 @@ type BaseBiker struct {
 	energyLevel                      float64 // float between 0 and 1
 	points                           int
 	forces                           utils.Forces
-	megaBikeId                       uuid.UUID  // if they are not on a bike it will be 0
-	gameState                        IGameState // updated by the server at every round
-	allocationParams                 ResourceAllocationParams
+	megaBikeId                       uuid.UUID             // if they are not on a bike it will be 0
+	gameState                        IGameState            // updated by the server at every round
 	reputation                       map[uuid.UUID]float64 // record reputation for other agents in float
 }
 
@@ -103,6 +98,9 @@ func (bb *BaseBiker) GetPoints() int {
 // - increase the energy level after a lootbox has been looted (energyLevel will be pos.ve)
 func (bb *BaseBiker) UpdateEnergyLevel(energyLevel float64) {
 	bb.energyLevel += energyLevel
+	if bb.energyLevel > 1.0 {
+		bb.energyLevel = 1.0
+	}
 }
 
 func (bb *BaseBiker) GetColour() utils.Colour {
@@ -269,10 +267,6 @@ func (bb *BaseBiker) UpdateGameState(gameState IGameState) {
 	bb.gameState = gameState
 }
 
-func (bb *BaseBiker) GetResourceAllocationParams() ResourceAllocationParams {
-	return bb.allocationParams
-}
-
 // default implementation returns the id of the nearest lootbox
 func (bb *BaseBiker) ProposeDirection() uuid.UUID {
 	return bb.nearestLoot()
@@ -327,13 +321,13 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 	return decision
 }
 
-// base biker defaults to democracy
-func (bb *BaseBiker) DecideGovernance() voting.GovernanceVote {
-	governanceRanking := make(voting.GovernanceVote)
-	governanceRanking[utils.Democracy] = 1.0
-	governanceRanking[utils.Dictatorship] = 0.0
-	governanceRanking[utils.Leadership] = 0.0
-	return governanceRanking
+func (bb *BaseBiker) DecideGovernance() utils.Governance {
+	// Change behaviour here to return different governance
+	return utils.Democracy
+}
+
+func (bb *BaseBiker) ResetPoints() {
+	bb.points = 0
 }
 
 // this function will contain the agent's strategy on deciding which direction to go to
@@ -402,9 +396,31 @@ func (bb *BaseBiker) VoteLeader() voting.IdVoteMap {
 	return votes
 }
 
-func (bb *BaseBiker) LeadDirection() uuid.UUID {
-	nearest := bb.nearestLoot()
-	return nearest
+// defaults to an equal distribution over all agents for all actions
+func (bb *BaseBiker) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	agents := bb.GetFellowBikers()
+	for _, agent := range agents {
+		weights[agent.GetID()] = 1.0
+	}
+	return weights
+}
+
+// only called when the agent is the dictator
+func (bb *BaseBiker) DecideKickOut() []uuid.UUID {
+	return (make([]uuid.UUID, 0))
+}
+
+// only called when the agent is the dictator
+func (bb *BaseBiker) DecideDictatorAllocation() voting.IdVoteMap {
+	bikeID := bb.GetBike()
+	fellowBikers := bb.gameState.GetMegaBikes()[bikeID].GetAgents()
+	distribution := make(voting.IdVoteMap)
+	equalDist := 1.0 / float64(len(fellowBikers))
+	for _, agent := range fellowBikers {
+		distribution[agent.GetID()] = equalDist
+	}
+	return distribution
 }
 
 // This function updates all the messages for that agent i.e. both sending and receiving.
