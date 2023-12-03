@@ -1,9 +1,11 @@
 package server_test
 
 import (
+	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/server"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/google/uuid"
@@ -125,18 +127,56 @@ func TestProcessJoiningRequests(t *testing.T) {
 }
 
 func TestRunActionProcess(t *testing.T) {
-	it := 1
-	s := server.Initialize(it)
-	gs := s.NewGameStateDump()
-	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(gs)
-	}
-	s.RunActionProcess()
-	// check all agents have lost energy (proportionally to how much they have pedalled)
-	for _, agent := range s.GetAgentMap() {
-		lostEnergy := (utils.MovingDepletion * agent.GetForces().Pedal)
-		if agent.GetEnergyLevel() != (1.0 - lostEnergy) {
-			t.Error("agents energy hasn't been successfully depleted")
+	for i := 0; i < 10; i++ {
+		it := 1
+		s := server.Initialize(it)
+		gs := s.NewGameStateDump()
+
+		// Loop through each bike
+		for _, bike := range s.GetMegaBikes() {
+			// Randomly select a governance strategy for this bike
+			governanceTypes := []int{int(utils.Democracy), int(utils.Leadership), int(utils.Dictatorship)}
+			governance := utils.Governance(governanceTypes[rand.Intn(len(governanceTypes))])
+			bike.SetGovernance(governance)
+
+			// Update the game state for all agents and set the governance of their bike
+			for _, agent := range s.GetAgentMap() {
+				agent.UpdateGameState(gs)
+			}
+
+			// Randomly select a ruler if necessary
+			if governance != utils.Democracy {
+				agents := bike.GetAgents()
+				if len(agents) > 0 {
+					randIndex := rand.Intn(len(agents))
+					randomAgent := agents[randIndex]
+					bike.SetRuler(randomAgent.GetID())
+				}
+			}
+		}
+
+		s.RunActionProcess()
+		// check all agents have lost energy (proportionally to how much they have pedalled)
+		for _, agent := range s.GetAgentMap() {
+			lostEnergy := (utils.MovingDepletion * agent.GetForces().Pedal)
+
+			var agentBike obj.IMegaBike
+			for _, bike := range s.GetMegaBikes() {
+				if bike.GetID() == agent.GetBike() {
+					agentBike = bike
+				}
+			}
+
+			governance := agentBike.GetGovernance()
+			switch governance {
+			case utils.Democracy:
+				lostEnergy += utils.DeliberativeDemocracyPenalty
+			case utils.Leadership:
+				lostEnergy += utils.LeadershipDemocracyPenalty
+			}
+			if agent.GetEnergyLevel() != (1.0 - lostEnergy) {
+				t.Error("agents energy hasn't been successfully depleted")
+			}
 		}
 	}
 	fmt.Printf("\nRun action process passed \n")
