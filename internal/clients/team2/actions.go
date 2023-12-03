@@ -286,6 +286,8 @@ func (a *AgentTwo) GetOptimalLootbox() uuid.UUID {
 
 // To overwrite the BaseBiker's DecideForce method in order to record all the previous actions of all bikes (GetForces) and bikers from gamestates
 func (a *AgentTwo) DecideForce(direction uuid.UUID) {
+
+	a.votedDirection = direction
 	fmt.Println("DecideForce entering")
 	fmt.Println("agent energy before: ", a.GetEnergyLevel())
 	// Pedal, Brake, Turning

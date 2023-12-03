@@ -39,5 +39,6 @@ func NewBaseTeam2Biker(agentId uuid.UUID) *AgentTwo {
 		points:             0,
 		forces:             utils.Forces{},
 		allocationParams:   objects.ResourceAllocationParams{},
+		votedDirection:     uuid.UUID{},
 	}
 }
