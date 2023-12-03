@@ -9,9 +9,9 @@ import (
 
 // Constants related to the calculation of social capital
 const (
-	TrustWeight       = 1.0 // Weight for trust in social capital calculation
-	InstitutionWeight = 0.0 // Weight for institution affiliation in social capital calculation
-	NetworkWeight     = 1.0 // Weight for network strength in social capital calculation
+	ReputationWeight  = 0.6 // Weight for reputation in social capital calculation
+	InstitutionWeight = 0.2 // Weight for institution affiliation in social capital calculation
+	NetworkWeight     = 0.2 // Weight for network strength in social capital calculation
 )
 
 const (

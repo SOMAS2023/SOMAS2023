@@ -27,7 +27,7 @@ func TestCalculateSocialCapital(t *testing.T) {
 
 	agent.CalculateSocialCapital()
 
-	assert.Equal(t, 2.0, agent.SocialCapital[testAgentID]) // 2 due to min/max scaling.
+	assert.Equal(t, 1.0, agent.SocialCapital[testAgentID]) // 2 due to min/max scaling.
 }
 
 func TestForcesToVectorConversion(t *testing.T) {
