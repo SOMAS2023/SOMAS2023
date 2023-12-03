@@ -11,7 +11,11 @@ import (
 const (
 	TrustWeight       = 1.0 // Weight for trust in social capital calculation
 	InstitutionWeight = 0.0 // Weight for institution affiliation in social capital calculation
-	NetworkWeight     = 0.0 // Weight for network strength in social capital calculation
+	NetworkWeight     = 1.0 // Weight for network strength in social capital calculation
+)
+
+const (
+	SocialEventWeight_AgentSentMsg = 1
 )
 
 // Constants related to the calculation of Institution

@@ -41,6 +41,7 @@ func (a *AgentTwo) CreateKickOffMessage() obj.KickOffAgentMessage {
 func (a *AgentTwo) HandleKickOffMessage(msg obj.KickOffAgentMessage) {
 	agentId := msg.AgentId
 	if agentId != uuid.Nil {
+		a.UpdateSocNetAgent(agentId, 1, SocialEventWeight_AgentSentMsg)
 		a.updateInstitution(agentId, InstitutionEventWeight_KickedOut, InstitutionKickoffEventValue)
 	}
 }
@@ -53,6 +54,8 @@ func (a *AgentTwo) HandleForcesMessage(msg obj.ForcesMessage) {
 	optimalForces := a.GetVotedLootboxForces(optimalLootbox)
 
 	EventValue := a.RuleAdhereanceValue(agentId, optimalForces, agentForces)
+
+	a.UpdateSocNetAgent(agentId, 1, SocialEventWeight_AgentSentMsg)
 	a.updateInstitution(agentId, InstitutionEventWeight_Adhereance, EventValue)
 
 }
@@ -63,5 +66,6 @@ func (a *AgentTwo) HandleJoiningMessage(msg obj.JoiningAgentMessage) {
 	// agentId := msg.AgentId
 	// bikeId := msg.BikeId
 	agentId := msg.AgentId
+	a.UpdateSocNetAgent(agentId, 1, SocialEventWeight_AgentSentMsg)
 	a.updateInstitution(agentId, InstitutionEventWeight_Accepted, InstitutionAcceptedEventValue)
 }
