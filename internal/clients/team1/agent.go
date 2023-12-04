@@ -18,7 +18,7 @@ const deviateNegative = -0.2     // trust loss on deviation
 const deviatePositive = 0.1      // trust gain on non deviation
 const effortScaling = 0.1        // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1      // scaling factor for fairness, higher it is the more fairness changes each round
-const leaveThreshold = 0.2       // threshold for leaving
+const leaveThreshold = 0.0       // threshold for leaving
 const kickThreshold = 0.25       // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
@@ -74,6 +74,15 @@ func (bb *Biker1) GetLootLocation(id uuid.UUID) utils.Coordinates {
 	fmt.Printf("ID: %v", id)
 	lootbox := lootboxes[id]
 	return lootbox.GetPosition()
+}
+
+func (bb *Biker1) GetAverageOpinionOfAgent (biker uuid.UUID) float64 {
+	fellowBikers := bb.GetFellowBikers()
+	opinionSum := 0.0
+	for _, agent := range fellowBikers {
+		opinionSum += agent.QueryReputation(biker)
+	}
+	return opinionSum / float64(len(fellowBikers))
 }
 
 // -------------------END OF SETTERS AND GETTERS----------------------
@@ -298,23 +307,8 @@ func (bb *Biker1) nearestLootColour() (uuid.UUID, float64) {
 	}
 	return nearestBox, shortestDist
 }
-func (bb *Biker1) ProposeDirection() uuid.UUID {
-	currLocation := bb.GetLocation()
-	shortestDist := math.MaxFloat64
-	currDist := 0.0
-	nearestBox := bb.nearestLoot()
-	for id, loot := range bb.GetGameState().GetLootBoxes() {
-		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(currLocation, lootPos)
-		if (currDist < shortestDist) && (loot.GetColour() == bb.GetColour()) {
-			nearestBox = id
-			shortestDist = currDist
-		}
-	}
-	return nearestBox
-}
 
-func (bb *Biker1) ProposeDirection1() uuid.UUID {
+func (bb *Biker1) ProposeDirection() uuid.UUID {
 	// all logic for nominations goes in here
 	// find nearest coloured box
 	// if we can reach it, nominate it
@@ -355,29 +349,11 @@ func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
 	return remainingEnergy
 }
 
-// Always vote for the nearest box to the bike
-func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
-	votes := make(voting.LootboxVoteMap)
-	shortestDist := math.MaxFloat64
-	closestProposal := uuid.UUID{}
-	for _, proposal := range proposals {
-		// find nearest box out of all the proposals and vote for it
-		dist := physics.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetLootBoxes()[proposal].GetPosition())
-		if dist < shortestDist {
-			shortestDist = dist
-			closestProposal = proposal
-		}
-		votes[proposal] = 0.0
-	}
-	votes[closestProposal] = 1.0
-	fmt.Printf("\n agent %s votes %v \n", bb.GetID(), votes)
-	return votes
-}
 
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
-func (bb *Biker1) FinalDirectionVote1(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	// add in voting logic using knowledge of everyone's nominations:
 
 	// for all boxes, rule out any that you can't reach
@@ -479,17 +455,18 @@ func (bb *Biker1) FinalDirectionVote1(proposals map[uuid.UUID]uuid.UUID) voting.
 // -----------------END OF DIRECTION DECISION FUNCTIONS------------------
 
 func (bb *Biker1) DecideAction() obj.BikerAction {
-	fellowBikers := bb.GetFellowBikers()
-	avg_opinion := 1.0
-	for _, agent := range fellowBikers {
-		avg_opinion = avg_opinion + bb.opinions[agent.GetID()].opinion
-	}
-	if (avg_opinion < leaveThreshold) || bb.dislikeVote {
-		bb.dislikeVote = false
-		return 1 //THIS SHIT JUST RETURNS PEDAL (MVP) see BaseBiker.go
-	} else {
-		return 0
-	}
+	// fellowBikers := bb.GetFellowBikers()
+	// avg_opinion := 1.0
+	// for _, agent := range fellowBikers {
+	// 	avg_opinion = avg_opinion + bb.opinions[agent.GetID()].opinion
+	// }
+	// if (avg_opinion < leaveThreshold) || bb.dislikeVote {
+	// 	bb.dislikeVote = false
+	// 	return 1 
+	// } else {
+	// 	return 0
+	// }
+	return 0
 }
 
 // -----------------PEDALLING FORCE FUNCTIONS------------------
@@ -1119,24 +1096,55 @@ func (bb *Biker1) DecideDictatorship() bool {
 		return false
 	}
 }
+
+
 // ----------------------LEADER/DICTATOR VOTING FUNCTIONS------------------
 func (bb *Biker1) VoteLeader() voting.IdVoteMap {
+
 	votes := make(voting.IdVoteMap)
 	fellowBikers := bb.GetFellowBikers()
+
+	maxOpinion := 0.0
+	leaderVote := bb.GetID()
 	for _, agent := range fellowBikers {
-		if bb.opinions[agent.GetID()].opinion > leaderThreshold {
-			// randomize between 
-			
-			votes[agent.GetID()] = 1
-		} else {
-			votes[agent.GetID()] = 0
+		votes[agent.GetID()] = 0.0
+		avgOp := bb.GetAverageOpinionOfAgent(agent.GetID())
+		if agent.GetID() != bb.GetID() {
+			val, ok := bb.opinions[agent.GetID()]
+			if ok {
+				avgOp = (avgOp + val.opinion) / 2
+			}
+		} 
+		if avgOp > maxOpinion {
+			maxOpinion = avgOp
+			leaderVote = agent.GetID()
 		}
 	}
-
-
+	votes[leaderVote] = 1.0
+	return votes
 }
 func (bb *Biker1) VoteDictator() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
 
+	maxOpinion := 0.0
+	leaderVote := bb.GetID()
+	for _, agent := range fellowBikers {
+		votes[agent.GetID()] = 0.0
+		avgOp := bb.GetAverageOpinionOfAgent(agent.GetID())
+		if agent.GetID() != bb.GetID() {
+			val, ok := bb.opinions[agent.GetID()]
+			if ok {
+				avgOp = (avgOp + 3 * val.opinion) / 4
+			}
+		} 
+		if avgOp > maxOpinion {
+			maxOpinion = avgOp
+			leaderVote = agent.GetID()
+		}
+	}
+	votes[leaderVote] = 1.0
+	return votes
 }
 //--------------------END OF LEADER/DICTATOR VOTING FUNCTIONS------------------
 
@@ -1170,11 +1178,21 @@ func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	// Leadership democracy 
 	// takes in proposed action as a parameter
 	// only run for the leader after everyone's proposeDirection is run
-	// assigns vector of weights to everyone's proposals, 1 is neutral
-	// for agent, opinion := range bb.opinions {
-	// 	reputation[agent] = opinion.opinion
-	// }
-	
+	// assigns vector of weights to everyone's proposals, 0.5 is neutral
+
+	//consider adding weights for agents with low points
+	fellowBikers := bb.GetFellowBikers()
+	weights := map[uuid.UUID]float64{}
+
+	for _, agent := range fellowBikers{
+		op, ok := bb.opinions[agent.GetID()]
+		if  !ok {
+			weights[agent.GetID()] = 0.5
+		}else{
+			weights[agent.GetID()] = op.opinion
+		}
+	}
+	return weights
 }
 
 //--------------------END OF LEADER FUNCTIONS------------------
@@ -1189,10 +1207,24 @@ func (bb *Biker1) GetReputation() map[uuid.UUID]float64 {
 	}
 	return reputation
 } 
-func (bb *Biker1) QueryReputation(uuid.UUID) float64 {
-	
-}    // query for reputation value of specific agent with UUID
-func (bb *Biker1) SetReputation(uuid.UUID, float64) {}    // set reputation value of specific agent with UUID
+// query for reputation value of specific agent with UUID
+func (bb *Biker1) QueryReputation(agent uuid.UUID) float64 {
+	val, ok := bb.opinions[agent]
+	if ok {
+		return val.opinion
+	} else {
+		return 0.5
+	}
+}    
+// set reputation value of specific agent with UUID
+func (bb *Biker1) SetReputation(agent uuid.UUID, reputation float64) {
+	bb.opinions[agent] = Opinion{
+		effort:   bb.opinions[agent].effort,
+		trust:    bb.opinions[agent].trust,
+		fairness: bb.opinions[agent].fairness,
+		opinion:  reputation,
+	}
+}    
 
 //---------------------END OF SOCIAL FUNCTIONS------------------------
 
