@@ -13,6 +13,7 @@ import (
 func (s *Server) RunRoundLoop() {
 	// Capture dump of starting state
 	gameState := s.NewGameStateDump()
+	s.UpdateGameStates()
 
 	// take care of agents that want to leave the bike and of the acceptance/ expulsion process
 	s.RunBikeSwitch(gameState)
@@ -34,6 +35,8 @@ func (s *Server) RunRoundLoop() {
 	s.MovePhysicsObject(s.audi)
 	// Check Audi collision
 	s.AudiCollisionCheck()
+
+	s.UpdateGameStates()
 
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
@@ -59,25 +62,16 @@ func (s *Server) RunBikeSwitch(gameState GameStateDump) {
 	changeBike := s.GetLeavingDecisions(gameState)
 	inLimbo = append(inLimbo, changeBike...)
 	// update gamestate as it has changed
-	gsNew := s.NewGameStateDump()
-	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(gsNew)
-	}
+	s.UpdateGameStates()
 	//process the kickout request
 	kickedOff := s.HandleKickoutProcess()
 	// update gamestate as it has changed
-	gsNew2 := s.NewGameStateDump()
-	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(gsNew2)
-	}
+	s.UpdateGameStates()
 	inLimbo = append(inLimbo, kickedOff...)
 	// process the joining request
 	s.ProcessJoiningRequests(inLimbo)
 	// update gamestate as it has changed
-	gsNew3 := s.NewGameStateDump()
-	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(gsNew3)
-	}
+	s.UpdateGameStates()
 }
 
 func (s *Server) HandleKickoutProcess() []uuid.UUID {

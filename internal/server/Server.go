@@ -122,3 +122,10 @@ func (s *Server) outputResults(gameStates []GameStateDump) {
 		panic(err)
 	}
 }
+
+func (s *Server) UpdateGameStates() {
+	gs := s.NewGameStateDump()
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
+}
