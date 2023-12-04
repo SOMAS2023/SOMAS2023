@@ -35,14 +35,17 @@ func (t5 *team5Agent) UpdateAgentInternalState() {
 
 //Functions can be called in any scenario
 
+// needs fixing always democracy
 func (t5 *team5Agent) DecideGovernance() utils.Governance {
 	return utils.Democracy
 }
 
+// needs fixing never gets off bike
 func (t5 *team5Agent) DecideAction() objects.BikerAction {
 	return objects.Pedal
 }
 
+// needs fixing doesn't pick a bike to join
 func (t5 *team5Agent) ChangeBike() uuid.UUID {
 	return uuid.Nil
 }
@@ -73,7 +76,7 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 	return voteResults
 }
 
-// Needs stategy currently votes for first agent
+// needs fixing currently votes for first agent
 func (t5 *team5Agent) VoteDictator() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)
 	fellowBikers := t5.GetFellowBikers()
@@ -87,7 +90,7 @@ func (t5 *team5Agent) VoteDictator() voting.IdVoteMap {
 	return votes
 }
 
-// Needs stategy currently votes for first agent
+// needs fixing currently votes for first agent
 func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)
 	fellowBikers := t5.GetFellowBikers()
