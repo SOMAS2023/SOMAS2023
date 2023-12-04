@@ -3,6 +3,7 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -33,6 +34,7 @@ type IBaseBikerServer interface {
 	AudiCollisionCheck()
 	AddAgentToBike(agent objects.IBaseBiker)
 	FoundingInstitutions()
+	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
 }
 
 type Server struct {
