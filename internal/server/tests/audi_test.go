@@ -53,7 +53,6 @@ func TestAudiCollisionProcess(t *testing.T) {
 func TestAudiTargeting(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
-	s.FoundingInstitutions()
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
 	i := 0
