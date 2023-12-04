@@ -47,7 +47,7 @@ func (t5 *team5Agent) DecideAction() objects.BikerAction {
 
 // needs fixing doesn't pick a bike to join
 // Decides which bike to join based on reputation and space available
-// Todo: create a formula that combines reputation, space available, people with same colour (rn only uses rep)
+// Todo: create a formula that combines reputation, space available, people with same colour, governance system (rn only uses rep)
 func (t5 *team5Agent) ChangeBike() uuid.UUID {
 	//get reputation of all bikes
 	bikeReps := t5.getReputationOfAllBikes()
