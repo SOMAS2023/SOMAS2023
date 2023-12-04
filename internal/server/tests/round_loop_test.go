@@ -375,3 +375,84 @@ func TestRunActionProcessLeader(t *testing.T) {
 	}
 
 }
+
+func TestProcessJoiningRequestsWithLimbo(t *testing.T) {
+	it := 3
+	s := server.Initialize(it)
+
+	// 1: get two bike ids
+	targetBikes := make([]uuid.UUID, 2)
+
+	i := 0
+	for bikeId := range s.GetMegaBikes() {
+		if i == 2 {
+			break
+		}
+		targetBikes[i] = bikeId
+		i += 1
+	}
+
+	// 2: set one agent requesting the first bike and two other requesting the second one
+	i = 0
+	requests := make(map[uuid.UUID][]uuid.UUID)
+	requests[targetBikes[0]] = make([]uuid.UUID, 1)
+	requests[targetBikes[1]] = make([]uuid.UUID, 1)
+	limbo := make([]uuid.UUID, 1)
+	for _, agent := range s.GetAgentMap() {
+		if i == 0 {
+			agent.ToggleOnBike()
+			agent.SetBike(targetBikes[0])
+			requests[targetBikes[0]][0] = agent.GetID()
+		} else if i == 1 {
+			// add it to second bike for request
+			agent.ToggleOnBike()
+			agent.SetBike(targetBikes[1])
+			requests[targetBikes[1]][i-1] = agent.GetID()
+		} else if i == 2 {
+			//remove it from bike but add it to limbo (to mimick request made in this turn)
+			agent.ToggleOnBike()
+			agent.SetBike(targetBikes[1])
+			limbo[0] = agent.GetID()
+		} else {
+			break
+		}
+
+		i += 1
+	}
+
+	// all agents should be accepted as there should be enough room on all bikes (but make it subject to that)
+	// check that all of them are now on bikes
+	// check that there are no bikers left with on bike = false
+
+	s.ProcessJoiningRequests(limbo)
+	for bikeID, agents := range requests {
+		bike := s.GetMegaBikes()[bikeID]
+		for _, agent := range agents {
+			onBike := false
+			for _, agentOnBike := range bike.GetAgents() {
+				onBikeId := agentOnBike.GetID()
+				if onBikeId == agent {
+					onBike = true
+					assert.True(t, agentOnBike.GetBikeStatus(), "biker's status wasn't successfully toggled back")
+					break
+				}
+			}
+			assert.True(t, onBike, "biker wasn't successfully accepted on bike")
+		}
+	}
+	// check that the limbo agent is not on any bikes
+	for _, agentID := range limbo {
+		for _, bike := range s.GetMegaBikes() {
+			for _, agentOnBike := range bike.GetAgents() {
+				assert.NotEqual(t, agentOnBike.GetID() == agentID, "agent in limbo was accepted")
+			}
+		}
+	}
+	// check that the limbo agent is still in limbo
+	for _, agentID := range limbo {
+		agent := s.GetAgentMap()[agentID]
+		assert.Equal(t, agent.GetBikeStatus(), false, "agent in limbo was accepted")
+	}
+
+	fmt.Printf("\nProcess joining request passed \n")
+}

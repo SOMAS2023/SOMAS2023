@@ -266,7 +266,6 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 	force := po.GetForce()
 	po.UpdateOrientation()
 	orientation := po.GetOrientation()
-
 	// Obtains the current xstate (i.e. velocity, acceleration, position, mass)
 	initialState := po.GetPhysicalState()
 
