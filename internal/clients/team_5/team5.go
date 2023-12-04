@@ -15,8 +15,18 @@ type Iteam5Agent interface {
 
 type team5Agent struct {
 	objects.BaseBiker
-	resourceAllocationMethod string
+	resourceAllocMethod ResourceAllocationMethod
 }
+
+type ResourceAllocationMethod int
+
+const (
+	Equal ResourceAllocationMethod = iota
+	Greedy
+	Needs
+	Contributions
+	Reputation
+)
 
 // Creates an instance of Team 5 Biker
 func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
@@ -24,8 +34,8 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	// print
 	fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
-		BaseBiker:                *baseBiker,
-		resourceAllocationMethod: "equal",
+		BaseBiker:           *baseBiker,
+		resourceAllocMethod: Equal,
 	}
 }
 
@@ -33,12 +43,12 @@ func (t5 *team5Agent) UpdateAgentInternalState() {
 	t5.updateReputationOfAllAgents()
 }
 
-//Functions can be called in any scenario
-
 // needs fixing always democracy
 func (t5 *team5Agent) DecideGovernance() utils.Governance {
 	return utils.Democracy
 }
+
+//Functions can be called in any scenario
 
 // needs fixing never gets off bike
 func (t5 *team5Agent) DecideAction() objects.BikerAction {
@@ -76,7 +86,8 @@ func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voti
 
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
-	return t5.calculateResourceAllocation(t5.GetGameState())
+	method := t5.resourceAllocMethod
+	return t5.calculateResourceAllocation(method)
 }
 
 // needs fixing currently never votes off
@@ -91,30 +102,32 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 	return voteResults
 }
 
-// needs fixing currently votes for first agent
 func (t5 *team5Agent) VoteDictator() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)
 	fellowBikers := t5.GetFellowBikers()
-	for i, fellowBiker := range fellowBikers {
-		if i == 0 {
-			votes[fellowBiker.GetID()] = 1.0
-		} else {
-			votes[fellowBiker.GetID()] = 0.0
+	var value float64 = 0
+	for _, fellowBiker := range fellowBikers {
+		value = t5.QueryReputation(fellowBiker.GetID())
+		if fellowBiker.GetColour() == t5.GetColour() {
+			value += 1
 		}
+
+		votes[fellowBiker.GetID()] = value
 	}
 	return votes
 }
 
-// needs fixing currently votes for first agent
 func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)
 	fellowBikers := t5.GetFellowBikers()
-	for i, fellowBiker := range fellowBikers {
-		if i == 0 {
-			votes[fellowBiker.GetID()] = 1.0
-		} else {
-			votes[fellowBiker.GetID()] = 0.0
+	var value float64 = 0
+	for _, fellowBiker := range fellowBikers {
+		value = t5.QueryReputation(fellowBiker.GetID())
+		if fellowBiker.GetColour() == t5.GetColour() {
+			value += 1
 		}
+
+		votes[fellowBiker.GetID()] = value
 	}
 	return votes
 

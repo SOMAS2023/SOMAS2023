@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t5 *team5Agent) calculateResourceAllocation(gameState objects.IGameState) map[uuid.UUID]float64 {
+func (t5 *team5Agent) calculateResourceAllocation(method ResourceAllocationMethod) map[uuid.UUID]float64 {
 	allocations := make(map[uuid.UUID]float64)
 
 	//how to get id of my megabike?
@@ -15,7 +15,7 @@ func (t5 *team5Agent) calculateResourceAllocation(gameState objects.IGameState) 
 	agentsOnBike := t5.GetFellowBikers()
 
 	for _, agent := range agentsOnBike {
-		allocations[agent.GetID()] = t5.generateAllocation(agent)
+		allocations[agent.GetID()] = t5.generateAllocation(agent, method)
 	}
 
 	allocations = normaliseMap(allocations)
@@ -23,24 +23,24 @@ func (t5 *team5Agent) calculateResourceAllocation(gameState objects.IGameState) 
 	return allocations
 }
 
-func (t5 *team5Agent) generateAllocation(agent objects.IBaseBiker) float64 {
+func (t5 *team5Agent) generateAllocation(agent objects.IBaseBiker, method ResourceAllocationMethod) float64 {
 	var value float64
 
-	switch t5.resourceAllocationMethod {
-	case "equal":
+	switch method {
+	case Equal:
 		value = 1
-	case "greedy":
+	case Greedy:
 		if agent.GetID() == t5.GetID() {
 			value = 1
 		} else {
 			value = 0
 		}
-	case "needs":
+	case Needs:
 		value = 1 - agent.GetEnergyLevel()
-	case "contributions":
+	case Contributions:
 		value = agent.GetForces().Pedal * utils.MovingDepletion
-	// case "rep":
-	// 	value = b.GetAgentReputation(agent.GetID())
+	case Reputation:
+		value = t5.QueryReputation(agent.GetID())
 	default:
 		//default to equal
 		value = 1

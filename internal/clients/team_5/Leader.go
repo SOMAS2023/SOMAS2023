@@ -25,19 +25,20 @@ func (t5 *team5Agent) DictateDirection() uuid.UUID {
 	return nearest
 }
 
-// needs fixing never kicks out
 func (t5 *team5Agent) DecideKickOut() []uuid.UUID {
-	return (make([]uuid.UUID, 0))
+	kickOut := make([]uuid.UUID, 0)
+	fellowBikers := t5.GetFellowBikers()
+	if len(fellowBikers) > 4 {
+		for _, agent := range fellowBikers {
+			id := agent.GetID()
+			if t5.QueryReputation(id) < 0.3 {
+				kickOut = append(kickOut, id)
+			}
+		}
+	}
+	return kickOut
 }
 
-// needs fixing always allocates evenly
 func (t5 *team5Agent) DecideDictatorAllocation() voting.IdVoteMap {
-	bikeID := t5.GetBike()
-	fellowBikers := t5.GetGameState().GetMegaBikes()[bikeID].GetAgents()
-	distribution := make(voting.IdVoteMap)
-	equalDist := 1.0 / float64(len(fellowBikers))
-	for _, agent := range fellowBikers {
-		distribution[agent.GetID()] = equalDist
-	}
-	return distribution
+	return t5.calculateResourceAllocation(Reputation)
 }
