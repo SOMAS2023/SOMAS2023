@@ -7,18 +7,15 @@ import (
 	"github.com/google/uuid"
 )
 
-func calculateResourceAllocation(gameState objects.IGameState, b *team5Agent) map[uuid.UUID]float64 {
+func calculateResourceAllocation(gameState objects.IGameState, t5 *team5Agent) map[uuid.UUID]float64 {
 	allocations := make(map[uuid.UUID]float64)
 
 	//how to get id of my megabike?
-	var bikeID uuid.UUID
-	bikeID = b.GetBike()
 
-	bike := gameState.GetMegaBikes()[bikeID]
-	agentsOnBike := bike.GetAgents()
+	agentsOnBike := t5.GetAgentsOnMegaBike()
 
 	for _, agent := range agentsOnBike {
-		allocations[agent.GetID()] = generateAllocation(agent, b)
+		allocations[agent.GetID()] = generateAllocation(agent, t5)
 	}
 
 	allocations = normaliseMap(allocations)

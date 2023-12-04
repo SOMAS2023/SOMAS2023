@@ -28,11 +28,6 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	}
 }
 
-func (t5 *team5Agent) GetBike() uuid.UUID {
-	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.GetBike(): ", t5.BaseBiker.GetBike())
-	return t5.BaseBiker.GetBike()
-}
-
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
 	return calculateResourceAllocation(t5.GetGameState(), t5)
@@ -51,6 +46,6 @@ func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voti
 	return finalVote
 }
 
-func (t5 *team5Agent) GetMegaBike() []objects.IBaseBiker {
-	return t5.BaseBiker.GetGameState().GetMegaBikes()[t5.BaseBiker.GetBike()].GetAgents()
+func (t5 *team5Agent) GetAgentsOnMegaBike() []objects.IBaseBiker {
+	return t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetAgents()
 }
