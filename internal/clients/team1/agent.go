@@ -21,6 +21,7 @@ const leaveThreshold = 0.2       // threshold for leaving
 const kickThreshold = 0.25       // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
+const joinThreshold = 0.8        // opinion threshold for joining if not same colour
 const trustconstant = 1          // weight of trust in opinion
 const effortConstant = 1         // weight of effort in opinion
 const fairnessDifference = 0.5   // modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
