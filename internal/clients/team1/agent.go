@@ -19,7 +19,7 @@ const deviatePositive = 0.1      // trust gain on non deviation
 const effortScaling = 0.1        // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1      // scaling factor for fairness, higher it is the more fairness changes each round
 const leaveThreshold = 0.0       // threshold for leaving
-const kickThreshold = 0.25       // threshold for kicking
+const kickThreshold = 0.0       // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
 const joinThreshold = 0.8        // opinion threshold for joining if not same colour
@@ -71,7 +71,6 @@ func (bb *Biker1) GetBikeInstance() obj.IMegaBike {
 func (bb *Biker1) GetLootLocation(id uuid.UUID) utils.Coordinates {
 	gs := bb.GetGameState()
 	lootboxes := gs.GetLootBoxes()
-	fmt.Printf("ID: %v", id)
 	lootbox := lootboxes[id]
 	return lootbox.GetPosition()
 }
@@ -106,6 +105,20 @@ func calculateSelfishnessScore(success float64, relationship float64) float64 {
 		overallScore = 0.5 - ((difference) / 2)
 	}
 	return overallScore
+}
+
+func (bb *Biker1) GetSelfishness(agent obj.IBaseBiker) float64 {
+	pointSum := bb.GetPoints() + agent.GetPoints()
+	var relativeSuccess float64
+	if pointSum == 0 {
+		relativeSuccess = 0.5
+	} else {
+		relativeSuccess = float64((agent.GetPoints() - bb.GetPoints()) / (pointSum)) //-1 to 1
+		relativeSuccess = (relativeSuccess + 1.0) / 2.0                              //shift to 0 to 1
+	}
+	id := agent.GetID()
+	ourRelationship := bb.opinions[id].opinion
+	return calculateSelfishnessScore(relativeSuccess, ourRelationship)
 }
 
 // ---------------LOOT ALLOCATION FUNCTIONS------------------
@@ -144,17 +157,9 @@ func (bb *Biker1) DecideAllocation() voting.IdVoteMap {
 
 	for _, agent := range fellowBikers {
 		if agent.GetID() != bb.GetID() {
-			pointSum := bb.GetPoints() + agent.GetPoints()
-			var relativeSuccess float64
-			if pointSum == 0 {
-				relativeSuccess = 0.5
-			} else {
-				relativeSuccess = float64((agent.GetPoints() - bb.GetPoints()) / (pointSum)) //-1 to 1
-				relativeSuccess = (relativeSuccess + 1.0) / 2.0                              //shift to 0 to 1
-			}
+			score := bb.GetSelfishness(agent)
 			id := agent.GetID()
-			ourRelationship := bb.opinions[id].opinion
-			selfishnessScore[id] = calculateSelfishnessScore(relativeSuccess, ourRelationship)
+			selfishnessScore[id] = score
 			runningScore = runningScore + selfishnessScore[id]
 		}
 	}
@@ -510,7 +515,7 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: normalisedAngle,
+			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
 		}
 		boxForces := utils.Forces{
 			Pedal:   bb.getPedalForce(),
@@ -527,7 +532,7 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 		normalisedAngle := angle / math.Pi
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: normalisedAngle,
+			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
 		}
 
 		escapeAudiForces := utils.Forces{
