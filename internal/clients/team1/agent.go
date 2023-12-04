@@ -9,6 +9,7 @@ import (
 	"math"
 	"sort"
 
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -22,6 +23,7 @@ const kickThreshold = 0.25       // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
 const joinThreshold = 0.8        // opinion threshold for joining if not same colour
+const leaderThreshold = 0.95	// opinion threshold for becoming leader
 const trustconstant = 1          // weight of trust in opinion
 const effortConstant = 1         // weight of effort in opinion
 const fairnessDifference = 0.5   // modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
@@ -296,7 +298,7 @@ func (bb *Biker1) nearestLootColour() (uuid.UUID, float64) {
 	}
 	return nearestBox, shortestDist
 }
-func (bb *Biker1) ProposeDirection1() uuid.UUID {
+func (bb *Biker1) ProposeDirection() uuid.UUID {
 	currLocation := bb.GetLocation()
 	shortestDist := math.MaxFloat64
 	currDist := 0.0
@@ -312,7 +314,7 @@ func (bb *Biker1) ProposeDirection1() uuid.UUID {
 	return nearestBox
 }
 
-func (bb *Biker1) ProposeDirection() uuid.UUID {
+func (bb *Biker1) ProposeDirection1() uuid.UUID {
 	// all logic for nominations goes in here
 	// find nearest coloured box
 	// if we can reach it, nominate it
@@ -354,7 +356,7 @@ func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
 }
 
 // Always vote for the nearest box to the bike
-func (bb *Biker1) FinalDirectionVote1(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	votes := make(voting.LootboxVoteMap)
 	shortestDist := math.MaxFloat64
 	closestProposal := uuid.UUID{}
@@ -375,7 +377,7 @@ func (bb *Biker1) FinalDirectionVote1(proposals map[uuid.UUID]uuid.UUID) voting.
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
-func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+func (bb *Biker1) FinalDirectionVote1(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	// add in voting logic using knowledge of everyone's nominations:
 
 	// for all boxes, rule out any that you can't reach
@@ -714,6 +716,171 @@ func (bb *Biker1) ourReputation() float64 {
 
 // ----------------END OF OPINION FUNCTIONS--------------
 
+// -----------------MESSAGING FUNCTIONS------------------
+
+// Handle a message received from anyone, ensuring they are trustworthy and come from the right place (e.g. our bike)
+func (bb *Biker1) VerifySender(sender obj.IBaseBiker) bool {
+	// check if sender is on our bike
+	if sender.GetBike() == bb.GetBike() {
+		// check if sender is trustworthy
+		if bb.opinions[sender.GetID()].trust > trustThreshold {
+			return true
+		}
+	}
+	return false
+}
+
+// Agent receives a who to kick off message
+func (bb *Biker1) HandleKickOffMessage(msg obj.KickOffAgentMessage) {
+	sender := msg.GetSender()
+	verified := bb.VerifySender(sender)
+	if verified {
+		// slightly penalise view of person who sent message
+		penalty := 0.9
+		bb.UpdateOpinion(sender.GetID(), penalty)
+	}
+
+}
+
+// Agent receives a reputation of another agent
+func (bb *Biker1) HandleReputationMessage(msg obj.ReputationOfAgentMessage) {
+	sender := msg.GetSender()
+	verified := bb.VerifySender(sender)
+	if verified {
+		// TODO: SOME FORMULA TO UPDATE OPINION BASED ON REPUTATION given
+	}
+}
+
+// Agent receives a message from another agent to join
+func (bb *Biker1) HandleJoiningMessage(msg obj.JoiningAgentMessage) {
+	sender := msg.GetSender()
+	// check if sender is trustworthy
+	if bb.opinions[sender.GetID()].trust > trustThreshold {
+		// TODO: some update on opinon maybe???
+	}
+
+}
+
+// Agent receives a message from another agent say what lootbox they want to go to
+func (bb *Biker1) HandleLootboxMessage(msg obj.LootboxMessage) {
+	sender := msg.GetSender()
+	verified := bb.VerifySender(sender)
+	if verified {
+		// TODO: some update on lootbox decision maybe??
+	}
+}
+
+// Agent receives a message from another agent saying what Governance they want
+func (bb *Biker1) HandleGovernanceMessage(msg obj.GovernanceMessage) {
+	sender := msg.GetSender()
+	verified := bb.VerifySender(sender)
+	if verified {
+		// TODO: some update on governance decision maybe??
+	}
+}
+
+func (bb *Biker1) GetTrustedRecepients() []obj.IBaseBiker {
+	fellowBikers := bb.GetFellowBikers()
+	var trustedRecepients []obj.IBaseBiker
+	for _, agent := range fellowBikers {
+		if bb.opinions[agent.GetID()].trust > trustThreshold {
+			trustedRecepients = append(trustedRecepients, agent)
+		}
+	}
+	return trustedRecepients
+}
+
+// CREATING MESSAGES
+func (bb *Biker1) CreateKickOffMessage() obj.KickOffAgentMessage {
+	// Receipients = fellowBikers
+	agentToKick := bb.lowestOpinionKick()
+	var kickDecision bool
+	// send kick off message if we have a low opinion of someone
+	if agentToKick != uuid.Nil {
+		kickDecision = true
+	} else {
+		kickDecision = false
+	}
+
+	return obj.KickOffAgentMessage{
+		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, bb.GetTrustedRecepients()),
+		AgentId:     agentToKick,
+		KickOff:     kickDecision,
+	}
+}
+
+func (bb *Biker1) CreateReputationMessage() obj.ReputationOfAgentMessage {
+	// Tell the truth (for now)
+	// TODO: receipients = fellowBikers that we trust?
+	return obj.ReputationOfAgentMessage{
+		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, bb.GetTrustedRecepients()),
+		AgentId:     uuid.Nil,
+		Reputation:  1.0,
+	}
+}
+
+func (bb *Biker1) CreateJoiningMessage() obj.JoiningAgentMessage {
+	// Tell the truth (for now)
+	// receipients = fellowBikers
+	biketoJoin := bb.ChangeBike()
+	gs := bb.GetGameState()
+	joiningBike := gs.GetMegaBikes()[biketoJoin]
+	return obj.JoiningAgentMessage{
+		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, joiningBike.GetAgents()),
+		AgentId:     bb.GetID(),
+		BikeId:      biketoJoin,
+	}
+}
+func (bb *Biker1) CreateLootboxMessage() obj.LootboxMessage {
+	// Tell the truth (for now)
+	// receipients = fellowBikers
+	chosenLootbox := bb.ProposeDirection()
+	return obj.LootboxMessage{
+		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, bb.GetTrustedRecepients()),
+		LootboxId:   chosenLootbox,
+	}
+}
+
+func (bb *Biker1) CreateGoverenceMessage() obj.GovernanceMessage {
+	// Tell the truth (using same logic as deciding governance for voting) (for now)
+	// receipients = fellowBikers
+	chosenGovernance := bb.DecideGovernace()
+	return obj.GovernanceMessage{
+		BaseMessage:  messaging.CreateMessage[obj.IBaseBiker](bb, bb.GetTrustedRecepients()),
+		BikeId:       bb.GetBike(),
+		GovernanceId: chosenGovernance,
+	}
+}
+
+// Agent sending messages to other agents
+func (bb *Biker1) GetAllMessages([]obj.IBaseBiker) []messaging.IMessage[obj.IBaseBiker] {
+	var sendKickMessage, sendReputationMessage, sendJoiningMessage, sendLootboxMessage, sendGovernanceMessage bool
+
+	// TODO: add logic to decide which messages to send and when
+
+	var messageList []messaging.IMessage[obj.IBaseBiker]
+	if sendKickMessage {
+		messageList = append(messageList, bb.CreateKickOffMessage())
+	}
+	if sendReputationMessage {
+		messageList = append(messageList, bb.CreateReputationMessage())
+	}
+	if sendJoiningMessage {
+		messageList = append(messageList, bb.CreateJoiningMessage())
+	}
+	if sendLootboxMessage {
+		messageList = append(messageList, bb.CreateLootboxMessage())
+
+	}
+	if sendGovernanceMessage {
+		messageList = append(messageList, bb.CreateGoverenceMessage())
+
+	}
+	return messageList
+}
+
+// -----------------END MESSAGING FUNCTIONS------------------
+
 // ----------------CHANGE BIKE FUNCTIONS-----------------
 // define a sorter for bikes -> used to change bikes
 type BikeSorter struct {
@@ -952,8 +1119,82 @@ func (bb *Biker1) DecideDictatorship() bool {
 		return false
 	}
 }
+// ----------------------LEADER/DICTATOR VOTING FUNCTIONS------------------
+func (bb *Biker1) VoteLeader() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
+	for _, agent := range fellowBikers {
+		if bb.opinions[agent.GetID()].opinion > leaderThreshold {
+			// randomize between 
+			
+			votes[agent.GetID()] = 1
+		} else {
+			votes[agent.GetID()] = 0
+		}
+	}
 
+
+}
+func (bb *Biker1) VoteDictator() voting.IdVoteMap {
+
+}
+//--------------------END OF LEADER/DICTATOR VOTING FUNCTIONS------------------
+
+//--------------------DICTATOR FUNCTIONS------------------
+
+// ** called only when the agent is the dictator
+func (bb *Biker1)DictateDirection() uuid.UUID {
+	
+	// TODO: make more sophisticated
+	return bb.nearestLootColour()[0]
+}                
+
+// ** decide which agents to kick out (dictator)
+func (bb *Biker1)DecideKickOut() []uuid.UUID {
+
+	// TODO: make more sophisticated
+	tmp := []uuid.UUID{}
+	tmp = append(tmp, bb.lowestOpinionKick())
+	return tmp
+} 
+
+// ** decide the allocation (dictator)
+func DecideDictatorAllocation() voting.IdVoteMap {
+	return bb.DecideAllocation()
+} 
+//--------------------END OF DICTATOR FUNCTIONS------------------
+
+//--------------------LEADER FUNCTIONS------------------
+func DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	// decides the weights of other peoples votes
+	// Leadership democracy 
+	// takes in proposed action as a parameter
+	// only run for the leader after everyone's proposeDirection is run
+	// assigns vector of weights to everyone's proposals, 1 is neutral
+	for agent, opinion := range bb.Opinions {
+		reputation[agent] = opinion.opinion
+	}
+	
+}
+
+//--------------------END OF LEADER FUNCTIONS------------------
 //--------------------END OF GOVERMENT CHOICE FUNCTIONS------------------
+
+//---------------------SOCIAL FUNCTIONS------------------------
+// get reputation value of all other agents
+func (bb *Biker1) GetReputation() map[uuid.UUID]float64 {
+	reputation := map[uuid.UUID]float64{}
+	for agent, opinion := range bb.Opinions {
+		reputation[agent] = opinion.opinion
+	}
+	return reputation
+} 
+func (bb *Biker1) QueryReputation(uuid.UUID) float64 {
+	
+}    // query for reputation value of specific agent with UUID
+func (bb *Biker1) SetReputation(uuid.UUID, float64) {}    // set reputation value of specific agent with UUID
+
+//---------------------END OF SOCIAL FUNCTIONS------------------------
 
 // -------------------INSTANTIATION FUNCTIONS----------------------------
 func GetBiker1(colour utils.Colour, id uuid.UUID) *Biker1 {
