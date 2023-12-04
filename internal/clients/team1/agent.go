@@ -1144,9 +1144,9 @@ func (bb *Biker1) VoteDictator() voting.IdVoteMap {
 
 // ** called only when the agent is the dictator
 func (bb *Biker1)DictateDirection() uuid.UUID {
-	
 	// TODO: make more sophisticated
-	return bb.nearestLootColour()[0]
+	tmp, _ := bb.nearestLootColour()
+	return tmp
 }                
 
 // ** decide which agents to kick out (dictator)
@@ -1159,21 +1159,21 @@ func (bb *Biker1)DecideKickOut() []uuid.UUID {
 } 
 
 // ** decide the allocation (dictator)
-func DecideDictatorAllocation() voting.IdVoteMap {
+func (bb *Biker1) DecideDictatorAllocation() voting.IdVoteMap {
 	return bb.DecideAllocation()
 } 
 //--------------------END OF DICTATOR FUNCTIONS------------------
 
 //--------------------LEADER FUNCTIONS------------------
-func DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	// decides the weights of other peoples votes
 	// Leadership democracy 
 	// takes in proposed action as a parameter
 	// only run for the leader after everyone's proposeDirection is run
 	// assigns vector of weights to everyone's proposals, 1 is neutral
-	for agent, opinion := range bb.Opinions {
-		reputation[agent] = opinion.opinion
-	}
+	// for agent, opinion := range bb.opinions {
+	// 	reputation[agent] = opinion.opinion
+	// }
 	
 }
 
@@ -1184,7 +1184,7 @@ func DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 // get reputation value of all other agents
 func (bb *Biker1) GetReputation() map[uuid.UUID]float64 {
 	reputation := map[uuid.UUID]float64{}
-	for agent, opinion := range bb.Opinions {
+	for agent, opinion := range bb.opinions {
 		reputation[agent] = opinion.opinion
 	}
 	return reputation
