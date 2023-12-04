@@ -7,15 +7,15 @@ import (
 	"github.com/google/uuid"
 )
 
-func calculateResourceAllocation(gameState objects.IGameState, t5 *team5Agent) map[uuid.UUID]float64 {
+func (t5 *team5Agent) calculateResourceAllocation(gameState objects.IGameState) map[uuid.UUID]float64 {
 	allocations := make(map[uuid.UUID]float64)
 
 	//how to get id of my megabike?
 
-	agentsOnBike := t5.GetAgentsOnMegaBike()
+	agentsOnBike := t5.GetFellowBikers()
 
 	for _, agent := range agentsOnBike {
-		allocations[agent.GetID()] = generateAllocation(agent, t5)
+		allocations[agent.GetID()] = t5.generateAllocation(agent)
 	}
 
 	allocations = normaliseMap(allocations)
@@ -23,14 +23,14 @@ func calculateResourceAllocation(gameState objects.IGameState, t5 *team5Agent) m
 	return allocations
 }
 
-func generateAllocation(agent objects.IBaseBiker, b *team5Agent) float64 {
+func (t5 *team5Agent) generateAllocation(agent objects.IBaseBiker) float64 {
 	var value float64
 
-	switch b.resourceAllocationMethod {
+	switch t5.resourceAllocationMethod {
 	case "equal":
 		value = 1
 	case "greedy":
-		if agent.GetID() == b.GetID() {
+		if agent.GetID() == t5.GetID() {
 			value = 1
 		} else {
 			value = 0

@@ -83,7 +83,7 @@ func calculateAverageEnergyOthers(gameState objects.IGameState, b *team5Agent) f
 
 	id := b.GetID()
 
-	agents := b.GetAgentsOnMegaBike()
+	agents := b.GetFellowBikers()
 	totAgents := len(agents) - 1
 
 	if totAgents == 0 {

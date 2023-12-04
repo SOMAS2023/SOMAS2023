@@ -7,7 +7,7 @@ import (
 )
 
 func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
-	agentsOnBike := t5.GetAgentsOnMegaBike()
+	agentsOnBike := t5.GetFellowBikers()
 	decisions := make(map[uuid.UUID]bool)
 	threshold := 0.5
 

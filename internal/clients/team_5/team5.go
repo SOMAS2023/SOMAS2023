@@ -18,6 +18,7 @@ type team5Agent struct {
 	resourceAllocationMethod string
 }
 
+// Creates an instance of Team 5 Biker
 func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
 	// print
@@ -32,9 +33,18 @@ func (t5 *team5Agent) UpdateAgentInternalState() {
 	t5.updateReputationOfAllAgents()
 }
 
-func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
-	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
-	return calculateResourceAllocation(t5.GetGameState(), t5)
+//Functions can be called in any scenario
+
+func (t5 *team5Agent) DecideGovernance() utils.Governance {
+	return utils.Democracy
+}
+
+func (t5 *team5Agent) DecideAction() objects.BikerAction {
+	return objects.Pedal
+}
+
+func (t5 *team5Agent) ChangeBike() uuid.UUID {
+	return uuid.Nil
 }
 
 func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
@@ -43,13 +53,51 @@ func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voti
 
 	finalVote := SortPreferences(finalPreferences)
 
-	// fmt.Print("finalVote: ")
-	// fmt.Print(finalVote)
-	// fmt.Print("\n")
-
 	return finalVote
 }
 
-func (t5 *team5Agent) GetAgentsOnMegaBike() []objects.IBaseBiker {
-	return t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetAgents()
+func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
+	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
+	return t5.calculateResourceAllocation(t5.GetGameState())
+}
+
+// needs fixing currently never votes off
+func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
+	voteResults := make(map[uuid.UUID]int)
+	for _, agent := range t5.GetFellowBikers() {
+		agentID := agent.GetID()
+		if agentID != t5.GetID() {
+			voteResults[agentID] = 0
+		}
+	}
+	return voteResults
+}
+
+// Needs stategy currently votes for first agent
+func (t5 *team5Agent) VoteDictator() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := t5.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+}
+
+// Needs stategy currently votes for first agent
+func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	fellowBikers := t5.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+
 }
