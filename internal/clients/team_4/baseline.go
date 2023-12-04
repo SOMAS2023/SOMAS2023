@@ -17,8 +17,8 @@ type IBaselineAgent interface {
 	objects.IBaseBiker
 
 	//INCOMPLETE/NO STRATEGY FUNCTIONS
-	CalculateReputation( /*choose*/ ) map[uuid.UUID]float64    //calculate reputation matrix
-	CalculateHonestyMatrix( /*choose*/ ) map[uuid.UUID]float64 //calculate honesty matrix
+	CalculateReputation() map[uuid.UUID]float64    //calculate reputation matrix
+	CalculateHonestyMatrix() map[uuid.UUID]float64 //calculate honesty matrix
 
 	DecideAction() objects.BikerAction //determines what action the agent is going to take this round. (changeBike or Pedal)
 	DecideForce(direction uuid.UUID)   //defines the vector you pass to the bike: [pedal, brake, turning]
@@ -223,6 +223,7 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 }
 
 func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+	fmt.Println("Final Direction Vote")
 	agent.UpdateDecisionData()
 	//We need to fix this ASAP
 	boxesInMap := agent.GetGameState().GetLootBoxes()
@@ -242,6 +243,7 @@ func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID
 }
 
 func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
+	fmt.Println("Decide Allocation")
 	agent.UpdateDecisionData()
 	distribution := make(voting.IdVoteMap) //make(map[uuid.UUID]float64)
 	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
@@ -396,6 +398,9 @@ func (agent *BaselineAgent) DisplayFellowsReputation() {
 }
 
 func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
+	fmt.Println("Propose Direction")
+	agent.UpdateDecisionData()
+	agent.DisplayFellowsEnergyHistory()
 	agent.proposedLootBox = nil
 	lootBoxes := agent.GetGameState().GetLootBoxes()
 	agentLocation := agent.GetLocation() //agent's location
