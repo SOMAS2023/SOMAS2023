@@ -68,6 +68,12 @@ func newPhysicsObjectDump(physicsObject objects.IPhysicsObject) PhysicsObjectDum
 func (s *Server) NewGameStateDump() GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
+		var location utils.Coordinates
+		if agent.GetBike() != uuid.Nil {
+			location = s.megaBikes[agent.GetBike()].GetPosition()
+		} else {
+			location = utils.Coordinates{X: 0.0, Y: 0.0}
+		}
 		agents[id] = AgentDump{
 			ID:           agent.GetID(),
 			Forces:       agent.GetForces(),
@@ -75,7 +81,7 @@ func (s *Server) NewGameStateDump() GameStateDump {
 			Points:       agent.GetPoints(),
 			Colour:       agent.GetColour(),
 			ColourString: agent.GetColour().String(),
-			Location:     s.megaBikes[agent.GetBike()].GetPosition(),
+			Location:     location,
 			OnBike:       agent.GetBikeStatus(),
 			BikeID:       agent.GetBike(),
 			Reputation:   maps.Clone(agent.GetReputation()),
