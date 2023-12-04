@@ -54,6 +54,8 @@ func TestAudiTargeting(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
 	s.FoundingInstitutions()
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	i := 0
 	emptyBikeId := uuid.UUID{}
 	slowBikeId := uuid.UUID{}
@@ -76,7 +78,7 @@ func TestAudiTargeting(t *testing.T) {
 			// give the bike a fast Velocity
 			bike.SetPhysicalState(utils.PhysicalState{Velocity: 100.0})
 			agentsOnBike := bike.GetAgents()
-			if agentsOnBike == nil || len(agentsOnBike) == 0 {
+			if len(agentsOnBike) == 0 {
 				emptyBikeId = id
 			}
 			fmt.Printf("Megabike{%s} has {%d} agents with velocity {%.2f}\n", id, len(bike.GetAgents()), bike.GetVelocity())

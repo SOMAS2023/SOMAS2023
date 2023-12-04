@@ -16,7 +16,10 @@ func TestGetLeavingDecisions(t *testing.T) {
 	// nor in the megabike riders
 	it := 3
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	gs := s.NewGameStateDump()
+
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
@@ -41,6 +44,8 @@ func TestGetLeavingDecisions(t *testing.T) {
 func TestHandleKickout(t *testing.T) {
 	it := 6
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -71,7 +76,7 @@ func TestProcessJoiningRequests(t *testing.T) {
 	targetBikes := make([]uuid.UUID, 2)
 
 	i := 0
-	for bikeId, _ := range s.GetMegaBikes() {
+	for bikeId := range s.GetMegaBikes() {
 		if i == 2 {
 			break
 		}
@@ -130,6 +135,8 @@ func TestRunActionProcess(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		it := 1
 		s := server.Initialize(it)
+		// required otherwise agents are not initialized to bikes
+		s.FoundingInstitutions()
 		gs := s.NewGameStateDump()
 
 		// Loop through each bike

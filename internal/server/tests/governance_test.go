@@ -12,6 +12,8 @@ import (
 func TestRulerElectionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -36,6 +38,8 @@ func TestRulerElectionDictator(t *testing.T) {
 func TestRulerElectionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -60,6 +64,8 @@ func TestRulerElectionLeader(t *testing.T) {
 func TestRunRulerActionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -125,7 +131,7 @@ func TestRunRulerActionLeader(t *testing.T) {
 	fmt.Printf("\nRuler action  leader passed \n")
 }
 
-func TestRunDemocratingAction(t *testing.T) {
+func TestRunDemocraticAction(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	gs := s.NewGameStateDump()

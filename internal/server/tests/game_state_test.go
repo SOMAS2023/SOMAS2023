@@ -16,7 +16,7 @@ func TestGetJoiningRequests(t *testing.T) {
 	targetBikes := make([]uuid.UUID, 2)
 
 	i := 0
-	for bikeId, _ := range s.GetMegaBikes() {
+	for bikeId := range s.GetMegaBikes() {
 		if i == 2 {
 			break
 		}
