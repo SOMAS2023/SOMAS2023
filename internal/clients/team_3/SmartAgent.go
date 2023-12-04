@@ -42,7 +42,7 @@ func (agent *SmartAgent) DecideAction() objects.BikerAction {
 
 // DecideForces considering Hegselmann-Krause model, Ramirez-Cano-Pitt model and Satisfaction
 func (agent *SmartAgent) DecideForces(direction uuid.UUID) {
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetAgents()
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
 	scores := make(map[uuid.UUID]float64)
 	totalScore := 0.0
 	for _, others := range agentsOnBike {
@@ -71,7 +71,7 @@ func (agent *SmartAgent) DecideForces(direction uuid.UUID) {
 		Brake: 0.0, // 这里默认刹车为 0
 		Turning: utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), agent.GetGameState().GetMegaBikes()[direction].GetPosition()) - agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetOrientation(),
+			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), agent.GetGameState().GetMegaBikes()[direction].GetPosition()) - agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetOrientation(),
 		}, // 这里默认转向为 0
 	}
 
@@ -107,7 +107,7 @@ func (agent *SmartAgent) FinalDirectionVote(proposals []uuid.UUID) voting.Lootbo
 
 func (agent *SmartAgent) DecideAllocation() voting.IdVoteMap {
 	agent.lootBoxCnt += 1
-	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()]
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	vote, _ := agent.scoreAgentsForAllocation(currentBike.GetAgents())
 	return vote
 }
@@ -132,7 +132,7 @@ func (agent *SmartAgent) decideTargetLootBox(lootBoxes map[uuid.UUID]objects.ILo
 
 // rankTargetProposals rank by distance
 func (agent *SmartAgent) rankTargetProposals(proposedLootBox []objects.ILootBox) (map[uuid.UUID]float64, error) {
-	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()]
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	// sort lootBox by distance
 	sort.Slice(proposedLootBox, func(i, j int) bool {
 		return physics.ComputeDistance(currentBike.GetPosition(), proposedLootBox[i].GetPosition()) < physics.ComputeDistance(currentBike.GetPosition(), proposedLootBox[j].GetPosition())
@@ -196,7 +196,7 @@ func (agent *SmartAgent) updateRepMap() {
 }
 
 func (agent *SmartAgent) recalculateSatisfaction() {
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetAgents()
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
 	scores := make([]float64, len(agentsOnBike))
 	gains := make([]float64, len(agentsOnBike))
 	for idx, others := range agentsOnBike {
