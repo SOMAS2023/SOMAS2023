@@ -77,6 +77,7 @@ func TestRunRulerActionDictator(t *testing.T) {
 			// make them vote for the dictator (assume that function works properly)
 			// get the dictator id (or check what it should be given the MVP strategy, this must be deterministic though)
 			ruler := s.RulerElection(agents, utils.Dictatorship)
+			bike.SetRuler(ruler)
 			direction := s.RunRulerAction(bike)
 			// set the force of the dictator
 			// check that the function works for it
@@ -100,6 +101,8 @@ func TestRunRulerActionDictator(t *testing.T) {
 func TestRunRulerActionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -134,6 +137,8 @@ func TestRunRulerActionLeader(t *testing.T) {
 func TestRunDemocraticAction(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
 	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
