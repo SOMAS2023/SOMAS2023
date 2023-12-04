@@ -78,7 +78,8 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 		agent.mylocationHistory = make([]utils.Coordinates, 0)
 	}
 	if agent.honestyMatrix == nil {
-		agent.honestyMatrix = make(map[uuid.UUID]float64)
+		//initialize l values to 1
+		agent.honestyMatrix = make(map[uuid.UUID]float64, 1)
 	}
 	if agent.reputation == nil {
 		agent.reputation = make(map[uuid.UUID]float64)
@@ -99,7 +100,7 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 		switch m := msg.(type) {
 		case objects.KickOffAgentMessage:
 			// Print out the ID of the agent who might be kicked off
-			//fmt.Printf("Received kickout message for agent ID: %s\n", m.getsender())
+			fmt.Printf("Received kickout message from agent ID: %s\n", msg.GetSender().GetID())
 			fmt.Printf("Received kickout message")
 
 			// Calculate the honesty value for the agent in the message
@@ -606,6 +607,7 @@ func (agent *BaselineAgent) CreateKickOffMessage() []objects.KickOffAgentMessage
 
 	var messages []objects.KickOffAgentMessage
 
+	// should this part only return one masssage about the kickout choice? maybe without the for loop here
 	for _, fellowBiker := range fellowBikers {
 		messages = append(messages, objects.KickOffAgentMessage{
 			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](agent, []objects.IBaseBiker{fellowBiker}),
