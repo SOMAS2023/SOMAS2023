@@ -133,10 +133,10 @@ func (s *Server) FoundingInstitutions() {
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
 	gameStates := []GameStateDump{s.NewGameStateDump()}
+	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
 		fmt.Printf("Main game loop running...\n\n")
-		s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 		gameStates = s.RunSimLoop(gameStates, utils.RoundIterations)
 		fmt.Printf("\nMain game loop finished.\n\n")
 		fmt.Printf("Messaging session started...\n\n")
