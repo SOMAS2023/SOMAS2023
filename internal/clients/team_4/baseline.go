@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"sort"
 
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -90,6 +91,29 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	//get fellow bikers
 	fellowBikers := currentBike.GetAgents()
+
+	// Process messages and update honesty matrix
+	msgs := agent.GetAllMessages(fellowBikers)
+
+	for _, msg := range msgs {
+		switch m := msg.(type) {
+		case objects.KickOffAgentMessage:
+			// Print out the ID of the agent who might be kicked off
+			//fmt.Printf("Received kickout message for agent ID: %s\n", m.getsender())
+			fmt.Printf("Received kickout message")
+
+			// Calculate the honesty value for the agent in the message
+			//honestyValue := GetHonestyValue(m.AgentId)
+			if m.AgentId == agent.GetID() {
+				//example, if our agent is going to be kicked out, we don't like this one and reduce the reputation value
+				senderId := m.BaseMessage.GetSender()
+				// Decrease the sender's honesty by 0.05
+				agent.DecreaseHonesty(senderId.GetID(), 0.05)
+				agent.CalculateHonestyMatrix(0, 0.05)
+			}
+		}
+	}
+
 	//update energy history for each fellow biker
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
@@ -100,9 +124,9 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	//call reputation and honesty matrix to calcuiate/update them
 	//save updated reputation and honesty matrix
 	agent.CalculateReputation()
-	agent.CalculateHonestyMatrix()
+
 	// agent.DisplayFellowsEnergyHistory()
-	// agent.DisplayFellowsHonesty()
+	agent.DisplayFellowsHonesty()
 	// agent.DisplayFellowsReputation()
 }
 
@@ -348,19 +372,35 @@ func (agent *BaselineAgent) CalculateReputation() {
 	// }
 }
 
-func (agent *BaselineAgent) CalculateHonestyMatrix() {
+/* func (agent *BaselineAgent) CalculateHonestyMatrix() {
 	// Copy the local honesty matrix values
 	for _, bike := range agent.GetGameState().GetMegaBikes() {
 		for _, biker := range bike.GetAgents() {
 			bikerID := biker.GetID()
-			agent.honestyMatrix[bikerID] = 1.0
+			agent.honestyMatrix[bikerID] = newHonesty
 		}
 	}
-	// for agentID, _ /*honestyValue*/ := range agent.honestyMatrix {
-	// 	//honestyMatrixCopy[agentID] = honestyValue
-	// 	agent.honestyMatrix[agentID] = 1.0
-	// }
+		return honestValue
+} */
 
+func (agent *BaselineAgent) CalculateHonestyMatrix(updateChange int, updateAmount float64) {
+	// This hypothetical function should determine whether to increase or decrease honesty,
+	// and by how much. You'll need to define how CalculateHonestyChange should work.
+	for _, bike := range agent.GetGameState().GetMegaBikes() {
+		for _, biker := range bike.GetAgents() {
+			bikerID := biker.GetID()
+
+			// Hypothetical function to calculate honesty change
+			//changeAmount, shouldIncrease := agent.CalculateHonestyChange(bikerID)
+
+			// Adjust honesty based on the result of CalculateHonestyChange
+			if updateChange == 1 {
+				agent.IncreaseHonesty(bikerID, updateAmount)
+			} else {
+				agent.DecreaseHonesty(bikerID, updateAmount)
+			}
+		}
+	}
 }
 
 func (agent *BaselineAgent) DisplayFellowsEnergyHistory() {
@@ -548,4 +588,74 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	}
 
 	return voteResults
+}
+
+func (agent *BaselineAgent) HandleKickOffMessage(msg objects.KickOffAgentMessage) {
+	if msg.AgentId == agent.GetID() {
+		senderId := msg.BaseMessage.GetSender()
+		agent.DecreaseHonesty(senderId.GetID(), 0.05)
+	} else {
+		senderId := msg.BaseMessage.GetSender()
+		agent.IncreaseHonesty(senderId.GetID(), 0.05)
+	}
+}
+
+func (agent *BaselineAgent) CreateKickOffMessage() []objects.KickOffAgentMessage {
+	currentMegaBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	fellowBikers := currentMegaBike.GetAgents()
+
+	var messages []objects.KickOffAgentMessage
+
+	for _, fellowBiker := range fellowBikers {
+		messages = append(messages, objects.KickOffAgentMessage{
+			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](agent, []objects.IBaseBiker{fellowBiker}),
+			AgentId:     fellowBiker.GetID(),
+			KickOff:     false,
+		})
+	}
+
+	return messages
+}
+
+func (agent *BaselineAgent) GetAllMessages(fellowBikers []objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
+	var messages []messaging.IMessage[objects.IBaseBiker]
+
+	if wantToSendMsg := true; wantToSendMsg {
+		//reputationMsgs := agent.CreateReputationMessage()
+		kickOffMsgs := agent.CreateKickOffMessage()
+		/* 		lootboxMsg := agent.CreateLootboxMessage()
+		   		joiningMsg := agent.CreateJoiningMessage()
+		   		governceMsg := agent.CreateGoverenceMessage() */
+
+		for _, msg := range kickOffMsgs {
+			messages = append(messages, msg)
+		}
+	}
+
+	return messages
+}
+
+// GetHonestyValue returns the honesty value for the given agent ID from the global honesty matrix.
+/* func GetHonestyValue(agentID uuid.UUID) float64 {
+	return GlobalHonestyMatrix.Records[agentID]
+} */
+
+func (agent *BaselineAgent) DecreaseHonesty(agentID uuid.UUID, decreaseAmount float64) {
+	if currentHonesty, ok := agent.honestyMatrix[agentID]; ok {
+		newHonesty := currentHonesty - decreaseAmount
+		if newHonesty < 0 {
+			newHonesty = 0
+		}
+		agent.honestyMatrix[agentID] = newHonesty
+	}
+}
+
+func (agent *BaselineAgent) IncreaseHonesty(agentID uuid.UUID, increaseAmount float64) {
+	if currentHonesty, ok := agent.honestyMatrix[agentID]; ok {
+		newHonesty := currentHonesty + increaseAmount
+		if newHonesty > 1 {
+			newHonesty = 1
+		}
+		agent.honestyMatrix[agentID] = newHonesty
+	}
 }
