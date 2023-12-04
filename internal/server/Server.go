@@ -3,6 +3,7 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -33,6 +34,11 @@ type IBaseBikerServer interface {
 	AudiCollisionCheck()
 	AddAgentToBike(agent objects.IBaseBiker)
 	FoundingInstitutions()
+	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
+	LootboxCheckAndDistributions()
+	ResetGameState()
+	GetDeadAgents() map[uuid.UUID]objects.IBaseBiker
+	UpdateGameStates()
 }
 
 type Server struct {
@@ -53,6 +59,7 @@ func Initialize(iterations int) IBaseBikerServer {
 		lootBoxes:      make(map[uuid.UUID]objects.ILootBox),
 		megaBikes:      make(map[uuid.UUID]objects.IMegaBike),
 		megaBikeRiders: make(map[uuid.UUID]uuid.UUID),
+		deadAgents:     make(map[uuid.UUID]objects.IBaseBiker),
 		audi:           objects.GetIAudi(),
 	}
 	server.replenishLootBoxes()
@@ -100,6 +107,10 @@ func (s *Server) RemoveAgentFromBike(agent objects.IBaseBiker) {
 	}
 }
 
+func (s *Server) GetDeadAgents() map[uuid.UUID]objects.IBaseBiker {
+	return s.deadAgents
+}
+
 func (s *Server) outputResults(gameStates []GameStateDump) {
 	statisticsJson, err := json.MarshalIndent(CalculateStatistics(gameStates), "", "    ")
 	if err != nil {
@@ -116,5 +127,12 @@ func (s *Server) outputResults(gameStates []GameStateDump) {
 	encoder.SetIndent("", "    ")
 	if err := encoder.Encode(gameStates); err != nil {
 		panic(err)
+	}
+}
+
+func (s *Server) UpdateGameStates() {
+	gs := s.NewGameStateDump()
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
 	}
 }
