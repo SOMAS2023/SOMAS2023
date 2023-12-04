@@ -46,8 +46,23 @@ func (t5 *team5Agent) DecideAction() objects.BikerAction {
 }
 
 // needs fixing doesn't pick a bike to join
+// Decides which bike to join based on reputation and space available
+// Todo: create a formula that combines reputation, space available, people with same colour (rn only uses rep)
 func (t5 *team5Agent) ChangeBike() uuid.UUID {
-	return uuid.Nil
+	//get reputation of all bikes
+	bikeReps := t5.getReputationOfAllBikes()
+	//get ID for maximum reputation bike if the bike is not full (<8 agents)
+	maxRep := 0.0
+	maxRepID := uuid.Nil
+	for bikeID, rep := range bikeReps {
+		//get length from GetAgents()
+		numAgentsOnbike := len(t5.GetGameState().GetMegaBikes()[bikeID].GetAgents())
+		if rep > maxRep && numAgentsOnbike < 8 {
+			maxRep = rep
+			maxRepID = bikeID
+		}
+	}
+	return maxRepID
 }
 
 func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {

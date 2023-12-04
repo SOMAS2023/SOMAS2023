@@ -65,6 +65,30 @@ func (t5 *team5Agent) getAveragePedalSpeedOfMegaBike(megaBikeID uuid.UUID) float
 }
 
 // Functions used in calculating the reputation value:
+
+func (t5 *team5Agent) getReputationOfSingleBike(megaBikeID uuid.UUID) float64 {
+	megaBikes := t5.GetGameState().GetMegaBikes()
+	megaBike, exists := megaBikes[megaBikeID]
+	if !exists {
+		return 0
+	}
+	agents := megaBike.GetAgents()
+	var totalReputation float64
+	for _, agent := range agents {
+		totalReputation += t5.GetReputation()[agent.GetID()]
+	}
+	return totalReputation / float64(len(agents))
+}
+
+func (t5 *team5Agent) getReputationOfAllBikes() map[uuid.UUID]float64 {
+	megaBikes := t5.GetGameState().GetMegaBikes()
+	reputations := make(map[uuid.UUID]float64)
+	for megaBikeID := range megaBikes {
+		reputations[megaBikeID] = t5.getReputationOfSingleBike(megaBikeID)
+	}
+	return reputations
+}
+
 func (t5 *team5Agent) getAverageEnergyOfAgents() float64 {
 	megaBikes := t5.GetGameState().GetMegaBikes()
 	var totalEnergy float64
