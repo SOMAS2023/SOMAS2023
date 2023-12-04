@@ -163,14 +163,14 @@ func (bb *Biker1) GetSelfishness(agent obj.IBaseBiker) float64 {
 // 	selfishnessScore := make(map[uuid.UUID]float64)
 // 	runningScore := 0.0
 
-	for _, agent := range fellowBikers {
-		if agent.GetID() != bb.GetID() {
-			score := bb.GetSelfishness(agent)
-			id := agent.GetID()
-			selfishnessScore[id] = score
-			runningScore = runningScore + selfishnessScore[id]
-		}
-	}
+	// for _, agent := range fellowBikers {
+	// 	if agent.GetID() != bb.GetID() {
+	// 		score := bb.GetSelfishness(agent)
+	// 		id := agent.GetID()
+	// 		selfishnessScore[id] = score
+	// 		runningScore = runningScore + selfishnessScore[id]
+	// 	}
+	// }
 
 // 	selfishnessScore[bb.GetID()] = runningScore / float64((len(fellowBikers) - 1))
 
@@ -316,11 +316,11 @@ func (bb *Biker1) GetSelfishness(agent obj.IBaseBiker) float64 {
 // 		}
 // 	}
 
-	if shortestDist == math.MaxFloat64 {
-		shortestDist = physics.ComputeDistance(bb.GetLootLocation(nearestBox), currLocation)
-	}
-	return nearestBox, shortestDist
-}
+// 	if shortestDist == math.MaxFloat64 {
+// 		shortestDist = physics.ComputeDistance(bb.GetLootLocation(nearestBox), currLocation)
+// 	}
+// 	return nearestBox, shortestDist
+// }
 
 func (bb *Biker1) ProposeDirection() uuid.UUID {
 	// all logic for nominations goes in here
@@ -478,17 +478,17 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 // -----------------END OF DIRECTION DECISION FUNCTIONS------------------
 
 func (bb *Biker1) DecideAction() obj.BikerAction {
-	// fellowBikers := bb.GetFellowBikers()
-	// avg_opinion := 1.0
-	// for _, agent := range fellowBikers {
-	// 	avg_opinion = avg_opinion + bb.opinions[agent.GetID()].opinion
-	// }
-	// if (avg_opinion < leaveThreshold) || bb.dislikeVote {
-	// 	bb.dislikeVote = false
-	// 	return 1
-	// } else {
-	// 	return 0
-	// }
+	fellowBikers := bb.GetFellowBikers()
+	avg_opinion := 1.0
+	for _, agent := range fellowBikers {
+		avg_opinion = avg_opinion + bb.opinions[agent.GetID()].opinion
+	}
+	if (avg_opinion < leaveThreshold) || bb.dislikeVote {
+		bb.dislikeVote = false
+		return 1
+	} else {
+		return 0
+	}
 	return 0
 }
 
@@ -521,27 +521,28 @@ func (bb *Biker1) getPedalForce() float64 {
 // 		angle := math.Atan2(deltaY, deltaX)
 // 		normalisedAngle := angle / math.Pi
 
-		turningDecision := utils.TurningDecision{
-			SteerBike:     true,
-			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
-		}
-		boxForces := utils.Forces{
-			Pedal:   bb.getPedalForce(),
-			Brake:   0.0,
-			Turning: turningDecision,
-		}
-		bb.SetForces(boxForces)
-	} else { //shouldnt happen, but would just run from audi
-		audiPos := bb.GetGameState().GetAudi().GetPosition()
-		deltaX := audiPos.X - currLocation.X
-		deltaY := audiPos.Y - currLocation.Y
-		// Steer in opposite direction to audi
-		angle := math.Atan2(-deltaY, -deltaX)
-		normalisedAngle := angle / math.Pi
-		turningDecision := utils.TurningDecision{
-			SteerBike:     true,
-			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
-		}
+	// 	turningDecision := utils.TurningDecision{
+	// 		SteerBike:     true,
+	// 		SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
+	// 	}
+	// 	boxForces := utils.Forces{
+	// 		Pedal:   bb.getPedalForce(),
+	// 		Brake:   0.0,
+	// 		Turning: turningDecision,
+	// 	}
+	// 	bb.SetForces(boxForces)
+	// } else { //shouldnt happen, but would just run from audi
+	// 	audiPos := bb.GetGameState().GetAudi().GetPosition()
+	// 	deltaX := audiPos.X - currLocation.X
+	// 	deltaY := audiPos.Y - currLocation.Y
+	// 	// Steer in opposite direction to audi
+	// 	angle := math.Atan2(-deltaY, -deltaX)
+	// 	normalisedAngle := angle / math.Pi
+	// 	turningDecision := utils.TurningDecision{
+	// 		SteerBike:     true,
+	// 		SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
+	// 	}
+	// }
 
 // 		escapeAudiForces := utils.Forces{
 // 			Pedal:   bb.getPedalForce(),
