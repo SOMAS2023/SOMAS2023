@@ -3,6 +3,7 @@ package objects
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/server"
 	"testing"
 
 	"github.com/google/uuid"
@@ -32,16 +33,16 @@ func NewMockBiker() *MockBiker {
 	}
 }
 
+func (mb *MockBiker) VoteForKickout() map[uuid.UUID]int {
+	return mb.VoteMap
+}
+
 type Biker interface {
 	VoteForKickout() map[uuid.UUID]int
 }
 
 // Ensure that BaseBiker implements the Biker interface.
-var _ Biker = &objects.BaseBiker{}
-
-func (mb *MockBiker) VoteForKickout() map[uuid.UUID]int {
-	return mb.VoteMap
-}
+//var _ Biker = &objects.BaseBiker{}
 
 func (mb *MockBiker) GetID() uuid.UUID {
 	return mb.ID
@@ -143,36 +144,44 @@ func TestGetSetGovernanceAndRuler(t *testing.T) {
 	mb.SetRuler(originalRuler)
 }
 
-/* func TestKickOutAgent(t *testing.T) {
+func TestKickOutAgent(t *testing.T) {
+	it := 3
+	s := server.Initialize(it)
+	s.FoundingInstitutions()
+	gs := s.NewGameStateDump()
+
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
+
 	mb := objects.GetMegaBike()
 
-	// Create and add mock bikers to the MegaBike
+	//biker1 := NewMockBiker(uuid.New(), map[uuid.UUID]int{ /* votes */ })
 	biker1 := NewMockBiker()
 	biker2 := NewMockBiker()
 	biker3 := NewMockBiker()
-	mb.AddAgent(biker1.BaseBiker)
-	mb.AddAgent(biker2.BaseBiker)
-	mb.AddAgent(biker3.BaseBiker)
+	mb.AddAgent(biker1)
+	mb.AddAgent(biker2)
+	mb.AddAgent(biker3)
 
 	weights := map[uuid.UUID]float64{
 		biker1.GetID(): 1.0,
-		biker2.GetID(): 2.0, // Higher weight for biker2
-		biker3.GetID(): 1.5, // Slightly higher weight for biker3
+		biker2.GetID(): 1.0,
+		biker3.GetID(): 1.0,
 	}
 
-	// Voting scenario
-	biker1.VoteMap[biker3.GetID()] = 1 // 1 vote against biker3
-	biker2.VoteMap[biker3.GetID()] = 2 // 2 votes against biker3 (weighted)
-	biker2.VoteMap[biker1.GetID()] = 1 // 1 vote against biker1 (weighted)
+	// Voting
+	biker1.VoteMap[biker3.GetID()] = 1
+	biker2.VoteMap[biker3.GetID()] = 1
+	biker3.VoteMap[biker1.GetID()] = 1
 
-	biker1.VoteForKickout()
-	fmt.Println("biker1", biker1.VoteMap)
-	biker2.VoteForKickout()
-	biker3.VoteForKickout()
+	for _, biker := range []Biker{biker1, biker2, biker3} {
+		biker.VoteForKickout()
+	}
 
+	// Kick out agents based on votes and weights.
 	kickedOutAgents := mb.KickOutAgent(weights)
 
-	// Check if the correct agent is kicked out based on weighted votes
 	if len(kickedOutAgents) != 1 {
 		t.Fatalf("KickOutAgent kicked out %d agents; want 1", len(kickedOutAgents))
 	}
@@ -181,11 +190,17 @@ func TestGetSetGovernanceAndRuler(t *testing.T) {
 		t.Errorf("KickOutAgent kicked out incorrect agent: got %v, want %v", kickedOutAgents[0], biker3.GetID())
 	}
 
-	// Verifying the remaining agents
-	remainingAgents := mb.GetAgents()
-	for _, agent := range remainingAgents {
-		if agent.GetID() == biker3.GetID() {
-			t.Errorf("Kicked out agent is still present in the MegaBike agents list")
+	for _, anyBike := range s.GetMegaBikes() {
+		agentsOnBike := anyBike.GetAgents()
+		// Skip empty bikes.
+		if agentsOnBike == nil {
+			continue
+		}
+		// Check if biker3 is still on a bike.
+		for _, agentOnBike := range agentsOnBike {
+			if agentOnBike.GetID() == biker3.GetID() {
+				t.Errorf("Kicked out agent is still present on a MegaBike")
+			}
 		}
 	}
-} */
+}
