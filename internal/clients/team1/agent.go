@@ -411,17 +411,18 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 				}
 				return votes
 			}
+			// calculate energy left if we went here
+			remainingEnergy := bb.findRemainingEnergyAfterReachingBox(proposal)
+			// find nearest reachable boxes from current coordinate
+			isColourNear := bb.checkBoxNearColour(proposal, remainingEnergy)
+			// assign score of number of votes for this box if our colour is nearby
+			if isColourNear {
+				votes[proposal] = float64(proposalVotes[proposal])
+			} else {
+				votes[proposal] = 0.0
+			}
 		}
-		// calculate energy left if we went here
-		remainingEnergy := bb.findRemainingEnergyAfterReachingBox(proposal)
-		// find nearest reachable boxes from current coordinate
-		isColourNear := bb.checkBoxNearColour(proposal, remainingEnergy)
-		// assign score of number of votes for this box if our colour is nearby
-		if isColourNear {
-			votes[proposal] = float64(proposalVotes[proposal])
-		} else {
-			votes[proposal] = 0.0
-		}
+		votes[proposal] = 0.0
 	}
 
 	// Check if all votes are 0
@@ -434,6 +435,7 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 	}
 
 	// If all votes are 0, nominate the nearest box
+	// Maybe nominate our box?
 	if allVotesZero {
 		minDist := math.MaxFloat64
 		var nearestBox uuid.UUID
