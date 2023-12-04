@@ -27,11 +27,8 @@ func (s *Server) RunSimLoop(iterations int) {
 
 func (s *Server) ResetGameState() {
 	// kick everyone off bikes
-	for id, _ := range s.GetAgentMap() {
-		if bikeId, ok := s.megaBikeRiders[id]; ok {
-			s.megaBikes[bikeId].RemoveAgent(id)
-			delete(s.megaBikeRiders, id)
-		}
+	for _, agent := range s.GetAgentMap() {
+		s.RemoveAgentFromBike(agent)
 	}
 
 	// respawn people who died in previous round (conditional)

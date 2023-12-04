@@ -87,16 +87,22 @@ func TestResetGameState(t *testing.T) {
 		mockBikers[i] = mockBiker
 	}
 	s.FoundingInstitutions()
-
-	s.ResetGameState()
 	gs := s.NewGameStateDump()
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
 
+	s.ResetGameState()
+
+	gsNew := s.NewGameStateDump()
+
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gsNew)
+	}
+
 	for _, mockBiker := range mockBikers {
-		if utils.BikersOnBike != 0 {
+		if mockBiker.GetBikeStatus() {
 			t.Errorf("Expected no bikers on bikes after reset, but found biker with ID %v on a bike", mockBiker.GetID())
 		}
 	}
