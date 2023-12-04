@@ -17,7 +17,7 @@ const deviatePositive = 0.1      // trust gain on non deviation
 const effortScaling = 0.1        // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1      // scaling factor for fairness, higher it is the more fairness changes each round
 const leaveThreshold = 0.2       // threshold for leaving
-const kickThreshold = 0.0     // threshold for kicking
+const kickThreshold = 0.0        // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
 const joinThreshold = 0.8        // opinion threshold for joining if not same colour
@@ -58,6 +58,16 @@ func (bb *Biker1) GetFellowBikers() []obj.IBaseBiker {
 	gs := bb.GetGameState()
 	bikeId := bb.GetBike()
 	return gs.GetMegaBikes()[bikeId].GetAgents()
+}
+
+func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
+	gs := bb.GetGameState()
+	// get all agents
+	agents := make([]obj.IBaseBiker, 0)
+	for _, agent := range gs.GetAgents() {
+		agents = append(agents, agent)
+	}
+	return agents
 }
 
 func (bb *Biker1) GetBikeInstance() obj.IMegaBike {
@@ -506,38 +516,39 @@ func (bb *Biker1) getPedalForce() float64 {
 // // in the MVP the pedalling force will be 1, the breaking 0 and the tunring is determined by the
 // // location of the nearest lootboX
 // // the function is passed in the id of the voted lootbox, for now ignored
-func (bb *Biker1) DecideForce(direction uuid.UUID) {
-	if bb.recentVote != nil {
-		if bb.recentVote[direction] < leavingThreshold {
-			bb.dislikeVote = true
-		} else {
-			bb.dislikeVote = false
-		}
-	}
+// func (bb *Biker1) DecideForce(direction uuid.UUID) {
+// 	if bb.recentVote != nil {
+// 		if bb.recentVote[direction] < leavingThreshold {
+// 			bb.dislikeVote = true
+// 		} else {
+// 			bb.dislikeVote = false
+// 		}
+// 	}
 
-	//agent doesn't rebel, just decides to leave next round if dislike vote
-	lootBoxes := bb.GetGameState().GetLootBoxes()
-	currLocation := bb.GetLocation()
-	if len(lootBoxes) > 0 {
-		targetPos := lootBoxes[direction].GetPosition()
-		deltaX := targetPos.X - currLocation.X
-		deltaY := targetPos.Y - currLocation.Y
-		angle := math.Atan2(deltaY, deltaX)
-		normalisedAngle := angle / math.Pi
+// 	//agent doesn't rebel, just decides to leave next round if dislike vote
+// 	lootBoxes := bb.GetGameState().GetLootBoxes()
+// 	currLocation := bb.GetLocation()
+// 	if len(lootBoxes) > 0 {
+// 		targetPos := lootBoxes[direction].GetPosition()
+// 		deltaX := targetPos.X - currLocation.X
+// 		deltaY := targetPos.Y - currLocation.Y
+// 		angle := math.Atan2(deltaY, deltaX)
+// 		normalisedAngle := angle / math.Pi
 
-		turningDecision := utils.TurningDecision{
-			SteerBike:     true,
-			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
-		}
-		boxForces := utils.Forces{
-			Pedal:   bb.getPedalForce(),
-			Brake:   0.0,
-			Turning: turningDecision,
-		}
-		fmt.Printf("agent %s: Forces: %v \n", bb.GetID(), boxForces)
-		bb.SetForces(boxForces)
-	}
-}
+// 		turningDecision := utils.TurningDecision{
+// 			SteerBike:     true,
+// 			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
+// 		}
+// 		boxForces := utils.Forces{
+// 			Pedal:   bb.getPedalForce(),
+// 			Brake:   0.0,
+// 			Turning: turningDecision,
+// 		}
+// 		fmt.Printf("agent %s: Forces: %v \n", bb.GetID(), boxForces)
+// 		bb.SetForces(boxForces)
+// 	}
+// }
+
 // 	} else { //shouldnt happen, but would just run from audi
 // 		audiPos := bb.GetGameState().GetAudi().GetPosition()
 // 		deltaX := audiPos.X - currLocation.X
@@ -564,31 +575,31 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 
 // -----------------OPINION FUNCTIONS------------------
 
-// func (bb *Biker1) UpdateEffort(agentID uuid.UUID) {
-// 	agent := bb.GetAgentFromId(agentID)
-// 	fellowBikers := bb.GetFellowBikers()
-// 	totalPedalForce := 0.0
-// 	for _, agent := range fellowBikers {
-// 		totalPedalForce = totalPedalForce + agent.GetForces().Pedal
-// 	}
-// 	avgForce := totalPedalForce / float64(len(fellowBikers))
-// 	//effort expectation is scaled by their energy level -- should it be? (*agent.GetEnergyLevel())
-// 	finalEffort := bb.opinions[agent.GetID()].effort + (agent.GetForces().Pedal-avgForce)*effortScaling
+func (bb *Biker1) UpdateEffort(agentID uuid.UUID) {
+	agent := bb.GetAgentFromId(agentID)
+	fellowBikers := bb.GetFellowBikers()
+	totalPedalForce := 0.0
+	for _, agent := range fellowBikers {
+		totalPedalForce = totalPedalForce + agent.GetForces().Pedal
+	}
+	avgForce := totalPedalForce / float64(len(fellowBikers))
+	//effort expectation is scaled by their energy level -- should it be? (*agent.GetEnergyLevel())
+	finalEffort := bb.opinions[agent.GetID()].effort + (agent.GetForces().Pedal-avgForce)*effortScaling
 
-// 	if finalEffort > 1 {
-// 		finalEffort = 1
-// 	}
-// 	if finalEffort < 0 {
-// 		finalEffort = 0
-// 	}
-// 	newOpinion := Opinion{
-// 		effort:   finalEffort,
-// 		fairness: bb.opinions[agentID].fairness,
-// 		trust:    bb.opinions[agentID].trust,
-// 		opinion:  bb.opinions[agentID].opinion,
-// 	}
-// 	bb.opinions[agent.GetID()] = newOpinion
-// }
+	if finalEffort > 1 {
+		finalEffort = 1
+	}
+	if finalEffort < 0 {
+		finalEffort = 0
+	}
+	newOpinion := Opinion{
+		effort:   finalEffort,
+		fairness: bb.opinions[agentID].fairness,
+		trust:    bb.opinions[agentID].trust,
+		opinion:  bb.opinions[agentID].opinion,
+	}
+	bb.opinions[agent.GetID()] = newOpinion
+}
 
 // func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 // 	id := agentID
@@ -645,105 +656,105 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 // }
 
 // how well does agent 1 like agent 2 according to objective metrics
-// func (bb *Biker1) GetObjectiveOpinion(id1 uuid.UUID, id2 uuid.UUID) float64 {
-// 	agent1 := bb.GetAgentFromId(id1)
-// 	agent2 := bb.GetAgentFromId(id2)
-// 	objOpinion := 0.0
-// 	if agent1.GetColour() == agent2.GetColour() {
-// 		objOpinion = objOpinion + colorOpinionConstant
-// 	}
-// 	objOpinion = objOpinion + (agent1.GetEnergyLevel() - agent2.GetEnergyLevel())
-// 	gs := bb.GetGameState()
-// 	megabikes := gs.GetMegaBikes()
-// 	maxpoints := 0
-// 	for _, bike := range megabikes {
-// 		for _, agent := range bike.GetAgents() {
-// 			if agent.GetPoints() > maxpoints {
-// 				maxpoints = agent.GetPoints()
-// 			}
-// 		}
-// 	}
-// 	objOpinion = objOpinion + float64((agent1.GetPoints()-agent2.GetPoints())/maxpoints)
-// 	objOpinion = math.Abs(objOpinion / (2.0 + colorOpinionConstant)) //normalise to 0-1
-// 	return objOpinion
-// }
+func (bb *Biker1) GetObjectiveOpinion(id1 uuid.UUID, id2 uuid.UUID) float64 {
+	agent1 := bb.GetAgentFromId(id1)
+	agent2 := bb.GetAgentFromId(id2)
+	objOpinion := 0.0
+	if agent1.GetColour() == agent2.GetColour() {
+		objOpinion = objOpinion + colorOpinionConstant
+	}
+	objOpinion = objOpinion + (agent1.GetEnergyLevel() - agent2.GetEnergyLevel())
+	all_agents := bb.GetAllAgents()
+	maxpoints := 0
+	for _, agent := range all_agents {
+		if agent.GetPoints() > maxpoints {
+			maxpoints = agent.GetPoints()
+		}
+	}
+	if maxpoints != 0 {
+		objOpinion = objOpinion + float64((agent1.GetPoints()-agent2.GetPoints())/maxpoints)
+	}
+	objOpinion = math.Abs(objOpinion / (2.0 + colorOpinionConstant)) //normalise to 0-1
+	return objOpinion
+}
 
-// func (bb *Biker1) setOpinion() {
-// 	if bb.opinions == nil {
-// 		bb.opinions = make(map[uuid.UUID]Opinion)
-// 	}
+func (bb *Biker1) setOpinion() {
+	if bb.opinions == nil {
+		bb.opinions = make(map[uuid.UUID]Opinion)
+	}
 
-// }
+}
 
-// func (bb *Biker1) UpdateOpinions() {
-// 	fellowBikers := bb.GetFellowBikers()
-// 	bb.setOpinion()
-// 	for _, agent := range fellowBikers {
-// 		id := agent.GetID()
-// 		_, ok := bb.opinions[agent.GetID()]
+func (bb *Biker1) UpdateOpinions() {
+	fellowBikers := bb.GetFellowBikers()
+	bb.setOpinion()
+	for _, agent := range fellowBikers {
+		id := agent.GetID()
+		_, ok := bb.opinions[agent.GetID()]
 
-// 		if !ok {
-// 			agentId := agent.GetID()
-// 			//if we have no data on an agent, initialise to neutral
-// 			newOpinion := Opinion{
-// 				effort:   0.5,
-// 				trust:    0.5,
-// 				fairness: 0.5,
-// 				opinion:  0.5,
-// 			}
-// 			bb.opinions[agentId] = newOpinion
-// 		}
-// 		bb.UpdateTrust(id)
-// 		bb.UpdateEffort(id)
-// 		//bb.UpdateFairness(agent)
-// 		bb.UpdateOpinion(id, 1.0)
-// 	}
-// }
+		if !ok {
+			agentId := agent.GetID()
+			//if we have no data on an agent, initialise to neutral
+			newOpinion := Opinion{
+				effort:   0.5,
+				trust:    0.5,
+				fairness: 0.5,
+				opinion:  0.5,
+			}
+			bb.opinions[agentId] = newOpinion
+		}
+		// bb.UpdateTrust(id)
+		// bb.UpdateEffort(id)
+		//bb.UpdateFairness(agent)
+		bb.UpdateOpinion(id, 1.0)
+	}
+}
 
-// func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
-// 	//Sorry no youre right, keep it, silly me
-// 	bb.setOpinion()
-// 	_, ok := bb.opinions[id]
-// 	if !ok {
-// 		//if we have no data on an agent, initialise to neutral
-// 		newOpinion := Opinion{
-// 			effort:   0.5,
-// 			trust:    0.5,
-// 			fairness: 0.5,
-// 			opinion:  0.5,
-// 		}
-// 		bb.opinions[id] = newOpinion
-// 	}
+func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
+	//Sorry no youre right, keep it, silly me
+	bb.setOpinion()
+	_, ok := bb.opinions[id]
+	if !ok {
+		//if we have no data on an agent, initialise to neutral
+		newOpinion := Opinion{
+			effort:   0.5,
+			trust:    0.5,
+			fairness: 0.5,
+			opinion:  0.5,
+		}
+		bb.opinions[id] = newOpinion
+	}
 
-// 	fmt.Printf("agent id %v \n", id)
-// 	fmt.Printf("opinions map %v \n", bb.opinions)
+	fmt.Printf("agent id %v \n", id)
+	fmt.Printf("opinions map %v \n", bb.opinions)
 
-// 	newOpinion := Opinion{
-// 		effort:   bb.opinions[id].effort,
-// 		trust:    bb.opinions[id].trust,
-// 		fairness: bb.opinions[id].fairness,
-// 		opinion:  ((bb.opinions[id].trust*trustconstant+bb.opinions[id].effort*effortConstant+bb.opinions[id].fairness*fairnessConstant)/trustconstant + effortConstant + fairnessConstant) * multiplier,
-// 	}
-// 	bb.opinions[id] = newOpinion
+	newOpinion := Opinion{
+		effort:   bb.opinions[id].effort,
+		trust:    bb.opinions[id].trust,
+		fairness: bb.opinions[id].fairness,
+		opinion:  ((bb.opinions[id].trust*trustconstant+bb.opinions[id].effort*effortConstant+bb.opinions[id].fairness*fairnessConstant)/trustconstant + effortConstant + fairnessConstant) * multiplier,
+	}
+	bb.opinions[id] = newOpinion
 
-// 	// if newOpinion.opinion > 1 {
-// 	// 	newOpinion.opinion = 1
-// 	// } else if newOpinion.opinion < 0 {
-// 	// 	newOpinion.opinion = 0
-// 	// }
+	// if newOpinion.opinion > 1 {
+	// 	newOpinion.opinion = 1
+	// } else if newOpinion.opinion < 0 {
+	// 	newOpinion.opinion = 0
+	// }
 
-// }
+}
 
-// func (bb *Biker1) ourReputation() float64 {
-// 	fellowBikers := bb.GetFellowBikers()
-// 	repuation := 0.0
-// 	for _, agent := range fellowBikers {
-// 		repuation = repuation + bb.GetObjectiveOpinion(bb.GetID(), agent.GetID())
+func (bb *Biker1) ourReputation() float64 {
+	founding_agents := bb.GetAllAgents()
+	reputation := 0.0
+	for _, agent := range founding_agents {
+		fmt.Printf("agent id %v \n", agent.GetID())
+		reputation = reputation + bb.GetObjectiveOpinion(bb.GetID(), agent.GetID())
 
-// 	}
-// 	repuation = repuation / float64(len(fellowBikers))
-// 	return repuation
-// }
+	}
+	reputation = reputation / float64(len(founding_agents))
+	return reputation
+}
 
 // ----------------END OF OPINION FUNCTIONS--------------
 
@@ -1000,19 +1011,15 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 // }
 
 // -------------------END OF CHANGE BIKE FUNCTIONS----------------------
-// func (bb *Biker1) GetAgentFromId(agentId uuid.UUID) obj.IBaseBiker {
-// 	gs := bb.GetGameState()
-// 	bikes := gs.GetMegaBikes()
-// 	for bikeId := range bikes {
-// 		for _, agents := range gs.GetMegaBikes()[bikeId].GetAgents() {
-// 			if agents.GetID() == agentId {
-// 				agent := agents
-// 				return agent
-// 			}
-// 		}
-// 	}
-// 	return bb
-// }
+func (bb *Biker1) GetAgentFromId(agentId uuid.UUID) obj.IBaseBiker {
+	agents := bb.GetAllAgents()
+	for _, agent := range agents {
+		if agent.GetID() == agentId {
+			return agent
+		}
+	}
+	return nil
+}
 
 // -------------------BIKER ACCEPTANCE FUNCTIONS------------------------
 // an agent will have to rank the agents that are trying to join and that they will try to
@@ -1086,71 +1093,74 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 // -------------------GOVERMENT CHOICE FUNCTIONS--------------------------
 
 // Not implemented on Server yet so this is just a placeholder
-// func (bb *Biker1) DecideGovernace() int {
-// 	if bb.DecideDictatorship() {
-// 		return 2
-// 	} else if bb.DecideLeadership() {
-// 		return 1
-// 	} else {
-// 		// Democracy
-// 		return 0
-// 	}
-// }
+func (bb *Biker1) DecideGovernance() utils.Governance {
+	if bb.DecideDictatorship() {
+		fmt.Printf("We are a dictatorship \n")
+		return 2
+	} else if bb.DecideLeadership() {
+		fmt.Printf("We are a leadership \n")
+		return 1
+	} else {
+		// Democracy
+		fmt.Printf("We are a democracy \n")
+		return 0
+	}
+}
 
 // Might be unnecesary as this is the default goverment choice for us
-// func (bb *Biker1) DecideDemocracy() bool {
-// 	fellowBikers := bb.GetFellowBikers()
-// 	totalOpinion := 0.0
-// 	reputation := bb.ourReputation()
-// 	for _, agent := range fellowBikers {
-// 		opinion, ok := bb.opinions[agent.GetID()]
-// 		if ok {
-// 			totalOpinion = totalOpinion + opinion.opinion
-// 		}
-// 	}
-// 	normOpinion := totalOpinion / float64(len(fellowBikers))
-// 	if (normOpinion > democracyOpinonThreshold) || (reputation > democracyReputationThreshold) {
-// 		return true
-// 	} else {
-// 		return false
-// 	}
-// }
+func (bb *Biker1) DecideDemocracy() bool {
+	founding_agents := bb.GetAllAgents()
+	totalOpinion := 0.0
+	reputation := bb.ourReputation()
+	for _, agent := range founding_agents {
+		opinion, ok := bb.opinions[agent.GetID()]
+		if ok {
+			totalOpinion = totalOpinion + opinion.opinion
+		}
+	}
+	normOpinion := totalOpinion / float64(len(founding_agents))
+	if (normOpinion > democracyOpinonThreshold) || (reputation > democracyReputationThreshold) {
+		return true
+	} else {
+		return false
+	}
+}
 
-// func (bb *Biker1) DecideLeadership() bool {
-// 	fellowBikers := bb.GetFellowBikers()
-// 	totalOpinion := 0.0
-// 	reputation := bb.ourReputation()
-// 	for _, agent := range fellowBikers {
-// 		opinion, ok := bb.opinions[agent.GetID()]
-// 		if ok {
-// 			totalOpinion = totalOpinion + opinion.opinion
-// 		}
-// 	}
-// 	normOpinion := totalOpinion / float64(len(fellowBikers))
-// 	if (normOpinion > leadershipOpinionThreshold) || (reputation > leadershipReputationThreshold) {
-// 		return true
-// 	} else {
-// 		return false
-// 	}
-// }
+func (bb *Biker1) DecideLeadership() bool {
+	founding_agents := bb.GetAllAgents()
+	totalOpinion := 0.0
+	reputation := bb.ourReputation()
+	for _, agent := range founding_agents {
+		opinion, ok := bb.opinions[agent.GetID()]
+		if ok {
+			totalOpinion = totalOpinion + opinion.opinion
+		}
+	}
+	normOpinion := totalOpinion / float64(len(founding_agents))
+	if (normOpinion > leadershipOpinionThreshold) || (reputation > leadershipReputationThreshold) {
+		return true
+	} else {
+		return false
+	}
+}
 
-// func (bb *Biker1) DecideDictatorship() bool {
-// 	fellowBikers := bb.GetFellowBikers()
-// 	totalOpinion := 0.0
-// 	reputation := bb.ourReputation()
-// 	for _, agent := range fellowBikers {
-// 		opinion, ok := bb.opinions[agent.GetID()]
-// 		if ok {
-// 			totalOpinion = totalOpinion + opinion.opinion
-// 		}
-// 	}
-// 	normOpinion := totalOpinion / float64(len(fellowBikers))
-// 	if (normOpinion > dictatorshipOpinionThreshold) || (reputation > dictatorshipReputationThreshold) {
-// 		return true
-// 	} else {
-// 		return false
-// 	}
-// }
+func (bb *Biker1) DecideDictatorship() bool {
+	founding_agents := bb.GetAllAgents()
+	totalOpinion := 0.0
+	reputation := bb.ourReputation()
+	for _, agent := range founding_agents {
+		opinion, ok := bb.opinions[agent.GetID()]
+		if ok {
+			totalOpinion = totalOpinion + opinion.opinion
+		}
+	}
+	normOpinion := totalOpinion / float64(len(founding_agents))
+	if (normOpinion > dictatorshipOpinionThreshold) || (reputation > dictatorshipReputationThreshold) {
+		return true
+	} else {
+		return false
+	}
+}
 
 // ----------------------LEADER/DICTATOR VOTING FUNCTIONS------------------
 // func (bb *Biker1) VoteLeader() voting.IdVoteMap {
@@ -1234,9 +1244,10 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 //---------------------END OF SOCIAL FUNCTIONS------------------------
 
 // -------------------INSTANTIATION FUNCTIONS----------------------------
-func GetBiker1 (colour utils.Colour, id uuid.UUID) *Biker1 {
+func GetBiker1(colour utils.Colour, id uuid.UUID) *Biker1 {
 	return &Biker1{
 		BaseBiker: obj.GetBaseBiker(colour, id),
+		opinions:  make(map[uuid.UUID]Opinion),
 	}
 }
 

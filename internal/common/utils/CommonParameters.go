@@ -11,7 +11,7 @@ const BikersOnBike = 8
 const ReplenishEnergyEveryRound = true
 const ResetPointsEveryRound = true
 const RespawnEveryRound = true
-const RoundIterations = 1
+const RoundIterations = 50
 
 /*
 Server Parameters
