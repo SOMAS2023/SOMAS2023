@@ -27,7 +27,17 @@ func (t5 *team5Agent) DictateDirection() uuid.UUID {
 
 // needs fixing never kicks out
 func (t5 *team5Agent) DecideKickOut() []uuid.UUID {
-	return (make([]uuid.UUID, 0))
+	kickOut := make([]uuid.UUID, 0)
+	fellowBikers := t5.GetFellowBikers()
+	if len(fellowBikers) > 4 {
+		for _, agent := range fellowBikers {
+			id := agent.GetID()
+			if t5.QueryReputation(id) < 0.3 {
+				kickOut = append(kickOut, id)
+			}
+		}
+	}
+	return kickOut
 }
 
 func (t5 *team5Agent) DecideDictatorAllocation() voting.IdVoteMap {
