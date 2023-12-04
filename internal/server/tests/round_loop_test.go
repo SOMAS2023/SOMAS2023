@@ -1,14 +1,18 @@
 package server_test
 
 import (
+	"SOMAS2023/internal/common/objects"
 	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"SOMAS2023/internal/server"
 	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetLeavingDecisions(t *testing.T) {
@@ -187,4 +191,125 @@ func TestRunActionProcess(t *testing.T) {
 		}
 	}
 	fmt.Printf("\nRun action process passed \n")
+}
+
+type NegativeAgent struct {
+	*objects.BaseBiker
+}
+
+type INegativeAgent interface {
+	objects.IBaseBiker
+	FurthestLootbox() uuid.UUID
+	DictateDirection() uuid.UUID
+	ProposeDirection() uuid.UUID
+	FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap
+	DecideWeights(utils.Action) map[uuid.UUID]float64
+}
+
+func NewNegativeAgent() *NegativeAgent {
+	baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+
+	return &NegativeAgent{
+		BaseBiker: baseBiker,
+	}
+}
+
+func (a *NegativeAgent) FurthestLootbox() uuid.UUID {
+	currLocation := a.GetLocation()
+	furthestDist := 0.0
+	var nearestBox uuid.UUID
+	var currDist float64
+	for _, loot := range a.GetGameState().GetLootBoxes() {
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
+		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+		if currDist > furthestDist {
+			nearestBox = loot.GetID()
+			furthestDist = currDist
+		}
+	}
+	return nearestBox
+}
+
+func (a *NegativeAgent) DictateDirection() uuid.UUID {
+	return a.FurthestLootbox()
+}
+
+// used when trying a negative agent as the leader
+func (a *NegativeAgent) ProposeDirection() uuid.UUID {
+	return a.FurthestLootbox()
+}
+
+// only vote for own proposal
+func (a *NegativeAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+	votes := make(voting.LootboxVoteMap)
+	furthest := a.FurthestLootbox()
+	for _, proposal := range proposals {
+		if furthest == proposal {
+			votes[proposal] = 1.0
+		} else {
+			votes[proposal] = 0.0
+		}
+	}
+	return votes
+}
+
+func (a *NegativeAgent) DecideWeights(utils.Action) map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	bike := a.GetGameState().GetMegaBikes()[a.GetBike()]
+	agents := bike.GetAgents()
+	for _, agent := range agents {
+		if agent.GetID() == a.GetID() {
+			weights[agent.GetID()] = 1.0
+		} else {
+			weights[agent.GetID()] = 0.0
+		}
+	}
+	return weights
+}
+
+func TestRunActionProcessDictator(t *testing.T) {
+	it := 1
+	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
+	gs := s.NewGameStateDump()
+
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
+
+	// make bike with dictatorship (by getting one of the existing bikes and making it a dictatorship bike)
+	bikeID := s.GetRandomBikeId()
+	bike := s.GetMegaBikes()[bikeID]
+	bike.SetGovernance(utils.Dictatorship)
+	agents := bike.GetAgents()
+	if len(agents) == utils.BikersOnBike {
+		removable := agents[0]
+		bike.RemoveAgent(removable.GetID())
+	}
+
+	// place dictator on bike
+	dictator := NewNegativeAgent()
+	s.AddAgent(dictator)
+	dictator.UpdateGameState(gs)
+	dictator.SetBike(bikeID)
+	bike.AddAgent(dictator)
+	bike.SetRuler(dictator.GetID())
+
+	// run the action process and confirm the direction is that of the dictator
+	s.RunActionProcess()
+
+	// check that the direction for the bike with our dictator is the same as the dictator's
+	for _, bike := range s.GetMegaBikes() {
+		if bike.GetID() == bikeID {
+			dictatorDirection := dictator.DictateDirection()
+			dictator.DecideForce(dictatorDirection)
+			dictatorForce := dictator.GetForces()
+			for _, agent := range bike.GetAgents() {
+				if agent.GetID() == dictator.GetID() {
+					assert.Equal(t, dictatorForce, agent.GetForces())
+				}
+			}
+		}
+	}
 }
