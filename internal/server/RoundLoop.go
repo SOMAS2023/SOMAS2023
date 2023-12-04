@@ -247,6 +247,7 @@ func (s *Server) RunActionProcess() {
 				agent.UpdateEnergyLevel(-utils.LeadershipDemocracyPenalty)
 			}
 		case utils.Dictatorship:
+			direction = s.RunRulerAction(bike)
 		}
 
 		for _, agent := range agents {
