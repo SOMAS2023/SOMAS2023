@@ -54,10 +54,7 @@ class Bike(Drawable):
             agentX = self.trueX + agentSize / 2 + (agentSize  * (col)) + (agentPadding * (col + 1))
             agentY = self.trueY + agentSize / 2 + (agentSize  * (row)) + (agentPadding * (row + 1))
             agent.draw(screen, agentX, agentY, zoom)
-        for index, agent in enumerate(self.agentList.values()):
-            agent.draw_overlay(screen)
         self.overlay = self.update_overlay(zoom)
-        self.draw_overlay(screen)
 
     def set_agents(self, agentJson:dict) -> None:
         """
@@ -66,6 +63,15 @@ class Bike(Drawable):
         self.agentList = dict()
         for agentid in self.agentData:
             self.agentList[agentid] = Agent(self.x, self.y, agentid, agentJson[agentid]["colour"], "?", agentJson[agentid])
+        
+    def get_agents(self) -> dict:
+        """
+        Return the agents in the bike
+        """
+        agents = dict()
+        for agentid, agent in self.agentList.items():
+            agents[agentid] = agent.get_properties()
+        return agents
 
     def propagate_click(self, mouseX:int, mouseY:int, zoom:float) -> None:
         """
@@ -79,9 +85,17 @@ class Bike(Drawable):
         if not intersected:
             self.click(mouseX, mouseY, zoom)
 
-    def check_collision(self, mouseX: int, mouseY: int, zoom:float) -> bool:
+    def check_collision(self, mouseX: int, mouseY: int, _:float) -> bool:
         """
         Check if the mouse click intersects with the bike.
         """
         return (self.trueX <= mouseX <= self.trueX + self.squareSide) and \
                (self.trueY <= mouseY <= self.trueY + self.squareSide)
+
+    def draw_overlay(self, screen: pygame_gui.core.UIContainer) -> None:
+        """
+        Overlay agent properties when clicked.
+        """
+        for _, agent in enumerate(self.agentList.values()):
+            agent.draw_overlay(screen)
+        super().draw_overlay(screen)

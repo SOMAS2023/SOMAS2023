@@ -85,3 +85,9 @@ class Drawable:
         """
         if self.clicked:
             screen.blit(self.overlay, (self.trueX, self.trueY))
+
+    def get_properties(self) -> dict:
+        """
+        Return the properties of the agent.
+        """
+        return self.properties

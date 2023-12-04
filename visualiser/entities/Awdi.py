@@ -9,7 +9,7 @@ from visualiser.entities.Common import Drawable
 
 class Awdi(Drawable):
     def __init__(self, jsonData:dict) -> None:
-        super().__init__("audi", jsonData)
+        super().__init__("owdi", jsonData)
         self.colour = AWDI["COLOUR"]
         properties = {
             "Target" : jsonData["target_bike"],
@@ -43,7 +43,6 @@ class Awdi(Drawable):
         screen.blit(border, (self.trueX, self.trueY))
         # update the overlay
         self.overlay = self.update_overlay(zoom)
-        self.draw_overlay(screen)
 
     def check_collision(self, mouseX: int, mouseY: int, zoom:float) -> bool:
         """

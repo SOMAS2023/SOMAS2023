@@ -7,7 +7,8 @@ import colorsys
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION
+from pygame_gui.core import UIContainer
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
@@ -23,8 +24,8 @@ class GameScreen:
         self.mouseX, self.mouseY = 0, 0
         self.oldZoom = 1.0
         self.zoom = ZOOM
-        self.bikes = []
-        self.lootboxes = []
+        self.bikes = {}
+        self.lootboxes = {}
         self.awdi = None
         self.elements = {}
         self.jsonData = None
@@ -36,8 +37,16 @@ class GameScreen:
         self.playEvent = pygame.USEREVENT + 100
         self.mouseXCur = 0
         self.mouseYCur = 0
+        self.consoleScreen = None
+        self.stats = {
+            "Active Bikes" : 0,
+            "Active Lootboxes" : 0,
+            "Alive Agents" : 0,
+            "Dead Agents" : 0,
+        }
+        self.agents = {}
 
-    def init_ui(self, manager:pygame_gui.UIManager, screen:pygame_gui.core.UIContainer) -> dict:
+    def init_ui(self, manager:pygame_gui.UIManager, uiscreen:UIContainer, consoleContainer:UIContainer) -> dict:
         """
         Initialise the UI for the main menu screen
         """
@@ -47,7 +56,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, 10), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"])),
             text="Reset",
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -58,9 +67,9 @@ class GameScreen:
         #control information
         self.elements["controls"] = ui_text_box.UITextBox(
             relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]*3.5)),
-            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>",
+            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -75,7 +84,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"])),
             text="Round: 0",
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -89,7 +98,7 @@ class GameScreen:
             value_range=(0, self.maxRound),
             click_increment=self.maxRound//10,
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -104,7 +113,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, topmargin), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
             text="Increase Round",
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -116,7 +125,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, topmargin+2.5*DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
             text="Decrease Round",
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -129,7 +138,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*4), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
             text="Play",
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -142,7 +151,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*4.5), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
             text="1 Round/Sec",
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -157,7 +166,7 @@ class GameScreen:
             value_range=(1, 10),
             click_increment=1,
             manager=manager,
-            container=screen,
+            container=uiscreen,
             anchors={
                 "left": "left",
                 "right": "left",
@@ -165,9 +174,42 @@ class GameScreen:
                 "bottom": "top",
             }
         )
+        self.elements["console"] = ui_text_box.UITextBox(
+            relative_rect=pygame.Rect((0, 0), (DIM["CONSOLE_WIDTH"], DIM["SCREEN_HEIGHT"]-DIM["GAME_SCREEN_HEIGHT"])),
+            html_text="",
+            container=consoleContainer,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            },
+            object_id="#console"
+        )
+        self.elements["stats"] = ui_text_box.UITextBox(
+            relative_rect=pygame.Rect((DIM["CONSOLE_WIDTH"], 0), (DIM["GAME_SCREEN_WIDTH"]-DIM["CONSOLE_WIDTH"], DIM["SCREEN_HEIGHT"]-DIM["GAME_SCREEN_HEIGHT"])),
+            html_text="",
+            container=consoleContainer,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            },
+            object_id="#stats"
+        )
+        self.log("Welcome to the visualiser!")
+        self.log(f"Max rounds: {self.maxRound}", "INFO")
+        self.stats = {
+            "Active Bikes" : 0,
+            "Active Lootboxes" : 0,
+            "Alive Agents" : 0,
+            "Dead Agents" : 0,
+        }
+        self.agents = {}
         return self.elements
 
-    def render_game_screen(self, screen:pygame_gui.core.UIContainer) -> None:
+    def render_game_screen(self, screen:UIContainer) -> None:
         """
         Render the game screen
         """
@@ -176,11 +218,17 @@ class GameScreen:
         # Draw awdi
         self.awdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # # Draw lootboxes
-        for lootbox in self.lootboxes:
+        for lootbox in self.lootboxes.values():
             lootbox.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Draw agents
-        for bike in self.bikes:
+        for bike in self.bikes.values():
             bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
+        # Draw overlays
+        for bike in self.bikes.values():
+            bike.draw_overlay(screen)
+        for lootbox in self.lootboxes.values():
+            lootbox.draw_overlay(screen)
+        self.awdi.draw_overlay(screen)
         self.draw_mouse_coords(screen)
         # Divider line
         lineWidth = 1
@@ -195,14 +243,16 @@ class GameScreen:
                 match event.button:
                     # Mouse inputs
                     case 1:  # Left click
-                        if event.pos < (DIM["GAME_SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]):
+                        if event.pos[0] < DIM["GAME_SCREEN_WIDTH"] and event.pos[1] < DIM["GAME_SCREEN_HEIGHT"]:
                             self.dragging = True
-                        self.mouseX, self.mouseY = event.pos
-                        self.propagate_click(event.pos)
+                            self.mouseX, self.mouseY = event.pos
+                            self.propagate_click(event.pos)
                     case 4:  # Scroll up
-                        self.adjust_zoom(1.1, event.pos)
+                        if event.pos[0] < DIM["GAME_SCREEN_WIDTH"] and event.pos[1] < DIM["GAME_SCREEN_HEIGHT"]:
+                            self.adjust_zoom(1.1, event.pos)
                     case 5:  # Scroll down
-                        self.adjust_zoom(0.9, event.pos)
+                        if event.pos[0] < DIM["GAME_SCREEN_WIDTH"] and event.pos[1] < DIM["GAME_SCREEN_HEIGHT"]:
+                            self.adjust_zoom(0.9, event.pos)
             #Interact with UI
             case pygame.MOUSEBUTTONUP:
                 if event.button == 1:  # Left click
@@ -277,20 +327,28 @@ class GameScreen:
     def change_round(self, newRound:int) -> None:
         """
         Change the current round using the round controls and json data
+        Determine statistics
         """
         self.round = max(0, min(self.maxRound, newRound))
         self.elements["round_count"].set_text(f"Round: {self.round}")
+        self.elements["console"].html_text = ""
         #Reload bikes
-        self.bikes = []
+        bikes = {}
+        agents = {}
         for bikeid, bike in self.jsonData[self.round]["bikes"].items():
             if bikeid not in self.bikeColourMap:
                 self.bikeColourMap[bikeid] = self.allocate_colour()
-            self.bikes.append(Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"]))
+            bikes[bikeid] = Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"])
+            agents.update(bikes[bikeid].get_agents())
+        self.compare_agents(agents)
+        self.compare_bikes(bikes)
         # Reload lootboxes
-        self.lootboxes = []
+        lootboxes = {}
         for lootboxid, lootbox in self.jsonData[self.round]["loot_boxes"].items():
-            self.lootboxes.append(Lootbox(lootboxid, lootbox))
+            lootboxes[lootboxid] = Lootbox(lootboxid, lootbox)
+        self.compare_lootboxes(lootboxes)
         self.awdi = Awdi(self.jsonData[self.round]["audi"])
+        self.update_stats()
 
     def allocate_colour(self) -> str:
         """
@@ -308,9 +366,9 @@ class GameScreen:
         Propagate the click to all entities
         """
         mouseX, mouseY = mousePos
-        for bike in self.bikes:
+        for bike in self.bikes.values():
             bike.propagate_click(mouseX, mouseY, self.zoom)
-        for lootbox in self.lootboxes:
+        for lootbox in self.lootboxes.values():
             lootbox.propagate_click(mouseX, mouseY, self.zoom)
         self.awdi.propagate_click(mouseX, mouseY, self.zoom)
 
@@ -334,7 +392,7 @@ class GameScreen:
         startX = self.offsetX % zoomedSpacing
         startY = self.offsetY % zoomedSpacing
         width = DIM["GAME_SCREEN_WIDTH"]
-        height = DIM["SCREEN_HEIGHT"]
+        height = DIM["GAME_SCREEN_HEIGHT"]
         # Draw vertical lines
         for x in range(-int(zoomedSpacing) + int(startX), width, int(zoomedSpacing)):
             pygame.draw.line(surface, BGCOLOURS["GRID"], (x, 0), (x, height))
@@ -352,6 +410,62 @@ class GameScreen:
         y = round(self.mouseYCur / self.zoom - self.offsetY / self.zoom, PRECISION)
         text = font.render(f"({x}, {y})", True, (0, 0, 0))
         surface.blit(text, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
+
+    def log(self, message:str, tag=None) -> None:
+        """
+        Draw the console on the game screen
+        """
+        if tag is None:
+            tag = "DEFAULT"
+        color = CONSOLE[tag]
+        # Format message as HTML with reduced margin in paragraph tag
+        text = f'<p style="margin: 0; line-height: 100%;"><font color="{color}">{message}</font></p>'
+        newText = self.elements["console"].html_text + text
+        self.elements["console"].html_text = newText
+        self.elements["console"].rebuild()
+
+    def compare_agents(self, newAgents:dict) -> None:
+        """
+        Compare the agents to the previous round and update console and stats
+        """
+        dead = 0
+        for agent, _ in self.agents.items():
+            if agent not in newAgents:
+                self.log(f"Agent {agent} has died!", "ERROR")
+                dead += 1
+        self.stats["Alive Agents"] = len(newAgents.values())
+        self.stats["Dead Agents"] += dead
+        self.agents = newAgents
+
+    def compare_bikes(self, newBikes:dict) -> None:
+        """
+        Compare the agents to the previous round and update console and stats
+        """
+        for bikeid, _ in self.bikes.items():
+            if bikeid not in newBikes:
+                self.log(f"Bike {bikeid} has died!", "ERROR")
+        self.stats["Active Bikes"] = len(newBikes.values())
+        self.bikes = newBikes
+
+    def compare_lootboxes(self, newLootboxes:dict) -> None:
+        """
+        Compare the lootboxes to the previous round and update console and stats
+        """
+        for lootbox, _ in self.lootboxes.items():
+            if lootbox not in newLootboxes:
+                self.log(f"Lootbox {lootbox} has been collected!", "INFO")
+        self.stats["Active Lootboxes"] = len(newLootboxes.values())
+        self.lootboxes = newLootboxes
+
+    def update_stats(self) -> None:
+        """
+        Update the stats
+        """
+        text = ""
+        for stat, value in self.stats.items():
+            text += f"<font face=verdana size=3 color=#FFFFFF><b>{stat}</b>: {value}</font><br>"
+        self.elements["stats"].html_text = text
+        self.elements["stats"].rebuild()
 
     def set_json(self, data:dict) -> None:
         """
