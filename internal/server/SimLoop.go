@@ -100,24 +100,24 @@ func (s *Server) FoundingInstitutions() {
 				}
 			}
 		}
+	}
 
-		for agent, governance := range s.foundingChoices {
-			// randomly select a biker from the bikers who chose this governance method
-			// add that biker to a megabike
+	for agent, governance := range s.foundingChoices {
+		// randomly select a biker from the bikers who chose this governance method
+		// add that biker to a megabike
 
-			// select a bike with this governance method which has been assigned the lowest amount of bikers
-			bikesAvailable := govBikes[governance]
-			sort.Slice(bikesAvailable, func(i, j int) bool {
-				// in the order from large to small
-				return len(s.GetMegaBikes()[bikesAvailable[i]].GetAgents()) < len(s.GetMegaBikes()[bikesAvailable[j]].GetAgents())
-			})
+		// select a bike with this governance method which has been assigned the lowest amount of bikers
+		bikesAvailable := govBikes[governance]
+		sort.Slice(bikesAvailable, func(i, j int) bool {
+			// in the order from large to small
+			return len(s.GetMegaBikes()[bikesAvailable[i]].GetAgents()) < len(s.GetMegaBikes()[bikesAvailable[j]].GetAgents())
+		})
 
-			chosenBike := bikesAvailable[0]
-			// add agent to bike
-			agentInt := s.GetAgentMap()[agent]
-			agentInt.SetBike(chosenBike)
-			s.AddAgentToBike(agentInt)
-		}
+		chosenBike := bikesAvailable[0]
+		// add agent to bike
+		agentInt := s.GetAgentMap()[agent]
+		agentInt.SetBike(chosenBike)
+		s.AddAgentToBike(agentInt)
 	}
 
 	// if there are more bikers for a governance method than there are seats, then evenly distribute them across megabikes

@@ -33,6 +33,7 @@ type IBaseBikerServer interface {
 	AudiCollisionCheck()
 	AddAgentToBike(agent objects.IBaseBiker)
 	FoundingInstitutions()
+	ResetGameState()
 }
 
 type Server struct {
