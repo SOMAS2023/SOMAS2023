@@ -338,14 +338,11 @@ func (bb *Biker1) ProposeDirection() uuid.UUID {
 
 	return nearestReachableBox
 }
-func (bb *Biker1) distanceToReachableBox(box uuid.UUID) float64 {
+func (bb *Biker1) distanceToBox(box uuid.UUID) float64 {
 	currLocation := bb.GetLocation()
 	boxPos := bb.GetGameState().GetLootBoxes()[box].GetPosition()
 	currDist := physics.ComputeDistance(currLocation, boxPos)
-	if currDist < bb.energyToReachableDistance(bb.GetEnergyLevel()) {
-		return currDist
-	}
-	return -1.
+	return currDist
 }
 
 func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
@@ -397,7 +394,7 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 
 	distToBoxMap := make(map[uuid.UUID]float64)
 	for _, proposal := range proposals {
-		distToBoxMap[proposal] = bb.distanceToReachableBox(proposal)
+		distToBoxMap[proposal] = bb.distanceToBox(proposal)
 		if distToBoxMap[proposal] <= maxDist { //if reachable
 			// if box is our colour and number of proposals is majority, make it 1, rest 0, return
 			if bb.GetGameState().GetLootBoxes()[proposal].GetColour() == bb.GetColour() {
