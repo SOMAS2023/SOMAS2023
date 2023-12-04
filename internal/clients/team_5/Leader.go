@@ -25,7 +25,6 @@ func (t5 *team5Agent) DictateDirection() uuid.UUID {
 	return nearest
 }
 
-// needs fixing never kicks out
 func (t5 *team5Agent) DecideKickOut() []uuid.UUID {
 	kickOut := make([]uuid.UUID, 0)
 	fellowBikers := t5.GetFellowBikers()
