@@ -267,6 +267,19 @@ func (a *NegativeAgent) DecideWeights(utils.Action) map[uuid.UUID]float64 {
 	return weights
 }
 
+func (a *NegativeAgent) DecideDictatorAllocation() voting.IdVoteMap {
+	fellowBikers := a.GetFellowBikers()
+	allocation := make(voting.IdVoteMap)
+	for _, biker := range fellowBikers {
+		if biker.GetID() == a.GetID() {
+			allocation[biker.GetID()] = 1.0
+		} else {
+			allocation[biker.GetID()] = 0.0
+		}
+	}
+	return allocation
+}
+
 func TestRunActionProcessDictator(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
@@ -546,4 +559,87 @@ func TestGetWinningDirection2(t *testing.T) {
 	}
 
 	assert.Equal(t, reducedPowerProposal, s.GetWinningDirection(proposals, weights), "reduced power proposal should win")
+}
+
+func TestLootboxShareDictator(t *testing.T) {
+	it := 1
+	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
+	gs := s.NewGameStateDump()
+
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
+
+	// make bike with dictatorship (by getting one of the existing bikes and making it a dictatorship bike)
+	foundBike := false
+	var bikeID uuid.UUID
+	for !foundBike {
+		bikeID = s.GetRandomBikeId()
+		if len(s.GetMegaBikes()[bikeID].GetAgents()) != 0 {
+			break
+		}
+	}
+	bike := s.GetMegaBikes()[bikeID]
+	bike.SetGovernance(utils.Dictatorship)
+	agents := bike.GetAgents()
+	if len(agents) == utils.BikersOnBike {
+		removable := agents[0]
+		bike.RemoveAgent(removable.GetID())
+	}
+
+	// place dictator on bike
+	dictator := NewNegativeAgent()
+	s.AddAgent(dictator)
+	dictator.UpdateGameState(gs)
+	dictator.SetBike(bikeID)
+	bike.AddAgent(dictator)
+	bike.SetRuler(dictator.GetID())
+
+	gsnew := s.NewGameStateDump()
+
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gsnew)
+	}
+
+	// run the action process and confirm the direction is that of the dictator
+	s.RunActionProcess()
+
+	// make note of agent's energies before the lootbox share
+	agentEnergies := make(map[uuid.UUID]float64)
+	bikeAgents := bike.GetAgents()
+	for _, agent := range bikeAgents {
+		agentEnergies[agent.GetID()] = agent.GetEnergyLevel()
+	}
+
+	// impose collision with lootbox (by manually changing the bike's position)
+	// get random lootbox
+	var lootbox obj.ILootBox
+	for _, lootbox = range s.GetLootBoxes() {
+		break
+	}
+	pos := lootbox.GetPosition()
+	// change the bikes position
+	ps := bike.GetPhysicalState()
+	newPhysicalState := utils.PhysicalState{
+		Position:     pos,
+		Velocity:     ps.Velocity,
+		Mass:         ps.Mass,
+		Acceleration: ps.Acceleration,
+	}
+	bike.SetPhysicalState(newPhysicalState)
+
+	// run lootbox check and distribution
+	s.LootboxCheckAndDistributions()
+
+	// check that only the agent's energy has increased
+	for _, agent := range bikeAgents {
+		if agent.GetID() != dictator.GetID() {
+			assert.Equal(t, agentEnergies[agent.GetID()], agent.GetEnergyLevel(), "non dictaror's energy shouldn't have changed")
+		} else {
+			assert.True(t, agentEnergies[agent.GetID()] < agent.GetEnergyLevel(), "dictator's energy should have increased")
+		}
+	}
+
 }

@@ -58,11 +58,26 @@ func (s *Server) RunBikeSwitch(gameState GameStateDump) {
 	// check if agents want ot leave the bike on this round
 	changeBike := s.GetLeavingDecisions(gameState)
 	inLimbo = append(inLimbo, changeBike...)
+	// update gamestate as it has changed
+	gsNew := s.NewGameStateDump()
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gsNew)
+	}
 	//process the kickout request
 	kickedOff := s.HandleKickoutProcess()
+	// update gamestate as it has changed
+	gsNew2 := s.NewGameStateDump()
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gsNew2)
+	}
 	inLimbo = append(inLimbo, kickedOff...)
 	// process the joining request
 	s.ProcessJoiningRequests(inLimbo)
+	// update gamestate as it has changed
+	gsNew3 := s.NewGameStateDump()
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gsNew3)
+	}
 }
 
 func (s *Server) HandleKickoutProcess() []uuid.UUID {

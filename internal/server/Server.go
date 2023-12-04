@@ -35,6 +35,7 @@ type IBaseBikerServer interface {
 	AddAgentToBike(agent objects.IBaseBiker)
 	FoundingInstitutions()
 	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
+	LootboxCheckAndDistributions()
 }
 
 type Server struct {
