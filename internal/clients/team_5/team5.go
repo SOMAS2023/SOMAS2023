@@ -38,21 +38,9 @@ func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	return calculateResourceAllocation(t5.GetGameState(), t5)
 }
 
-// func (t5 *team5Agent) ProposeDirection() uuid.UUID {
-// 	return lootBoxPref(t5.GetGameState(), t5)
-// }
-
-func (t5 *team5Agent) GetGameState() objects.IGameState {
-	return t5.BaseBiker.GetGameState()
-}
-
-func (t5 *team5Agent) GetMegaBikeId() uuid.UUID {
-	return t5.BaseBiker.GetMegaBikeId()
-}
-
-func (t5 *team5Agent) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
+func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	gameState := t5.GetGameState()
-	finalPreferences := CalculateLootBoxPreferences(gameState, t5 /*t5.cumulativePreferences*/)
+	finalPreferences := CalculateLootBoxPreferences(gameState, t5, proposals /*t5.cumulativePreferences*/)
 
 	finalVote := SortPreferences(finalPreferences)
 
@@ -64,5 +52,5 @@ func (t5 *team5Agent) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVo
 }
 
 func (t5 *team5Agent) GetMegaBike() []objects.IBaseBiker {
-    return t5.BaseBiker.GetGameState().GetMegaBikes()[t5.BaseBiker.GetMegaBikeId()].GetAgents()
+	return t5.BaseBiker.GetGameState().GetMegaBikes()[t5.BaseBiker.GetBike()].GetAgents()
 }

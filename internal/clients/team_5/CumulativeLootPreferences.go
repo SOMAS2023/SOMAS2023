@@ -10,14 +10,16 @@ import (
 )
 
 // calculates final preferences for loot boxes based on various factors
-func CalculateLootBoxPreferences(gameState objects.IGameState, b *team5Agent) map[uuid.UUID]float64 {
+func CalculateLootBoxPreferences(gameState objects.IGameState, b *team5Agent, proposals map[uuid.UUID]uuid.UUID) map[uuid.UUID]float64 {
 	finalPreferences := make(map[uuid.UUID]float64)
 
+	var lootBox objects.ILootBox
+
 	// retrieve agent and loot boxes from game state
-	lootBoxes := gameState.GetLootBoxes()
 	position := gameState.GetMegaBikes()[b.GetBike()].GetPosition()
 
-	for id, lootBox := range lootBoxes {
+	for _, lootBoxID := range proposals {
+		lootBox = gameState.GetLootBoxes()[lootBoxID]
 		distance := calculateDistanceToLootbox(position, lootBox.GetPosition())
 		colorPreference := calculateColorPreference(b.GetColour(), lootBox.GetColour())
 		energyPreference := calculateEnergyPreference(b.GetEnergyLevel(), lootBox.GetTotalResources())
@@ -26,7 +28,7 @@ func CalculateLootBoxPreferences(gameState objects.IGameState, b *team5Agent) ma
 		// combine preferences (weights: 0.4 for distance, 0.3 for color, 0.2 for energy, 0.1 for cumulative)
 		// ensure that if cant get first preference, get second preference and so on
 
-		finalPreferences[id] = 0.4*(1/distance) + 0.3*colorPreference + 0.2*energyPreference /*+ 0.1*cumulativePreference*/
+		finalPreferences[lootBoxID] = 0.4*(1/distance) + 0.3*colorPreference + 0.2*energyPreference /*+ 0.1*cumulativePreference*/
 	}
 
 	return finalPreferences
