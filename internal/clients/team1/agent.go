@@ -2,7 +2,7 @@ package team1
 
 import (
 	obj "SOMAS2023/internal/common/objects"
-	"SOMAS2023/internal/common/physics"
+	//"SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
 	"fmt"
@@ -17,7 +17,7 @@ const deviatePositive = 0.1      // trust gain on non deviation
 const effortScaling = 0.1        // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1      // scaling factor for fairness, higher it is the more fairness changes each round
 const leaveThreshold = 0.2       // threshold for leaving
-const kickThreshold = 0.25       // threshold for kicking
+const kickThreshold = 0.0     // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
 const joinThreshold = 0.8        // opinion threshold for joining if not same colour
@@ -171,149 +171,149 @@ func calculateSelfishnessScore(success float64, relationship float64) float64 {
 
 // Simulates a step of the game, assuming all bikers pedal with the same force as us.
 // Returns the distance travelled and the remaining energy
-func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float64) (float64, float64) {
-	bikerNum := len(bb.GetFellowBikers())
-	totalBikerForce := force * float64(len(bb.GetFellowBikers()))
-	totalMass := utils.MassBike + float64(bikerNum)*utils.MassBiker
-	acceleration := physics.CalcAcceleration(totalBikerForce, totalMass, velocity)
-	distance := velocity + 0.5*acceleration
-	energy = energy - force*utils.MovingDepletion
-	return distance, energy
-}
+// func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float64) (float64, float64) {
+// 	bikerNum := len(bb.GetFellowBikers())
+// 	totalBikerForce := force * float64(len(bb.GetFellowBikers()))
+// 	totalMass := utils.MassBike + float64(bikerNum)*utils.MassBiker
+// 	acceleration := physics.CalcAcceleration(totalBikerForce, totalMass, velocity)
+// 	distance := velocity + 0.5*acceleration
+// 	energy = energy - force*utils.MovingDepletion
+// 	return distance, energy
+// }
 
-// Calculates the approximate distance that can be travelled with the given energy
-func (bb *Biker1) energyToReachableDistance(energy float64) float64 {
-	distance := 0.0
-	totalDistance := 0.0
-	remainingEnergy := energy
-	for remainingEnergy > 0 {
-		distance, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetVelocity(), bb.getPedalForce())
-		totalDistance = totalDistance + distance
-	}
-	return totalDistance
-}
+// // Calculates the approximate distance that can be travelled with the given energy
+// func (bb *Biker1) energyToReachableDistance(energy float64) float64 {
+// 	distance := 0.0
+// 	totalDistance := 0.0
+// 	remainingEnergy := energy
+// 	for remainingEnergy > 0 {
+// 		distance, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetVelocity(), bb.getPedalForce())
+// 		totalDistance = totalDistance + distance
+// 	}
+// 	return totalDistance
+// }
 
-// Calculates the energy remaining after travelling the given distance
-func (bb *Biker1) distanceToEnergy(distance float64, initialEnergy float64) float64 {
-	totalDistance := 0.0
-	remainingEnergy := initialEnergy
-	extraDist := 0.0
-	for totalDistance < distance {
-		extraDist, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetPhysicalState().Mass, utils.BikerMaxForce*remainingEnergy)
-		totalDistance = totalDistance + extraDist
-	}
+// // Calculates the energy remaining after travelling the given distance
+// func (bb *Biker1) distanceToEnergy(distance float64, initialEnergy float64) float64 {
+// 	totalDistance := 0.0
+// 	remainingEnergy := initialEnergy
+// 	extraDist := 0.0
+// 	for totalDistance < distance {
+// 		extraDist, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetPhysicalState().Mass, utils.BikerMaxForce*remainingEnergy)
+// 		totalDistance = totalDistance + extraDist
+// 	}
 
-	return remainingEnergy
-}
+// 	return remainingEnergy
+// }
 
-// Finds all boxes within our reachable distance
-func (bb *Biker1) getAllReachableBoxes() []uuid.UUID {
-	currLocation := bb.GetLocation()
-	ourEnergy := bb.GetEnergyLevel()
-	lootBoxes := bb.GetGameState().GetLootBoxes()
-	reachableBoxes := make([]uuid.UUID, 0)
-	var currDist float64
-	for _, loot := range lootBoxes {
-		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(currLocation, lootPos)
-		if currDist < bb.energyToReachableDistance(ourEnergy) {
-			reachableBoxes = append(reachableBoxes, loot.GetID())
-		}
-	}
+// // Finds all boxes within our reachable distance
+// func (bb *Biker1) getAllReachableBoxes() []uuid.UUID {
+// 	currLocation := bb.GetLocation()
+// 	ourEnergy := bb.GetEnergyLevel()
+// 	lootBoxes := bb.GetGameState().GetLootBoxes()
+// 	reachableBoxes := make([]uuid.UUID, 0)
+// 	var currDist float64
+// 	for _, loot := range lootBoxes {
+// 		lootPos := loot.GetPosition()
+// 		currDist = physics.ComputeDistance(currLocation, lootPos)
+// 		if currDist < bb.energyToReachableDistance(ourEnergy) {
+// 			reachableBoxes = append(reachableBoxes, loot.GetID())
+// 		}
+// 	}
 
-	return reachableBoxes
-}
+// 	return reachableBoxes
+// }
 
-// Checks whether a box of the desired colour is within our reachable distance from a given box
-func (bb *Biker1) checkBoxNearColour(box uuid.UUID, energy float64) bool {
-	lootBoxes := bb.GetGameState().GetLootBoxes()
-	boxPos := lootBoxes[box].GetPosition()
-	var currDist float64
-	for _, loot := range lootBoxes {
-		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(boxPos, lootPos)
-		if currDist < bb.energyToReachableDistance(energy) && loot.GetColour() == bb.GetColour() {
-			return true
-		}
-	}
-	return false
-}
+// // Checks whether a box of the desired colour is within our reachable distance from a given box
+// func (bb *Biker1) checkBoxNearColour(box uuid.UUID, energy float64) bool {
+// 	lootBoxes := bb.GetGameState().GetLootBoxes()
+// 	boxPos := lootBoxes[box].GetPosition()
+// 	var currDist float64
+// 	for _, loot := range lootBoxes {
+// 		lootPos := loot.GetPosition()
+// 		currDist = physics.ComputeDistance(boxPos, lootPos)
+// 		if currDist < bb.energyToReachableDistance(energy) && loot.GetColour() == bb.GetColour() {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
-// returns the nearest lootbox with respect to the agent's bike current position
-// in the MVP this is used to determine the pedalling forces as all agent will be
-// aiming to get to the closest lootbox by default
-func (bb *Biker1) nearestLoot() uuid.UUID {
-	currLocation := bb.GetLocation()
-	shortestDist := math.MaxFloat64
-	var nearestBox uuid.UUID
-	var currDist float64
-	for _, loot := range bb.GetGameState().GetLootBoxes() {
-		x, y := loot.GetPosition().X, loot.GetPosition().Y
-		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
-		if currDist < shortestDist {
-			nearestBox = loot.GetID()
-			shortestDist = currDist
-		}
-	}
-	return nearestBox
-}
+// // returns the nearest lootbox with respect to the agent's bike current position
+// // in the MVP this is used to determine the pedalling forces as all agent will be
+// // aiming to get to the closest lootbox by default
+// func (bb *Biker1) nearestLoot() uuid.UUID {
+// 	currLocation := bb.GetLocation()
+// 	shortestDist := math.MaxFloat64
+// 	var nearestBox uuid.UUID
+// 	var currDist float64
+// 	for _, loot := range bb.GetGameState().GetLootBoxes() {
+// 		x, y := loot.GetPosition().X, loot.GetPosition().Y
+// 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+// 		if currDist < shortestDist {
+// 			nearestBox = loot.GetID()
+// 			shortestDist = currDist
+// 		}
+// 	}
+// 	return nearestBox
+// }
 
-// Finds the nearest reachable box
-func (bb *Biker1) getNearestReachableBox() uuid.UUID {
-	currLocation := bb.GetLocation()
-	reachableBoxes := bb.getAllReachableBoxes()
-	shortestDist := math.MaxFloat64
-	//default to nearest box
-	nearestBox := bb.nearestLoot()
-	for _, loot := range reachableBoxes {
-		lootPos := bb.GetLootLocation(loot)
-		currDist := physics.ComputeDistance(currLocation, lootPos)
-		if currDist < shortestDist {
-			nearestBox = loot
-		}
-	}
-	return nearestBox
-}
+// // Finds the nearest reachable box
+// func (bb *Biker1) getNearestReachableBox() uuid.UUID {
+// 	currLocation := bb.GetLocation()
+// 	reachableBoxes := bb.getAllReachableBoxes()
+// 	shortestDist := math.MaxFloat64
+// 	//default to nearest box
+// 	nearestBox := bb.nearestLoot()
+// 	for _, loot := range reachableBoxes {
+// 		lootPos := bb.GetLootLocation(loot)
+// 		currDist := physics.ComputeDistance(currLocation, lootPos)
+// 		if currDist < shortestDist {
+// 			nearestBox = loot
+// 		}
+// 	}
+// 	return nearestBox
+// }
 
-// Finds the nearest lootbox of agent's colour
-func (bb *Biker1) nearestLootColour() (uuid.UUID, float64) {
-	currLocation := bb.GetLocation()
-	shortestDist := math.MaxFloat64
-	//default to nearest lootbox
-	nearestBox := bb.nearestLoot()
+// // Finds the nearest lootbox of agent's colour
+// func (bb *Biker1) nearestLootColour() (uuid.UUID, float64) {
+// 	currLocation := bb.GetLocation()
+// 	shortestDist := math.MaxFloat64
+// 	//default to nearest lootbox
+// 	nearestBox := bb.nearestLoot()
 
-	var currDist float64
-	for id, loot := range bb.GetGameState().GetLootBoxes() {
-		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(currLocation, lootPos)
-		if (currDist < shortestDist) && (loot.GetColour() == bb.GetColour()) {
-			nearestBox = id
-			shortestDist = currDist
-		}
-	}
+// 	var currDist float64
+// 	for id, loot := range bb.GetGameState().GetLootBoxes() {
+// 		lootPos := loot.GetPosition()
+// 		currDist = physics.ComputeDistance(currLocation, lootPos)
+// 		if (currDist < shortestDist) && (loot.GetColour() == bb.GetColour()) {
+// 			nearestBox = id
+// 			shortestDist = currDist
+// 		}
+// 	}
 
-	if shortestDist == math.MaxFloat64 {
-		shortestDist = physics.ComputeDistance(bb.GetLootLocation(nearestBox), currLocation)
-	}
-	return nearestBox, shortestDist
-}
+// 	if shortestDist == math.MaxFloat64 {
+// 		shortestDist = physics.ComputeDistance(bb.GetLootLocation(nearestBox), currLocation)
+// 	}
+// 	return nearestBox, shortestDist
+// }
 
-func (bb *Biker1) ProposeDirection() uuid.UUID {
-	currLocation := bb.GetLocation()
-	shortestDist := math.MaxFloat64
-	currDist := 0.0
-	nearestBox := bb.nearestLoot()
-	for id, loot := range bb.GetGameState().GetLootBoxes() {
-		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(currLocation, lootPos)
-		if (currDist < shortestDist) && (loot.GetColour() == bb.GetColour()) {
-			nearestBox = id
-			shortestDist = currDist
-		}
-	}
-	fmt.Printf("Biker1: Proposed direction: %v \n", nearestBox.String())
-	return nearestBox
-}
+// func (bb *Biker1) ProposeDirection() uuid.UUID {
+// 	currLocation := bb.GetLocation()
+// 	shortestDist := math.MaxFloat64
+// 	currDist := 0.0
+// 	nearestBox := bb.nearestLoot()
+// 	for id, loot := range bb.GetGameState().GetLootBoxes() {
+// 		lootPos := loot.GetPosition()
+// 		currDist = physics.ComputeDistance(currLocation, lootPos)
+// 		if (currDist < shortestDist) && (loot.GetColour() == bb.GetColour()) {
+// 			nearestBox = id
+// 			shortestDist = currDist
+// 		}
+// 	}
+// 	fmt.Printf("Biker1: Proposed direction: %v \n", nearestBox.String())
+// 	return nearestBox
+// }
 
 // func (bb *Biker1) ProposeDirection() uuid.UUID {
 // 	// all logic for nominations goes in here
@@ -340,21 +340,21 @@ func (bb *Biker1) ProposeDirection() uuid.UUID {
 //		fmt.Println("Nearest reachable box:", nearestReachableBox.String())
 //		return nearestReachableBox
 //	}
-func (bb *Biker1) distanceToReachableBox(box uuid.UUID) float64 {
-	currLocation := bb.GetLocation()
-	boxPos := bb.GetGameState().GetLootBoxes()[box].GetPosition()
-	currDist := physics.ComputeDistance(currLocation, boxPos)
-	if currDist < bb.energyToReachableDistance(bb.GetEnergyLevel()) {
-		return currDist
-	}
-	return -1.
-}
+// func (bb *Biker1) distanceToReachableBox(box uuid.UUID) float64 {
+// 	currLocation := bb.GetLocation()
+// 	boxPos := bb.GetGameState().GetLootBoxes()[box].GetPosition()
+// 	currDist := physics.ComputeDistance(currLocation, boxPos)
+// 	if currDist < bb.energyToReachableDistance(bb.GetEnergyLevel()) {
+// 		return currDist
+// 	}
+// 	return -1.
+// }
 
-func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
-	dist := physics.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetLootBoxes()[box].GetPosition())
-	remainingEnergy := bb.distanceToEnergy(dist, bb.GetEnergyLevel())
-	return remainingEnergy
-}
+// func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
+// 	dist := physics.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetLootBoxes()[box].GetPosition())
+// 	remainingEnergy := bb.distanceToEnergy(dist, bb.GetEnergyLevel())
+// 	return remainingEnergy
+// }
 
 // // Always vote for the nearest box to the bike
 // func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
@@ -506,36 +506,38 @@ func (bb *Biker1) getPedalForce() float64 {
 // // in the MVP the pedalling force will be 1, the breaking 0 and the tunring is determined by the
 // // location of the nearest lootboX
 // // the function is passed in the id of the voted lootbox, for now ignored
-// func (bb *Biker1) DecideForce(direction uuid.UUID) {
-// 	fmt.Printf("\nscore: %v \n", bb.GetPoints())
-// 	if bb.recentVote != nil {
-// 		if bb.recentVote[direction] < leavingThreshold {
-// 			bb.dislikeVote = true
-// 		} else {
-// 			bb.dislikeVote = false
-// 		}
-// 	}
+func (bb *Biker1) DecideForce(direction uuid.UUID) {
+	if bb.recentVote != nil {
+		if bb.recentVote[direction] < leavingThreshold {
+			bb.dislikeVote = true
+		} else {
+			bb.dislikeVote = false
+		}
+	}
 
-// 	//agent doesn't rebel, just decides to leave next round if dislike vote
-// 	lootBoxes := bb.GetGameState().GetLootBoxes()
-// 	currLocation := bb.GetLocation()
-// 	if len(lootBoxes) > 0 {
-// 		targetPos := lootBoxes[direction].GetPosition()
-// 		deltaX := targetPos.X - currLocation.X
-// 		deltaY := targetPos.Y - currLocation.Y
-// 		angle := math.Atan2(deltaY, deltaX)
-// 		normalisedAngle := angle / math.Pi
+	//agent doesn't rebel, just decides to leave next round if dislike vote
+	lootBoxes := bb.GetGameState().GetLootBoxes()
+	currLocation := bb.GetLocation()
+	if len(lootBoxes) > 0 {
+		targetPos := lootBoxes[direction].GetPosition()
+		deltaX := targetPos.X - currLocation.X
+		deltaY := targetPos.Y - currLocation.Y
+		angle := math.Atan2(deltaY, deltaX)
+		normalisedAngle := angle / math.Pi
 
-// 		turningDecision := utils.TurningDecision{
-// 			SteerBike:     true,
-// 			SteeringForce: normalisedAngle,
-// 		}
-// 		boxForces := utils.Forces{
-// 			Pedal:   bb.getPedalForce(),
-// 			Brake:   0.0,
-// 			Turning: turningDecision,
-// 		}
-// 		bb.SetForces(boxForces)
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
+		}
+		boxForces := utils.Forces{
+			Pedal:   bb.getPedalForce(),
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		fmt.Printf("agent %s: Forces: %v \n", bb.GetID(), boxForces)
+		bb.SetForces(boxForces)
+	}
+}
 // 	} else { //shouldnt happen, but would just run from audi
 // 		audiPos := bb.GetGameState().GetAudi().GetPosition()
 // 		deltaX := audiPos.X - currLocation.X
@@ -1232,7 +1234,7 @@ func (bb *Biker1) getPedalForce() float64 {
 //---------------------END OF SOCIAL FUNCTIONS------------------------
 
 // -------------------INSTANTIATION FUNCTIONS----------------------------
-func GetBiker1(colour utils.Colour, id uuid.UUID) *Biker1 {
+func GetBiker1 (colour utils.Colour, id uuid.UUID) *Biker1 {
 	return &Biker1{
 		BaseBiker: obj.GetBaseBiker(colour, id),
 	}
