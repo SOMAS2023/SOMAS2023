@@ -55,6 +55,7 @@ func Initialize(iterations int) IBaseBikerServer {
 		lootBoxes:      make(map[uuid.UUID]objects.ILootBox),
 		megaBikes:      make(map[uuid.UUID]objects.IMegaBike),
 		megaBikeRiders: make(map[uuid.UUID]uuid.UUID),
+		deadAgents:     make(map[uuid.UUID]objects.IBaseBiker),
 		audi:           objects.GetIAudi(),
 	}
 	server.replenishLootBoxes()
