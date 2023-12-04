@@ -21,7 +21,6 @@ OVERLAY = {
     "LINE_WIDTH": 2,
     "BORDER_WIDTH": 2,
     "BORDER_COLOUR": "#000000",
-    "TRANSPARENCY": 240,
     "FPS_PAD" : 5,
 }
 BIKE = {

@@ -71,9 +71,6 @@ class Drawable:
         border = pygame.Surface((length + 2 * OVERLAY["BORDER_WIDTH"], height + 2 * OVERLAY["BORDER_WIDTH"]))
         border.fill(OVERLAY["BORDER_COLOUR"])
         border.blit(overlay, (OVERLAY["BORDER_WIDTH"], OVERLAY["BORDER_WIDTH"]))
-
-        # Make transparent
-        border.set_alpha(OVERLAY["TRANSPARENCY"])
         return border
 
     def check_collision(self, mouseX:int, mouseY:int, zoom:float) -> bool:
