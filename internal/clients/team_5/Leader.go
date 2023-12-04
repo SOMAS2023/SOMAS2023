@@ -25,10 +25,12 @@ func (t5 *team5Agent) DictateDirection() uuid.UUID {
 	return nearest
 }
 
+// needs fixing never kicks out
 func (t5 *team5Agent) DecideKickOut() []uuid.UUID {
 	return (make([]uuid.UUID, 0))
 }
 
+// needs fixing always allocates evenly
 func (t5 *team5Agent) DecideDictatorAllocation() voting.IdVoteMap {
 	bikeID := t5.GetBike()
 	fellowBikers := t5.GetGameState().GetMegaBikes()[bikeID].GetAgents()
