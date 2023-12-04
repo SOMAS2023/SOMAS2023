@@ -230,7 +230,6 @@ func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID
 	boxProposed := make([]objects.ILootBox, len(proposals))
 	count := 0
 	for _, i := range proposals {
-		fmt.Println("proposed box: ", i)
 		boxProposed[count] = boxesInMap[i]
 		count++
 	}
@@ -400,7 +399,7 @@ func (agent *BaselineAgent) DisplayFellowsReputation() {
 func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 	fmt.Println("Propose Direction")
 	agent.UpdateDecisionData()
-	agent.DisplayFellowsEnergyHistory()
+	// agent.DisplayFellowsEnergyHistory()
 	agent.proposedLootBox = nil
 	lootBoxes := agent.GetGameState().GetLootBoxes()
 	agentLocation := agent.GetLocation() //agent's location
@@ -423,7 +422,7 @@ func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 
 // DecideAction only pedal
 func (agent *BaselineAgent) DecideAction() objects.BikerAction {
-	fmt.Println("Team 4")
+	// fmt.Println("Team 4")
 	return objects.Pedal
 }
 
