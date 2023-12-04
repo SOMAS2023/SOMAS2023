@@ -12,18 +12,28 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
+	KickOutAgent(weights map[uuid.UUID]float64) []uuid.UUID
+	GetGovernance() utils.Governance
+	GetRuler() uuid.UUID
+	SetGovernance(governance utils.Governance)
+	SetRuler(ruler uuid.UUID)
 }
 
 // MegaBike will have the following forces
 type MegaBike struct {
 	*PhysicsObject
-	agents []IBaseBiker
+	agents         []IBaseBiker
+	kickedOutCount int
+	governance     utils.Governance
+	ruler          uuid.UUID
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
 func GetMegaBike() *MegaBike {
 	return &MegaBike{
 		PhysicsObject: GetPhysicsObject(utils.MassBike),
+		governance:    utils.Democracy,
+		ruler:         uuid.Nil,
 	}
 }
 
@@ -99,8 +109,58 @@ func (mb *MegaBike) UpdateOrientation() {
 	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
 
 	if mb.orientation > 1.0 {
-		mb.orientation -= 2
+		mb.orientation -= 2.0
 	} else if mb.orientation < -1.0 {
-		mb.orientation += 2
+		mb.orientation += 2.0
 	}
+}
+
+// get the count of kicked out agents
+func (mb *MegaBike) GetKickedOutCount() int {
+	return mb.kickedOutCount
+}
+
+// only called for level 0 and level 1
+func (mb *MegaBike) KickOutAgent(weights map[uuid.UUID]float64) []uuid.UUID {
+	voteCount := make(map[uuid.UUID]float64)
+	// Count votes for each agent
+	for _, agent := range mb.agents {
+		agentVotes := agent.VoteForKickout() // Assuming this now returns map[uuid.UUID]int
+		for agentID, votes := range agentVotes {
+			agentWeight := weights[agentID]
+			if val, ok := voteCount[agentID]; ok {
+				voteCount[agentID] = float64(val) + agentWeight*float64(votes)
+			} else {
+				voteCount[agentID] = float64(votes) * agentWeight
+			}
+		}
+	}
+
+	// Find all agents with votes > half the number of agents
+	agentsToKickOut := make([]uuid.UUID, 0)
+	for agentID, votes := range voteCount {
+		if votes > float64(len(mb.agents))/2.0 {
+			agentsToKickOut = append(agentsToKickOut, agentID)
+		}
+	}
+
+	mb.kickedOutCount += len(agentsToKickOut)
+
+	return agentsToKickOut
+}
+
+func (mb *MegaBike) GetGovernance() utils.Governance {
+	return mb.governance
+}
+
+func (mb *MegaBike) GetRuler() uuid.UUID {
+	return mb.ruler
+}
+
+func (mb *MegaBike) SetGovernance(governance utils.Governance) {
+	mb.governance = governance
+}
+
+func (mb *MegaBike) SetRuler(ruler uuid.UUID) {
+	mb.ruler = ruler
 }
