@@ -30,14 +30,6 @@ func (t5 *team5Agent) DecideKickOut() []uuid.UUID {
 	return (make([]uuid.UUID, 0))
 }
 
-// needs fixing always allocates evenly
 func (t5 *team5Agent) DecideDictatorAllocation() voting.IdVoteMap {
-	bikeID := t5.GetBike()
-	fellowBikers := t5.GetGameState().GetMegaBikes()[bikeID].GetAgents()
-	distribution := make(voting.IdVoteMap)
-	equalDist := 1.0 / float64(len(fellowBikers))
-	for _, agent := range fellowBikers {
-		distribution[agent.GetID()] = equalDist
-	}
-	return distribution
+	return t5.calculateResourceAllocation(Reputation)
 }

@@ -15,8 +15,18 @@ type Iteam5Agent interface {
 
 type team5Agent struct {
 	objects.BaseBiker
-	resourceAllocationMethod string
+	resourceAllocMethod ResourceAllocationMethod
 }
+
+type ResourceAllocationMethod int
+
+const (
+	Equal ResourceAllocationMethod = iota
+	Greedy
+	Needs
+	Contributions
+	Reputation
+)
 
 // Creates an instance of Team 5 Biker
 func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
@@ -24,8 +34,8 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	// print
 	fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
-		BaseBiker:                *baseBiker,
-		resourceAllocationMethod: "equal",
+		BaseBiker:           *baseBiker,
+		resourceAllocMethod: Equal,
 	}
 }
 
@@ -61,7 +71,8 @@ func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voti
 
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
-	return t5.calculateResourceAllocation(t5.GetGameState())
+	method := t5.resourceAllocMethod
+	return t5.calculateResourceAllocation(method)
 }
 
 // needs fixing currently never votes off
