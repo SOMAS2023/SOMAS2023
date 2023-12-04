@@ -12,18 +12,28 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
+	KickOutAgent() map[uuid.UUID]int
+	GetGovernance() utils.Governance
+	GetRuler() uuid.UUID
+	SetGovernance(governance utils.Governance)
+	SetRuler(ruler uuid.UUID)
 }
 
 // MegaBike will have the following forces
 type MegaBike struct {
 	*PhysicsObject
-	agents []IBaseBiker
+	agents         []IBaseBiker
+	kickedOutCount int
+	governance     utils.Governance
+	ruler          uuid.UUID
 }
 
 // GetMegaBike is a constructor for MegaBike that initializes it with a new UUID and default position.
 func GetMegaBike() *MegaBike {
 	return &MegaBike{
 		PhysicsObject: GetPhysicsObject(utils.MassBike),
+		governance:    utils.Democracy,
+		ruler:         uuid.Nil,
 	}
 }
 
@@ -87,8 +97,11 @@ func (mb *MegaBike) UpdateOrientation() {
 		// will not have an impact on the direction of the bike.
 		turningDecision := agent.GetForces().Turning
 		if turningDecision.SteerBike {
-			numOfSteeringAgents += 1
-			totalTurning += float64(turningDecision.SteeringForce)
+			// Only dictators can steer if Governance is set to dictatorship
+			if (mb.governance != utils.Dictatorship) || (agent.GetID() == mb.ruler) {
+				numOfSteeringAgents += 1
+				totalTurning += float64(turningDecision.SteeringForce)
+			}
 		}
 	}
 	// Do not update orientation if no biker want to steer
@@ -97,9 +110,54 @@ func (mb *MegaBike) UpdateOrientation() {
 		mb.orientation += (averageTurning)
 	}
 	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
+
 	if mb.orientation > 1.0 {
 		mb.orientation -= 2
 	} else if mb.orientation < -1.0 {
 		mb.orientation += 2
 	}
+}
+
+// get the count of kicked out agents
+func (mb *MegaBike) GetKickedOutCount() int {
+	return mb.kickedOutCount
+}
+
+func (mb *MegaBike) KickOutAgent() map[uuid.UUID]int {
+	voteCount := make(map[uuid.UUID]int)
+	// Count votes for each agent
+	for _, agent := range mb.agents {
+		agentVotes := agent.VoteForKickout() // Assuming this now returns map[uuid.UUID]int
+		for agentID, votes := range agentVotes {
+			voteCount[agentID] += votes
+		}
+	}
+
+	// Find all agents with votes > half the number of agents
+	agentsToKickOut := make(map[uuid.UUID]int)
+	for agentID, votes := range voteCount {
+		if votes > len(mb.agents)/2 {
+			agentsToKickOut[agentID] = votes
+		}
+	}
+
+	mb.kickedOutCount += len(agentsToKickOut)
+
+	return agentsToKickOut
+}
+
+func (mb *MegaBike) GetGovernance() utils.Governance {
+	return mb.governance
+}
+
+func (mb *MegaBike) GetRuler() uuid.UUID {
+	return mb.ruler
+}
+
+func (mb *MegaBike) SetGovernance(governance utils.Governance) {
+	mb.governance = governance
+}
+
+func (mb *MegaBike) SetRuler(ruler uuid.UUID) {
+	mb.ruler = ruler
 }

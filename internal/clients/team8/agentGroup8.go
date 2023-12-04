@@ -2,6 +2,8 @@ package team_8
 
 import (
 	"SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/utils"
+	"math/rand"
 
 	"SOMAS2023/internal/common/voting"
 	"math"
@@ -24,7 +26,67 @@ type Agent8 struct {
 	*objects.BaseBiker
 }
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DecideGovernance <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// base biker defaults to democracy
+func (bb *Agent8) DecideGovernance() voting.GovernanceVote {
+	// TODO: implement this function
+	governanceRanking := make(voting.GovernanceVote)
+	governanceRanking[utils.Democracy] = 1.0
+	governanceRanking[utils.Dictatorship] = 0.0
+	governanceRanking[utils.Leadership] = 0.0
+	return governanceRanking
+}
+
+// defaults to voting for first agent in the list
+func (bb *Agent8) VoteDictator() voting.IdVoteMap {
+	// TODO: implement this function
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+}
+
+// defaults to voting for first agent in the list
+func (bb *Agent8) VoteLeader() voting.IdVoteMap {
+	// TODO: implement this function
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetFellowBikers()
+	for i, fellowBiker := range fellowBikers {
+		if i == 0 {
+			votes[fellowBiker.GetID()] = 1.0
+		} else {
+			votes[fellowBiker.GetID()] = 0.0
+		}
+	}
+	return votes
+}
+
+//===============================================================================================================================================================
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 1 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (bb *Agent8) VoteForKickout() map[uuid.UUID]int {
+	// TODO: implement this function
+	voteResults := make(map[uuid.UUID]int)
+	bikeID := bb.GetBike()
+
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if agentID != bb.GetID() {
+			// random votes to other agents
+			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
+		}
+	}
+
+	return voteResults
+}
+
 // the function is used to map uuid of agents to real baseAgent object
 func (bb *Agent8) UuidToAgentMap(pendingAgents []uuid.UUID) map[uuid.UUID]objects.IBaseBiker {
 	agentMap := make(map[uuid.UUID]objects.IBaseBiker)
@@ -334,6 +396,16 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 // =========================================================================================================================================================
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 4 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+func (bb *Agent8) DictateDirection() uuid.UUID {
+	// TODO: implement this function
+	return uuid.Nil
+}
+
+func (bb *Agent8) LeadDirection() uuid.UUID {
+	// TODO: implement this function
+	return uuid.Nil
+}
+
 // Multi-voting system
 func (bb *Agent8) FinalDirectionVote(proposals []uuid.UUID, overallScores voting.LootboxVoteMap) voting.LootboxVoteMap {
 	// Calculate the biker's individual preference scores
@@ -426,7 +498,7 @@ func (bb *Agent8) hasDesiredColorInRange(proposals []uuid.UUID, rangeThreshold f
 
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *Agent8) DecideForce(direction uuid.UUID) {
-	//TODO： need to be implemented
+	// TODO: implement this function
 }
 
 // =========================================================================================================================================================
@@ -436,7 +508,7 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 // through this function the agent submits their desired allocation of resources
 // in the MVP each agent returns 1 whcih will cause the distribution to be equal across all of them
 func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
-	//TODO： need to be implemented
+	// TODO: implement this function
 	distribution := make(map[uuid.UUID]float64)
 	return distribution
 

@@ -68,3 +68,12 @@ type PhysicalState struct {
 	Velocity     float64     `json:"velocity"`
 	Mass         float64     `json:"mass"`
 }
+
+type Governance int
+
+const (
+	Democracy Governance = iota
+	Leadership
+	Dictatorship
+	Invalid
+)
