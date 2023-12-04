@@ -19,7 +19,7 @@ const deviatePositive = 0.1      // trust gain on non deviation
 const effortScaling = 0.1        // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1      // scaling factor for fairness, higher it is the more fairness changes each round
 const leaveThreshold = 0.0       // threshold for leaving
-const kickThreshold = 0.0       // threshold for kicking
+const kickThreshold = 0.0        // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
 const joinThreshold = 0.8        // opinion threshold for joining if not same colour
@@ -377,23 +377,24 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 	// loop through proposals
 	// for each box, add 1 to value of key=box_id in dic
 	proposalVotes := make(map[uuid.UUID]int)
+
+	winningProposal := proposals[bb.GetID()]
+	maxVotes := 1
+	curVotes := 1
+
 	for _, proposal := range proposals {
 		_, ok := proposalVotes[proposal]
 		if !ok {
 			proposalVotes[proposal] = 1
 		} else {
 			proposalVotes[proposal] += 1
+			if curVotes > maxVotes {
+				maxVotes = curVotes
+				winningProposal = proposal
+			}
 		}
 	}
-	var maxVotes int
-	var winningProposal uuid.UUID
 
-	for proposal, votes := range proposalVotes {
-		if votes > maxVotes {
-			maxVotes = votes
-			winningProposal = proposal
-		}
-	}
 	distToBoxMap := make(map[uuid.UUID]float64)
 	for _, proposal := range proposals {
 		distToBoxMap[proposal] = bb.distanceToReachableBox(proposal)
@@ -408,10 +409,10 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 							votes[proposal1] = 0
 						}
 					}
-					return votes
 				} else {
 					votes[proposal] = float64(proposalVotes[proposal])
 				}
+				return votes
 			}
 		}
 		// calculate energy left if we went here
