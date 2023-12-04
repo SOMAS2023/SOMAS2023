@@ -1,4 +1,4 @@
-package objects_tests
+package objects
 
 import (
 	obj "SOMAS2023/internal/common/objects"

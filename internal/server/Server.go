@@ -36,6 +36,9 @@ type IBaseBikerServer interface {
 	FoundingInstitutions()
 	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
 	LootboxCheckAndDistributions()
+	ResetGameState()
+	GetDeadAgents() map[uuid.UUID]objects.IBaseBiker
+	UpdateGameStates()
 }
 
 type Server struct {
@@ -102,6 +105,10 @@ func (s *Server) RemoveAgentFromBike(agent objects.IBaseBiker) {
 	if _, ok := s.megaBikeRiders[agent.GetID()]; ok {
 		delete(s.megaBikeRiders, agent.GetID())
 	}
+}
+
+func (s *Server) GetDeadAgents() map[uuid.UUID]objects.IBaseBiker {
+	return s.deadAgents
 }
 
 func (s *Server) outputResults(gameStates []GameStateDump) {

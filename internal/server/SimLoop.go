@@ -27,11 +27,8 @@ func (s *Server) RunSimLoop(iterations int) {
 
 func (s *Server) ResetGameState() {
 	// kick everyone off bikes
-	for id, _ := range s.GetAgentMap() {
-		if bikeId, ok := s.megaBikeRiders[id]; ok {
-			s.megaBikes[bikeId].RemoveAgent(id)
-			delete(s.megaBikeRiders, id)
-		}
+	for _, agent := range s.GetAgentMap() {
+		s.RemoveAgentFromBike(agent)
 	}
 
 	// respawn people who died in previous round (conditional)
@@ -100,24 +97,25 @@ func (s *Server) FoundingInstitutions() {
 				}
 			}
 		}
+	}
 
-		for agent, governance := range s.foundingChoices {
-			// randomly select a biker from the bikers who chose this governance method
-			// add that biker to a megabike
+	for agent, governance := range s.foundingChoices {
+		// randomly select a biker from the bikers who chose this governance method
+		// add that biker to a megabike
 
-			// select a bike with this governance method which has been assigned the lowest amount of bikers
-			bikesAvailable := govBikes[governance]
-			sort.Slice(bikesAvailable, func(i, j int) bool {
-				// in the order from large to small
-				return len(s.GetMegaBikes()[bikesAvailable[i]].GetAgents()) < len(s.GetMegaBikes()[bikesAvailable[j]].GetAgents())
-			})
+		// select a bike with this governance method which has been assigned the lowest amount of bikers
+		bikesAvailable := govBikes[governance]
+		sort.Slice(bikesAvailable, func(i, j int) bool {
+			// in the order from large to small
+			return len(s.GetMegaBikes()[bikesAvailable[i]].GetAgents()) < len(s.GetMegaBikes()[bikesAvailable[j]].GetAgents())
+		})
 
-			chosenBike := bikesAvailable[0]
-			// add agent to bike
-			agentInt := s.GetAgentMap()[agent]
-			agentInt.SetBike(chosenBike)
-			s.AddAgentToBike(agentInt)
-		}
+		// get the first one of the sorted bikes
+		chosenBike := bikesAvailable[0]
+		// add agent to bike
+		agentInt := s.GetAgentMap()[agent]
+		agentInt.SetBike(chosenBike)
+		s.AddAgentToBike(agentInt)
 	}
 
 	// if there are more bikers for a governance method than there are seats, then evenly distribute them across megabikes
