@@ -3,6 +3,7 @@ package objects
 import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
+
 	// "fmt"
 	"math"
 
@@ -357,7 +358,8 @@ func (bb *BaseBiker) VoteForKickout() map[uuid.UUID]int {
 		agentID := agent.GetID()
 		if agentID != bb.GetID() {
 			// random votes to other agents
-			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
+			// voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
+			voteResults[agentID] = 0 // randomly assigns 0 or 1 vote
 		}
 	}
 
