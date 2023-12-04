@@ -15,7 +15,6 @@ func NewVoteOnDictatorHandler() *VoteOnDictatorHandler {
 }
 
 func (voteHandler *VoteOnDictatorHandler) GetDecision(inputs VoteOnAgentsInput) voting.IdVoteMap {
-	vote := make(voting.IdVoteMap)
 	agentScoreMap := make(voting.IdVoteMap)
 	totalScore := 0.0
 
@@ -25,7 +24,7 @@ func (voteHandler *VoteOnDictatorHandler) GetDecision(inputs VoteOnAgentsInput) 
 		agentScoreMap[agent_id] = agentScore
 	}
 	// Return a vote map where the sum of the votes is 1, as expected by the environment.
-	vote = NormaliseVote(agentScoreMap, totalScore)
+	vote := NormaliseVote(agentScoreMap, totalScore)
 
 	return vote
 }

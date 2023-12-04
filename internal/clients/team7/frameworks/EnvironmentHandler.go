@@ -38,12 +38,12 @@ func (env *EnvironmentHandler) GetAgentsOnCurrentBike() []objects.IBaseBiker {
 }
 
 // Returns IDs of all agents on bike.
-func (env *EnvironmentHandler) GetAgentsOnCurrentBikeId() []uuid.UUID {
+func (env *EnvironmentHandler) GetAgentIdsOnCurrentBike() []uuid.UUID {
 	fellowBikers := env.GetAgentsOnCurrentBike()
 
 	agentIds := make([]uuid.UUID, len(fellowBikers))
-	for _, fellowBiker := range fellowBikers {
-		agentIds = append(agentIds, fellowBiker.GetID())
+	for i, fellowBiker := range fellowBikers {
+		agentIds[i] = fellowBiker.GetID()
 	}
 
 	return agentIds

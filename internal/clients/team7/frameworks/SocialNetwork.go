@@ -51,11 +51,13 @@ func (sn *SocialNetwork) GetSocialNetwork() map[uuid.UUID]*SocialConnection {
 }
 
 func (sn *SocialNetwork) updateTrustLevels(input SocialNetworkUpdateInput) {
-	agentIds := make([]uuid.UUID, len(input.AgentDecisions))
+	agentIds := make([]uuid.UUID, len(input.AgentDecisions)-1)
+	i := 0
 	for agentId := range input.AgentDecisions {
 		if agentId != sn.myId {
-			agentIds = append(agentIds, agentId)
+			agentIds[i] = agentId
 		}
+		i++
 	}
 
 	DistributionPenaltyMap := make(map[uuid.UUID]float64)

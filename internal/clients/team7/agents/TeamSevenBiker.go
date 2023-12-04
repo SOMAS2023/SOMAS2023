@@ -69,9 +69,9 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	agentResourceVotes := make(map[uuid.UUID]voting.IdVoteMap)
 
 	agentIds := make([]uuid.UUID, len(fellowBikers))
-	for _, fellowBiker := range fellowBikers {
+	for i, fellowBiker := range fellowBikers {
 		agentId := fellowBiker.GetID()
-		agentIds = append(agentIds, agentId)
+		agentIds[i] = agentId
 		agentForces[agentId] = fellowBiker.GetForces()
 		agentColours[agentId] = fellowBiker.GetColour()
 		agentEnergyLevels[agentId] = fellowBiker.GetEnergyLevel()
@@ -196,7 +196,7 @@ func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uu
 
 // Vote on allocation of resources
 func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
-	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
+	agentIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAllocationInput{
 		AgentCandidates: agentIds,
