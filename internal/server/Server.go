@@ -3,6 +3,7 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -33,8 +34,11 @@ type IBaseBikerServer interface {
 	AudiCollisionCheck()
 	AddAgentToBike(agent objects.IBaseBiker)
 	FoundingInstitutions()
+	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
+	LootboxCheckAndDistributions()
 	ResetGameState()
 	GetDeadAgents() map[uuid.UUID]objects.IBaseBiker
+	UpdateGameStates()
 }
 
 type Server struct {
@@ -123,5 +127,12 @@ func (s *Server) outputResults(gameStates []GameStateDump) {
 	encoder.SetIndent("", "    ")
 	if err := encoder.Encode(gameStates); err != nil {
 		panic(err)
+	}
+}
+
+func (s *Server) UpdateGameStates() {
+	gs := s.NewGameStateDump()
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
 	}
 }

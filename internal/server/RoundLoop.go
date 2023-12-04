@@ -13,6 +13,7 @@ import (
 func (s *Server) RunRoundLoop() {
 	// Capture dump of starting state
 	gameState := s.NewGameStateDump()
+	s.UpdateGameStates()
 
 	// take care of agents that want to leave the bike and of the acceptance/ expulsion process
 	s.RunBikeSwitch(gameState)
@@ -34,6 +35,8 @@ func (s *Server) RunRoundLoop() {
 	s.MovePhysicsObject(s.audi)
 	// Check Audi collision
 	s.AudiCollisionCheck()
+
+	s.UpdateGameStates()
 
 	// Lootbox Distribution
 	s.LootboxCheckAndDistributions()
@@ -58,11 +61,17 @@ func (s *Server) RunBikeSwitch(gameState GameStateDump) {
 	// check if agents want ot leave the bike on this round
 	changeBike := s.GetLeavingDecisions(gameState)
 	inLimbo = append(inLimbo, changeBike...)
+	// update gamestate as it has changed
+	s.UpdateGameStates()
 	//process the kickout request
 	kickedOff := s.HandleKickoutProcess()
+	// update gamestate as it has changed
+	s.UpdateGameStates()
 	inLimbo = append(inLimbo, kickedOff...)
 	// process the joining request
 	s.ProcessJoiningRequests(inLimbo)
+	// update gamestate as it has changed
+	s.UpdateGameStates()
 }
 
 func (s *Server) HandleKickoutProcess() []uuid.UUID {
@@ -247,6 +256,7 @@ func (s *Server) RunActionProcess() {
 				agent.UpdateEnergyLevel(-utils.LeadershipDemocracyPenalty)
 			}
 		case utils.Dictatorship:
+			direction = s.RunRulerAction(bike)
 		}
 
 		for _, agent := range agents {
@@ -265,7 +275,6 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 	force := po.GetForce()
 	po.UpdateOrientation()
 	orientation := po.GetOrientation()
-
 	// Obtains the current xstate (i.e. velocity, acceleration, position, mass)
 	initialState := po.GetPhysicalState()
 
