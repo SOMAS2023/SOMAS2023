@@ -26,18 +26,18 @@ type IBaselineAgent interface {
 	VoteForKickout() map[uuid.UUID]int
 
 	//CURRENTLY UNUSED/NOT CONSIDERED FUNCTIONS
-	DecideGovernance() voting.GovernanceVote //decide the governance system
+	DecideGovernance() utils.Governance //decide the governance system
 	VoteDictator() voting.IdVoteMap
 	VoteLeader() voting.IdVoteMap
 	LeadDirection() uuid.UUID //called only when the agent is the leader
 
 	//IMPLEMENTED FUNCTIONS
-	ProposeDirection() uuid.UUID                                    //returns the id of the desired lootbox
-	FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap //returns rank of proposed lootboxes
-	DecideAllocation() voting.IdVoteMap                             //decide the allocation parameters
-	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      //decide whether to accept or not accept bikers, ranks the ones
-	nearestLoot() uuid.UUID                                         //returns the id of the nearest lootbox
-	DictateDirection() uuid.UUID                                    //called only when the agent is the dictator
+	ProposeDirection() uuid.UUID                                                //returns the id of the desired lootbox
+	FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
+	DecideAllocation() voting.IdVoteMap                                         //decide the allocation parameters
+	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool                  //decide whether to accept or not accept bikers, ranks the ones
+	nearestLoot() uuid.UUID                                                     //returns the id of the nearest lootbox
+	DictateDirection() uuid.UUID                                                //called only when the agent is the dictator
 
 	//HELPER FUNCTIONS
 	UpdateDecisionData()           //updates all the data needed for the decision making process(call at the start of any decision making function)
@@ -161,8 +161,8 @@ func (agent *BaselineAgent) getHonestyAverage() float64 {
 	return sum / float64(len(agent.honestyMatrix))
 }
 
-func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootBox) (map[uuid.UUID]float64, error) {
-	rank := make(map[uuid.UUID]float64)
+func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootBox) (voting.LootboxVoteMap, error) {
+	rank := make(voting.LootboxVoteMap) //make(map[uuid.UUID]float64)
 	ranksum := make(map[uuid.UUID]float64)
 	totalsum := float64(0)
 	distanceRank := float64(0)
@@ -222,13 +222,18 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 	return rank, nil
 }
 
-func (agent *BaselineAgent) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap {
+func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	agent.UpdateDecisionData()
+	//We need to fix this ASAP
 	boxesInMap := agent.GetGameState().GetLootBoxes()
 	boxProposed := make([]objects.ILootBox, len(proposals))
-	for i, pp := range proposals {
-		boxProposed[i] = boxesInMap[pp]
+	count := 0
+	for _, i := range proposals {
+		fmt.Println("proposed box: ", i)
+		boxProposed[count] = boxesInMap[i]
+		count++
 	}
+
 	rank, e := agent.rankTargetProposals(boxProposed)
 	if e != nil {
 		panic("unexpected error!")
@@ -238,7 +243,7 @@ func (agent *BaselineAgent) FinalDirectionVote(proposals []uuid.UUID) voting.Loo
 
 func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
 	agent.UpdateDecisionData()
-	distribution := make(map[uuid.UUID]float64) //make(voting.IdVoteMap)
+	distribution := make(voting.IdVoteMap) //make(map[uuid.UUID]float64)
 	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	fellowBikers := currentBike.GetAgents()
 	totalEnergySpent := float64(0)
@@ -421,8 +426,7 @@ func (agent *BaselineAgent) DecideAction() objects.BikerAction {
 func (agent *BaselineAgent) DecideForces(direction uuid.UUID) {
 	//save the target lootbox
 	agent.lootBoxColour = agent.GetGameState().GetLootBoxes()[direction].GetColour()
-
-	energyLevel := agent.GetEnergyLevel() // 当前能量
+	energyLevel := agent.GetEnergyLevel()
 
 	randomBreakForce := float64(0)
 	randomPedalForce := rand.Float64() * energyLevel
@@ -467,16 +471,9 @@ func (agent *BaselineAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UU
 	return decision
 }
 
-func (agent *BaselineAgent) DecideGovernance() voting.GovernanceVote {
-	rank := make(map[utils.Governance]float64)
-	rank[utils.Democracy] = 1
-	rank[utils.Leadership] = 0
-	rank[utils.Dictatorship] = 0
-	rank[utils.Invalid] = 0
-	//for i := utils.Democracy; i <= utils.Invalid; i++ {
-	//  rank[i] = 0.25
-	//}
-	return rank
+func (agent *BaselineAgent) DecideGovernance() utils.Governance {
+	// Change behaviour here to return different governance
+	return utils.Democracy
 }
 
 func (agent *BaselineAgent) nearestLoot() uuid.UUID {
