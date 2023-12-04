@@ -12,14 +12,14 @@ func ProposeDirection(gameState objects.IGameState, b *team5Agent) uuid.UUID {
 	preferenceMap := make(map[uuid.UUID]float64)
 
 	// Get the megabike, agent and lootboxes
-	bikeId := findAgentandBike(gameState, b.GetID())
+	bikeId := b.GetBike()
 	bike := gameState.GetMegaBikes()[bikeId]
 	lootBoxes := gameState.GetLootBoxes()
 
 	// Weights for distance, energy and colour
 	var wd, we, wc = 0.3, 0.3, 0.4
 
-	averageEnergyOthers := calculateAverageEnergyOthers(gameState, b.GetID(), bike)   // Average energy of other agents on the bike
+	averageEnergyOthers := calculateAverageEnergyOthers(gameState, b)                 // Average energy of other agents on the bike
 	urgencyFactor := averageEnergyPreference(b.GetEnergyLevel(), averageEnergyOthers) // Urgency factor based on agent's energy level compared to his bike mates
 
 	// Calculate the preference for each lootbox
@@ -51,18 +51,6 @@ func ProposeDirection(gameState objects.IGameState, b *team5Agent) uuid.UUID {
 	return prefLootId
 }
 
-// Find the agent with the given ID and return the bike ID and agent
-func findAgentandBike(gameState objects.IGameState, agentID uuid.UUID) uuid.UUID {
-	for id, bike := range gameState.GetMegaBikes() {
-		for _, agent := range bike.GetAgents() {
-			if agent.GetID() == agentID {
-				return id
-			}
-		}
-	}
-	return uuid.Nil
-}
-
 // Calculate the Euclidean distance between two coordinates
 func calculateDistance(a, b utils.Coordinates) float64 {
 	return math.Sqrt(math.Pow(a.X-b.X, 2) + math.Pow(a.Y-b.Y, 2))
@@ -90,10 +78,12 @@ func averageEnergyPreference(agentEnergy, averageEnergyOthers float64) float64 {
 }
 
 // Calculate the average energy of other agents
-func calculateAverageEnergyOthers(gameState objects.IGameState, agentID uuid.UUID, megabike objects.IMegaBike) float64 {
+func calculateAverageEnergyOthers(gameState objects.IGameState, b *team5Agent) float64 {
 	totalEnergy := 0.0
 
-	agents := megabike.GetAgents()
+	id := b.GetID()
+
+	agents := b.GetFellowBikers()
 	totAgents := len(agents) - 1
 
 	if totAgents == 0 {
@@ -102,7 +92,7 @@ func calculateAverageEnergyOthers(gameState objects.IGameState, agentID uuid.UUI
 
 	// Calculate the total energy of other agents on the bike
 	for _, agent := range agents {
-		if agent.GetID() != agentID {
+		if agent.GetID() != id {
 			totalEnergy += agent.GetEnergyLevel()
 		}
 	}

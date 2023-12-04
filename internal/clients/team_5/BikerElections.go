@@ -7,18 +7,14 @@ import (
 )
 
 func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
-	bikeId := t5.BaseBiker.GetMegaBikeId()
-	agentsOnBike := t5.BaseBiker.GetGameState().GetMegaBikes()[bikeId].GetAgents()
+	agentsOnBike := t5.GetFellowBikers()
 	decisions := make(map[uuid.UUID]bool)
 	threshold := 0.5
-
-	agentRep := NewRepSystem(t5.BaseBiker.GetGameState())
-	agentRep.updateReputationOfAllAgents()
 
 	for _, agent := range agentsOnBike {
 
 		key := agent.GetID()
-		value := agentRep.calculateReputationOfAgent(key)
+		value := t5.QueryReputation(key)
 
 		fmt.Println(value)
 
