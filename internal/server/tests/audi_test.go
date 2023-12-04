@@ -53,6 +53,7 @@ func TestAudiCollisionProcess(t *testing.T) {
 func TestAudiTargeting(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
+	s.FoundingInstitutions()
 	i := 0
 	emptyBikeId := uuid.UUID{}
 	slowBikeId := uuid.UUID{}
