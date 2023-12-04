@@ -39,9 +39,10 @@ type SocialNetwork struct {
 	myId          uuid.UUID
 }
 
-func NewSocialNetwork(personality *Personality) *SocialNetwork {
+func NewSocialNetwork(myId uuid.UUID, personality *Personality) *SocialNetwork {
 	return &SocialNetwork{
 		socialNetwork: map[uuid.UUID]*SocialConnection{},
+		myId:          myId,
 		personality:   personality,
 	}
 }
@@ -51,13 +52,11 @@ func (sn *SocialNetwork) GetSocialNetwork() map[uuid.UUID]*SocialConnection {
 }
 
 func (sn *SocialNetwork) updateTrustLevels(input SocialNetworkUpdateInput) {
-	agentIds := make([]uuid.UUID, len(input.AgentDecisions)-1)
-	i := 0
+	agentIds := make([]uuid.UUID, 0)
 	for agentId := range input.AgentDecisions {
 		if agentId != sn.myId {
-			agentIds[i] = agentId
+			agentIds = append(agentIds, agentId)
 		}
-		i++
 	}
 
 	DistributionPenaltyMap := make(map[uuid.UUID]float64)

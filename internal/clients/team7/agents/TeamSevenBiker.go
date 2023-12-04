@@ -35,15 +35,16 @@ type BaseTeamSevenBiker struct {
 }
 
 // Produce new BaseTeamSevenBiker
-func NewBaseTeamSevenBiker(agentId uuid.UUID) *BaseTeamSevenBiker {
-	baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), agentId)
+func NewBaseTeamSevenBiker() *BaseTeamSevenBiker {
+	baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+	agentId := baseBiker.GetID()
 	personality := frameworks.NewDefaultPersonality()
 	return &BaseTeamSevenBiker{
 		BaseBiker:             baseBiker,
 		navigationFramework:   frameworks.NewNavigationDecisionFramework(),
 		bikeDecisionFramework: frameworks.NewBikeDecisionFramework(),
 		opinionFramework:      frameworks.NewOpinionFramework(frameworks.OpinionFrameworkInputs{}),
-		socialNetwork:         frameworks.NewSocialNetwork(personality),
+		socialNetwork:         frameworks.NewSocialNetwork(agentId, personality),
 		personality:           personality,
 		environmentHandler:    frameworks.NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetBike(), agentId),
 		memoryLength:          10,
@@ -75,10 +76,11 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		agentForces[agentId] = fellowBiker.GetForces()
 		agentColours[agentId] = fellowBiker.GetColour()
 		agentEnergyLevels[agentId] = fellowBiker.GetEnergyLevel()
-		if biker.votedForResources {
-			agentResourceVotes[agentId] = fellowBiker.DecideAllocation()
-			biker.votedForResources = false
-		}
+		// TODO: Implement once we can message biker to ask for allocation
+		// if biker.votedForResources {
+		// 	agentResourceVotes[agentId] = fellowBiker.DecideAllocation()
+		// 	biker.votedForResources = false
+		// }
 	}
 
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{

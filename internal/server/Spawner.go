@@ -8,7 +8,6 @@ import (
 	team7agents "SOMAS2023/internal/clients/team7/agents"
 
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
-	"github.com/google/uuid"
 )
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
@@ -19,7 +18,7 @@ func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBike
 
 func BikerAgentGenerator() objects.IBaseBiker {
 	// return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
-	return team7agents.NewBaseTeamSevenBiker(uuid.UUID{})
+	return team7agents.NewBaseTeamSevenBiker()
 }
 
 func (s *Server) spawnLootBox() {
