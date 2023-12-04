@@ -12,6 +12,11 @@ import (
 //i added a comment for the printstatement in get colour remember to remove and in the original decideforce fn in base biker remember to remove those
 
 // i think i found it divide the steering force by the amount of agents on the bike
+
+// so this bassically adjusts the force depending on the energy of the agent
+
+
+
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	//fmt.Println("testing 1")
 
@@ -30,11 +35,28 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
-		fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
+		//fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
+		distance_to_loot_box := math.Sqrt((((deltaX)*(deltaX)) + ((deltaY)*(deltaY))))
 
 		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
-		
+
+		audiPos := t5.GetGameState().GetAudi().GetPosition()
+
+		deltaX2 := audiPos.X - currLocation.X
+		deltaY2 := audiPos.Y - currLocation.Y
+        
+		distance_to_audi := math.Sqrt((((deltaX2)*(deltaX2)) + (deltaY2*(deltaY2))))
+		//if the audi is closer than the closest lootbox then run away
+		if distance_to_audi < distance_to_loot_box { 
+			angle = math.Atan2(-deltaY2, deltaX2)
+			normalisedAngle = angle / math.Pi
+		}
+		if distance_to_audi > distance_to_loot_box { 
+			angle = math.Atan2(deltaY, deltaX)
+			normalisedAngle = angle / math.Pi
+		}
+			
 
 		orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
 		//fmt.Println("Bike Orientation: ", orientation) 
@@ -50,39 +72,34 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		}
 		//fmt.Println("Turning Decision: ", turningDecision)
 
-		nearestBoxForces := utils.Forces{
-			Pedal:   utils.BikerMaxForce,
+		ownEnergyLevel := t5.GetEnergyLevel()
+		// ask the guys what number i want to put the own energy level and if it
+		// should be adjusted based on energy level to sva eenergy
+		Biker_pedal := utils.BikerMaxForce
+		//if our own agents on a bike or just us on a bike we use full force this is only when we are on a bike with other agents or more than 3 agents
+		if len(t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetAgents()) > 3 {
+			if ownEnergyLevel < 0.2 {
+				Biker_pedal = ownEnergyLevel * utils.BikerMaxForce
+			}
+		}
+
+		Forces_movement := utils.Forces{
+			Pedal:   Biker_pedal,
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		fmt.Println("Nearest Box Forces: ", nearestBoxForces)
-
-		t5.SetForces(nearestBoxForces)
-	} else {
-		idleForces := utils.Forces{
-			Pedal:   0.0,
-			Brake:   0.0,
-			Turning: utils.TurningDecision{SteerBike: false},
-		}
-		fmt.Println("Idle Forces: ", idleForces)
-
-		t5.SetForces(idleForces)
+		t5.SetForces(Forces_movement)
 	}
+}
+
+func calculatePedalForceBasedOnEnergy() {
+	panic("unimplemented")
 }
 
 	
 
 
-// so this bassically adjusts the force depending on the energy of the agent
-func (t5 *team5Agent) calculatePedalForceBasedOnEnergy() float64 {
-	ownEnergyLevel := t5.GetEnergyLevel()
-	// ask the guys what number i want to put the own energy level and if it
-	// should be adjusted based on energy level to sva eenergy
-	if ownEnergyLevel < 0.5 {
-		return ownEnergyLevel * utils.BikerMaxForce
-	}
-	return utils.BikerMaxForce
-}
+
 
 // here I can add implementation of stategy like:
 //___________________________________________________________________________________________________________________________

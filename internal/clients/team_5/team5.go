@@ -66,3 +66,5 @@ func (t5 *team5Agent) FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVo
 func (t5 *team5Agent) GetMegaBike() []objects.IBaseBiker {
     return t5.BaseBiker.GetGameState().GetMegaBikes()[t5.BaseBiker.GetMegaBikeId()].GetAgents()
 }
+
+
