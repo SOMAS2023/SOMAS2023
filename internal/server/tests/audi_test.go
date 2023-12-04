@@ -4,8 +4,9 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/server"
 	"fmt"
-	"github.com/google/uuid"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestAudiCollisionProcess(t *testing.T) {
@@ -52,6 +53,7 @@ func TestAudiCollisionProcess(t *testing.T) {
 func TestAudiTargeting(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
 	i := 0
 	emptyBikeId := uuid.UUID{}
@@ -75,7 +77,7 @@ func TestAudiTargeting(t *testing.T) {
 			// give the bike a fast Velocity
 			bike.SetPhysicalState(utils.PhysicalState{Velocity: 100.0})
 			agentsOnBike := bike.GetAgents()
-			if agentsOnBike == nil || len(agentsOnBike) == 0 {
+			if len(agentsOnBike) == 0 {
 				emptyBikeId = id
 			}
 			fmt.Printf("Megabike{%s} has {%d} agents with velocity {%.2f}\n", id, len(bike.GetAgents()), bike.GetVelocity())
