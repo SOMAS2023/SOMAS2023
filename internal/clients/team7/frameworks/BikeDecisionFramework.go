@@ -38,6 +38,10 @@ func (bdf *BikeDecisionFramework) GetDecision(inputs BikeDecisionInputs) BikeDec
 	if inputs.DecisionType == StayOrLeaveBike {
 		distances := inputs.PreviousDistancesFromProposals
 		// find gradient of distances
+		if len(distances) == 0 {
+			return BikeDecision{LeaveBike: false}
+		}
+
 		gradient := make([]float64, len(distances)-1)
 		for i := 0; i < len(distances)-1; i++ {
 			gradient[i] = distances[i+1] - distances[i]

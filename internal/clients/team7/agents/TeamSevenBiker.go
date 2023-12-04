@@ -29,6 +29,9 @@ type BaseTeamSevenBiker struct {
 	locations             []utils.Coordinates
 	myProposedLootboxes   []uuid.UUID
 	distanceFromMyLootbox []float64
+	time                  int
+
+	votedForResources bool
 }
 
 // Produce new BaseTeamSevenBiker
@@ -42,8 +45,10 @@ func NewBaseTeamSevenBiker(agentId uuid.UUID) *BaseTeamSevenBiker {
 		opinionFramework:      frameworks.NewOpinionFramework(frameworks.OpinionFrameworkInputs{}),
 		socialNetwork:         frameworks.NewSocialNetwork(personality),
 		personality:           personality,
-		environmentHandler:    frameworks.NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetMegaBikeId(), agentId),
+		environmentHandler:    frameworks.NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetBike(), agentId),
 		memoryLength:          10,
+		time:                  -1,
+		proposedDirections:    []float64{0, 0},
 	}
 }
 
@@ -54,7 +59,8 @@ func (biker *BaseTeamSevenBiker) UpdateGameState(gameState objects.IGameState) {
 
 // Override UpdateAgentInternalState
 func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
-	biker.environmentHandler.UpdateCurrentBikeId(biker.GetMegaBikeId())
+	biker.time++
+	biker.environmentHandler.UpdateCurrentBikeId(biker.GetBike())
 
 	fellowBikers := biker.environmentHandler.GetAgentsOnCurrentBike()
 	agentForces := make(map[uuid.UUID]utils.Forces)
@@ -69,7 +75,10 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		agentForces[agentId] = fellowBiker.GetForces()
 		agentColours[agentId] = fellowBiker.GetColour()
 		agentEnergyLevels[agentId] = fellowBiker.GetEnergyLevel()
-		agentResourceVotes[agentId] = fellowBiker.DecideAllocation()
+		if biker.votedForResources {
+			agentResourceVotes[agentId] = fellowBiker.DecideAllocation()
+			biker.votedForResources = false
+		}
 	}
 
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{
@@ -95,7 +104,13 @@ func (biker *BaseTeamSevenBiker) ProposeDirection() uuid.UUID {
 		return biker.environmentHandler.GetNearestLootBox().GetID()
 	}
 
-	myProposedLootbox := biker.environmentHandler.GetNearestLootBoxByColour(biker.GetColour()).GetID()
+	myProposedLootboxObject := biker.environmentHandler.GetNearestLootBoxByColour(biker.GetColour())
+	var myProposedLootbox uuid.UUID
+	if myProposedLootboxObject == nil {
+		myProposedLootbox = biker.environmentHandler.GetNearestLootBox().GetID()
+	} else {
+		myProposedLootbox = myProposedLootboxObject.GetID()
+	}
 
 	// Update Memory
 	if len(biker.myProposedLootboxes) < biker.memoryLength {
@@ -109,11 +124,18 @@ func (biker *BaseTeamSevenBiker) ProposeDirection() uuid.UUID {
 
 // Override base biker functions
 func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
-
 	proposedLootbox := biker.environmentHandler.GetLootboxById(direction)
 
+	var proposedLocation utils.Coordinates
+	if proposedLootbox != nil {
+		proposedLocation = proposedLootbox.GetPosition()
+	} else {
+		proposedLocation = utils.Coordinates{X: 0, Y: 0}
+	}
+
 	navInputs := frameworks.NavigationInputs{
-		Destination:     proposedLootbox.GetPosition(),
+		IsDestination:   proposedLootbox != nil,
+		Destination:     proposedLocation,
 		CurrentLocation: biker.GetLocation(),
 	}
 
@@ -183,6 +205,8 @@ func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
 
 	voteHandler := frameworks.NewVoteOnAllocationHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
+
+	biker.votedForResources = true
 	return voteOutput
 }
 
