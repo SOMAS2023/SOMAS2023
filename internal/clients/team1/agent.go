@@ -71,7 +71,6 @@ func (bb *Biker1) GetBikeInstance() obj.IMegaBike {
 func (bb *Biker1) GetLootLocation(id uuid.UUID) utils.Coordinates {
 	gs := bb.GetGameState()
 	lootboxes := gs.GetLootBoxes()
-	fmt.Printf("ID: %v", id)
 	lootbox := lootboxes[id]
 	return lootbox.GetPosition()
 }
@@ -507,7 +506,7 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: normalisedAngle,
+			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
 		}
 		boxForces := utils.Forces{
 			Pedal:   bb.getPedalForce(),
