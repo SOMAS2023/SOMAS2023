@@ -18,10 +18,7 @@ class Agent(Drawable):
             "Pedal" : jsonData["forces"]["pedal"],
             "Brake" : jsonData["forces"]["brake"],
             "Steering?" : f'{jsonData["forces"]["turning"]["steer_bike"] != 0}, {round(jsonData["forces"]["turning"]["steering_force"],PRECISION)}',
-            "Energy" : jsonData["energy_level"],
-            "Resources Needed" : jsonData["resource_allocation_params"]["need"],
-            "Resource Demand" : jsonData["resource_allocation_params"]["demand"],
-            "Resource Appropration" : jsonData["resource_allocation_params"]["appropriation"],
+            "Energy" : round(jsonData["energy_level"], PRECISION)
         }
         self.properties.update(properties)
 
