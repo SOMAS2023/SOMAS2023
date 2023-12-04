@@ -501,3 +501,49 @@ func TestGetWinningDirection1(t *testing.T) {
 
 	assert.Equal(t, fullPowerProposal, s.GetWinningDirection(proposals, weights), "full power proposal should win")
 }
+
+func TestGetWinningDirection2(t *testing.T) {
+	s := server.Initialize(1)
+
+	fullPower := make([]uuid.UUID, 2)
+	for i := 0; i < 2; i++ {
+		fullPower[i] = uuid.New()
+	}
+
+	reducedPower := make([]uuid.UUID, 3)
+	for i := 0; i < 3; i++ {
+		reducedPower[i] = uuid.New()
+	}
+
+	// make the weights list
+	weights := make(map[uuid.UUID]float64)
+	for _, agent := range fullPower {
+		weights[agent] = 1.0
+	}
+	// in this case they all have the same power, so the reducedPower one should win
+	for _, agent := range reducedPower {
+		weights[agent] = 1.0
+	}
+
+	// make the votes list
+	proposals := make(map[uuid.UUID]voting.LootboxVoteMap)
+	fullPowerProposal := uuid.New()
+	reducedPowerProposal := uuid.New()
+
+	fullPowerVote := make(voting.LootboxVoteMap)
+	fullPowerVote[fullPowerProposal] = 1.0
+	fullPowerVote[reducedPowerProposal] = 0.0
+
+	reducedPowerVote := make(voting.LootboxVoteMap)
+	reducedPowerVote[fullPowerProposal] = 0.0
+	reducedPowerVote[reducedPowerProposal] = 1.0
+
+	for _, agent := range fullPower {
+		proposals[agent] = fullPowerVote
+	}
+	for _, agent := range reducedPower {
+		proposals[agent] = reducedPowerVote
+	}
+
+	assert.Equal(t, reducedPowerProposal, s.GetWinningDirection(proposals, weights), "reduced power proposal should win")
+}
