@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Server) RunSimLoop(iterations int) {
+func (s *Server) RunSimLoop(gameStates []GameStateDump, iterations int) []GameStateDump {
 
 	s.ResetGameState()
 	s.FoundingInstitutions()
@@ -21,8 +21,10 @@ func (s *Server) RunSimLoop(iterations int) {
 	// run this for n iterations
 	for i := 0; i < iterations; i++ {
 		s.RunRoundLoop()
+		gameStates = append(gameStates, s.NewGameStateDump())
 	}
 
+	return gameStates
 }
 
 func (s *Server) ResetGameState() {
@@ -130,13 +132,12 @@ func (s *Server) FoundingInstitutions() {
 
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
-	gameStates := make([]GameStateDump, 0, s.GetIterations())
+	gameStates := []GameStateDump{s.NewGameStateDump()}
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
 		fmt.Printf("Main game loop running...\n\n")
 		s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
-		s.RunSimLoop(utils.RoundIterations)
-		gameStates = append(gameStates, s.NewGameStateDump())
+		gameStates = s.RunSimLoop(gameStates, utils.RoundIterations)
 		fmt.Printf("\nMain game loop finished.\n\n")
 		fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
