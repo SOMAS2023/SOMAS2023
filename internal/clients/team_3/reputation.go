@@ -11,10 +11,11 @@ type reputation struct {
 	recentContribution  float64
 	historyContribution float64
 	//decisionSimilarity  float64
-	isSameColor  float64
-	lootBoxGet   float64
-	energyGain   float64
-	energyRemain float64
+	isSameColor     float64
+	lootBoxGet      float64
+	energyGain      float64
+	energyRemain    float64
+	recentGetEnergy bool
 
 	// memory or counter
 	_lastPedal         float64
@@ -29,6 +30,7 @@ func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor util
 	// update memory
 	rep._lastPedal = biker.GetForces().Pedal - biker.GetForces().Brake
 	rep._pedalCnt += rep._lastPedal
+	rep.recentGetEnergy = biker.GetEnergyLevel() > rep._lastEnergyLevel
 	if biker.GetEnergyLevel() > rep._lastEnergyLevel {
 		rep._recentEnergyGain = biker.GetEnergyLevel() - rep._lastEnergyLevel
 		rep._energyReceivedCnt += rep._recentEnergyGain
