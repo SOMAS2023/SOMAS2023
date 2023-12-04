@@ -110,6 +110,7 @@ func (s *Server) FoundingInstitutions() {
 			return len(s.GetMegaBikes()[bikesAvailable[i]].GetAgents()) < len(s.GetMegaBikes()[bikesAvailable[j]].GetAgents())
 		})
 
+		// get the first one of the sorted bikes
 		chosenBike := bikesAvailable[0]
 		// add agent to bike
 		agentInt := s.GetAgentMap()[agent]

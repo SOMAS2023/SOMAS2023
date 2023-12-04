@@ -4,6 +4,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/server"
+	"slices"
 	"testing"
 
 	"github.com/google/uuid"
@@ -87,8 +88,8 @@ func TestResetGameState(t *testing.T) {
 		mockBikers[i] = mockBiker
 	}
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
 
+	gs := s.NewGameStateDump()
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
@@ -96,7 +97,6 @@ func TestResetGameState(t *testing.T) {
 	s.ResetGameState()
 
 	gsNew := s.NewGameStateDump()
-
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gsNew)
 	}
@@ -113,6 +113,10 @@ func TestResetGameState(t *testing.T) {
 				t.Errorf("Expected agent points to be 0, got %d", agent.GetPoints())
 			}
 		}
+	}
+
+	if len(s.GetDeadAgents()) != 0 {
+		t.Error("Expected dead agents map to have been emptied")
 	}
 
 }
@@ -145,13 +149,32 @@ func TestFoundingInstitutions(t *testing.T) {
 	} */
 
 	for _, biker := range mockBikers {
-		actualBike := s.GetMegaBikes()[biker.BikeID]
+		actualBike := s.GetMegaBikes()[biker.GetBike()]
 		if actualBike == nil {
 			t.Errorf("Biker %v has not been assigned to any bike", biker.GetID())
 			continue
 		}
 		if actualBike.GetGovernance() != biker.governance {
 			t.Errorf("Biker %v is on a bike with incorrect governance", biker.GetID())
+		}
+	}
+
+	for _, agent := range s.GetAgentMap() {
+		bikeID := agent.GetBike()
+		if bikeID == uuid.Nil {
+			t.Errorf("Agent %v has not been assigned to any bike", agent.GetID())
+		}
+		if bike, ok := s.GetMegaBikes()[bikeID]; ok {
+			if bike.GetGovernance() != agent.DecideGovernance() {
+				t.Errorf("Agent %v is on bike with governance %v, want %v",
+					agent.GetID(), bike.GetGovernance(), agent.DecideGovernance())
+			}
+			agents := bike.GetAgents()
+			if !slices.Contains(agents, agent) {
+				t.Errorf("Agent %v is not on the bike they were assigned to", agent.GetID())
+			}
+		} else {
+			t.Errorf("Agent %v has not been assigned to any bike", agent.GetID())
 		}
 	}
 }
