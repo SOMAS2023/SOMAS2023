@@ -529,3 +529,18 @@ func (agent *BaselineAgent) VoteDictator() voting.IdVoteMap {
 	}
 	return votes
 }
+func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
+	voteResults := make(map[uuid.UUID]int)
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	fellowBikers := currentBike.GetAgents()
+
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if agentID != agent.GetID() {
+			// random votes to other agents
+			voteResults[agentID] = 0 // randomly assigns 0 or 1 vote
+		}
+	}
+
+	return voteResults
+}
