@@ -23,7 +23,7 @@ const kickThreshold = 0.25       // threshold for kicking
 const trustThreshold = 0.7       // threshold for trusting (need to tune)
 const fairnessConstant = 1       // weight of fairness in opinion
 const joinThreshold = 0.8        // opinion threshold for joining if not same colour
-const leaderThreshold = 0.95	// opinion threshold for becoming leader
+const leaderThreshold = 0.95     // opinion threshold for becoming leader
 const trustconstant = 1          // weight of trust in opinion
 const effortConstant = 1         // weight of effort in opinion
 const fairnessDifference = 0.5   // modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
@@ -76,7 +76,7 @@ func (bb *Biker1) GetLootLocation(id uuid.UUID) utils.Coordinates {
 	return lootbox.GetPosition()
 }
 
-func (bb *Biker1) GetAverageOpinionOfAgent (biker uuid.UUID) float64 {
+func (bb *Biker1) GetAverageOpinionOfAgent(biker uuid.UUID) float64 {
 	fellowBikers := bb.GetFellowBikers()
 	opinionSum := 0.0
 	for _, agent := range fellowBikers {
@@ -349,7 +349,6 @@ func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
 	return remainingEnergy
 }
 
-
 // this function will contain the agent's strategy on deciding which direction to go to
 // the default implementation returns an equal distribution over all options
 // this will also be tried as returning a rank of options
@@ -381,14 +380,22 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 			proposalVotes[proposal] += 1
 		}
 	}
+	var maxVotes int
+	var winningProposal uuid.UUID
+
+	for proposal, votes := range proposalVotes {
+		if votes > maxVotes {
+			maxVotes = votes
+			winningProposal = proposal
+		}
+	}
 	distToBoxMap := make(map[uuid.UUID]float64)
 	for _, proposal := range proposals {
 		distToBoxMap[proposal] = bb.distanceToReachableBox(proposal)
 		if distToBoxMap[proposal] <= maxDist { //if reachable
 			// if box is our colour and number of proposals is majority, make it 1, rest 0, return
 			if bb.GetGameState().GetLootBoxes()[proposal].GetColour() == bb.GetColour() {
-				if proposalVotes[proposal] > len(proposals)/2 {
-
+				if proposalVotes[proposal] >= proposalVotes[winningProposal] { // to c
 					for _, proposal1 := range proposals {
 						if proposal1 == proposal {
 							votes[proposal1] = 1
@@ -397,6 +404,8 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 						}
 					}
 					return votes
+				} else {
+					votes[proposal] = float64(proposalVotes[proposal])
 				}
 			}
 		}
@@ -462,7 +471,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 	// }
 	// if (avg_opinion < leaveThreshold) || bb.dislikeVote {
 	// 	bb.dislikeVote = false
-	// 	return 1 
+	// 	return 1
 	// } else {
 	// 	return 0
 	// }
@@ -1097,7 +1106,6 @@ func (bb *Biker1) DecideDictatorship() bool {
 	}
 }
 
-
 // ----------------------LEADER/DICTATOR VOTING FUNCTIONS------------------
 func (bb *Biker1) VoteLeader() voting.IdVoteMap {
 
@@ -1114,7 +1122,7 @@ func (bb *Biker1) VoteLeader() voting.IdVoteMap {
 			if ok {
 				avgOp = (avgOp + val.opinion) / 2
 			}
-		} 
+		}
 		if avgOp > maxOpinion {
 			maxOpinion = avgOp
 			leaderVote = agent.GetID()
@@ -1135,9 +1143,9 @@ func (bb *Biker1) VoteDictator() voting.IdVoteMap {
 		if agent.GetID() != bb.GetID() {
 			val, ok := bb.opinions[agent.GetID()]
 			if ok {
-				avgOp = (avgOp + 3 * val.opinion) / 4
+				avgOp = (avgOp + 3*val.opinion) / 4
 			}
-		} 
+		}
 		if avgOp > maxOpinion {
 			maxOpinion = avgOp
 			leaderVote = agent.GetID()
@@ -1146,36 +1154,38 @@ func (bb *Biker1) VoteDictator() voting.IdVoteMap {
 	votes[leaderVote] = 1.0
 	return votes
 }
+
 //--------------------END OF LEADER/DICTATOR VOTING FUNCTIONS------------------
 
 //--------------------DICTATOR FUNCTIONS------------------
 
 // ** called only when the agent is the dictator
-func (bb *Biker1)DictateDirection() uuid.UUID {
+func (bb *Biker1) DictateDirection() uuid.UUID {
 	// TODO: make more sophisticated
 	tmp, _ := bb.nearestLootColour()
 	return tmp
-}                
+}
 
 // ** decide which agents to kick out (dictator)
-func (bb *Biker1)DecideKickOut() []uuid.UUID {
+func (bb *Biker1) DecideKickOut() []uuid.UUID {
 
 	// TODO: make more sophisticated
 	tmp := []uuid.UUID{}
 	tmp = append(tmp, bb.lowestOpinionKick())
 	return tmp
-} 
+}
 
 // ** decide the allocation (dictator)
 func (bb *Biker1) DecideDictatorAllocation() voting.IdVoteMap {
 	return bb.DecideAllocation()
-} 
+}
+
 //--------------------END OF DICTATOR FUNCTIONS------------------
 
-//--------------------LEADER FUNCTIONS------------------
+// --------------------LEADER FUNCTIONS------------------
 func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	// decides the weights of other peoples votes
-	// Leadership democracy 
+	// Leadership democracy
 	// takes in proposed action as a parameter
 	// only run for the leader after everyone's proposeDirection is run
 	// assigns vector of weights to everyone's proposals, 0.5 is neutral
@@ -1184,11 +1194,11 @@ func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	fellowBikers := bb.GetFellowBikers()
 	weights := map[uuid.UUID]float64{}
 
-	for _, agent := range fellowBikers{
+	for _, agent := range fellowBikers {
 		op, ok := bb.opinions[agent.GetID()]
-		if  !ok {
+		if !ok {
 			weights[agent.GetID()] = 0.5
-		}else{
+		} else {
 			weights[agent.GetID()] = op.opinion
 		}
 	}
@@ -1198,7 +1208,7 @@ func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 //--------------------END OF LEADER FUNCTIONS------------------
 //--------------------END OF GOVERMENT CHOICE FUNCTIONS------------------
 
-//---------------------SOCIAL FUNCTIONS------------------------
+// ---------------------SOCIAL FUNCTIONS------------------------
 // get reputation value of all other agents
 func (bb *Biker1) GetReputation() map[uuid.UUID]float64 {
 	reputation := map[uuid.UUID]float64{}
@@ -1206,7 +1216,8 @@ func (bb *Biker1) GetReputation() map[uuid.UUID]float64 {
 		reputation[agent] = opinion.opinion
 	}
 	return reputation
-} 
+}
+
 // query for reputation value of specific agent with UUID
 func (bb *Biker1) QueryReputation(agent uuid.UUID) float64 {
 	val, ok := bb.opinions[agent]
@@ -1215,7 +1226,8 @@ func (bb *Biker1) QueryReputation(agent uuid.UUID) float64 {
 	} else {
 		return 0.5
 	}
-}    
+}
+
 // set reputation value of specific agent with UUID
 func (bb *Biker1) SetReputation(agent uuid.UUID, reputation float64) {
 	bb.opinions[agent] = Opinion{
@@ -1224,7 +1236,7 @@ func (bb *Biker1) SetReputation(agent uuid.UUID, reputation float64) {
 		fairness: bb.opinions[agent].fairness,
 		opinion:  reputation,
 	}
-}    
+}
 
 //---------------------END OF SOCIAL FUNCTIONS------------------------
 
