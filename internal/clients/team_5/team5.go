@@ -28,6 +28,10 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	}
 }
 
+func (t5 *team5Agent) UpdateAgentInternalState() {
+	t5.updateReputationOfAllAgents()
+}
+
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
 	return calculateResourceAllocation(t5.GetGameState(), t5)

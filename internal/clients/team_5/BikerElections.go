@@ -11,13 +11,10 @@ func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 	decisions := make(map[uuid.UUID]bool)
 	threshold := 0.5
 
-	agentRep := NewRepSystem(t5.GetGameState())
-	agentRep.updateReputationOfAllAgents()
-
 	for _, agent := range agentsOnBike {
 
 		key := agent.GetID()
-		value := agentRep.calculateReputationOfAgent(key)
+		value := t5.QueryReputation(key)
 
 		fmt.Println(value)
 
