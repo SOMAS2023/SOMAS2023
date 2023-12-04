@@ -33,6 +33,8 @@ type IBaseBikerServer interface {
 	AudiCollisionCheck()
 	AddAgentToBike(agent objects.IBaseBiker)
 	FoundingInstitutions()
+	ResetGameState()
+	GetDeadAgents() map[uuid.UUID]objects.IBaseBiker
 }
 
 type Server struct {
@@ -99,6 +101,10 @@ func (s *Server) RemoveAgentFromBike(agent objects.IBaseBiker) {
 	if _, ok := s.megaBikeRiders[agent.GetID()]; ok {
 		delete(s.megaBikeRiders, agent.GetID())
 	}
+}
+
+func (s *Server) GetDeadAgents() map[uuid.UUID]objects.IBaseBiker {
+	return s.deadAgents
 }
 
 func (s *Server) outputResults(gameStates []GameStateDump) {
