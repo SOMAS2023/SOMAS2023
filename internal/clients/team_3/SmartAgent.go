@@ -20,23 +20,32 @@ type KeyValuePair struct {
 	Value float64
 }
 
-/*
-func SomeFunction(s *server.Server) {
-	s.GetLootBoxes()
-}
-*/
-
 type SmartAgent struct {
 	objects.BaseBiker
 	currentBike   *objects.MegaBike
 	targetLootBox objects.ILootBox
 	reputationMap map[uuid.UUID]reputation
-	creditMap     map[uuid.UUID]credit
+	// creditMap     map[uuid.UUID]credit
 
 	lootBoxCnt                     float64
 	energySpent                    float64
 	lastEnergyLevel                float64
 	satisfactionOfRecentAllocation float64
+	badleader                      bool
+}
+
+func (agent *SmartAgent) DecideGovernance() voting.GovernanceVote {
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
+	votes := agent.which_governance_method(agentsOnBike)
+	return votes
+}
+
+func (agent *SmartAgent) VoteLeader() voting.IdVoteMap {
+	// defaults to voting for first agent in the list
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
+	lootboxes := agent.GetGameState().GetLootBoxes()
+	votes := agent.vote_leader(agentsOnBike, lootboxes)
+	return votes
 }
 
 // DecideAction only pedal
@@ -55,7 +64,7 @@ func (agent *SmartAgent) DecideAction() objects.BikerAction {
 
 // DecideForces considering Hegselmann-Krause model, Ramirez-Cano-Pitt model and Satisfaction
 func (agent *SmartAgent) DecideForces(direction uuid.UUID) {
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetAgents()
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
 	scores := make(map[uuid.UUID]float64)
 	totalScore := 0.0
 	for _, others := range agentsOnBike {
@@ -84,7 +93,7 @@ func (agent *SmartAgent) DecideForces(direction uuid.UUID) {
 		Brake: 0.0, // 这里默认刹车为 0
 		Turning: utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), agent.GetGameState().GetMegaBikes()[direction].GetPosition()) - agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetOrientation(),
+			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), agent.GetGameState().GetMegaBikes()[direction].GetPosition()) - agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetOrientation(),
 		}, // 这里默认转向为 0
 	}
 
@@ -101,7 +110,9 @@ func (agent *SmartAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]
 }
 
 func (agent *SmartAgent) ProposeDirection() utils.Coordinates {
-	e := agent.decideTargetLootBox(agent.GetGameState().GetLootBoxes())
+	// direction is targetLootBox
+	e := agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
+	// An agent has already proposed its proposal (BordaCount)
 	if e != nil {
 		panic("unexpected error!")
 	}
@@ -110,23 +121,21 @@ func (agent *SmartAgent) ProposeDirection() utils.Coordinates {
 
 func (agent *SmartAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	boxesInMap := agent.GetGameState().GetLootBoxes()
-	//boxProposed := make([]objects.ILootBox, len(proposals))
-	boxProposed := make(map[uuid.UUID]objects.ILootBox, len(proposals))
-	for i, pp := range proposals {
-		boxProposed[i] = boxesInMap[pp]
-	}
-	rank := agent.rankTargetProposals(boxProposed)
+
+	rank := agent.rankTargetProposals(boxesInMap)
+	// need to be map[uuid.UUID]voting.LootboxVoteMap
 	return rank
 }
 
 func (agent *SmartAgent) DecideAllocation() voting.IdVoteMap {
 	agent.lootBoxCnt += 1
-	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()]
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	vote, _ := agent.scoreAgentsForAllocation(currentBike.GetAgents())
 	return vote
 }
 
-func (agent *SmartAgent) vote_off_leader() float64 {
+func (agent *SmartAgent) vote_off_leader() bool {
+	decision_to_vote_off := false
 	vote_off := 0.0
 	// vote_off: 1.0 means to vote_off the leader
 	id := agent.GetID()
@@ -134,12 +143,17 @@ func (agent *SmartAgent) vote_off_leader() float64 {
 	if (rep.recentGetEnergy == false) && (rep.isSameColor == 0.0) {
 		vote_off = 1.0
 	}
-	return vote_off
+	if vote_off == 1.0 {
+		decision_to_vote_off = true
+	}
+	return decision_to_vote_off
 }
 
-func (agent *SmartAgent) whether_need_leader(agentsOnBike []objects.IBaseBiker) *float64 {
-	need := 1.0
-	// need: 1.0 means it needs the leader
+func (agent *SmartAgent) which_governance_method(agentsOnBike []objects.IBaseBiker) map[utils.Governance]float64 {
+	//assume agent only accepts democracy or leadership
+	// By default, it accpets leadership
+	need_deomocracy := 0.0
+	need_leadership := 1.0
 	agent_id := agent.GetID()
 	agent_rep := agent.reputationMap[agent_id]
 
@@ -158,14 +172,28 @@ func (agent *SmartAgent) whether_need_leader(agentsOnBike []objects.IBaseBiker) 
 	}
 
 	if (agent_rep.recentContribution < average_recent_contribution) && (agent_rep.historyContribution < average_contribution) {
-		need = 0.0 // selfish personality
+		need_deomocracy = 1.0
+		need_leadership = 0.0
+		// selfish personality
 	}
 	if agent_rep.energyRemain > 2*average_energyRemain {
-		need = 0.0 // fear of being taken advantage of
+		need_deomocracy = 1.0
+		need_leadership = 0.0
+		// fear of being taken advantage of
 	}
-	return &need
+
+	votes := map[utils.Governance]float64{
+		utils.Democracy:    need_deomocracy,
+		utils.Leadership:   need_leadership,
+		utils.Dictatorship: 0.0,
+		utils.Invalid:      0.0,
+	}
+
+	return votes
+	// return type: voting.GovernanceVote: map[utils.Governance]float64, util.Governance: int (0-1-2-3)
 }
 
+/*
 func (agent *SmartAgent) find_collusion(agentsOnBike []SmartAgent, agentsOnBike2 []objects.IBaseBiker) {
 	for i := 0; i < len(agentsOnBike)-1; i++ {
 		for j := i + 1; j < len(agentsOnBike); j++ {
@@ -205,97 +233,57 @@ func (agent *SmartAgent) find_collusion(agentsOnBike []SmartAgent, agentsOnBike2
 		}
 	}
 }
+*/
 
-func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposedLootBox map[uuid.UUID]objects.ILootBox) (map[uuid.UUID]float64, error) {
+func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposedLootBox map[uuid.UUID]objects.ILootBox) voting.IdVoteMap {
 	// two-round run-off
 
-	// the first round: top three
-	scores := make(map[uuid.UUID]float64)
+	// the first round
+	scores1 := make(map[uuid.UUID]float64)
+	total_score_1 := 0.0
 
 	for _, others := range agentsOnBike {
 		id := others.GetID()
-		if id != agent.GetID() {
-			rep := agent.reputationMap[id]
-			score := rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
-				+rep.isSameColor/ // Cognitive dimension: is same belief?
-				+rep.energyRemain // necessity: must stay alive
+		rep := agent.reputationMap[id]
+		score_1 := rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
+			+rep.isSameColor/ // Cognitive dimension: is same belief?
+			+rep.energyRemain // necessity: must stay alive
 
-			scores[id] = score
-		}
+		scores1[id] = score_1
+		total_score_1 += score_1
 	}
 
-	// scores
-
-	var keyValuePairs []KeyValuePair
-	for key, value := range scores {
-		keyValuePairs = append(keyValuePairs, KeyValuePair{Key: key, Value: value})
+	for _, others := range agentsOnBike {
+		id := others.GetID()
+		scores1[id] = scores1[id] / total_score_1 //normalize
 	}
 
-	sort.Slice(keyValuePairs, func(i, j int) bool {
-		return keyValuePairs[i].Value > keyValuePairs[j].Value
-	})
-
-	indexMap := make(map[uuid.UUID]int)
-	for i, pair := range keyValuePairs {
-		indexMap[pair.Key] = i
+	//the second round
+	scores2 := make(map[uuid.UUID]float64)
+	total_score_2 := 0.0
+	for _, others := range agentsOnBike {
+		id := others.GetID()
+		rep := agent.reputationMap[id]
+		score_2 := rep.recentContribution // recent progress, Forgiveness if performed bad before
+		scores2[id] = score_2
+		total_score_2 += score_2
 	}
 
-	floatIndexMap := make(map[uuid.UUID]float64)
-	for key, index := range indexMap {
-		floatIndexMap[key] = float64(index)
+	for _, others := range agentsOnBike {
+		id := others.GetID()
+		scores2[id] = scores2[id] / total_score_2 //normalize
 	}
 
-	return floatIndexMap, nil
+	// total
+	scores := make(map[uuid.UUID]float64)
+	for _, others := range agentsOnBike {
+		id := others.GetID()
+		scores[id] = 0.7*scores1[id] + 0.3*scores2[id]
+	}
 
-	/*
-		sortedIDs := make([]uuid.UUID, 0, len(scores))
-		for score := range scores {
-			sortedIDs = append(sortedIDs, score)
-		}
+	var votes voting.IdVoteMap = scores
 
-		sort.Slice(sortedIDs, func(i, j int) bool {
-			return scores[sortedIDs[i]] > scores[sortedIDs[j]]
-		})
-
-		var topThree []uuid.UUID
-		if len(sortedIDs) >= 3 {
-			topThree = sortedIDs[:3]
-		} else {
-			topThree = sortedIDs
-		}
-
-		// the second round: borda count
-
-		scores2 := make([]float64, 0)
-		for _, uuid := range topThree {
-			rep := agent.reputationMap[uuid]
-			score := rep.recentContribution // Forgiveness: forgive agents pedal harder recently
-			scores2 = append(scores2, score)
-		}
-
-		elementCount := make(map[float64]int)
-		for _, num := range scores2 {
-			elementCount[num]++
-		}
-		uniqueElements := make([]float64, 0, len(elementCount))
-		for num := range elementCount {
-			uniqueElements = append(uniqueElements, num)
-		}
-		sort.Float64s(uniqueElements)
-		elementOrder := make(map[float64]int)
-		for i, num := range uniqueElements {
-			elementOrder[num] = i + 1
-		}
-		elementOrderList := make([]int, len(scores))
-		for i, num := range scores2 {
-			elementOrderList[i] = elementOrder[num]
-		}
-
-		rank := make(map[uuid.UUID]float64)
-		for i, lootBox := range proposedLootBox {
-			rank[lootBox.GetID()] = float64(elementOrderList[i])
-		}
-	*/
+	return votes
 }
 
 func (agent *SmartAgent) find_same_colour_highest_loot_lootbox(proposedLootBox map[uuid.UUID]objects.ILootBox) error {
@@ -428,6 +416,7 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 	//scores := make([]float64, 0)
 	scores := make(map[uuid.UUID]float64)
 
+	sum_score := 0.0
 	for lootbox_agent_id, lootbox := range proposedLootBox {
 		other_agents_score := 0.0
 		loot := (lootbox.GetTotalResources() / 8.0)
@@ -443,33 +432,21 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 
 		scores[lootbox.GetID()] = score
 		//scores = append(scores, score)
+		sum_score += score
 	}
 	// We choose to use the Borda count method to pick a proposal because it can mitigate the Condorcet paradox.
 	// Borda count needs to get the rank of all candidates to score Borda points.
 	// In this case, according to the Gibbard-Satterthwaite Theorem, Borda count is susceptible to tactical voting.
 	// The following steps tend to achieve the rank of lootbox proposals according to their scores calculated. We will return the highest rank to pick the agent with it. (Another Borda score would consider reputation function)这个后面如果可以再考虑如果能得到的话
 
-	// borda count
-	var keyValuePairs []KeyValuePair
-	for key, value := range scores {
-		keyValuePairs = append(keyValuePairs, KeyValuePair{Key: key, Value: value})
+	// normalize
+	for _, lootbox := range proposedLootBox {
+		scores[lootbox.GetID()] = scores[lootbox.GetID()] / sum_score
 	}
 
-	sort.Slice(keyValuePairs, func(i, j int) bool {
-		return keyValuePairs[i].Value > keyValuePairs[j].Value
-	})
+	var lootboxVotes voting.LootboxVoteMap = scores
 
-	indexMap := make(map[uuid.UUID]int)
-	for i, pair := range keyValuePairs {
-		indexMap[pair.Key] = i
-	}
-
-	floatIndexMap := make(map[uuid.UUID]float64)
-	for key, index := range indexMap {
-		floatIndexMap[key] = float64(index)
-	}
-
-	return floatIndexMap
+	return lootboxVotes
 }
 
 // scoreAgentsForAllocation if self energy level is low (below average cost for a lootBox), we follow 'Smallest First', else 'Ration'
@@ -524,7 +501,7 @@ func (agent *SmartAgent) updateRepMap() {
 }
 
 func (agent *SmartAgent) recalculateSatisfaction() {
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetMegaBikeId()].GetAgents()
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
 	scores := make([]float64, len(agentsOnBike))
 	gains := make([]float64, len(agentsOnBike))
 	for idx, others := range agentsOnBike {

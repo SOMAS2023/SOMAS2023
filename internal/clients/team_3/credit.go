@@ -1,9 +1,5 @@
 package team_3
 
-import (
-	"SOMAS2023/internal/common/objects"
-)
-
 type credit struct {
 	// score
 	credit                   float64
@@ -13,6 +9,7 @@ type credit struct {
 	_credit float64
 }
 
+/*
 func (cre *credit) updatecredit(biker SmartAgent, agentsOnBike []objects.IBaseBiker) {
 	// update memory
 	if *(biker.whether_need_leader(agentsOnBike)) == 0.0 {
@@ -30,3 +27,4 @@ func (cre *credit) updatecredit(biker SmartAgent, agentsOnBike []objects.IBaseBi
 		cre.consecutiveNegativeCount = 0
 	}
 }
+*/
