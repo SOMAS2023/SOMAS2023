@@ -9,8 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const BikerAgentCount = 6
-
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator, BikerAgentCount),
@@ -40,7 +38,8 @@ func (s *Server) spawnMegaBike() {
 }
 
 func (s *Server) replenishMegaBikes() {
-	for i := 0; i < MegaBikeCount-len(s.megaBikes); i++ {
+	neededBikes := MegaBikeCount - len(s.megaBikes)
+	for i := 0; i < neededBikes; i++ {
 		s.spawnMegaBike()
 	}
 }
