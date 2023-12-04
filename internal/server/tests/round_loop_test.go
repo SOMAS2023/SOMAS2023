@@ -279,7 +279,14 @@ func TestRunActionProcessDictator(t *testing.T) {
 	}
 
 	// make bike with dictatorship (by getting one of the existing bikes and making it a dictatorship bike)
-	bikeID := s.GetRandomBikeId()
+	foundBike := false
+	var bikeID uuid.UUID
+	for !foundBike {
+		bikeID = s.GetRandomBikeId()
+		if len(s.GetMegaBikes()[bikeID].GetAgents()) != 0 {
+			break
+		}
+	}
 	bike := s.GetMegaBikes()[bikeID]
 	bike.SetGovernance(utils.Dictatorship)
 	agents := bike.GetAgents()
@@ -312,4 +319,59 @@ func TestRunActionProcessDictator(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestRunActionProcessLeader(t *testing.T) {
+	it := 1
+	s := server.Initialize(it)
+	// required otherwise agents are not initialized to bikes
+	s.FoundingInstitutions()
+	gs := s.NewGameStateDump()
+
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
+
+	// make bike with dictatorship (by getting one of the existing bikes and making it a dictatorship bike)
+	foundBike := false
+	var bikeID uuid.UUID
+	for !foundBike {
+		bikeID = s.GetRandomBikeId()
+		if len(s.GetMegaBikes()[bikeID].GetAgents()) != 0 {
+			break
+		}
+	}
+	bike := s.GetMegaBikes()[bikeID]
+	bike.SetGovernance(utils.Leadership)
+	agents := bike.GetAgents()
+	if len(agents) == utils.BikersOnBike {
+		removable := agents[0]
+		bike.RemoveAgent(removable.GetID())
+	}
+
+	// place dictator on bike
+	leader := NewNegativeAgent()
+	s.AddAgent(leader)
+	leader.UpdateGameState(gs)
+	leader.SetBike(bikeID)
+	bike.AddAgent(leader)
+	bike.SetRuler(leader.GetID())
+
+	// run action process
+	s.RunActionProcess()
+
+	// check that the direction of the leader is that of its direction (as the weights emulate a dictatorship)
+	for _, bike := range s.GetMegaBikes() {
+		if bike.GetID() == bikeID {
+			leaderDirection := leader.ProposeDirection()
+			leader.DecideForce(leaderDirection)
+			leaderForce := leader.GetForces()
+			for _, agent := range bike.GetAgents() {
+				if agent.GetID() == leader.GetID() {
+					assert.Equal(t, leaderForce, agent.GetForces())
+				}
+			}
+		}
+	}
+
 }
