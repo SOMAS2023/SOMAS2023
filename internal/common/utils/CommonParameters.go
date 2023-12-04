@@ -11,7 +11,7 @@ const BikersOnBike = 8
 const ReplenishEnergyEveryRound = true
 const ResetPointsEveryRound = true
 const RespawnEveryRound = true
-const RoundIterations = 1
+const RoundIterations = 100
 
 /*
 Server Parameters
@@ -22,7 +22,7 @@ const ReplenishMegaBikes bool = true
 /*
 Physics Parameters
 */
-const MassBike float64 = .01
+const MassBike float64 = 1.0
 const MassBiker float64 = 1.0
 const MassAudi float64 = 10.0
 
