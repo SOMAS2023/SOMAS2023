@@ -165,12 +165,11 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 	// NEAREST BOX STRATEGY (MVP)
 	currLocation := bb.GetLocation()
-	nearestLoot := bb.nearestLoot()
 	currentLootBoxes := bb.gameState.GetLootBoxes()
 
 	// Check if there are lootboxes available and move towards closest one
 	if len(currentLootBoxes) > 0 {
-		targetPos := currentLootBoxes[nearestLoot].GetPosition()
+		targetPos := currentLootBoxes[direction].GetPosition()
 
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
