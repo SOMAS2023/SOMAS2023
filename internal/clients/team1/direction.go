@@ -17,9 +17,8 @@ import (
 // Simulates a step of the game, assuming all bikers pedal with the same force as us.
 // Returns the distance travelled and the remaining energy
 func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float64, numberOfBikers float64) (float64, float64) {
-	bikerNum := len(bb.GetFellowBikers())
 	totalBikerForce := force * numberOfBikers
-	totalMass := utils.MassBike + float64(bikerNum)*utils.MassBiker
+	totalMass := utils.MassBike + float64(numberOfBikers)*utils.MassBiker
 	acceleration := physics.CalcAcceleration(totalBikerForce, totalMass, velocity)
 	distance := velocity + 0.5*acceleration
 	energy = energy - force*utils.MovingDepletion
