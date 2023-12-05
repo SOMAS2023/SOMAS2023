@@ -48,12 +48,11 @@ func TestHandleKickout(t *testing.T) {
 	it := 6
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
-
+	s.FoundingInstitutions()
 	s.HandleKickoutProcess()
 
 	for _, agent := range s.GetAgentMap() {
