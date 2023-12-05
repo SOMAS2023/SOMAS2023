@@ -11,6 +11,8 @@ EPSILON = 8
 ENERGYTHRESHOLD = 0.1
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
+MAXSPEED = 50
+ITERATIONLENGTH = 100
 TEXT = {
     "FONT" : "Arial",
     "FONT_SIZE": 1,
