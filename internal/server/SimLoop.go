@@ -13,15 +13,16 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Server) RunSimLoop(gameStates []GameStateDump, iterations int) []GameStateDump {
+func (s *Server) RunSimLoop(iterations int) []GameStateDump {
 
 	s.ResetGameState()
 	s.FoundingInstitutions()
 
 	// run this for n iterations
+	gameStates := []GameStateDump{s.NewGameStateDump(-1)}
 	for i := 0; i < iterations; i++ {
 		s.RunRoundLoop()
-		gameStates = append(gameStates, s.NewGameStateDump())
+		gameStates = append(gameStates, s.NewGameStateDump(i))
 	}
 
 	return gameStates
@@ -30,7 +31,9 @@ func (s *Server) RunSimLoop(gameStates []GameStateDump, iterations int) []GameSt
 func (s *Server) ResetGameState() {
 	// kick everyone off bikes
 	for _, agent := range s.GetAgentMap() {
-		s.RemoveAgentFromBike(agent)
+		if agent.GetBike() != uuid.Nil {
+			s.RemoveAgentFromBike(agent)
+		}
 	}
 
 	// respawn people who died in previous round (conditional)
@@ -132,13 +135,12 @@ func (s *Server) FoundingInstitutions() {
 
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
-	gameStates := []GameStateDump{s.NewGameStateDump()}
-	//s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
+	gameStates := make([][]GameStateDump, 0, s.GetIterations())
+	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
 		fmt.Printf("Main game loop running...\n\n")
-		s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
-		gameStates = s.RunSimLoop(gameStates, utils.RoundIterations)
+		gameStates = append(gameStates, s.RunSimLoop(utils.RoundIterations))
 		fmt.Printf("\nMain game loop finished.\n\n")
 		fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
