@@ -8,7 +8,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
@@ -436,7 +436,7 @@ class GameScreen:
         dead = 0
         for agentid, agent in self.agents.items():
             if agentid not in newAgents:
-                if agent["Energy"] == 0:
+                if agent["Energy"] < ENERGYTHRESHOLD:
                     self.log(f"Agent {agentid} has run out of energy!", "ERROR")
                 elif (pow(agent["X"]-self.awdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["Y"]-self.awdi.y, 2) < pow(EPSILON, 2)):
                     self.log(f"Agent {agentid} has been run over by the Owdi!", "ERROR")

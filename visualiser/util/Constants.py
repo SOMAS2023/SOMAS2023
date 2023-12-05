@@ -8,6 +8,7 @@ MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
 COORDINATESCALE = 15
 PRECISION = 2
 EPSILON = 8
+ENERGYTHRESHOLD = 0.1
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
 TEXT = {
