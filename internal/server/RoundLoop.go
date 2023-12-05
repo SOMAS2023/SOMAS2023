@@ -15,6 +15,9 @@ func (s *Server) RunRoundLoop() {
 	gameState := s.NewGameStateDump(0)
 	s.UpdateGameStates()
 
+	// get destination bikes from bikers not on bike
+	s.SetDestinationBikes()
+
 	// take care of agents that want to leave the bike and of the acceptance/ expulsion process
 	s.RunBikeSwitch(gameState)
 
@@ -151,23 +154,27 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 	leavingAgents := make([]uuid.UUID, 0)
 	for agentId, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(gameState)
-		agent.UpdateAgentInternalState()
-		switch agent.DecideAction() {
-		case objects.Pedal:
-			continue
-		case objects.ChangeBike:
-			// decide which bike the agent is going to try and go t
-			// the bike id is set to be the desired bike and onbike is set to false
-			// so by looking at the values of onBike and megaBikeID it will be known
-			// whether the agent is trying to join a bike (and which one)
+		if agent.GetBikeStatus() {
+			agent.UpdateGameState(gameState)
+			agent.UpdateAgentInternalState()
+			switch agent.DecideAction() {
+			case objects.Pedal:
+				continue
+			case objects.ChangeBike:
+				// decide which bike the agent is going to try and go t
+				// the bike id is set to be the desired bike and onbike is set to false
+				// so by looking at the values of onBike and megaBikeID it will be known
+				// whether the agent is trying to join a bike (and which one)
 
-			// the request is handled at the beginning of the next round, so the moving
-			// will only be finalised then
-			leavingAgents = append(leavingAgents, agentId)
-			s.RemoveAgentFromBike(agent)
-		default:
-			panic("agent decided invalid action")
+				// the request is handled at the beginning of the next round, so the moving
+				// will only be finalised then
+				leavingAgents = append(leavingAgents, agentId)
+				s.RemoveAgentFromBike(agent)
+			default:
+				panic("agent decided invalid action")
+			}
+		} else {
+
 		}
 	}
 	return leavingAgents
@@ -439,6 +446,14 @@ func (s *Server) LootboxCheckAndDistributions() {
 	for id, loot := range looted {
 		if loot > 0 {
 			delete(s.lootBoxes, id)
+		}
+	}
+}
+
+func (s *Server) SetDestinationBikes() {
+	for _, agent := range s.GetAgentMap() {
+		if !agent.GetBikeStatus() {
+			agent.SetBike(agent.ChangeBike())
 		}
 	}
 }
