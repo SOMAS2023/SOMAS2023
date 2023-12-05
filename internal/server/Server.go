@@ -14,7 +14,7 @@ import (
 
 const LootBoxCount = BikerAgentCount * 2
 const MegaBikeCount = BikerAgentCount / 2
-const BikerAgentCount = 2
+const BikerAgentCount = 12
 
 type IBaseBikerServer interface {
 	baseserver.IServer[objects.IBaseBiker]
