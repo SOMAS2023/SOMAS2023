@@ -12,7 +12,7 @@ import (
 
 func (s *Server) RunRoundLoop() {
 	// Capture dump of starting state
-	gameState := s.NewGameStateDump()
+	gameState := s.NewGameStateDump(0)
 	s.UpdateGameStates()
 
 	// take care of agents that want to leave the bike and of the acceptance/ expulsion process
