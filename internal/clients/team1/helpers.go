@@ -58,8 +58,10 @@ func (bb *Biker1) GetAgentFromId(agentId uuid.UUID) obj.IBaseBiker {
 func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
 	gs := bb.GetGameState()
 	// get all agents
-	agents := make([]obj.IBaseBiker, 0)
-	for _, agent := range gs.GetAgents() {
+	
+	agentMap := gs.GetAgents() 
+	agents := make([]obj.IBaseBiker, 0, len(agentMap))
+	for _, agent := range agentMap {
 		agents = append(agents, agent)
 	}
 	return agents
