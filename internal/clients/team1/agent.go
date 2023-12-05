@@ -148,16 +148,6 @@ func (bb *Biker1) DecideAllocation() voting.IdVoteMap {
 		sumEnergyNeeds = sumEnergyNeeds + energyNeed
 	}
 
-	if len(fellowBikers) == 1 {
-		for _, agent := range fellowBikers {
-			energy := agent.GetEnergyLevel()
-			energyNeed := 1.0 - energy
-			helpfulAllocation[agent.GetID()] = energyNeed
-			selfishAllocation[agent.GetID()] = energyNeed
-			sumEnergyNeeds = sumEnergyNeeds + energyNeed
-		}
-	}
-
 	for agentId, _ := range helpfulAllocation {
 		helpfulAllocation[agentId] /= sumEnergyNeeds
 	}
