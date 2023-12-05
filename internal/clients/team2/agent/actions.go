@@ -45,8 +45,13 @@ func (a *AgentTwo) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 }
 
 func (a *AgentTwo) ProposeDirection() uuid.UUID {
-	// TODO: Propose direction of lootbox with highest gain of our color.
-	return a.BaseBiker.ProposeDirection()
+	agentID, agentColour, agentEnergy := a.GetID(), a.GetColour(), a.GetEnergyLevel()
+	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
+	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
+	if agentEnergy < modules.EnergyToOptimalLootboxThreshold {
+		return nearestLootbox
+	}
+	return optimalLootbox
 }
 
 func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
