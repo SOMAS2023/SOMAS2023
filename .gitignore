@@ -2,6 +2,7 @@
 *.exe
 __pycache__
 game_dump.json
+statistics.xlsx
 .DS_store
 Test/
 *.pyc

@@ -12,7 +12,7 @@ import (
 
 func (s *Server) RunRoundLoop() {
 	// Capture dump of starting state
-	gameState := s.NewGameStateDump()
+	gameState := s.NewGameStateDump(0)
 	s.UpdateGameStates()
 
 	// take care of agents that want to leave the bike and of the acceptance/ expulsion process
@@ -128,7 +128,6 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 	leavingAgents := make([]uuid.UUID, 0)
 	for agentId, agent := range s.GetAgentMap() {
-		fmt.Printf("Agent %s updating state \n", agentId)
 		agent.UpdateGameState(gameState)
 		agent.UpdateAgentInternalState()
 		switch agent.DecideAction() {
