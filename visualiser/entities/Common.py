@@ -7,13 +7,15 @@ from visualiser.util.Constants import OVERLAY, COORDINATESCALE, PRECISION
 class Drawable:
     def __init__(self, entityid:str, jsonData:dict, x=None, y=None) -> None:
         if x is None or y is None:
-            self.x = round(jsonData["physical_state"]["position"]["x"]*COORDINATESCALE, PRECISION)
-            self.y = round(jsonData["physical_state"]["position"]["y"]*COORDINATESCALE, PRECISION)
+            self.x = jsonData["physical_state"]["position"]["x"]
+            self.y = jsonData["physical_state"]["position"]["y"]
         else:
-            self.x = round(x*COORDINATESCALE, PRECISION)
-            self.y = round(y*COORDINATESCALE, PRECISION)
-        self.trueX = self.x
-        self.trueY = self.y
+            self.x = x
+            self.y = y
+        self.x = round(self.x, PRECISION)
+        self.y = round(self.y, PRECISION)
+        self.trueX = round(self.x*COORDINATESCALE, PRECISION)
+        self.trueY = round(self.y*COORDINATESCALE, PRECISION)
         self.clicked = False
         self.id = entityid
         self.properties = {
@@ -71,9 +73,6 @@ class Drawable:
         border = pygame.Surface((length + 2 * OVERLAY["BORDER_WIDTH"], height + 2 * OVERLAY["BORDER_WIDTH"]))
         border.fill(OVERLAY["BORDER_COLOUR"])
         border.blit(overlay, (OVERLAY["BORDER_WIDTH"], OVERLAY["BORDER_WIDTH"]))
-
-        # Make transparent
-        border.set_alpha(OVERLAY["TRANSPARENCY"])
         return border
 
     def check_collision(self, mouseX:int, mouseY:int, zoom:float) -> bool:
@@ -88,3 +87,14 @@ class Drawable:
         """
         if self.clicked:
             screen.blit(self.overlay, (self.trueX, self.trueY))
+
+    def get_properties(self) -> dict:
+        """
+        Return the properties of the agent.
+        """
+        properties = {
+            "X" : self.x,
+            "Y" : self.y,
+        }
+        properties.update(self.properties)
+        return properties
