@@ -16,6 +16,7 @@ func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBike
 
 func BikerAgentGenerator() objects.IBaseBiker {
 	return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
+	// return team_8.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
 }
 
 func (s *Server) spawnLootBox() {
