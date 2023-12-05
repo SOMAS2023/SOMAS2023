@@ -70,6 +70,24 @@ func (bb *Biker1) HandleGovernanceMessage(msg obj.GovernanceMessage) {
 	}
 }
 
+// HandleForcesMessage
+func (bb *Biker1) HandleForcesMessage(msg obj.ForcesMessage) {
+	sender := msg.GetSender()
+	verified := bb.VerifySender(sender)
+	if verified {
+		//if we are dictator and the pedal force is 0, or they are braking, or they are turning differently, add them to the kick list
+		bikeID := bb.GetBike()
+		gs := bb.GetGameState()
+		if gs.GetMegaBikes()[bikeID].GetGovernance() == 1 {
+			if msg.AgentForces.Brake > 0 || msg.AgentForces.Turning.SteerBike {
+				//set our opinion of them to 0, should be kicked in next loop
+				bb.UpdateOpinion(sender.GetID(), 0)
+			}
+		}
+		return
+	}
+}
+
 func (bb *Biker1) GetTrustedRecepients() []obj.IBaseBiker {
 	fellowBikers := bb.GetFellowBikers()
 	var trustedRecepients []obj.IBaseBiker
