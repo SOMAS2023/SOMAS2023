@@ -77,7 +77,7 @@ func (t5 *team5Agent) ChangeBike() uuid.UUID {
 
 func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	gameState := t5.GetGameState()
-	finalPreferences := CalculateLootBoxPreferences(gameState, t5, proposals /*t5.cumulativePreferences*/)
+	finalPreferences := t5.CalculateLootBoxPreferences(gameState, proposals /*t5.cumulativePreferences*/)
 
 	finalVote := SortPreferences(finalPreferences)
 
