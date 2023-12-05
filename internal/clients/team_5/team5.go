@@ -91,16 +91,16 @@ func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
 }
 
 // needs fixing currently never votes off
-func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
-	voteResults := make(map[uuid.UUID]int)
-	for _, agent := range t5.GetFellowBikers() {
-		agentID := agent.GetID()
-		if agentID != t5.GetID() {
-			voteResults[agentID] = 0
-		}
-	}
-	return voteResults
-}
+// func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
+// 	voteResults := make(map[uuid.UUID]int)
+// 	for _, agent := range t5.GetFellowBikers() {
+// 		agentID := agent.GetID()
+// 		if agentID != t5.GetID() {
+// 			voteResults[agentID] = 0
+// 		}
+// 	}
+// 	return voteResults
+// }
 
 func (t5 *team5Agent) VoteDictator() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)
