@@ -2,6 +2,7 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/utils"
+	"fmt"
 	"sort"
 
 	"github.com/google/uuid"
@@ -13,44 +14,59 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 
 	internalRanking := make(map[uuid.UUID]float64)
 	ranking := make(map[uuid.UUID]int)
+	threshold := 0.3 // need to tune
 
 	a := 1.0
 	b := 1.0
 	c := 0.6
-	forceMax := utils.BikerMaxForce
+	// forceMax := utils.BikerMaxForce
 
-	for _, agent := range agentsOnBike {
+	for _, agentB := range agentsOnBike {
 
-		key := agent.GetID()
-		reputation := t5.QueryReputation(key)
-		pedallingForce := t5.GetForces().Pedal
+		keyId := agentB.GetID()
+		if keyId == t5.GetID() {
+			continue
+		}
+
+		reputation := t5.QueryReputation(keyId)
+
+		pedallingForce := agentB.GetForces().Pedal
 
 		utility := (a * pedallingForce) + (b * reputation) + (c * numberOfAgents)
-		utilityNorm := utility / ((a * forceMax) + b + c)
+		utilityNorm := utility / 10.0
 
-		internalRanking[key] = utilityNorm
+		internalRanking[keyId] = utilityNorm
+
+		if utilityNorm > threshold {
+			fmt.Println(utilityNorm)
+			ranking[keyId] = 0
+
+		} else {
+			fmt.Println(utilityNorm)
+			ranking[keyId] = 1
+		}
+
 	}
 
-	// Extras for sorting
-	type kv struct {
-		Key   uuid.UUID
-		Value float64
-	}
+	// type kv struct {
+	// 	Key   uuid.UUID
+	// 	Value float64
+	// }
 
-	var ss []kv
+	// var ss []kv
 
-	for k, v := range internalRanking {
-		ss = append(ss, kv{k, v})
-	}
+	// for k, v := range internalRanking {
+	// 	ss = append(ss, kv{k, v})
+	// }
 
-	// Sort the slice by values
-	sort.Slice(ss, func(i, j int) bool {
-		return ss[i].Value < ss[j].Value
-	})
+	// // Sort the slice by values
+	// sort.Slice(ss, func(i, j int) bool {
+	// 	return ss[i].Value < ss[j].Value
+	// })
 
-	for i, pair := range ss {
-		ranking[pair.Key] = i + 1
-	}
+	// for i, pair := range ss {
+	// 	ranking[pair.Key] = i + 1
+	// }
 
 	return ranking
 }
@@ -67,14 +83,14 @@ func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 	a := 1.0
 	b := 1.0
 	c := 1.0
-	energyMax := 1.0
+	// energyMax := 1.0
 	targetColor := t5.GetColour()
 
 	for _, agentID := range pendingAgents {
 		agentState := agentMap[agentID]
 
 		key := agentState.GetID()
-		reputation := agentState.QueryReputation(key)
+		reputation := t5.QueryReputation(key)
 		energyLevel := agentState.GetEnergyLevel()
 		pendingAgentColor := agentState.GetColour()
 
@@ -86,7 +102,7 @@ func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 
 		// color has to be a 0/1 and replaced with
 		utility := (a * energyLevel) + (b * reputation) + (c * isColorSame)
-		utilityNorm := utility / ((a * energyMax) + b + c)
+		utilityNorm := utility / 3.0
 
 		pendingAgentUtility[agentID] = utilityNorm
 
