@@ -383,12 +383,12 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 4 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (bb *Agent8) DictateDirection() uuid.UUID {
 	// TODO: implement this function
-	return uuid.Nil
+	return bb.GetID()
 }
 
 func (bb *Agent8) LeadDirection() uuid.UUID {
 	// TODO: implement this function
-	return uuid.Nil
+	return bb.GetID()
 }
 
 // Multi-voting system
@@ -484,6 +484,21 @@ func (bb *Agent8) hasDesiredColorInRange(proposals []uuid.UUID, rangeThreshold f
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	// TODO: implement this function
+	var forces utils.Forces
+	forces.Brake = 0
+	forces.Pedal = 1
+	lootboxs := bb.GetGameState().GetLootBoxes()
+	var target objects.ILootBox
+	for key, value := range lootboxs {
+		if key == direction {
+			target = value
+			break
+		}
+	}
+	angle := math.Atan2(target.GetPosition().Y-bb.GetLocation().Y, target.GetPosition().X-bb.GetLocation().X)/math.Pi - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+	forces.Turning.SteerBike = true
+	forces.Turning.SteeringForce = angle
+	bb.SetForces(forces)
 }
 
 // =========================================================================================================================================================
@@ -494,7 +509,16 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 // in the MVP each agent returns 1 whcih will cause the distribution to be equal across all of them
 func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
 	// TODO: implement this function
-	distribution := make(map[uuid.UUID]float64)
+	bikeID := bb.GetBike()
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	distribution := make(voting.IdVoteMap)
+	for _, agent := range fellowBikers {
+		if agent.GetID() == bb.GetID() {
+			distribution[agent.GetID()] = 1.0
+		} else {
+			distribution[agent.GetID()] = 0.0
+		}
+	}
 	return distribution
 
 }
