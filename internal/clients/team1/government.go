@@ -79,49 +79,57 @@ func (bb *Biker1) DecideDictatorship() bool {
 func (bb *Biker1) VoteLeader() voting.IdVoteMap {
 
 	votes := make(voting.IdVoteMap)
-	fellowBikers := bb.GetFellowBikers()
+	fellowBikers := bb.GetAllAgents()
 
-	maxOpinion := 0.0
-	leaderVote := bb.GetID()
 	for _, agent := range fellowBikers {
 		votes[agent.GetID()] = 0.0
-		avgOp := bb.GetAverageOpinionOfAgent(agent.GetID())
 		if agent.GetID() != bb.GetID() {
 			val, ok := bb.opinions[agent.GetID()]
 			if ok {
-				avgOp = (avgOp + val.opinion) / 2
+				votes[agent.GetID()] = val.opinion
 			}
-		}
-		if avgOp > maxOpinion {
-			maxOpinion = avgOp
-			leaderVote = agent.GetID()
+		} else {
+			votes[agent.GetID()] = 0.7
 		}
 	}
-	votes[leaderVote] = 1.0
+	votesum := 0.0
+	for _, agent := range fellowBikers {
+		votesum = votesum + votes[agent.GetID()]
+	}
+	for _, agent := range fellowBikers {
+		votes[agent.GetID()] = votes[agent.GetID()] / votesum
+	}
 	return votes
 }
 
 func (bb *Biker1) VoteDictator() voting.IdVoteMap {
-	votes := make(voting.IdVoteMap)
-	fellowBikers := bb.GetFellowBikers()
 
-	maxOpinion := 0.0
-	leaderVote := bb.GetID()
+	votes := make(voting.IdVoteMap)
+	fellowBikers := bb.GetAllAgents()
+
 	for _, agent := range fellowBikers {
 		votes[agent.GetID()] = 0.0
-		avgOp := bb.GetAverageOpinionOfAgent(agent.GetID())
+		bb.UpdateOpinions()
 		if agent.GetID() != bb.GetID() {
 			val, ok := bb.opinions[agent.GetID()]
 			if ok {
-				avgOp = (avgOp + 3*val.opinion) / 4
+				votes[agent.GetID()] = val.opinion
 			}
-		}
-		if avgOp > maxOpinion {
-			maxOpinion = avgOp
-			leaderVote = agent.GetID()
+		} else {
+			votes[agent.GetID()] = 1.0
 		}
 	}
-	votes[leaderVote] = 1.0
+	votesum := 0.0
+	for _, agent := range fellowBikers {
+		votesum = votesum + votes[agent.GetID()]
+	}
+	for _, agent := range fellowBikers {
+		votes[agent.GetID()] = votes[agent.GetID()] / votesum
+	}
+	votesum2 := 0.0
+	for _, agent := range fellowBikers {
+		votesum2 = votesum2 + votes[agent.GetID()]
+	}
 	return votes
 }
 
