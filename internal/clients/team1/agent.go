@@ -508,13 +508,10 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 	} else {
 		avg_opinion = 1.0
 	}
-	fmt.Printf("agent %s: avg opinion: %v \n", bb.GetID(), avg_opinion)
 	if (avg_opinion < leaveThreshold) || bb.dislikeVote {
-		fmt.Printf("agent %s: leaving bike \n", bb.GetID())
 		bb.dislikeVote = false
 		return 1
 	} else {
-		fmt.Printf("agent %s: staying on bike \n", bb.GetID())
 		return 0
 	}
 }
