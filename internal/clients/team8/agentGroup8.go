@@ -8,6 +8,7 @@ import (
 	"SOMAS2023/internal/common/voting"
 	"math"
 
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -71,6 +72,73 @@ func (bb *Agent8) VoteLeader() voting.IdVoteMap {
 	return votes
 }
 
+// ===============================================================================================================================================================
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Message System <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// This function updates all the messages for that agent i.e. both sending and receiving.
+// And returns the new messages from other agents to your agent
+func (bb *Agent8) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
+	// For team's agent add your own logic on chosing when your biker should send messages
+	wantToSendMsg := false
+	if wantToSendMsg {
+		reputationMsg := bb.CreateReputationMessage()
+		kickOffMsg := bb.CreateKickOffMessage()
+		lootboxMsg := bb.CreateLootboxMessage()
+		joiningMsg := bb.CreateJoiningMessage()
+		governceMsg := bb.CreateGoverenceMessage()
+		forcesMsg := bb.CreateForcesMessage()
+		return []messaging.IMessage[objects.IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg}
+	}
+	return []messaging.IMessage[objects.IBaseBiker]{}
+}
+
+func (bb *Agent8) HandleKickOffMessage(msg objects.KickOffAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// kickOff := msg.KickOff
+}
+
+func (bb *Agent8) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// reputation := msg.Reputation
+}
+
+func (bb *Agent8) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// bikeId := msg.BikeId
+}
+
+func (bb *Agent8) HandleLootboxMessage(msg objects.LootboxMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// lootboxId := msg.LootboxId
+}
+
+func (bb *Agent8) HandleGovernanceMessage(msg objects.GovernanceMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// bikeId := msg.BikeId
+	// governanceId := msg.GovernanceId
+}
+
+func (bb *Agent8) HandleForcesMessage(msg objects.ForcesMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// agentForces := msg.AgentForces
+
+}
+
 //===============================================================================================================================================================
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 1 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -89,6 +157,12 @@ func (bb *Agent8) VoteForKickout() map[uuid.UUID]int {
 	}
 
 	return voteResults
+}
+
+// only called when the agent is the dictator
+func (bb *Agent8) DecideKickOut() []uuid.UUID {
+	// TODO: implement this function
+	return (make([]uuid.UUID, 0))
 }
 
 // an agent will have to rank the agents that are trying to join and that they will try to
@@ -245,6 +319,16 @@ func (bb *Agent8) LeadDirection() uuid.UUID {
 	return bb.GetID()
 }
 
+// defaults to an equal distribution over all agents for all actions
+func (bb *Agent8) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	agents := bb.GetFellowBikers()
+	for _, agent := range agents {
+		weights[agent.GetID()] = 1.0
+	}
+	return weights
+}
+
 // Multi-voting system
 func (bb *Agent8) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	// Calculate the biker's individual preference scores
@@ -306,7 +390,23 @@ func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
 		}
 	}
 	return distribution
+}
 
+// only called when the agent is the dictator
+func (bb *Agent8) DecideDictatorAllocation() voting.IdVoteMap {
+	bikeID := bb.GetBike()
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	distribution := make(voting.IdVoteMap)
+	equalDist := 1.0 / float64(len(fellowBikers))
+	for _, agent := range fellowBikers {
+		distribution[agent.GetID()] = equalDist
+	}
+	return distribution
+}
+
+// update the reputation for other agents
+func (bb *Agent8) UpdateReputation() {
+	// TODO: implement this function
 }
 
 // =========================================================================================================================================================
