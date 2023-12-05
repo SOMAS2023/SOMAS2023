@@ -9,6 +9,7 @@ import (
 )
 
 type GameStateDump struct {
+	Iteration int                       `json:"iteration"`
 	Agents    map[uuid.UUID]AgentDump   `json:"agents"`
 	Bikes     map[uuid.UUID]BikeDump    `json:"bikes"`
 	LootBoxes map[uuid.UUID]LootBoxDump `json:"loot_boxes"`
@@ -65,7 +66,7 @@ func newPhysicsObjectDump(physicsObject objects.IPhysicsObject) PhysicsObjectDum
 	}
 }
 
-func (s *Server) NewGameStateDump() GameStateDump {
+func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
 		agents[id] = AgentDump{
@@ -110,6 +111,7 @@ func (s *Server) NewGameStateDump() GameStateDump {
 	}
 
 	return GameStateDump{
+		Iteration: iteration,
 		Agents:    agents,
 		Bikes:     bikes,
 		LootBoxes: lootBoxes,

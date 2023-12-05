@@ -26,7 +26,7 @@ type IBaseBikerServer interface {
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
 	RunRulerAction(bike objects.IMegaBike) uuid.UUID
 	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID
-	NewGameStateDump() GameStateDump
+	NewGameStateDump(iteration int) GameStateDump
 	GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID
 	HandleKickoutProcess() []uuid.UUID
 	ProcessJoiningRequests(inLimbo []uuid.UUID)
@@ -131,7 +131,7 @@ func (s *Server) outputResults(gameStates []GameStateDump) {
 }
 
 func (s *Server) UpdateGameStates() {
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}

@@ -19,9 +19,10 @@ func (s *Server) RunSimLoop(gameStates []GameStateDump, iterations int) []GameSt
 	s.FoundingInstitutions()
 
 	// run this for n iterations
+	gameStates = append(gameStates, s.NewGameStateDump(-1))
 	for i := 0; i < iterations; i++ {
 		s.RunRoundLoop()
-		gameStates = append(gameStates, s.NewGameStateDump())
+		gameStates = append(gameStates, s.NewGameStateDump(i))
 	}
 
 	return gameStates
@@ -132,7 +133,7 @@ func (s *Server) FoundingInstitutions() {
 
 func (s *Server) Start() {
 	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
-	gameStates := []GameStateDump{s.NewGameStateDump()}
+	gameStates := make([]GameStateDump, 0, s.GetIterations()*utils.RoundIterations)
 	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
