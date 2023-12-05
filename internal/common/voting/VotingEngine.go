@@ -3,7 +3,6 @@ package voting
 import (
 	"SOMAS2023/internal/common/utils"
 	"errors"
-	"fmt"
 	"math"
 	"sort"
 
@@ -153,7 +152,6 @@ func WinnerFromDist(voters map[uuid.UUID]IVoter, voteWeight map[uuid.UUID]float6
 		winner = CopelandScoring(VotesOfAgents, voteWeight)
 	}
 	// TODO call group 8 voting function
-	fmt.Printf("\nWinner is %v\n", winner)
 	return winner
 }
 
