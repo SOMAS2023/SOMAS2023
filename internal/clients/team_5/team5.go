@@ -16,6 +16,8 @@ type Iteam5Agent interface {
 type team5Agent struct {
 	objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
+	//set state default to 0
+	state int // 0 = normal, 1 = conservative
 }
 
 type ResourceAllocationMethod int
@@ -36,6 +38,7 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	return &team5Agent{
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
+		state:               0,
 	}
 }
 
