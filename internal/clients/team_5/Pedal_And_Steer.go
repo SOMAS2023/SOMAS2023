@@ -35,7 +35,6 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		deltaXB := targetPos.X - currLocation.X
 		deltaYB := targetPos.Y - currLocation.Y
 		//fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
-		distance_to_loot_box := math.Sqrt((deltaXB * deltaXB) + (deltaYB * deltaYB))
 
 		angleToGoal := math.Atan2(deltaYB, deltaXB) / math.Pi
 
@@ -44,18 +43,9 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		deltaXA := audiPos.X - currLocation.X
 		deltaYA := audiPos.Y - currLocation.Y
 
-		// deltaXAB := targetPos.X - audiPos.X
-		// deltaYAB := targetPos.Y - audiPos.Y
-
 		angleToAudi := math.Atan2(deltaYA, deltaXA) / math.Pi
 
-		// distBetweenAudiBox := math.Sqrt((deltaXAB * deltaXAB) + (deltaYAB * deltaYAB))
-
 		distance_to_audi := math.Sqrt((((deltaXA) * (deltaXA)) + (deltaYA * (deltaYA))))
-		//if the audi is closer than the closest lootbox then run away
-		if distance_to_audi-10 < distance_to_loot_box && math.Abs(angleToAudi-angleToGoal) < 0.5 {
-			// steer = steer - math.Copysign(0.5, angleToAudi)
-		}
 
 		if distance_to_audi < 15 && math.Abs(angleToAudi-angleToGoal) < 0.5 {
 			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
