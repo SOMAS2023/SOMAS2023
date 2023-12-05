@@ -84,7 +84,7 @@ func TestAudiTargeting(t *testing.T) {
 		}
 		i += 1
 	}
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	s.GetAudi().UpdateGameState(gs)
 	s.GetAudi().UpdateForce()
 	targetId := s.GetAudi().GetTargetID()
