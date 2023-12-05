@@ -4,12 +4,12 @@ Logic for handling bikes in the visualiser
 # pylint: disable=import-error, no-name-in-module
 import pygame
 import pygame_gui
-from visualiser.util.Constants import AWDI, OVERLAY
+from visualiser.util.Constants import AWDI, OVERLAY, COORDINATESCALE
 from visualiser.entities.Common import Drawable
 
 class Awdi(Drawable):
     def __init__(self, jsonData:dict) -> None:
-        super().__init__("audi", jsonData)
+        super().__init__("owdi", jsonData)
         self.colour = AWDI["COLOUR"]
         properties = {
             "Target" : jsonData["target_bike"],
@@ -24,8 +24,8 @@ class Awdi(Drawable):
         Draw the lootbox
         """
         # Determine the grid size
-        self.trueX = int(self.x * zoom + offsetX)
-        self.trueY = int(self.y * zoom + offsetY)
+        self.trueX = int(self.x * COORDINATESCALE * zoom + offsetX)
+        self.trueY = int(self.y * COORDINATESCALE * zoom + offsetY)
         # Draw the awdi
         border = pygame.Surface(((2*AWDI["LINE_WIDTH"] + AWDI["SIZE"])*zoom, (2*AWDI["LINE_WIDTH"] + AWDI["SIZE"])*zoom))
         border.fill(AWDI["LINE_COLOUR"])
@@ -43,7 +43,6 @@ class Awdi(Drawable):
         screen.blit(border, (self.trueX, self.trueY))
         # update the overlay
         self.overlay = self.update_overlay(zoom)
-        self.draw_overlay(screen)
 
     def check_collision(self, mouseX: int, mouseY: int, zoom:float) -> bool:
         """
