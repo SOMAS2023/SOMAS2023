@@ -180,9 +180,9 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 				}
 
 				// get approval votes from each agent
-				responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
-				for i, agent := range agents {
-					responses[i] = agent.DecideJoining(pendingAgents)
+				responses := make(map[uuid.UUID](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				for _, agent := range agents {
+					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}
 
 				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
@@ -193,9 +193,9 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 				weights := leader.DecideWeights(utils.Joining)
 
 				// get approval votes from each agent
-				responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
-				for i, agent := range agents {
-					responses[i] = agent.DecideJoining(pendingAgents)
+				responses := make(map[uuid.UUID](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				for _, agent := range agents {
+					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}
 
 				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
