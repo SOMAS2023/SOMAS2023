@@ -1,15 +1,9 @@
 package team5Agent
 
-// 0 = normal, 1 = conservative
-
-func (t5 *team5Agent) UpdateAgentInternalState() {
-	// Update agent's state based on energy level or other parameters
-	t5.updateState()
-	t5.updateReputationOfAllAgents()
-}
+// 0 = normal, 1 = conservative (Boris biker)
 
 func (t5 *team5Agent) updateState() {
-	// Example condition: switch to conservative if energy is low
+	// Example condition: switch to conservative (Boris biker) if energy is low
 	if t5.GetEnergyLevel() < 0.2 {
 		t5.state = 1
 	} else {
