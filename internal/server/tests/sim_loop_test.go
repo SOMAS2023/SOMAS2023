@@ -89,14 +89,14 @@ func TestResetGameState(t *testing.T) {
 	}
 	s.FoundingInstitutions()
 
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
 
 	s.ResetGameState()
 
-	gsNew := s.NewGameStateDump()
+	gsNew := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gsNew)
 	}

@@ -22,7 +22,7 @@ func TestGetLeavingDecisions(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -50,7 +50,7 @@ func TestHandleKickout(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
@@ -141,7 +141,7 @@ func TestRunActionProcess(t *testing.T) {
 		s := server.Initialize(it)
 		// required otherwise agents are not initialized to bikes
 		s.FoundingInstitutions()
-		gs := s.NewGameStateDump()
+		gs := s.NewGameStateDump(0)
 
 		// Loop through each bike
 		for _, bike := range s.GetMegaBikes() {
@@ -285,7 +285,7 @@ func TestRunActionProcessDictator(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -339,7 +339,7 @@ func TestRunActionProcessLeader(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -566,7 +566,7 @@ func TestLootboxShareDictator(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
@@ -597,7 +597,7 @@ func TestLootboxShareDictator(t *testing.T) {
 	bike.AddAgent(dictator)
 	bike.SetRuler(dictator.GetID())
 
-	gsnew := s.NewGameStateDump()
+	gsnew := s.NewGameStateDump(0)
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gsnew)
