@@ -36,6 +36,12 @@ type GovernanceMessage struct { //"I would like to operate under this governance
 	GovernanceId int       // the governce type that this agent wants
 }
 
+type ForcesMessage struct {
+	messaging.BaseMessage[IBaseBiker]
+	AgentId     uuid.UUID    // the agent whose forces are shared
+	AgentForces utils.Forces // the forces
+}
+
 func (msg ReputationOfAgentMessage) InvokeMessageHandler(agent IBaseBiker) {
 	agent.HandleReputationMessage(msg)
 }
@@ -54,13 +60,6 @@ func (msg LootboxMessage) InvokeMessageHandler(agent IBaseBiker) {
 
 func (msg GovernanceMessage) InvokeMessageHandler(agent IBaseBiker) {
 	agent.HandleGovernanceMessage(msg)
-}
-
-// OUR FORCES MESSAGE
-type ForcesMessage struct {
-	messaging.BaseMessage[IBaseBiker]
-	AgentId     uuid.UUID    // the agent whose forces are shared
-	AgentForces utils.Forces // the forces
 }
 
 func (msg ForcesMessage) InvokeMessageHandler(agent IBaseBiker) {
