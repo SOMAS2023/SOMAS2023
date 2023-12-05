@@ -96,7 +96,7 @@ BGCOLOURS = {
 }
 COLOURS = {
     "red": "#E05558",
-    "orange": "#D5C801",
+    "orange": "#D57901",
     "yellow": "#D5C801",
     "green": "#7BBD01",
     "blue": "#5E82FD",
