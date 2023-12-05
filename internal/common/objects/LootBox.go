@@ -21,7 +21,7 @@ func GetLootBox() *LootBox {
 	return &LootBox{
 		PhysicsObject: GetPhysicsObject(0),
 		colour:        utils.GenerateRandomColour(),    // Initialize to randomized colour
-		totalLoot:     utils.GenerateRandomFloat(3, 5), // Initialize to randomized totalLoot
+		totalLoot:     utils.GenerateRandomFloat(5, 8), // Initialize to randomized totalLoot
 	}
 }
 
