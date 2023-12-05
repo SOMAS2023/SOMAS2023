@@ -1,4 +1,4 @@
-package team2
+package agent
 
 import (
 	"SOMAS2023/internal/common/utils"
@@ -22,7 +22,7 @@ func TestRuleAdherenceValue_SameDirection(t *testing.T) {
 	agent := NewBaseTeam2Biker(agentID)
 
 	// Call the function
-	result := agent.RuleAdherenceValue(agentID, expectedAction, actualAction)
+	result := agent.Modules.Utils.RuleAdherenceValue(agentID, expectedAction, actualAction)
 
 	// Since there is 0 directional difference, it should return 1.0*0.2 = 0.2
 	expectedResult := 0.2
@@ -49,7 +49,7 @@ func TestRuleAdherenceValue_OppositeDirection(t *testing.T) {
 	agent := NewBaseTeam2Biker(agentID)
 
 	// Call the function
-	result := agent.RuleAdherenceValue(agentID, expectedAction, actualAction)
+	result := agent.Modules.Utils.RuleAdherenceValue(agentID, expectedAction, actualAction)
 
 	// Since there is 180 degree directional difference, it should return -1.0*0.2 (weighting) = -0.2
 	expectedResult := -0.2
@@ -76,7 +76,7 @@ func TestRuleAdherenceValue_OrthogonalDirection(t *testing.T) {
 	agent := NewBaseTeam2Biker(agentID)
 
 	// Call the function
-	result := agent.RuleAdherenceValue(agentID, expectedAction, actualAction)
+	result := agent.Modules.Utils.RuleAdherenceValue(agentID, expectedAction, actualAction)
 
 	// Since there is 90 degree directional difference, it should return 0*0.2 (weighting) = 0
 	expectedResult := 0
