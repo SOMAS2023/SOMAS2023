@@ -111,21 +111,37 @@ func (s *Server) GetDeadAgents() map[uuid.UUID]objects.IBaseBiker {
 	return s.deadAgents
 }
 
-func (s *Server) outputResults(gameStates []GameStateDump) {
-	statisticsJson, err := json.MarshalIndent(CalculateStatistics(gameStates), "", "    ")
+func (s *Server) outputResults(gameStates [][]GameStateDump) {
+	statistics := CalculateStatistics(gameStates)
+
+	statisticsJson, err := json.MarshalIndent(statistics.Average, "", "    ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Statistics:\n" + string(statisticsJson))
+	fmt.Println("Average Statistics:\n" + string(statisticsJson))
 
-	file, err := os.Create("game_dump.json")
+	file, err := os.Create("statistics.xlsx")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	if err := statistics.ToSpreadsheet().Write(file); err != nil {
+		panic(err)
+	}
+
+	var flattenedGameStates []GameStateDump
+	for i := range gameStates {
+		flattenedGameStates = append(flattenedGameStates, gameStates[i]...)
+	}
+
+	file, err = os.Create("game_dump.json")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "    ")
-	if err := encoder.Encode(gameStates); err != nil {
+	if err := encoder.Encode(flattenedGameStates); err != nil {
 		panic(err)
 	}
 }

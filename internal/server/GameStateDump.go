@@ -4,6 +4,8 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"maps"
+	"reflect"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -33,6 +35,7 @@ type BikeDump struct {
 
 type AgentDump struct {
 	ID           uuid.UUID             `json:"-"`
+	Class        string                `json:"class"`
 	Forces       utils.Forces          `json:"forces"`
 	EnergyLevel  float64               `json:"energy_level"`
 	Points       int                   `json:"points"`
@@ -71,6 +74,7 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 	for id, agent := range s.GetAgentMap() {
 		agents[id] = AgentDump{
 			ID:           agent.GetID(),
+			Class:        strings.TrimPrefix(reflect.TypeOf(agent).String(), "*"),
 			Forces:       agent.GetForces(),
 			EnergyLevel:  agent.GetEnergyLevel(),
 			Points:       agent.GetPoints(),
