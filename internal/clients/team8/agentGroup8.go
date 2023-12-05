@@ -14,12 +14,13 @@ import (
 )
 
 type GP struct {
-	EnergyThreshold             float64
-	DistanceThresholdForVoting  float64
-	ThresholdForJoiningDecision float64
+	EnergyThreshold              float64
+	DistanceThresholdForVoting   float64
+	ThresholdForJoiningDecision  float64
+	ThresholdForChangingMegabike float64
 }
 
-var GlobalParameters GP = GP{EnergyThreshold: 0.5, DistanceThresholdForVoting: 30, ThresholdForJoiningDecision: 0.2}
+var GlobalParameters GP = GP{EnergyThreshold: 0.5, DistanceThresholdForVoting: 30, ThresholdForJoiningDecision: 0.2, ThresholdForChangingMegabike: 0.3}
 
 type Agent8 struct {
 	*objects.BaseBiker
@@ -209,28 +210,54 @@ func (bb *Agent8) CountAgentsWithSameColour(bikeID uuid.UUID) int {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (bb *Agent8) DecideAction() objects.BikerAction {
-	// Example usage: assume the game has run 9 iteration
-	// requires a set of instances of Agent8
+
+	var energyLevels []float64
+	var target_goal int
+	energy_threshold := GlobalParameters.EnergyThreshold
+	changingbike_threshold := GlobalParameters.ThresholdForChangingMegabike
+
+	// utility should be calculated by the fomula outlined on page7 of Lec6
 	utilityLevels := []float64{80.0, 90.0, 75.0, 85.0, 45.0, 35.0, 60.0, 70.0, 65.0}
-	agentGoals := []int{1, 2, 1, 1, 2, 2, 1, 1, 2}
-	targetGoal := 1
 	turns := []bool{true, false, true, true, false, true, true, false, true}
 	decisions := []bool{true, false, false, true, true, false, false, true, false}
-	energyLevels := []int{80, 45, 60, 30, 70, 40, 55, 75, 90}
-	EnergyThreshold := 50
+
+	// get the energy level of all agents in the megabike
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetAgents()
+
+	for _, agent := range fellowBikers {
+		if !(agent.GetID() == bb.GetID()) {
+			energy_level := agent.GetEnergyLevel()
+			energyLevels = append(energyLevels, energy_level)
+		}
+	}
+
+	goalPreferenceList := make([]int, len(energyLevels))
+	if bb.GetEnergyLevel() >= energy_threshold {
+		target_goal = 1
+	} else {
+		target_goal = 0
+	}
+
+	// Convert energyLevels to 0 or 1 based on the threshold
+	for i, energy := range energyLevels {
+		if energy >= energy_threshold {
+			goalPreferenceList[i] = 1
+		} else {
+			goalPreferenceList[i] = 0
+		}
+	}
 
 	// Find quantified ‘Value-judgement’
-	valueJudgement := bb.calculateValueJudgement(utilityLevels, agentGoals, targetGoal, turns)
+	valueJudgement := bb.calculateValueJudgement(utilityLevels, goalPreferenceList, target_goal, turns)
 
 	// Scale the ‘Cost in the collective improvement’
-	AverageOfCost := bb.calculateAverageOfCostAndPercentage(decisions, energyLevels, EnergyThreshold)
+	AverageOfCost := bb.calculateAverageOfCostAndPercentage(decisions, energyLevels, energy_threshold)
 
 	// Find the overall ‘changeBike’ coefficient
 	changeBikeCoefficient := 0.6*valueJudgement - 0.4*AverageOfCost
 
 	// Make a decision based on the calculated coefficients
-	// rand.Float64() to be deicided
-	if rand.Float64() > changeBikeCoefficient {
+	if changingbike_threshold > changeBikeCoefficient {
 		return objects.ChangeBike
 	}
 
@@ -239,11 +266,7 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 }
 
 func (bb *Agent8) calculateValueJudgement(utilityLevels []float64, agentGoals []int, targetGoal int, turns []bool) float64 {
-	/* Example usage
-	utilityLevels := []float64{80.0, 90.0, 75.0, 85.0}
-	agentGoals := []int{1, 2, 1, 1, 2, 2, 1, 1, 2, 2}
-	targetGoal := 1
-	turns := []bool{true, false, true, true, false, true, true, false, true}*/
+
 	averageUtility := bb.calculateAverageUtility(utilityLevels)
 	percentageSameGoal := bb.calculatePercentageSameGoal(agentGoals, targetGoal)
 	probabilitySatisfiedLoops := bb.calculateProbabilitySatisfiedLoops(turns)
@@ -253,15 +276,8 @@ func (bb *Agent8) calculateValueJudgement(utilityLevels []float64, agentGoals []
 	return averageScore
 }
 
-func (bb *Agent8) calculateAverageOfCostAndPercentage(decisions []bool, energyLevels []int, threshold int) float64 {
+func (bb *Agent8) calculateAverageOfCostAndPercentage(decisions []bool, energyLevels []float64, threshold float64) float64 {
 
-	/*Example usage
-	decisions := []bool{true, false, false, true, true, false, false, true}
-	energyLevels := []int{80, 45, 60, 30, 70, 40, 55, 75, 90}
-	threshold := 50
-
-	// Calculate the average of values returned by calculateCostInCollectiveImprovement and calculatePercentageLowEnergyAgents
-	averageResult := calculateAverageOfCostAndPercentage(decisions, energyLevels, threshold)*/
 	costPercentage := bb.calculateCostInCollectiveImprovement(decisions)
 	percentageLowEnergy := bb.calculatePercentageLowEnergyAgents(energyLevels, threshold)
 
@@ -269,8 +285,6 @@ func (bb *Agent8) calculateAverageOfCostAndPercentage(decisions []bool, energyLe
 	averageResult := (costPercentage + percentageLowEnergy) / 2
 	return averageResult
 }
-
-// DecideAction helper functions
 
 // calculateAverageUtilityPercentage calculates the average of utility levels and returns the percentage
 // the utilitylevels need additional parameters to calculate
@@ -332,7 +346,8 @@ func (bb *Agent8) calculateCostInCollectiveImprovement(decisions []bool) float64
 	return percentage
 }
 
-func (bb *Agent8) calculatePercentageLowEnergyAgents(energyLevels []int, threshold int) float64 {
+// PercentageLowEnergyAgents can reflect relect the optimism regarding of the current megabike
+func (bb *Agent8) calculatePercentageLowEnergyAgents(energyLevels []float64, threshold float64) float64 {
 	var countLowEnergy int
 
 	// Count the number of agents with energy levels below the threshold
