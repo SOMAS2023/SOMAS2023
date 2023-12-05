@@ -4,18 +4,56 @@ import (
 	"SOMAS2023/internal/clients/team2/modules"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"math/rand"
 
 	"github.com/google/uuid"
 )
 
-// DecideAction() BikerAction                                      // ** determines what action the agent is going to take this round. (changeBike or Pedal)
-// DecideForce(direction uuid.UUID)                                // ** defines the vector you pass to the bike: [pedal, brake, turning]
-// DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool      // ** decide whether to accept or not accept bikers, ranks the ones
-// ChangeBike() uuid.UUID                                          // ** called when biker wants to change bike, it will choose which bike to try and join
-// ProposeDirection() uuid.UUID                                    // ** returns the id of the desired lootbox based on internal strategy
-// FinalDirectionVote(proposals []uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
-// DecideAllocation() voting.IdVoteMap                             // ** decide the allocation parameters
+func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	// TODO: All actions have equal weights. Weighting by AgentId based on social capital.
+	return a.BaseBiker.DecideWeights(action)
+}
+
+func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
+	// TODO: We vote for ourselves and highest SC agent.
+	// Equal weights for both.
+	return a.BaseBiker.VoteLeader()
+}
+
+func (a *AgentTwo) DecideGovernance() utils.Governance {
+	// TODO: All possibilities except dictatorship.
+	return a.BaseBiker.DecideGovernance()
+}
+
+func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
+	// TODO: We simply pass in Social Capital values in the map.
+	// If a value does not exist in the map, we set it as the average social capital.
+	// We give ourselves the highest social capital which is 1.
+	return a.BaseBiker.DecideAllocation()
+}
+
+func (a *AgentTwo) VoteForKickout() map[uuid.UUID]int {
+	// TODO: Vote for the agents with a Social Capital lower than a threshold.
+	return a.BaseBiker.VoteForKickout()
+}
+
+func (a *AgentTwo) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+	// TODO: Accept all agents we don't know about or are higher in social capital.
+	// If we know about them and they have a lower social capital, reject them.
+	return a.BaseBiker.DecideJoining(pendingAgents)
+}
+
+func (a *AgentTwo) ProposeDirection() uuid.UUID {
+	// TODO: Propose direction of lootbox with highest gain of our color.
+	return a.BaseBiker.ProposeDirection()
+}
+
+func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+	// TODO: If Social Capital of agent who proposed a lootbox is higher than a threshold, vote for it. Weight based on SC.
+	// Otherwise, set a weight of 0.
+	return a.BaseBiker.FinalDirectionVote(proposals)
+}
 
 func (a *AgentTwo) ChangeBike() uuid.UUID {
 	decisionInputs := modules.DecisionInputs{SocialCapital: a.Modules.SocialCapital, Enviornment: a.Modules.Environment, AgentID: a.GetID()}
