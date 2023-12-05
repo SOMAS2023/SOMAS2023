@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import filedialog
 import json
 from os.path import exists
+import sys
 import pygame
 import pygame_gui
 from pygame_gui import UIManager
@@ -24,11 +25,14 @@ class Visualiser:
         pygame.init()
         # Set screens, UI manager, caption, clock and timeDelta
         self.window = pygame.display.set_mode((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]))
-        self.manager = UIManager((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]), THEMEJSON)
+        self.manager = UIManager((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]), sys.argv[0] + "/../"+THEMEJSON)
         self.gamescreen = pygame.Surface((DIM["GAME_SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]))
         self.UIscreen = UIContainer(relative_rect=pygame.Rect((DIM["GAME_SCREEN_WIDTH"], 0),
-                          (DIM["UI_WIDTH"], DIM["SCREEN_HEIGHT"],)),
-                          manager=self.manager)
+                        (DIM["UI_WIDTH"], DIM["SCREEN_HEIGHT"],)),
+                        manager=self.manager)
+        self.consoleContainer = UIContainer(relative_rect=pygame.Rect((0, DIM["GAME_SCREEN_HEIGHT"]),
+                        (DIM["GAME_SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]-DIM["GAME_SCREEN_HEIGHT"])),
+                        manager=self.manager)
         pygame.display.set_caption(WINDOW_TITLE)
         self.clock = pygame.time.Clock()
         # UI element dictionaries
@@ -191,13 +195,16 @@ class Visualiser:
             data = json.load(f)
         self.jsondata = data
         self.gameScreenManager.set_json(data)
-        self.UIElements["game_screen"] = self.gameScreenManager.init_ui(self.manager, self.UIscreen)
+        self.UIElements["game_screen"] = self.gameScreenManager.init_ui(self.manager, self.UIscreen, self.consoleContainer)
+
     def test(self) -> None:
         """
         Test function
         """
-        if exists(JSONPATH):
-            self.json_parser(JSONPATH)
+        filepath = sys.argv[0] + "/../" + JSONPATH
+        # filepath = JSONPATH
+        if exists(filepath):
+            self.json_parser(filepath)
             self.gameScreenManager.change_round(0)
             self.run_loop("game_screen")
         else:

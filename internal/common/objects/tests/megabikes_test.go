@@ -148,7 +148,7 @@ func TestKickOutAgent(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
