@@ -21,12 +21,11 @@ func TestGetLeavingDecisions(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
-
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	s.GetLeavingDecisions(gs)
 
@@ -140,8 +139,11 @@ func TestRunActionProcess(t *testing.T) {
 		it := 1
 		s := server.Initialize(it)
 		// required otherwise agents are not initialized to bikes
-		s.FoundingInstitutions()
 		gs := s.NewGameStateDump(0)
+		for _, agent := range s.GetAgentMap() {
+			agent.UpdateGameState(gs)
+		}
+		s.FoundingInstitutions()
 
 		// Loop through each bike
 		for _, bike := range s.GetMegaBikes() {
@@ -284,12 +286,12 @@ func TestRunActionProcessDictator(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	// make bike with dictatorship (by getting one of the existing bikes and making it a dictatorship bike)
 	foundBike := false
@@ -338,12 +340,11 @@ func TestRunActionProcessLeader(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
-
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	// make bike with dictatorship (by getting one of the existing bikes and making it a dictatorship bike)
 	foundBike := false
@@ -565,12 +566,11 @@ func TestLootboxShareDictator(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
-
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	// make bike with dictatorship (by getting one of the existing bikes and making it a dictatorship bike)
 	foundBike := false

@@ -13,11 +13,12 @@ func TestRulerElectionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
+
 	// pass gamestate
 	var ruler uuid.UUID
 	for _, bike := range s.GetMegaBikes() {
@@ -39,11 +40,11 @@ func TestRulerElectionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 	// pass gamestate
 	var ruler uuid.UUID
 	for _, bike := range s.GetMegaBikes() {
