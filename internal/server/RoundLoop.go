@@ -12,7 +12,7 @@ import (
 
 func (s *Server) RunRoundLoop() {
 	// Capture dump of starting state
-	gameState := s.NewGameStateDump()
+	gameState := s.NewGameStateDump(0)
 	s.UpdateGameStates()
 
 	// take care of agents that want to leave the bike and of the acceptance/ expulsion process
@@ -128,7 +128,6 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 	leavingAgents := make([]uuid.UUID, 0)
 	for agentId, agent := range s.GetAgentMap() {
-		fmt.Printf("Agent %s updating state \n", agentId)
 		agent.UpdateGameState(gameState)
 		agent.UpdateAgentInternalState()
 		switch agent.DecideAction() {
@@ -181,9 +180,9 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 				}
 
 				// get approval votes from each agent
-				responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
-				for i, agent := range agents {
-					responses[i] = agent.DecideJoining(pendingAgents)
+				responses := make(map[uuid.UUID](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				for _, agent := range agents {
+					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}
 
 				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
@@ -194,9 +193,9 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 				weights := leader.DecideWeights(utils.Joining)
 
 				// get approval votes from each agent
-				responses := make([](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
-				for i, agent := range agents {
-					responses[i] = agent.DecideJoining(pendingAgents)
+				responses := make(map[uuid.UUID](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				for _, agent := range agents {
+					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}
 
 				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
