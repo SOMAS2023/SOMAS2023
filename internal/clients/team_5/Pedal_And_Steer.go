@@ -2,9 +2,9 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/utils"
-	"github.com/google/uuid"
-	"fmt"
 	"math"
+
+	"github.com/google/uuid"
 )
 
 //for testing use any box in targetLootBoxID
@@ -15,12 +15,11 @@ import (
 
 // so this bassically adjusts the force depending on the energy of the agent
 
-
-
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	//fmt.Println("testing 1")
 
 	currLocation := t5.GetLocation()
+	orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
 	//fmt.Println("Current Location: ", currLocation)
 
 	nearestLoot := t5.ProposeDirection()
@@ -33,42 +32,45 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		targetPos := currentLootBoxes[nearestLoot].GetPosition()
 		//fmt.Println("Target Position: ", targetPos)
 
-		deltaX := targetPos.X - currLocation.X
-		deltaY := targetPos.Y - currLocation.Y
+		deltaXB := targetPos.X - currLocation.X
+		deltaYB := targetPos.Y - currLocation.Y
 		//fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
-		distance_to_loot_box := math.Sqrt((((deltaX)*(deltaX)) + ((deltaY)*(deltaY))))
+		distance_to_loot_box := math.Sqrt((deltaXB * deltaXB) + (deltaYB * deltaYB))
 
-		angle := math.Atan2(deltaY, deltaX)
-		normalisedAngle := angle / math.Pi
+		angleToGoal := math.Atan2(deltaYB, deltaXB) / math.Pi
 
 		audiPos := t5.GetGameState().GetAudi().GetPosition()
 
-		deltaX2 := audiPos.X - currLocation.X
-		deltaY2 := audiPos.Y - currLocation.Y
-        
-		distance_to_audi := math.Sqrt((((deltaX2)*(deltaX2)) + (deltaY2*(deltaY2))))
-		//if the audi is closer than the closest lootbox then run away
-		if distance_to_audi < distance_to_loot_box { 
-			angle = math.Atan2(-deltaY2, deltaX2)
-			normalisedAngle = angle / math.Pi
-		}
-		if distance_to_audi > distance_to_loot_box { 
-			angle = math.Atan2(deltaY, deltaX)
-			normalisedAngle = angle / math.Pi
-		}
-			
+		deltaXA := audiPos.X - currLocation.X
+		deltaYA := audiPos.Y - currLocation.Y
 
-		orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
-		//fmt.Println("Bike Orientation: ", orientation) 
-		turning_depending_on_agents_on_that_bike := (normalisedAngle - orientation);
+		// deltaXAB := targetPos.X - audiPos.X
+		// deltaYAB := targetPos.Y - audiPos.Y
+
+		angleToAudi := math.Atan2(deltaYA, deltaXA) / math.Pi
+
+		// distBetweenAudiBox := math.Sqrt((deltaXAB * deltaXAB) + (deltaYAB * deltaYAB))
+
+		distance_to_audi := math.Sqrt((((deltaXA) * (deltaXA)) + (deltaYA * (deltaYA))))
+		//if the audi is closer than the closest lootbox then run away
+		if distance_to_audi-10 < distance_to_loot_box && math.Abs(angleToAudi-angleToGoal) < 0.5 {
+			// steer = steer - math.Copysign(0.5, angleToAudi)
+		}
+
+		if distance_to_audi < 15 && math.Abs(angleToAudi-angleToGoal) < 0.5 {
+			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
+		}
+
+		steer := (angleToGoal - orientation)
+
+		//fmt.Println("Bike Orientation: ", orientation)
 		///(float64(len(t5.GetMegaBike())));
-		fmt.Println("Angle: ", angle, "Normalized Angle: ", normalisedAngle, " bike orientation ", orientation, "turning_depending_on_agents_on_that_bike ", turning_depending_on_agents_on_that_bike )
+		// fmt.Println("Normalized Angle: ", angleToGoal, " bike orientation ", orientation, "turning_depending_on_agents_on_that_bike ", steer)
 		//and i can change this depending on how the enemy agents are turning
-		
 
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: turning_depending_on_agents_on_that_bike,
+			SteeringForce: steer,
 		}
 		//fmt.Println("Turning Decision: ", turningDecision)
 
@@ -96,11 +98,6 @@ func calculatePedalForceBasedOnEnergy() {
 	panic("unimplemented")
 }
 
-	
-
-
-
-
 // here I can add implementation of stategy like:
 //___________________________________________________________________________________________________________________________
 
@@ -127,17 +124,11 @@ func calculatePedalForceBasedOnEnergy() {
 
 // add a function depends
 
-
 // 2.)speed of other bikes
-// and 
+// and
 // position of other bikes and how fast to peddle depending on that
 
 // 1.)so the lootbox is the direction but we may need to turn more if the bike doesnt turn enough.
 
-
-
 //have a meeting with others discuss what other fns i can implement nd what helps others
 // runs no issues
-
-
-
