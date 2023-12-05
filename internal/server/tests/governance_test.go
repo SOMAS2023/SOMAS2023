@@ -66,11 +66,11 @@ func TestRunRulerActionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	for _, bike := range s.GetMegaBikes() {
 		agents := bike.GetAgents()
@@ -103,11 +103,11 @@ func TestRunRulerActionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	for _, bike := range s.GetMegaBikes() {
 		agents := bike.GetAgents()
