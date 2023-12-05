@@ -7,13 +7,15 @@ from visualiser.util.Constants import OVERLAY, COORDINATESCALE, PRECISION
 class Drawable:
     def __init__(self, entityid:str, jsonData:dict, x=None, y=None) -> None:
         if x is None or y is None:
-            self.x = round(jsonData["physical_state"]["position"]["x"]*COORDINATESCALE, PRECISION)
-            self.y = round(jsonData["physical_state"]["position"]["y"]*COORDINATESCALE, PRECISION)
+            self.x = jsonData["physical_state"]["position"]["x"]
+            self.y = jsonData["physical_state"]["position"]["y"]
         else:
-            self.x = round(x*COORDINATESCALE, PRECISION)
-            self.y = round(y*COORDINATESCALE, PRECISION)
-        self.trueX = self.x
-        self.trueY = self.y
+            self.x = x
+            self.y = y
+        self.x = round(self.x, PRECISION)
+        self.y = round(self.y, PRECISION)
+        self.trueX = round(self.x*COORDINATESCALE, PRECISION)
+        self.trueY = round(self.y*COORDINATESCALE, PRECISION)
         self.clicked = False
         self.id = entityid
         self.properties = {
@@ -90,4 +92,9 @@ class Drawable:
         """
         Return the properties of the agent.
         """
-        return self.properties
+        properties = {
+            "X" : self.x,
+            "Y" : self.y,
+        }
+        properties.update(self.properties)
+        return properties

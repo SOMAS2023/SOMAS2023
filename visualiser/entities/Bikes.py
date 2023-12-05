@@ -5,7 +5,7 @@ Logic for handling bikes in the visualiser
 import math
 import pygame
 import pygame_gui
-from visualiser.util.Constants import AGENT, BIKE, PRECISION
+from visualiser.util.Constants import AGENT, BIKE, PRECISION, COORDINATESCALE
 from visualiser.entities.Agents import Agent
 from visualiser.entities.Common import Drawable
 
@@ -35,8 +35,8 @@ class Bike(Drawable):
         agentSize = (AGENT["SIZE"] + AGENT["LINE_WIDTH"]) * 2 * zoom
         self.squareSide = gridSize * agentSize + ((gridSize+1) * agentPadding)
         # Calculate bike's position and size
-        self.trueX = int(self.x * zoom + offsetX)
-        self.trueY = int(self.y * zoom + offsetY)
+        self.trueX = int(self.x * COORDINATESCALE * zoom + offsetX)
+        self.trueY = int(self.y * COORDINATESCALE * zoom + offsetY)
         # Draw the bike square
         border = pygame.Surface(((2*BIKE["LINE_WIDTH"]*zoom)+self.squareSide,  (2*BIKE["LINE_WIDTH"]*zoom)+self.squareSide))
         border.fill(BIKE["LINE_COLOUR"])
@@ -63,7 +63,7 @@ class Bike(Drawable):
         self.agentList = dict()
         for agentid in self.agentData:
             self.agentList[agentid] = Agent(self.x, self.y, agentid, agentJson[agentid]["colour"], "?", agentJson[agentid])
-        
+
     def get_agents(self) -> dict:
         """
         Return the agents in the bike

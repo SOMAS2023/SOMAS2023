@@ -7,6 +7,7 @@ FRAMERATE = 60
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
 COORDINATESCALE = 15
 PRECISION = 2
+EPSILON = 8
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
 TEXT = {

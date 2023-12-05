@@ -8,7 +8,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
@@ -45,6 +45,11 @@ class GameScreen:
             "Dead Agents" : 0,
         }
         self.agents = {}
+        self.deadCount = {
+            "-1" : 0,
+            "0" : 0,
+        }
+        self.maxDead = 0
 
     def init_ui(self, manager:pygame_gui.UIManager, uiscreen:UIContainer, consoleContainer:UIContainer) -> dict:
         """
@@ -332,6 +337,7 @@ class GameScreen:
         self.round = max(0, min(self.maxRound, newRound))
         self.elements["round_count"].set_text(f"Round: {self.round}")
         self.elements["console"].html_text = ""
+        self.elements["console"].rebuild()
         #Reload bikes
         bikes = {}
         agents = {}
@@ -396,7 +402,6 @@ class GameScreen:
         # Draw vertical lines
         for x in range(-int(zoomedSpacing) + int(startX), width, int(zoomedSpacing)):
             pygame.draw.line(surface, BGCOLOURS["GRID"], (x, 0), (x, height))
-
         # Draw horizontal lines
         for y in range(-int(zoomedSpacing) + int(startY), height, int(zoomedSpacing)):
             pygame.draw.line(surface, BGCOLOURS["GRID"], (0, y), (width, y))
@@ -406,8 +411,8 @@ class GameScreen:
         Draw the mouse coordinates on the game screen
         """
         font = pygame.font.SysFont("Arial", 15)
-        x = round(self.mouseXCur / self.zoom - self.offsetX / self.zoom, PRECISION)
-        y = round(self.mouseYCur / self.zoom - self.offsetY / self.zoom, PRECISION)
+        x = round((self.mouseXCur / self.zoom - self.offsetX / self.zoom) / COORDINATESCALE, PRECISION)
+        y = round((self.mouseYCur / self.zoom - self.offsetY / self.zoom) / COORDINATESCALE, PRECISION)
         text = font.render(f"({x}, {y})", True, (0, 0, 0))
         surface.blit(text, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
 
@@ -429,22 +434,36 @@ class GameScreen:
         Compare the agents to the previous round and update console and stats
         """
         dead = 0
-        for agent, _ in self.agents.items():
-            if agent not in newAgents:
-                self.log(f"Agent {agent} has died!", "ERROR")
+        for agentid, agent in self.agents.items():
+            if agentid not in newAgents:
+                if agent["Energy"] == 0:
+                    self.log(f"Agent {agentid} has run out of energy!", "ERROR")
+                elif (pow(agent["X"]-self.awdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["Y"]-self.awdi.y, 2) < pow(EPSILON, 2)):
+                    self.log(f"Agent {agentid} has been run over by the Owdi!", "ERROR")
+                else:
+                    self.log(f"Agent {agentid} has died for unknown reasons!", "ERROR")
                 dead += 1
         self.stats["Alive Agents"] = len(newAgents.values())
-        self.stats["Dead Agents"] += dead
+        if str(self.round) not in self.deadCount:
+            if str(self.round-1) in self.deadCount:
+                self.deadCount[str(self.round)] = self.deadCount[str(self.round-1)] + dead
+            else:
+                self.stats["Dead Agents"] = "N/A"
+        if str(self.round) in self.deadCount:
+            self.stats["Dead Agents"] = self.deadCount[str(self.round)]
         self.agents = newAgents
 
     def compare_bikes(self, newBikes:dict) -> None:
         """
         Compare the agents to the previous round and update console and stats
         """
+        activeBikes = 0
         for bikeid, _ in self.bikes.items():
             if bikeid not in newBikes:
                 self.log(f"Bike {bikeid} has died!", "ERROR")
-        self.stats["Active Bikes"] = len(newBikes.values())
+            if len(newBikes[bikeid].get_agents()) > 0:
+                activeBikes += 1
+        self.stats["Active Bikes"] = activeBikes
         self.bikes = newBikes
 
     def compare_lootboxes(self, newLootboxes:dict) -> None:
