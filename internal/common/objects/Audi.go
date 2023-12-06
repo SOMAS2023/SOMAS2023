@@ -3,8 +3,9 @@ package objects
 import (
 	phy "SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
-	"github.com/google/uuid"
 	"math"
+
+	"github.com/google/uuid"
 )
 
 type IAudi interface {
@@ -68,7 +69,7 @@ func (audi *Audi) ComputeTarget() {
 
 		if !utils.AudiTargetsEmptyMegaBike {
 			agentsOnBike := bike.GetAgents()
-			if agentsOnBike == nil || len(agentsOnBike) == 0 {
+			if len(agentsOnBike) == 0 {
 				continue
 			}
 		}

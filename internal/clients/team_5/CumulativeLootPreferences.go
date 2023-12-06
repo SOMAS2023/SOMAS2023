@@ -10,25 +10,34 @@ import (
 )
 
 // calculates final preferences for loot boxes based on various factors
-func CalculateLootBoxPreferences(gameState objects.IGameState, b *team5Agent, proposals map[uuid.UUID]uuid.UUID) map[uuid.UUID]float64 {
+func (t5 *team5Agent) CalculateLootBoxPreferences(gameState objects.IGameState, proposals map[uuid.UUID]uuid.UUID) map[uuid.UUID]float64 {
 	finalPreferences := make(map[uuid.UUID]float64)
 
 	var lootBox objects.ILootBox
 
 	// retrieve agent and loot boxes from game state
-	position := gameState.GetMegaBikes()[b.GetBike()].GetPosition()
+	position := gameState.GetMegaBikes()[t5.GetBike()].GetPosition()
+	audiPos := t5.GetGameState().GetAudi().GetPosition()
 
 	for _, lootBoxID := range proposals {
 		lootBox = gameState.GetLootBoxes()[lootBoxID]
-		distance := calculateDistanceToLootbox(position, lootBox.GetPosition())
-		colorPreference := calculateColorPreference(b.GetColour(), lootBox.GetColour())
-		energyPreference := calculateEnergyPreference(b.GetEnergyLevel(), lootBox.GetTotalResources())
+		distanceFromBike := calculateDistanceToObject(position, lootBox.GetPosition())
+		colorPreference := calculateColorPreference(t5.GetColour(), lootBox.GetColour())
+		energyPreference := calculateEnergyPreference(t5.GetEnergyLevel(), lootBox.GetTotalResources())
+
+		distanceFromAudi := calculateDistanceToObject(audiPos, lootBox.GetPosition())
+		var audiModifier float64 = 0
+
+		if distanceFromAudi < (2 * utils.CollisionThreshold) {
+			audiModifier = -0.5
+		}
+
 		// cumulativePreference := cumulativePreferences[id]
 
 		// combine preferences (weights: 0.4 for distance, 0.3 for color, 0.2 for energy, 0.1 for cumulative)
 		// ensure that if cant get first preference, get second preference and so on
 
-		finalPreferences[lootBoxID] = 0.4*(1/distance) + 0.3*colorPreference + 0.2*energyPreference /*+ 0.1*cumulativePreference*/
+		finalPreferences[lootBoxID] = 0.4*(1/distanceFromBike) + 0.3*colorPreference + 0.2*energyPreference + audiModifier
 	}
 
 	return finalPreferences
@@ -57,8 +66,8 @@ func SortPreferences(prefs map[uuid.UUID]float64) map[uuid.UUID]float64 {
 // ensure that if cant get first preference, get second preference and so on
 
 // calculates the Euclidean distance between two points
-func calculateDistanceToLootbox(a, b utils.Coordinates) float64 {
-	return math.Sqrt(math.Pow(a.X-b.X, 2) + math.Pow(a.Y-b.Y, 2))
+func calculateDistanceToObject(a, t5 utils.Coordinates) float64 {
+	return math.Sqrt(math.Pow(a.X-t5.X, 2) + math.Pow(a.Y-t5.Y, 2))
 }
 
 // calculates preference based on color match
