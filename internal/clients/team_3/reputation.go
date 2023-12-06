@@ -28,15 +28,17 @@ type reputation struct {
 
 func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor utils.Colour) {
 	// update memory
-	rep._lastPedal = biker.GetForces().Pedal - biker.GetForces().Brake
-	rep._pedalCnt += rep._lastPedal
 	rep.recentGetEnergy = biker.GetEnergyLevel() > rep._lastEnergyLevel
 	if biker.GetEnergyLevel() > rep._lastEnergyLevel {
 		rep._recentEnergyGain = biker.GetEnergyLevel() - rep._lastEnergyLevel
 		rep._energyReceivedCnt += rep._recentEnergyGain
-		rep._lootBoxGetCnt += 1
+		rep._lootBoxGetCnt += 1.0
+	} else {
+		rep._lastPedal = rep._lastEnergyLevel - biker.GetEnergyLevel()
+		// if agent gain energy in this iter, assume it pedals with the same energy cost as last iter
 	}
 	rep._lastEnergyLevel = biker.GetEnergyLevel()
+	rep._pedalCnt += rep._lastPedal
 
 	// update score
 	rep.recentContribution = normalize(rep._lastPedal)

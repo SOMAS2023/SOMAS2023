@@ -22,101 +22,151 @@ type KeyValuePair struct {
 
 type SmartAgent struct {
 	objects.BaseBiker
-	currentBike   *objects.MegaBike
 	targetLootBox objects.ILootBox
 	reputationMap map[uuid.UUID]reputation
-	// creditMap     map[uuid.UUID]credit
 
 	lootBoxCnt                     float64
 	energySpent                    float64
 	lastEnergyLevel                float64
+	lastEnergyCost                 float64
 	satisfactionOfRecentAllocation float64
-	badleader                      bool
+	badTeam                        bool
+	lastPedal                      float64
 }
 
-func (agent *SmartAgent) DecideGovernance() voting.GovernanceVote {
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
-	votes := agent.which_governance_method(agentsOnBike)
-	return votes
+func (agent *SmartAgent) DecideGovernance() utils.Governance {
+	currentBike, e := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	if e == false { // not on bike at initial state
+		return utils.Democracy
+	}
+	governance := agent.which_governance_method(currentBike.GetAgents())
+	return governance
 }
 
-func (agent *SmartAgent) VoteLeader() voting.IdVoteMap {
-	// defaults to voting for first agent in the list
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
-	lootboxes := agent.GetGameState().GetLootBoxes()
-	votes := agent.vote_leader(agentsOnBike, lootboxes)
-	return votes
-}
-
-// DecideAction only pedal
+// DecideAction change bike if find badLeader or badTeam
 func (agent *SmartAgent) DecideAction() objects.BikerAction {
 	if agent.GetEnergyLevel() < agent.lastEnergyLevel {
-		agent.energySpent += agent.lastEnergyLevel - agent.GetEnergyLevel()
+		agent.lastEnergyCost = agent.lastEnergyLevel - agent.GetEnergyLevel()
+		agent.energySpent += agent.lastEnergyCost
 	} else {
 		agent.recalculateSatisfaction()
+		agent.badTeam = false
+		if agent.satisfactionOfRecentAllocation < 0.5 && agent.energySpent/agent.lootBoxCnt > agent.GetEnergyLevel() {
+			// if not enough energy received and not fair allocation happened
+			agent.badTeam = true
+		}
 	}
 	agent.lastEnergyLevel = agent.GetEnergyLevel()
-
 	agent.updateRepMap()
-
+	if agent.badTeam {
+		return objects.ChangeBike
+	}
 	return objects.Pedal
 }
 
-// DecideForces considering Hegselmann-Krause model, Ramirez-Cano-Pitt model and Satisfaction
-func (agent *SmartAgent) DecideForces(direction uuid.UUID) {
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
-	scores := make(map[uuid.UUID]float64)
-	totalScore := 0.0
-	for _, others := range agentsOnBike {
-		id := others.GetID()
-		rep := agent.reputationMap[id]
-		score := rep.isSameColor/ // Cognitive dimension: is same belief?
-			+rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
-			+rep.recentContribution // Forgiveness: forgive agents pedal harder recently
-		scores[others.GetID()] = score
-		totalScore += score
-	}
-
-	for id, score := range scores {
-		scores[id] = score / totalScore
-	}
-
+// DecideForce considering Hegselmann-Krause model, Ramirez-Cano-Pitt model and Satisfaction
+func (agent *SmartAgent) DecideForce(direction uuid.UUID) {
 	pedalForce := 0.0
-	for id, weight := range scores {
-		pedalForce += weight * agent.reputationMap[id]._lastPedal
-	}
-	pedalForce /= agent.satisfactionOfRecentAllocation
+	if agent.lastPedal == 0 {
+		pedalForce = utils.BikerMaxForce
+	} else {
+		agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
+		scores := make(map[uuid.UUID]float64)
+		totalScore := 0.0
+		for _, others := range agentsOnBike {
+			id := others.GetID()
+			rep := agent.reputationMap[id]
+			// Cognitive dimension: is same belief?
+			// Pareto principle: give more energy to those with more outcome
+			// Forgiveness: forgive agents pedal harder recently
+			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution
+			scores[others.GetID()] = score
+			totalScore += score
+		}
 
-	// 因为force是一个struct,包括pedal, brake,和turning，因此需要一起定义，不能够只有pedal
+		for id, score := range scores {
+			scores[id] = score / totalScore
+		}
+
+		energyCost := 0.0
+		for id, weight := range scores {
+			energyCost += weight * agent.reputationMap[id]._lastPedal
+		}
+		pedalForce = agent.lastPedal * (energyCost / agent.lastEnergyCost)
+		pedalForce *= agent.satisfactionOfRecentAllocation
+	}
+	if pedalForce > utils.BikerMaxForce {
+		pedalForce = utils.BikerMaxForce
+	}
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	forces := utils.Forces{
 		Pedal: pedalForce,
-		Brake: 0.0, // 这里默认刹车为 0
+		Brake: 0.0,
 		Turning: utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), agent.GetGameState().GetMegaBikes()[direction].GetPosition()) - agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetOrientation(),
-		}, // 这里默认转向为 0
+			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), currentBike.GetPosition()) - currentBike.GetOrientation(),
+		},
 	}
-
+	agent.lastPedal = pedalForce
 	agent.SetForces(forces)
 }
 
-// DecideJoining accept all
+// DecideJoining accept higher reputation score, max the number of agents on bike
 func (agent *SmartAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	decision := make(map[uuid.UUID]bool)
-	for _, agent := range pendingAgents {
-		decision[agent] = true
+	scores := make([]float64, len(pendingAgents))
+	for idx, applicant := range pendingAgents {
+		rep := agent.reputationMap[applicant]
+		// Cognitive dimension: is same belief?
+		// Contribution and Achievement
+		// Forgiveness: forgive agents pedal harder recently
+		// Potential
+		scores[idx] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+	}
+	sort.Slice(pendingAgents, func(i, j int) bool {
+		return scores[i] > scores[j]
+	})
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	for idx, agentId := range pendingAgents {
+		decision[agentId] = idx+len(currentBike.GetAgents()) < utils.BikersOnBike
 	}
 	return decision
 }
 
-func (agent *SmartAgent) ProposeDirection() utils.Coordinates {
+// ChangeBike rank the average reputation score of agents on bike with empty place, go for highest rank one
+func (agent *SmartAgent) ChangeBike() (targetId uuid.UUID) {
+	highestAvgScore := 0.0
+	for id, bike := range agent.GetGameState().GetMegaBikes() {
+		if len(bike.GetAgents()) == utils.BikersOnBike {
+			// ignore the bike with no empty space
+			continue
+		}
+		score := 0.0
+		for _, biker := range bike.GetAgents() {
+			rep := agent.reputationMap[biker.GetID()]
+			// Cognitive dimension: is same belief?
+			// Contribution and Achievement
+			// Forgiveness: forgive agents pedal harder recently
+			// Potential
+			score += rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+		}
+		score /= float64(len(bike.GetAgents()))
+		if score > highestAvgScore {
+			highestAvgScore = score
+			targetId = id
+		}
+	}
+	return targetId
+}
+
+func (agent *SmartAgent) ProposeDirection() uuid.UUID {
 	// direction is targetLootBox
 	e := agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
 	// An agent has already proposed its proposal (BordaCount)
 	if e != nil {
 		panic("unexpected error!")
 	}
-	return agent.targetLootBox.GetPosition()
+	return agent.targetLootBox.GetID()
 }
 
 func (agent *SmartAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
@@ -134,6 +184,109 @@ func (agent *SmartAgent) DecideAllocation() voting.IdVoteMap {
 	return vote
 }
 
+// VoteForKickout try to kick out the reputation score below half of the average on bike
+func (agent *SmartAgent) VoteForKickout() map[uuid.UUID]int {
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	scores := make([]float64, len(currentBike.GetAgents()))
+	threshold := 0.0
+	kickOutVote := make(map[uuid.UUID]int)
+	for idx, onBikeAgent := range currentBike.GetAgents() {
+		rep := agent.reputationMap[onBikeAgent.GetID()]
+		// Cognitive dimension: is same belief?
+		// Contribution and Achievement
+		// Forgiveness: forgive agents pedal harder recently
+		// Potential
+		scores[idx] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+		threshold += scores[idx]
+	}
+	threshold = threshold / float64(len(currentBike.GetAgents())) / 2.0
+	for idx, onBikeAgent := range currentBike.GetAgents() {
+		if scores[idx] < threshold {
+			kickOutVote[onBikeAgent.GetID()] = 1
+		} else {
+			kickOutVote[onBikeAgent.GetID()] = 0
+		}
+	}
+	return kickOutVote
+}
+
+// VoteDictator not prefer a dictatorship, if have to then follow the same logic with choosing leader
+func (agent *SmartAgent) VoteDictator() voting.IdVoteMap {
+	return agent.VoteLeader()
+}
+
+func (agent *SmartAgent) VoteLeader() voting.IdVoteMap {
+	// defaults to voting for first agent in the list
+	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
+	lootboxes := agent.GetGameState().GetLootBoxes()
+	votes := agent.vote_leader(agentsOnBike, lootboxes)
+	return votes
+}
+
+// DictateDirection assume that if this agent is chosen to be dictator,
+// then it is believed by others that the choice of this agent is correct,
+// then no extra modification but following the same target choice as normal is acceptable
+func (agent *SmartAgent) DictateDirection() uuid.UUID {
+	return agent.ProposeDirection()
+}
+
+func (agent *SmartAgent) DecideKickOut() []uuid.UUID {
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	scores := make([]float64, len(currentBike.GetAgents()))
+	threshold := 0.0
+	kickOutVote := make(map[uuid.UUID]int)
+	for idx, onBikeAgent := range currentBike.GetAgents() {
+		rep := agent.reputationMap[onBikeAgent.GetID()]
+		// Cognitive dimension: is same belief?
+		// Contribution and Achievement
+		// Forgiveness: forgive agents pedal harder recently
+		// Potential
+		scores[idx] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+		threshold += scores[idx]
+	}
+	threshold = threshold / float64(len(currentBike.GetAgents())) / 2.0
+	count := 0
+	for idx, onBikeAgent := range currentBike.GetAgents() {
+		if scores[idx] < threshold {
+			kickOutVote[onBikeAgent.GetID()] = 1
+			count += 1
+		} else {
+			kickOutVote[onBikeAgent.GetID()] = 0
+		}
+	}
+	decideKickOut := make([]uuid.UUID, count)
+	for idx, decision := range kickOutVote {
+		if decision == 1 {
+			count -= 1
+			decideKickOut[count] = idx
+		}
+	}
+	return decideKickOut
+}
+
+func (agent *SmartAgent) DecideDictatorAllocation() voting.IdVoteMap {
+	return agent.DecideAllocation()
+}
+
+func (agent *SmartAgent) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	totalW := 0.0
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	for _, onBikeAgent := range currentBike.GetAgents() {
+		rep := agent.reputationMap[onBikeAgent.GetID()]
+		// Cognitive dimension: is same belief?
+		// Contribution and Achievement
+		// Forgiveness: forgive agents pedal harder recently
+		// Potential
+		weights[onBikeAgent.GetID()] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+		totalW += weights[onBikeAgent.GetID()]
+	}
+	for id, w := range weights {
+		weights[id] = w / totalW
+	}
+	return weights
+}
+
 func (agent *SmartAgent) vote_off_leader() bool {
 	decision_to_vote_off := false
 	vote_off := 0.0
@@ -149,7 +302,7 @@ func (agent *SmartAgent) vote_off_leader() bool {
 	return decision_to_vote_off
 }
 
-func (agent *SmartAgent) which_governance_method(agentsOnBike []objects.IBaseBiker) map[utils.Governance]float64 {
+func (agent *SmartAgent) which_governance_method(agentsOnBike []objects.IBaseBiker) utils.Governance {
 	//assume agent only accepts democracy or leadership
 	// By default, it accpets leadership
 	need_deomocracy := 0.0
@@ -182,58 +335,12 @@ func (agent *SmartAgent) which_governance_method(agentsOnBike []objects.IBaseBik
 		// fear of being taken advantage of
 	}
 
-	votes := map[utils.Governance]float64{
-		utils.Democracy:    need_deomocracy,
-		utils.Leadership:   need_leadership,
-		utils.Dictatorship: 0.0,
-		utils.Invalid:      0.0,
-	}
-
-	return votes
-	// return type: voting.GovernanceVote: map[utils.Governance]float64, util.Governance: int (0-1-2-3)
-}
-
-/*
-func (agent *SmartAgent) find_collusion(agentsOnBike []SmartAgent, agentsOnBike2 []objects.IBaseBiker) {
-	for i := 0; i < len(agentsOnBike)-1; i++ {
-		for j := i + 1; j < len(agentsOnBike); j++ {
-			firstAgent := &agentsOnBike[i]
-			secondAgent := &agentsOnBike[j]
-
-			firstID := firstAgent.GetID()
-			secondID := secondAgent.GetID()
-
-			firstCredit := agent.creditMap[firstID]
-			secondCredit := agent.creditMap[secondID]
-			firstRep := agent.reputationMap[firstID]
-			secondRep := agent.reputationMap[secondID]
-
-			firstNeedPtr := firstAgent.whether_need_leader(agentsOnBike2)
-			secondNeedPtr := secondAgent.whether_need_leader(agentsOnBike2)
-
-			first_recent_contribution := firstRep.recentContribution
-			second_recent_contribution := secondRep.recentContribution
-
-			average_recent_contribution := 0.0
-			for _, others := range agentsOnBike2 {
-				id := others.GetID()
-				rep := agent.reputationMap[id]
-				average_recent_contribution += rep.recentContribution
-				average_recent_contribution = average_recent_contribution / float64(len(agentsOnBike2))
-			}
-
-			if firstCredit.consecutiveNegativeCount == 3 && secondCredit.consecutiveNegativeCount == 3 && (first_recent_contribution < average_recent_contribution) && (second_recent_contribution < average_recent_contribution) {
-				if *firstNeedPtr == 0.0 {
-					*firstNeedPtr = 1.0
-				}
-				if *secondNeedPtr == 0.0 {
-					*secondNeedPtr = 1.0
-				}
-			}
-		}
+	if need_deomocracy > need_leadership {
+		return utils.Democracy
+	} else {
+		return utils.Leadership
 	}
 }
-*/
 
 func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposedLootBox map[uuid.UUID]objects.ILootBox) voting.IdVoteMap {
 	// two-round run-off
@@ -245,9 +352,10 @@ func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposed
 	for _, others := range agentsOnBike {
 		id := others.GetID()
 		rep := agent.reputationMap[id]
-		score_1 := rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
-			+rep.isSameColor/ // Cognitive dimension: is same belief?
-			+rep.energyRemain // necessity: must stay alive
+		// Pareto principle: give more energy to those with more outcome
+		// Cognitive dimension: is same belief?
+		// necessity: must stay alive
+		score_1 := rep.historyContribution + rep.lootBoxGet + rep.isSameColor + rep.energyRemain
 
 		scores1[id] = score_1
 		total_score_1 += score_1
@@ -399,9 +507,10 @@ func (agent *SmartAgent) decideTargetLootBox(agentsOnBike []objects.IBaseBiker, 
 		for _, others := range same_colour_bikers {
 			id := others.GetID()
 			rep := agent.reputationMap[id]
-			score += 0.5 * 0.4 * rep.historyContribution / //opinion, trustness from direct experience
-				+0.5 * 0.2 * rep.recentContribution / //forgiveness
-				+0.5 * 0.4 * rep.energyRemain //improve trustness by decreasing the risk of no efforts
+			//opinion, trustness from direct experience
+			//forgiveness
+			//improve trustness by decreasing the risk of no efforts
+			score += 0.5*0.4*rep.historyContribution + 0.5*0.2*rep.recentContribution + 0.5*0.4*rep.energyRemain
 		}
 
 		if score > max_score {
@@ -466,12 +575,13 @@ func (agent *SmartAgent) scoreAgentsForAllocation(agentsOnBike []objects.IBaseBi
 		for _, others := range agentsOnBike {
 			id := others.GetID()
 			rep := agent.reputationMap[id]
-			score := rep.isSameColor/ // Cognitive dimension: is same belief?
-				+rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
-				+rep.recentContribution/ // Forgiveness: forgive agents pedal harder recently
-				-rep.energyGain/ // Equality: Agents received more energy before should get less this time
-				+rep.energyRemain // Need: Agents with lower energyLevel require more, try to meet their need
-			scores[others.GetID()] = score
+			// Cognitive dimension: is same belief?
+			// Pareto principle: give more energy to those with more outcome
+			// Forgiveness: forgive agents pedal harder recently
+			// Equality: Agents received more energy before should get less this time
+			// Need: Agents with lower energyLevel require more, try to meet their need
+			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution - rep.energyGain + rep.energyRemain
+			scores[id] = score
 			totalScore += score
 		}
 	}
@@ -484,40 +594,49 @@ func (agent *SmartAgent) scoreAgentsForAllocation(agentsOnBike []objects.IBaseBi
 	return scores, nil
 }
 
+func (agent *SmartAgent) UpdateGameState(gameState objects.IGameState) {
+	agent.BaseBiker.UpdateGameState(gameState)
+}
+
 func (agent *SmartAgent) updateRepMap() {
 	if agent.reputationMap == nil {
 		agent.reputationMap = make(map[uuid.UUID]reputation)
 	}
-	for _, bikes := range agent.GetGameState().GetMegaBikes() {
-		for _, otherAgent := range bikes.GetAgents() {
-			rep, exist := agent.reputationMap[otherAgent.GetID()]
-			if !exist {
-				rep = reputation{}
-			}
-			rep.updateScore(otherAgent, agent.GetColour())
-			agent.reputationMap[otherAgent.GetID()] = rep
+	for _, otherAgent := range agent.GetGameState().GetAgents() {
+		rep, exist := agent.reputationMap[otherAgent.GetID()]
+		if !exist {
+			rep = reputation{}
 		}
+		rep.updateScore(otherAgent, agent.GetColour())
+		agent.reputationMap[otherAgent.GetID()] = rep
 	}
 }
 
 func (agent *SmartAgent) recalculateSatisfaction() {
-	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
+	agent.satisfactionOfRecentAllocation = 1.0
+	currentBike, e := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	if !e {
+		return
+	}
+	agentsOnBike := currentBike.GetAgents()
 	scores := make([]float64, len(agentsOnBike))
 	gains := make([]float64, len(agentsOnBike))
 	for idx, others := range agentsOnBike {
 		id := others.GetID()
 		rep := agent.reputationMap[id]
-		score := rep.isSameColor/ // Cognitive dimension: is same belief?
-			+rep.historyContribution + rep.lootBoxGet/ // Pareto principle: give more energy to those with more outcome
-			+rep.recentContribution/ // Forgiveness: forgive agents pedal harder recently
-			-rep.energyGain/ // Equality: Agents received more energy before should get less this time
-			+rep.energyRemain // Need: Agents with lower energyLevel require more, try to meet their need
+		// Cognitive dimension: is same belief?
+		// Pareto principle: give more energy to those with more outcome
+		// Forgiveness: forgive agents pedal harder recently
+		// Equality: Agents received more energy before should get less this time
+		// Need: Agents with lower energyLevel require more, try to meet their need
+		score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution - rep.energyGain + rep.energyRemain
 		scores[idx] = score
 		gains[idx] = agent.reputationMap[id]._recentEnergyGain
 	}
 	sort.Slice(gains, func(i, j int) bool {
 		return scores[i] < scores[j]
 	})
+
 	agent.satisfactionOfRecentAllocation = measureOrder(gains)
 }
 
@@ -528,7 +647,7 @@ func measureOrder(input []float64) float64 {
 	for i, n := range input {
 		j := i + 1
 		for j < size {
-			if n > input[j] { // 升序为正序
+			if n > input[j] {
 				inversionCnt += 1
 			}
 			j += 1
