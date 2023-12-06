@@ -71,7 +71,7 @@ class GameScreen:
         )
         #control information
         self.elements["controls"] = ui_text_box.UITextBox(
-            relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]*3.2)),
+            relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], 220)),
             html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
             manager=manager,
             container=uiscreen,
@@ -83,7 +83,7 @@ class GameScreen:
             },
             object_id="#controls"
         )
-        topmargin = 315
+        topmargin = 300
         # Round count
         self.elements["round_count"] = UILabel(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"])),
@@ -193,6 +193,19 @@ class GameScreen:
                 "bottom": "top",
             }
         )
+        # Void space
+        self.elements["void_button"] = UIButton(
+            relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*5.6), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
+            text="Void/Game Toggle",
+            manager=manager,
+            container=uiscreen,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            }
+        )
         self.elements["console"] = ui_text_box.UITextBox(
             relative_rect=pygame.Rect((0, 0), (DIM["CONSOLE_WIDTH"], DIM["SCREEN_HEIGHT"]-DIM["GAME_SCREEN_HEIGHT"])),
             html_text="",
@@ -217,8 +230,6 @@ class GameScreen:
             },
             object_id="#stats"
         )
-        self.log("Welcome to the visualiser!")
-        self.log(f"Max rounds: {self.maxRound}", "INFO")
         self.stats = {
             "Active Bikes" : 0,
             "Active Lootboxes" : 0,
