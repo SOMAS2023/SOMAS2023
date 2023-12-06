@@ -34,3 +34,11 @@ const (
 const (
 	ChangeBikeSocialCapitalThreshold = 0.5 // Threshold for deciding whether to change bike or not
 )
+
+// weights for each type of governance
+const (
+	democracyWeight = 0.6
+	leadershipWeight = 0.2
+	dictatorshipWeight = 0.2
+	invalidWeight = 0.0
+)
