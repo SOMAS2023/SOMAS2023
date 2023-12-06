@@ -39,8 +39,29 @@ func (a *AgentTwo) VoteDictator() voting.IdVoteMap {
 }
 
 func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
-	// TODO: All actions have equal weights. Weighting by AgentId based on social capital.
-	return a.BaseBiker.DecideWeights(action)
+	// All actions have equal weights. Weighting by AgentId based on social capital.
+	// We set the weight for an Agent to be equal to its Social Capital.
+	weights := make(map[uuid.UUID]float64)
+	agents := a.GetFellowBikers()
+	for _, agent := range agents {
+		// if agent Id is not in the a.Modules.SocialCapital.SocialCapital map, set the weight to 0.5 (neither trust or distrust)
+		if _, ok := a.Modules.SocialCapital.SocialCapital[agent.GetID()]; !ok {
+			// add agent to the map
+			a.Modules.SocialCapital.SocialCapital[agent.GetID()] = 0.5
+		}
+		weights[agent.GetID()] = a.Modules.SocialCapital.SocialCapital[agent.GetID()]
+	}
+	return weights
+}
+
+func (a *AgentTwo) DecideKickOut() []uuid.UUID {
+	// Only called when the agent is the dictator.
+	// We kick out the agent with the lowest social capital on the bike.
+	// GetBikerWithMinSocialCapital returns only one agent, if more agents with min SC, it randomly chooses one.
+	kickOut_agents := make([]uuid.UUID, 0)
+	agentId, _ := a.Modules.Environment.GetBikerWithMinSocialCapital(a.Modules.SocialCapital)
+	kickOut_agents = append(kickOut_agents, agentId)
+	return kickOut_agents
 }
 
 func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
