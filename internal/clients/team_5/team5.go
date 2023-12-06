@@ -6,6 +6,7 @@ import (
 	"SOMAS2023/internal/common/voting"
 	"fmt"
 
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -17,7 +18,8 @@ type team5Agent struct {
 	objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
-	state int // 0 = normal, 1 = conservative
+	state    int // 0 = normal, 1 = conservative
+	messLoot uuid.UUID
 }
 
 type ResourceAllocationMethod int
@@ -40,6 +42,7 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
+		messLoot:            uuid.Nil,
 	}
 }
 
@@ -136,4 +139,30 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 	}
 	return votes
 
+}
+
+func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
+	// For team's agent add your own logic on chosing when your biker should send messages
+	wantToSendMsg := true
+	if wantToSendMsg {
+
+		lootboxMsg := t5.CreateLootboxMessage()
+		fmt.Println("GetAllMessages: ", lootboxMsg.LootboxId)
+
+		return []messaging.IMessage[objects.IBaseBiker]{lootboxMsg}
+	}
+	return []messaging.IMessage[objects.IBaseBiker]{}
+}
+
+func (t5 *team5Agent) HandleLootboxMessage(msg objects.LootboxMessage) {
+	// Implement your logic here
+	lootBox := msg.LootboxId
+	t5.messLoot = lootBox
+}
+
+func (t5 *team5Agent) CreateLootboxMessage() objects.LootboxMessage {
+	return objects.LootboxMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
+		LootboxId:   t5.ProposeDirection(),
+	}
 }
