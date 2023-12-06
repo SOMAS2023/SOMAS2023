@@ -67,6 +67,7 @@ func (s *Server) ResetGameState() {
 func (s *Server) FoundingInstitutions() {
 	// Say which goverance method you might choose
 
+	s.UpdateGameStates()
 	// check which governance method is chosen for each biker
 	s.foundingChoices = make(map[uuid.UUID]utils.Governance)
 	for id, agent := range s.GetAgentMap() {
@@ -141,6 +142,8 @@ func (s *Server) FoundingInstitutions() {
 	// bikers comply with governance method on the bike they're on
 
 	// choose leader if required
+	s.UpdateGameStates()
+
 }
 
 func (s *Server) Start() {

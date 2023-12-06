@@ -87,13 +87,11 @@ func TestResetGameState(t *testing.T) {
 		s.AddAgent(mockBiker)
 		mockBikers[i] = mockBiker
 	}
-	gs := s.NewGameStateDump(0)
-	for _, agent := range s.GetAgentMap() {
-		agent.UpdateGameState(gs)
-	}
+
+	s.UpdateGameStates()
 	s.FoundingInstitutions()
 
-	
+	s.UpdateGameStates()
 
 	s.ResetGameState()
 
