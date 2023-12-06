@@ -42,9 +42,9 @@ const dictatorshipReputationThreshold = 0.7
 // Bike scoring constants
 
 const majorityWeight = 3.0
-const lootboxWeight = 0.5
-const lootboxColourWeight = 0.5
-const audiDistWeight = 0.5
+const lootboxWeight = 0.2
+const lootboxColourWeight = 0.6
+const audiDistWeight = 0.7
 const opinionWeight = 0.5
 const nearbyBikeWeight = 0.5
 
@@ -57,6 +57,11 @@ type Biker1 struct {
 	dislikeVote    bool                  // whether the agent disliked the most recent vote
 	opinions       map[uuid.UUID]Opinion
 	desiredBike    uuid.UUID
+	pursuedBikes   []uuid.UUID
+	timeInLimbo    int
+	prevOnBike     bool  
+	numberOfLeaves int
+	leavingRisk	   float64
 }
 
 
@@ -99,7 +104,13 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 	allBikes := gs.GetMegaBikes()
 	scoreMap := make(map[uuid.UUID]float64)
 	for _, bike := range allBikes {
-		if len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.GetBike() {
+		tried := false
+		for _, pursuedId := range bb.pursuedBikes {
+			if pursuedId == bike.GetID(){
+				tried = true
+			}
+		}
+		if (len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.GetBike()) && !tried{
 			scoreMap[bike.GetID()] = bb.ScoreBike(bike)
 		}
 	}
@@ -131,13 +142,22 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 		avg_opinion = 1.0
 	}
 	if (avg_opinion < leaveThreshold) || bb.dislikeVote {
-		bb.dislikeVote = false
-		newBike := bb.PickBestBike()
-		if newBike != bb.GetBike() {
-			return 1
+		// if we think we can survive
+		if bb.GetEnergyLevel() > bb.leavingRisk * -utils.LimboEnergyPenalty {
+			bb.dislikeVote = false
+			fmt.Printf("Agent %v is considering leaving bike %v\n", bb.GetID(), bb.GetBike())
+			newBike := bb.PickBestBike()
+			if newBike != bb.GetBike() {
+				fmt.Printf("Agent %v is leaving bike %v for bike %v\n", bb.GetID(), bb.GetBike(), newBike)
+				return 1
+			} else {
+				return 0
+			}
 		} else {
+			fmt.Printf("Agent %v is staying on bike %v despite low opinion\n", bb.GetID(), bb.GetBike())
 			return 0
 		}
+		
 	} else {
 		return 0
 	}
@@ -165,6 +185,21 @@ func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 
 // decide which bike to go to
 func (bb *Biker1) ChangeBike() uuid.UUID {
+	// if recently left bike
+	if bb.prevOnBike && bb.GetBikeStatus() {
+		bb.prevOnBike = false
+		bb.numberOfLeaves++
+
+		if bb.timeInLimbo != 0 {
+			bb.leavingRisk = (bb.leavingRisk*float64(bb.numberOfLeaves) + float64(bb.timeInLimbo)) / float64(bb.numberOfLeaves)
+			bb.timeInLimbo = 0
+		}
+		bb.pursuedBikes = make([]uuid.UUID, 0)
+	}
+	if !bb.prevOnBike {
+		bb.timeInLimbo++
+		bb.pursuedBikes = append(bb.pursuedBikes, bb.desiredBike)
+	}
 	return bb.desiredBike
 }
 
@@ -254,6 +289,9 @@ func GetBiker1(colour utils.Colour, id uuid.UUID) *Biker1 {
 		BaseBiker:   obj.GetBaseBiker(colour, id),
 		opinions:    make(map[uuid.UUID]Opinion),
 		dislikeVote: false,
+		pursuedBikes: make([]uuid.UUID, 0),
+		numberOfLeaves: 0,
+		leavingRisk: 0.0,
 	}
 }
 
