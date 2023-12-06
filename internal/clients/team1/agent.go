@@ -146,6 +146,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 	if bb.recentDecided != uuid.Nil && fellowBikers != nil {
 		bb.UpdateAllAgentsTrust(fellowBikers)
 		bb.UpdateAllAgentsOpinions(fellowBikers)
+		bb.UpdateAllAgentsRelativeSuccess(fellowBikers)
 
 		if bb.getPedalForce() > 0 && bb.GetEnergyLevel() < bb.prevEnergy[bb.GetID()] {
 			bb.UpdateAllAgentsEffort()
