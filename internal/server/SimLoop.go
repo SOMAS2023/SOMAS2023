@@ -123,6 +123,17 @@ func (s *Server) FoundingInstitutions() {
 		s.AddAgentToBike(agentInt)
 	}
 
+	s.UpdateGameStates()
+	// run election process for Leadership and Dictatorship bikes
+	for _, bike := range s.GetMegaBikes() {
+		gov := bike.GetGovernance()
+		agents := bike.GetAgents()
+		if (gov == utils.Leadership || gov == utils.Dictatorship) && len(agents) != 0 {
+			ruler := s.RulerElection(agents, gov)
+			bike.SetRuler(ruler)
+		}
+	}
+
 	// if there are more bikers for a governance method than there are seats, then evenly distribute them across megabikes
 
 	// set governance method for each bike so that it stays with the bike during the round
@@ -130,7 +141,6 @@ func (s *Server) FoundingInstitutions() {
 	// bikers comply with governance method on the bike they're on
 
 	// choose leader if required
-
 }
 
 func (s *Server) Start() {
