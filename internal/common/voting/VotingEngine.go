@@ -114,28 +114,28 @@ func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) 
 }
 
 // return the votesMap
-func GetVotesMap(voters map[uuid.UUID]IVoter) (map[uuid.UUID]map[uuid.UUID]float64, error) {
+func GetVotesMap(voters map[uuid.UUID]IVoter) map[uuid.UUID]map[uuid.UUID]float64 {
 	if len(voters) == 0 {
 		panic("no votes provided")
 	}
 	// Vote checks for each voter
 	VotesOfAgents := make(map[uuid.UUID]map[uuid.UUID]float64)
-	for agentID, IVoter := range voters {
-		if math.Abs(SumOfValues(IVoter)-1.0) > utils.Epsilon {
-			return nil, errors.New("distribution doesn't sum to 1")
+	for agentID, voter := range voters {
+		voteSum := SumOfValues(voter)
+		votes := voter.GetVotes()
+		for id := range votes {
+			votes[id] /= voteSum
 		}
-		votes := IVoter.GetVotes()
 		VotesOfAgents[agentID] = votes
 	}
 
-	return VotesOfAgents, nil
+	return VotesOfAgents
 }
 
 // returns the winner accoring to chosen voting strategy (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
 func WinnerFromDist(voters map[uuid.UUID]IVoter, voteWeight map[uuid.UUID]float64) uuid.UUID {
-	// TODO handle the error
-	VotesOfAgents, _ := GetVotesMap(voters)
+	VotesOfAgents := GetVotesMap(voters)
 	var winner uuid.UUID
 	switch utils.VoteAction {
 	case utils.PLURALITY:
