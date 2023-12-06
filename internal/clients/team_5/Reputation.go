@@ -3,12 +3,14 @@ package team5Agent
 import (
 	// Assuming this package contains the IMegaBike interface
 
+	"fmt"
 	"math"
 
 	"github.com/google/uuid"
 )
 
 func (t5 *team5Agent) InitialiseReputation() {
+	fmt.Println("HAHAHA: ", t5.GetReputation())
 	megaBikes := t5.GetGameState().GetMegaBikes()
 	for _, mb := range megaBikes {
 		// Iterate through all agents on each MegaBike
@@ -17,12 +19,15 @@ func (t5 *team5Agent) InitialiseReputation() {
 			t5.SetReputation(agent.GetID(), 0.5)
 		}
 	}
+	fmt.Println("HAHAHA22: ", t5.GetReputation())
+
 }
 
 // Most important 3 functions:
 
 // Reputation calculation currently just based on energy and force
 func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep float64) float64 {
+	//fmt.Println("DONT BE nan: ", currentRep)
 	averagePedalForce := t5.getAverageForceOfAgents()
 	averageEnergy := t5.getAverageEnergyOfAgents()
 
@@ -38,24 +43,53 @@ func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep f
 
 	weight := 0.2 //maximum change per round
 	newRep := currentRep + (combinedDeviation-1)*weight
-	return math.Min(math.Max(newRep, 0), 1) //capped at 0 and 1
+	rValue := math.Min(math.Max(newRep, 0), 1)
+	//fmt.Println("retun", rValue, newRep, currentRep, combinedDeviation, energyDeviation, forceDeviation, agentEnergy, agentPedalForce, averagePedalForce, averageEnergy, currentRep)
+	return rValue //capped at 0 and 1
 }
+
+// func (t5 *team5Agent) updateReputationOfAllAgents() {
+// 	// if all agents have a reputation of 0 then update all to have a reputation of 0.5
+
+// 	reputationMap := t5.GetReputation()
+
+// 	if len(reputationMap) == 0 {
+// 		t5.InitialiseReputation()
+// 	}  else{
+
+// 		for agentID, reputaion := range t5.GetReputation() {
+// 			newRep := t5.calculateReputationOfAgent(agentID, reputaion)
+// 			t5.SetReputation(agentID, newRep)
+// 			fmt.Println(newRep)
+// 		}
+
+// 	}
+
+// 	fmt.Println("hnonljknjk")
+// 	fmt.Println(t5.GetReputation())
+
+// }
 
 func (t5 *team5Agent) updateReputationOfAllAgents() {
 	// if all agents have a reputation of 0 then update all to have a reputation of 0.5
-	for _, reputation := range t5.GetReputation() {
-		if reputation != 0 {
-			break
-		}
-		for agentID := range t5.GetReputation() {
-			t5.SetReputation(agentID, 0.5)
+	reputationMap := t5.GetReputation()
+	fmt.Println("REPREP: ", reputationMap)
+	if len(reputationMap) == 0 {
+		fmt.Println("INITINIT")
+		t5.InitialiseReputation()
+	} else {
+		//fmt.Println("RepMap: ", reputationMap)
+		for agentID, reputation := range reputationMap {
+			//fmt.Println("Reputation: ", reputation)
+			newRep := t5.calculateReputationOfAgent(agentID, reputation)
+			t5.SetReputation(agentID, newRep)
+
+			fmt.Println("nonce:<", newRep)
 		}
 	}
 
-	for agentID, reputaion := range t5.GetReputation() {
-		newRep := t5.calculateReputationOfAgent(agentID, reputaion)
-		t5.SetReputation(agentID, newRep)
-	}
+	fmt.Println("hnonljknjk")
+	fmt.Println(t5.GetReputation())
 }
 
 //Useful helper functions:

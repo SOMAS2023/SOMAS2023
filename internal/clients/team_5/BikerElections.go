@@ -30,15 +30,17 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 
 		reputation := t5.QueryReputation(keyId)
 
-		pedallingForce := agentB.GetForces().Pedal
+		fmt.Println("Hi")
+		fmt.Println(reputation)
 
+		pedallingForce := agentB.GetForces().Pedal
 		utility := (a * pedallingForce) + (b * reputation) + (c * numberOfAgents)
 		utilityNorm := utility / 10.0
 
 		internalRanking[keyId] = utilityNorm
 
 		if utilityNorm > threshold {
-			fmt.Println(utilityNorm)
+			// fmt.Println(utilityNorm)
 			ranking[keyId] = 0
 
 		} else {

@@ -44,8 +44,8 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 }
 
 func (t5 *team5Agent) UpdateAgentInternalState() {
-	t5.updateReputationOfAllAgents()
 	t5.updateState()
+	t5.updateReputationOfAllAgents()
 }
 
 // needs fixing always democracy
