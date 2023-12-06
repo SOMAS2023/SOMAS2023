@@ -28,7 +28,7 @@ func (s *Server) GetJoiningRequests(inLimbo []uuid.UUID) map[uuid.UUID][]uuid.UU
 	for agentID, agent := range s.GetAgentMap() {
 		// don't process joining requests of agents in limbo
 		if !agent.GetBikeStatus() && !slices.Contains(inLimbo, agentID) {
-			bike := agent.GetBike()
+			bike := agent.ChangeBike()
 			if ids, ok := bikeRequests[bike]; ok {
 				bikeRequests[bike] = append(ids, agentID)
 			} else {

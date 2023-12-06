@@ -58,7 +58,7 @@ func createMockBikers(s server.IBaseBikerServer, count int) []*MockBiker {
 		bikeID := uuid.New()
 		mockBiker.BikeID = bikeID
 
-		s.AddAgentToBike(mockBiker)
+		s.AddAgentToBike(mockBiker, bikeID)
 
 		if i%2 != 0 {
 			s.RemoveAgent(mockBiker)

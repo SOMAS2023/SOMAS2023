@@ -133,8 +133,7 @@ func TestAddAgentToBike(t *testing.T) {
 	bike := s.GetRandomBikeId()
 	var changedAgent uuid.UUID
 	for agentID, agent := range s.GetAgentMap() {
-		agent.SetBike(bike)
-		s.AddAgentToBike(agent)
+		s.AddAgentToBike(agent, bike)
 		changedAgent = agentID
 		break
 	}

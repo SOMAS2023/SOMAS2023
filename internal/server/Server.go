@@ -32,7 +32,7 @@ type IBaseBikerServer interface {
 	ProcessJoiningRequests(inLimbo []uuid.UUID)
 	RunActionProcess()
 	AudiCollisionCheck()
-	AddAgentToBike(agent objects.IBaseBiker)
+	AddAgentToBike(agent objects.IBaseBiker, bikeID uuid.UUID)
 	FoundingInstitutions()
 	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
 	LootboxCheckAndDistributions()
@@ -70,40 +70,38 @@ func Initialize(iterations int) IBaseBikerServer {
 
 func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
 	id := agent.GetID()
+	// remove the agent from its bike
+	s.RemoveAgentFromBike(agent)
 	// add agent to dead agent map
 	s.deadAgents[id] = agent
 	// remove agent from agent map
 	s.BaseServer.RemoveAgent(agent)
-	if bikeId, ok := s.megaBikeRiders[id]; ok {
-		s.megaBikes[bikeId].RemoveAgent(id)
-		delete(s.megaBikeRiders, id)
-	}
 }
 
-func (s *Server) AddAgentToBike(agent objects.IBaseBiker) {
+func (s *Server) AddAgentToBike(agent objects.IBaseBiker, bikeID uuid.UUID) {
 	// Remove the agent from the old bike, if it was on one
-	if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
-		s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
-	}
+	s.RemoveAgentFromBike(agent)
 
-	// set agent on desired bike
-	bikeId := agent.GetBike()
-	s.megaBikes[bikeId].AddAgent(agent)
-	s.megaBikeRiders[agent.GetID()] = bikeId
+	// Set agent on desired bike
+	s.megaBikeRiders[agent.GetID()] = bikeID
+	s.megaBikes[bikeID].AddAgent(agent)
 	if !agent.GetBikeStatus() {
 		agent.ToggleOnBike()
 	}
+	agent.SetBike(bikeID)
 }
 
+// RemoveAgentFromBike removes the agent from the bike that it is on.
+// If it is not on a bike, it does nothing.
 func (s *Server) RemoveAgentFromBike(agent objects.IBaseBiker) {
-	bike := s.megaBikes[agent.GetBike()]
-	bike.RemoveAgent(agent.GetID())
-	agent.ToggleOnBike()
-	// get new destination for agent
-	agent.SetBike(agent.ChangeBike())
-
 	if _, ok := s.megaBikeRiders[agent.GetID()]; ok {
+		bike := s.megaBikes[s.megaBikeRiders[agent.GetID()]]
 		delete(s.megaBikeRiders, agent.GetID())
+
+		bike.RemoveAgent(agent.GetID())
+		if agent.GetBikeStatus() {
+			agent.ToggleOnBike()
+		}
 	}
 }
 

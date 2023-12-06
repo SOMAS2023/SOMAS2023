@@ -194,7 +194,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 			for i, pendingAgent := range pendingAgents {
 				if i <= utils.BikersOnBike {
 					acceptedAgent := s.GetAgentMap()[pendingAgent]
-					s.AddAgentToBike(acceptedAgent)
+					s.AddAgentToBike(acceptedAgent, bikeID)
 				} else {
 					break
 				}
@@ -258,7 +258,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 			for i := 0; i < min(emptySpaces, len(acceptedRanked)); i++ {
 				accepted := acceptedRanked[i]
 				acceptedAgent := s.GetAgentMap()[accepted]
-				s.AddAgentToBike(acceptedAgent)
+				s.AddAgentToBike(acceptedAgent, bikeID)
 			}
 		}
 	}
