@@ -16,14 +16,17 @@ import (
 type IBaselineAgent interface {
 	objects.IBaseBiker
 
-	//INCOMPLETE/NO STRATEGY FUNCTIONS
+	//INCOMPLETE FUNCTIONS
 	CalculateReputation() map[uuid.UUID]float64    //calculate reputation matrix
 	CalculateHonestyMatrix() map[uuid.UUID]float64 //calculate honesty matrix
 
 	DecideAction() objects.BikerAction //determines what action the agent is going to take this round. (changeBike or Pedal)
-	DecideForce(direction uuid.UUID)   //defines the vector you pass to the bike: [pedal, brake, turning]
 	ChangeBike() uuid.UUID             //called when biker wants to change bike, it will choose which bike to try and join
 	VoteForKickout() map[uuid.UUID]int
+	// dictator functions
+	DictateDirection() uuid.UUID                //called only when the agent is the dictator
+	DecideKickOut() []uuid.UUID                 //decide which agents to kick out (dictator)
+	DecideDictatorAllocation() voting.IdVoteMap //decide the allocation (dictator)
 
 	//CURRENTLY UNUSED/NOT CONSIDERED FUNCTIONS
 	DecideGovernance() utils.Governance //decide the governance system
@@ -33,11 +36,11 @@ type IBaselineAgent interface {
 
 	//IMPLEMENTED FUNCTIONS
 	ProposeDirection() uuid.UUID                                                //returns the id of the desired lootbox
-	FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap // ** stage 3 of direction voting
+	FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap //stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                                         //decide the allocation parameters
 	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool                  //decide whether to accept or not accept bikers, ranks the ones
 	nearestLoot() uuid.UUID                                                     //returns the id of the nearest lootbox
-	DictateDirection() uuid.UUID                                                //called only when the agent is the dictator
+	DecideForce(direction uuid.UUID)                                            //defines the vector you pass to the bike: [pedal, brake, turning]
 
 	//HELPER FUNCTIONS
 	UpdateDecisionData()           //updates all the data needed for the decision making process(call at the start of any decision making function)
@@ -57,6 +60,7 @@ type IBaselineAgent interface {
 	DisplayFellowsHonesty()
 	DisplayFellowsReputation()
 }
+
 type BaselineAgent struct {
 	objects.BaseBiker
 	currentBike       *objects.MegaBike
@@ -404,15 +408,18 @@ func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 	lootBoxes := agent.GetGameState().GetLootBoxes()
 	agentLocation := agent.GetLocation() //agent's location
 	shortestDistance := math.MaxFloat64
-
+	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	distanceThreshold := 20.0
 	for _, lootbox := range lootBoxes {
 		lootboxLocation := lootbox.GetPosition()
 		distance := physics.ComputeDistance(agentLocation, lootboxLocation)
-		if agent.proposedLootBox == nil && distance < shortestDistance {
+		lootDistanceFromAudi := physics.ComputeDistance(audiPos, lootboxLocation)
+
+		if agent.proposedLootBox == nil && distance < shortestDistance && lootDistanceFromAudi > distanceThreshold {
 			shortestDistance = distance
 			agent.proposedLootBox = lootbox
 		}
-		if distance < shortestDistance || agent.GetColour() == lootbox.GetColour() {
+		if (distance < shortestDistance || agent.GetColour() == lootbox.GetColour()) && lootDistanceFromAudi > distanceThreshold {
 			shortestDistance = distance
 			agent.proposedLootBox = lootbox
 		}
@@ -421,9 +428,61 @@ func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 }
 
 // DecideAction only pedal
-func (agent *BaselineAgent) DecideAction() objects.BikerAction {
-	// fmt.Println("Team 4")
-	return objects.Pedal
+func (agent *BaselineAgent) DecideForce(direction uuid.UUID) {
+
+	currLocation := agent.GetLocation()
+	nearestLoot := agent.nearestLoot()
+	currentLootBoxes := agent.GetGameState().GetLootBoxes()
+	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	distanceFromAudi := physics.ComputeDistance(currLocation, audiPos)
+	distanceThreshold := 20.0
+	pedalForce := 1.0
+
+	if distanceFromAudi < distanceThreshold {
+		deltaX := audiPos.X - currLocation.X
+		deltaY := audiPos.Y - currLocation.Y
+		// Steer in opposite direction to audi
+		angle := math.Atan2(deltaY, deltaX)
+		normalisedAngle := angle / math.Pi
+		// Steer in opposite direction to audi
+		var flipAngle float64
+		if normalisedAngle < 0.0 {
+			flipAngle = normalisedAngle + 1.0
+		} else if normalisedAngle > 0.0 {
+			flipAngle = normalisedAngle - 1.0
+		}
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: flipAngle - agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetOrientation(),
+		}
+		escapeAudiForces := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		agent.SetForces(escapeAudiForces)
+	} else {
+		targetPos := currentLootBoxes[nearestLoot].GetPosition()
+		deltaX := targetPos.X - currLocation.X
+		deltaY := targetPos.Y - currLocation.Y
+		angle := math.Atan2(deltaY, deltaX)
+		normalisedAngle := angle / math.Pi
+
+		// Default BaseBiker will always
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: normalisedAngle - agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetOrientation(),
+		}
+		if agent.GetEnergyLevel() <= 0.5 {
+			pedalForce = pedalForce * agent.GetEnergyLevel()
+		}
+		nearestBoxForces := utils.Forces{
+			Pedal:   pedalForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		agent.SetForces(nearestBoxForces)
+	}
 }
 
 // DecideForces randomly based on current energyLevel
@@ -535,14 +594,14 @@ func (agent *BaselineAgent) VoteDictator() voting.IdVoteMap {
 }
 func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	voteResults := make(map[uuid.UUID]int)
-	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
-	fellowBikers := currentBike.GetAgents()
+	bikeID := agent.GetBike()
 
-	for _, agent := range fellowBikers {
-		agentID := agent.GetID()
-		if agentID != agent.GetID() {
+	fellowBikers := agent.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	for _, fellow := range fellowBikers {
+		fellowID := fellow.GetID()
+		if fellowID != agent.GetID() {
 			// random votes to other agents
-			voteResults[agentID] = 0 // randomly assigns 0 or 1 vote
+			voteResults[fellowID] = 0 // randomly assigns 0 or 1 vote
 		}
 	}
 
