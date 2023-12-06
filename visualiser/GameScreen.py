@@ -8,7 +8,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED, ITERATIONLENGTH
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
@@ -71,8 +71,8 @@ class GameScreen:
         )
         #control information
         self.elements["controls"] = ui_text_box.UITextBox(
-            relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]*3.5)),
-            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
+            relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]*3.2)),
+            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
             manager=manager,
             container=uiscreen,
             anchors={
@@ -83,7 +83,7 @@ class GameScreen:
             },
             object_id="#controls"
         )
-        topmargin = 325
+        topmargin = 315
         # Round count
         self.elements["round_count"] = UILabel(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"])),
@@ -101,7 +101,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*2), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]//2)),
             start_value=0,
             value_range=(0, self.maxRound),
-            click_increment=self.maxRound//10,
+            click_increment=ITERATIONLENGTH,
             manager=manager,
             container=uiscreen,
             anchors={
@@ -126,8 +126,21 @@ class GameScreen:
                 "bottom": "top",
             }
         )
+        # Iteration count
+        self.elements["iteration_count"] = UILabel(
+            relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*2.5), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]/2)),
+            text="Iteration: 0",
+            manager=manager,
+            container=uiscreen,
+            anchors={
+                "left": "left",
+                "right": "left",
+                "top": "top",
+                "bottom": "top",
+            }
+        )
         self.elements["decrease_round"] = UIButton(
-            relative_rect=pygame.Rect((x, topmargin+2.5*DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
+            relative_rect=pygame.Rect((x, topmargin+3*DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
             text="Decrease Round",
             manager=manager,
             container=uiscreen,
@@ -138,6 +151,7 @@ class GameScreen:
                 "bottom": "top",
             }
         )
+        topmargin += 15
         # play pause button
         self.elements["play_pause"] = UIButton(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*4), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
@@ -168,7 +182,7 @@ class GameScreen:
         self.elements["play_pause_speed_slider"] = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*5), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
             start_value=1,
-            value_range=(1, 10),
+            value_range=(1, MAXSPEED),
             click_increment=1,
             manager=manager,
             container=uiscreen,
@@ -323,7 +337,7 @@ class GameScreen:
         """
         Change the speed of the game
         """
-        self.playSpeed = min(10, max(1, newSpeed))
+        self.playSpeed = min(MAXSPEED, max(1, newSpeed))
         self.elements["play_pause_speed_slider"].set_current_value(self.playSpeed)
         self.elements["play_pause_speed"].set_text(f"{self.playSpeed} Round/Sec")
         if self.isPlaying:
@@ -336,6 +350,7 @@ class GameScreen:
         """
         self.round = max(0, min(self.maxRound, newRound))
         self.elements["round_count"].set_text(f"Round: {self.round}")
+        self.elements["iteration_count"].set_text(f"Iteration: {self.round // ITERATIONLENGTH}")
         self.elements["console"].html_text = ""
         self.elements["console"].rebuild()
         #Reload bikes

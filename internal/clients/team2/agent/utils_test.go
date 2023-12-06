@@ -19,7 +19,7 @@ func TestRuleAdherenceValue_SameDirection(t *testing.T) {
 	actualAction := utils.Forces{Pedal: 0.2, Turning: turningDecision}
 
 	// Create an instance of AgentTwo
-	agent := NewBaseTeam2Biker(agentID)
+	agent := NewBaseTeam2Biker(agentID, utils.GenerateRandomColour())
 
 	// Call the function
 	result := agent.Modules.Utils.RuleAdherenceValue(agentID, expectedAction, actualAction)
@@ -46,7 +46,7 @@ func TestRuleAdherenceValue_OppositeDirection(t *testing.T) {
 	actualAction := utils.Forces{Pedal: 0.2, Turning: ActualTurningDecision}
 
 	// Create an instance of AgentTwo
-	agent := NewBaseTeam2Biker(agentID)
+	agent := NewBaseTeam2Biker(agentID, utils.GenerateRandomColour())
 
 	// Call the function
 	result := agent.Modules.Utils.RuleAdherenceValue(agentID, expectedAction, actualAction)
@@ -73,7 +73,7 @@ func TestRuleAdherenceValue_OrthogonalDirection(t *testing.T) {
 	actualAction := utils.Forces{Pedal: 0.2, Turning: ActualTurningDecision}
 
 	// Create an instance of AgentTwo
-	agent := NewBaseTeam2Biker(agentID)
+	agent := NewBaseTeam2Biker(agentID, utils.GenerateRandomColour())
 
 	// Call the function
 	result := agent.Modules.Utils.RuleAdherenceValue(agentID, expectedAction, actualAction)

@@ -1,18 +1,67 @@
 package agent
 
 import (
+	// "SOMAS2023/internal/clients/team2/agent"
 	"SOMAS2023/internal/clients/team2/modules"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"maps"
 	"math/rand"
 
 	"github.com/google/uuid"
 )
 
+// We vote for ourselves and the agent with the highest social capital.
+func (a *AgentTwo) VoteDictator() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	agentId, _ := a.Modules.Environment.GetBikerWithMaxSocialCapital(a.Modules.SocialCapital)
+	if len(a.GetFellowBikers()) > 1 && agentId != a.GetID() {
+		fellowBikers := a.GetFellowBikers()
+		for _, fellowBiker := range fellowBikers {
+			if fellowBiker.GetID() == agentId || fellowBiker.GetID() == a.GetID() {
+				votes[fellowBiker.GetID()] = 0.5
+			} else {
+				votes[fellowBiker.GetID()] = 0.0
+			}
+		}
+	} else {
+		fellowBikers := a.GetFellowBikers()
+		for _, fellowBiker := range fellowBikers {
+			if fellowBiker.GetID() == a.GetID() {
+				votes[fellowBiker.GetID()] = 1.0
+			} else {
+				votes[fellowBiker.GetID()] = 0.0
+			}
+		}
+	}
+	return votes
+}
+
 func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
-	// TODO: All actions have equal weights. Weighting by AgentId based on social capital.
-	return a.BaseBiker.DecideWeights(action)
+	// All actions have equal weights. Weighting by AgentId based on social capital.
+	// We set the weight for an Agent to be equal to its Social Capital.
+	weights := make(map[uuid.UUID]float64)
+	agents := a.GetFellowBikers()
+	for _, agent := range agents {
+		// if agent Id is not in the a.Modules.SocialCapital.SocialCapital map, set the weight to 0.5 (neither trust or distrust)
+		if _, ok := a.Modules.SocialCapital.SocialCapital[agent.GetID()]; !ok {
+			// add agent to the map
+			a.Modules.SocialCapital.SocialCapital[agent.GetID()] = 0.5
+		}
+		weights[agent.GetID()] = a.Modules.SocialCapital.SocialCapital[agent.GetID()]
+	}
+	return weights
+}
+
+func (a *AgentTwo) DecideKickOut() []uuid.UUID {
+	// Only called when the agent is the dictator.
+	// We kick out the agent with the lowest social capital on the bike.
+	// GetBikerWithMinSocialCapital returns only one agent, if more agents with min SC, it randomly chooses one.
+	kickOut_agents := make([]uuid.UUID, 0)
+	agentId, _ := a.Modules.Environment.GetBikerWithMinSocialCapital(a.Modules.SocialCapital)
+	kickOut_agents = append(kickOut_agents, agentId)
+	return kickOut_agents
 }
 
 func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
@@ -38,20 +87,74 @@ func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
 }
 
 func (a *AgentTwo) DecideGovernance() utils.Governance {
-	// TODO: All possibilities except dictatorship.
-	return a.BaseBiker.DecideGovernance()
+	// All possibilities except dictatorship.
+	// Need to decide weights for each type of Governance
+	// Can add an invalid weighting so that it is not 50/50
+
+	randomNumber := rand.Float64()
+	if randomNumber < democracyWeight {
+		return utils.Democracy
+	} else {
+		return utils.Leadership
+	}
 }
 
 func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
-	// TODO: We simply pass in Social Capital values in the map.
-	// If a value does not exist in the map, we set it as the average social capital.
-	// We give ourselves the highest social capital which is 1.
-	return a.BaseBiker.DecideAllocation()
+	socialCapital := maps.Clone(a.Modules.SocialCapital.SocialCapital)
+	// Iterate through agents in social capital
+	for id := range socialCapital {
+		// Iterate through fellow bikers
+		for _, biker := range a.GetFellowBikers() {
+			// If this agent is a fellow biker, move on
+			if biker.GetID() == id {
+				continue
+			}
+		}
+		// This agent is not a fellow biker - remove it from SC
+		delete(socialCapital, id)
+	}
+	// We give ourselves 1.0
+	socialCapital[a.GetID()] = 1.0
+	return socialCapital
+}
+
+func (a *AgentTwo) DecideDictatorAllocation() voting.IdVoteMap {
+	socialCapital := a.DecideAllocation()
+
+	// Calculate the total social capital
+	totalSocialCapital := 0.0
+	for _, sc := range socialCapital {
+		totalSocialCapital += sc
+	}
+
+	// Distribute the allocation based on each agent's share of the total social capital
+	result := make(voting.IdVoteMap)
+	for agentID, sc := range socialCapital {
+		result[agentID] = sc / totalSocialCapital
+	}
+	return result
 }
 
 func (a *AgentTwo) VoteForKickout() map[uuid.UUID]int {
-	// TODO: Vote for the agents with a Social Capital lower than a threshold.
-	return a.BaseBiker.VoteForKickout()
+	VoteMap := make(map[uuid.UUID]int)
+	kickoutThreshold := ChangeBikeSocialCapitalThreshold
+	agentTwoID := a.GetID()
+
+	// check all bikers on the bike but ignore ourselves
+	for _, agent := range a.GetFellowBikers() {
+		if agent.GetID() != agentTwoID {
+			_, exists := a.Modules.SocialCapital.SocialCapital[agent.GetID()]
+
+			if a.Modules.SocialCapital.SocialCapital[agent.GetID()] < kickoutThreshold && exists {
+				VoteMap[agent.GetID()] = 1
+			} else {
+				VoteMap[agent.GetID()] = 0
+			}
+
+		}
+	}
+
+	return VoteMap
 }
 
 func (a *AgentTwo) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
@@ -78,16 +181,36 @@ func (a *AgentTwo) ProposeDirection() uuid.UUID {
 	agentID, agentColour, agentEnergy := a.GetID(), a.GetColour(), a.GetEnergyLevel()
 	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
 	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
-	if agentEnergy < modules.EnergyToOptimalLootboxThreshold {
+	if agentEnergy < modules.EnergyToOptimalLootboxThreshold || optimalLootbox == uuid.Nil {
 		return nearestLootbox
 	}
 	return optimalLootbox
 }
 
 func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
-	// TODO: If Social Capital of agent who proposed a lootbox is higher than a threshold, vote for it. Weight based on SC.
-	// Otherwise, set a weight of 0.
-	return a.BaseBiker.FinalDirectionVote(proposals)
+	votes := make(voting.LootboxVoteMap)
+
+	// Assume we set our own social capital to 1.0, thus need to account for it
+	weight := 1.0 / (a.Modules.SocialCapital.GetSum(a.Modules.SocialCapital.SocialCapital) + 1)
+
+	for proposerID, proposal := range proposals {
+		scWeight := 0.0
+		if proposerID == a.GetID() {
+			// If the proposal is our own, we vote for it with full weight
+			scWeight = weight
+		} else {
+			scWeight = weight * a.Modules.SocialCapital.SocialCapital[proposerID]
+		}
+
+		// Check if the proposal already exists in votes, if not add it with the calculated weight
+		if _, ok := votes[proposal]; !ok {
+			votes[proposal] = scWeight
+		} else {
+			// If the proposal is already there, update it
+			votes[proposal] += scWeight
+		}
+	}
+	return votes
 }
 
 func (a *AgentTwo) ChangeBike() uuid.UUID {
@@ -103,7 +226,7 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 func (a *AgentTwo) DecideAction() objects.BikerAction {
 	avgSocialCapital := a.Modules.SocialCapital.GetAverage(a.Modules.SocialCapital.SocialCapital)
 
-	if avgSocialCapital > ChangeBikeSocialCapitalThreshold {
+	if avgSocialCapital >= ChangeBikeSocialCapitalThreshold {
 		// Pedal if members of the bike have high social capital.
 		return objects.Pedal
 	} else {
@@ -113,6 +236,12 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 }
 
 func (a *AgentTwo) DecideForce(direction uuid.UUID) {
+	if direction == uuid.Nil {
+		lootboxId := a.Modules.Environment.GetHighestGainLootbox()
+		lootboxPos := a.Modules.Environment.GetLootboxPos(lootboxId)
+		a.SetForces(a.Modules.Utils.GetForcesToTarget(a.GetLocation(), lootboxPos))
+		return
+	}
 
 	a.Modules.VotedDirection = direction
 

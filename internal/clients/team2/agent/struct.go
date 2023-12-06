@@ -25,9 +25,8 @@ type AgentTwo struct {
 	Modules            AgentModules
 }
 
-func NewBaseTeam2Biker(agentId uuid.UUID) *AgentTwo {
-	color := utils.GenerateRandomColour()
-	baseBiker := objects.GetBaseBiker(color, agentId)
+func NewBaseTeam2Biker(agentId uuid.UUID, colour utils.Colour) *AgentTwo {
+	baseBiker := objects.GetBaseBiker(colour, agentId)
 
 	return &AgentTwo{
 		BaseBiker: baseBiker,

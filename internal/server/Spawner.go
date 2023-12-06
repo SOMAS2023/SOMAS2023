@@ -10,13 +10,15 @@ import (
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator, BikerAgentCount),
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator(objects.GetIBaseBiker), BikerAgentCount),
+		//baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator(team2.GetBiker), BikerAgentCount),
 	}
 }
 
-func BikerAgentGenerator() objects.IBaseBiker {
-	return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
-	// return team2.NewBaseTeam2Biker(uuid.New())
+func BikerAgentGenerator(initFunc func(colour utils.Colour, bikeId uuid.UUID) objects.IBaseBiker) func() objects.IBaseBiker {
+	return func() objects.IBaseBiker {
+		return initFunc(utils.GenerateRandomColour(), uuid.New())
+	}
 }
 
 func (s *Server) spawnLootBox() {
