@@ -16,9 +16,25 @@ func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 }
 
 func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
-	// TODO: We vote for ourselves and highest SC agent.
-	// Equal weights for both.
-	return a.BaseBiker.VoteLeader()
+	// We vote 0.5 for ourselves if the agent with the highest SC Agent(that we've met so far) on our bike. If we're alone on a bike, we vote 1 for ourselves.
+	votes := make(voting.IdVoteMap)
+	fellowBikers := a.GetFellowBikers()
+	if len(a.GetFellowBikers()) > 0 {
+		agentId, _ := a.Modules.Environment.GetBikerWithMaxSocialCapital(a.Modules.SocialCapital)
+		for _, fellowBiker := range fellowBikers {
+			if fellowBiker.GetID() == agentId {
+				votes[fellowBiker.GetID()] = 0.5
+			} else if fellowBiker.GetID() == a.GetID() {
+				votes[a.GetID()] = 0.5
+			} else {
+				votes[fellowBiker.GetID()] = 0.0
+			}
+		}
+	} else {
+		votes[a.GetID()] = 1.0
+	}
+
+	return votes
 }
 
 func (a *AgentTwo) DecideGovernance() utils.Governance {
@@ -39,9 +55,23 @@ func (a *AgentTwo) VoteForKickout() map[uuid.UUID]int {
 }
 
 func (a *AgentTwo) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
-	// TODO: Accept all agents we don't know about or are higher in social capital.
+	// Accept all agents we don't know about or are higher in social capital.
 	// If we know about them and they have a lower social capital, reject them.
-	return a.BaseBiker.DecideJoining(pendingAgents)
+
+	decision := make(map[uuid.UUID]bool)
+	for _, agent := range pendingAgents {
+		// If we know about them and they have a higher social capital than threshold, accept them.
+		if _, ok := a.Modules.SocialCapital.SocialCapital[agent]; ok {
+			if a.Modules.SocialCapital.SocialCapital[agent] > modules.AcceptThreshold {
+				decision[agent] = true
+			} else {
+				decision[agent] = false
+			}
+		} else {
+			decision[agent] = true
+		}
+	}
+	return decision
 }
 
 func (a *AgentTwo) ProposeDirection() uuid.UUID {
