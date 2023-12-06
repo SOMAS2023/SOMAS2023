@@ -5,7 +5,6 @@ import (
 	physics "SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 	"math"
-
 	"github.com/google/uuid"
 )
 
@@ -39,9 +38,40 @@ func (bb *Biker1) GetAverageOpinionOfAgent(biker uuid.UUID) float64 {
 	return opinionSum / float64(len(fellowBikers))
 }
 
+func (bb *Biker1) GetAverageOpinionOfBike(megabike obj.IMegaBike) float64 {
+	bikers := megabike.GetAgents()
+	totalBikers := len(bikers)
+	if totalBikers == 0 {
+		return 0.5
+	}
+	sumOpinions := 0.0
+	for _, biker := range bikers {
+		if biker.GetID() == bb.GetID() {
+			continue
+		}
+		op, ok := bb.opinions[biker.GetID()]
+		if ok {
+			sumOpinions += op.opinion
+		}else{
+			newOpinion := Opinion{
+				effort:   0.5,
+				trust:    0.5,
+				fairness: 0.5,
+				opinion:  0.5,
+			}
+			bb.opinions[biker.GetID()] = newOpinion
+			sumOpinions += 0.5
+		}
+	}
+
+	return sumOpinions / float64(totalBikers)
+}
+
 // -------------------END OF SETTERS AND GETTERS----------------------
 
-// -------------------END OF CHANGE BIKE FUNCTIONS----------------------
+func (bb *Biker1) DistanceFromAudi(obj.IMegaBike) float64 {
+	return physics.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+}
 
 // Find an agent from their id
 func (bb *Biker1) GetAgentFromId(agentId uuid.UUID) obj.IBaseBiker {
@@ -67,7 +97,6 @@ func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
 	return agents
 }
 
-// -------------------END OF CHANGE BIKE FUNCTIONS----------------------
 
 // -------------------SELFISHNESS FUNCTIONS----------------------
 

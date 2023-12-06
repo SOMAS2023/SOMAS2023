@@ -152,7 +152,6 @@ func (bb *Biker1) UpdateOpinions() {
 }
 
 func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
-	//Sorry no youre right, keep it, silly me
 	bb.setOpinion()
 	_, ok := bb.opinions[id]
 	if !ok {
@@ -192,5 +191,6 @@ func (bb *Biker1) ourReputation() float64 {
 	reputation = reputation / float64(len(founding_agents))
 	return reputation
 }
+
 
 // ----------------END OF OPINION FUNCTIONS--------------
