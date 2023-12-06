@@ -102,6 +102,32 @@ func (e *EnvironmentModule) GetHighestGainLootbox() uuid.UUID {
 	return bestLoot
 }
 
+func (e *EnvironmentModule) GetNearestLootboxAwayFromAudi() uuid.UUID {
+	// Find positions.
+	bikePos := e.GetBikeById(e.BikeId).GetPosition()
+	audiPos := e.GetAudi().GetPosition()
+
+	// Find position away from audi.
+	deltaX := audiPos.X - bikePos.X
+	deltaY := audiPos.Y - bikePos.Y
+
+	awayX := bikePos.X - deltaX
+	awayY := bikePos.Y - deltaY
+	awayPos := utils.Coordinates{X: awayX, Y: awayY}
+
+	// Find nearest lootbox away from audi.
+	minLoot := uuid.Nil
+	minDist := math.MaxFloat64
+	for id, lootbox := range e.GetLootBoxes() {
+		dist := e.GetDistance(awayPos, lootbox.GetPosition())
+		if dist < minDist {
+			minDist = dist
+			minLoot = id
+		}
+	}
+	return minLoot
+}
+
 ///
 /// Bikes
 ///
@@ -124,6 +150,36 @@ func (e *EnvironmentModule) GetBike() objects.IMegaBike {
 
 func (e *EnvironmentModule) GetBikeOrientation() float64 {
 	return e.GetBikeById(e.BikeId).GetOrientation()
+}
+
+func (e *EnvironmentModule) GetBikerWithMaxSocialCapital(sc *SocialCapital) (uuid.UUID, float64) {
+	fellowBikers := e.GetBikerAgents()
+	maxSCAgentId := uuid.Nil
+	maxSC := 0.0
+	for _, fellowBiker := range fellowBikers {
+		if sc, ok := sc.SocialCapital[e.AgentId]; ok {
+			if sc >= maxSC {
+				maxSCAgentId = fellowBiker.GetID()
+				maxSC = sc
+			}
+		}
+	}
+	return maxSCAgentId, maxSC
+}
+
+func (e *EnvironmentModule) GetBikerWithMinSocialCapital(sc *SocialCapital) (uuid.UUID, float64) {
+	fellowBikers := e.GetBikerAgents()
+	minSCAgentId := uuid.Nil
+	minSC := math.MaxFloat64
+	for _, fellowBiker := range fellowBikers {
+		if sc, ok := sc.SocialCapital[e.AgentId]; ok {
+			if sc < minSC {
+				minSCAgentId = fellowBiker.GetID()
+				minSC = sc
+			}
+		}
+	}
+	return minSCAgentId, minSC
 }
 
 func (e *EnvironmentModule) GetBikeWithMaximumSocialCapital(sc *SocialCapital) uuid.UUID {

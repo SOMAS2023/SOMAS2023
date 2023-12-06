@@ -5,10 +5,37 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"maps"
 	"math/rand"
 
 	"github.com/google/uuid"
 )
+
+// We vote for ourselves and the agent with the highest social capital.
+func (a *AgentTwo) VoteDictator() voting.IdVoteMap {
+	votes := make(voting.IdVoteMap)
+	agentId, _ := a.Modules.Environment.GetBikerWithMaxSocialCapital(a.Modules.SocialCapital)
+	if len(a.GetFellowBikers()) > 1 && agentId != a.GetID() {
+		fellowBikers := a.GetFellowBikers()
+		for _, fellowBiker := range fellowBikers {
+			if fellowBiker.GetID() == agentId || fellowBiker.GetID() == a.GetID() {
+				votes[fellowBiker.GetID()] = 0.5
+			} else {
+				votes[fellowBiker.GetID()] = 0.0
+			}
+		}
+	} else {
+		fellowBikers := a.GetFellowBikers()
+		for _, fellowBiker := range fellowBikers {
+			if fellowBiker.GetID() == a.GetID() {
+				votes[fellowBiker.GetID()] = 1.0
+			} else {
+				votes[fellowBiker.GetID()] = 0.0
+			}
+		}
+	}
+	return votes
+}
 
 func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	// TODO: All actions have equal weights. Weighting by AgentId based on social capital.
@@ -16,9 +43,25 @@ func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 }
 
 func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
-	// TODO: We vote for ourselves and highest SC agent.
-	// Equal weights for both.
-	return a.BaseBiker.VoteLeader()
+	// We vote 0.5 for ourselves if the agent with the highest SC Agent(that we've met so far) on our bike. If we're alone on a bike, we vote 1 for ourselves.
+	votes := make(voting.IdVoteMap)
+	fellowBikers := a.GetFellowBikers()
+	if len(a.GetFellowBikers()) > 0 {
+		agentId, _ := a.Modules.Environment.GetBikerWithMaxSocialCapital(a.Modules.SocialCapital)
+		for _, fellowBiker := range fellowBikers {
+			if fellowBiker.GetID() == agentId {
+				votes[fellowBiker.GetID()] = 0.5
+			} else if fellowBiker.GetID() == a.GetID() {
+				votes[a.GetID()] = 0.5
+			} else {
+				votes[fellowBiker.GetID()] = 0.0
+			}
+		}
+	} else {
+		votes[a.GetID()] = 1.0
+	}
+
+	return votes
 }
 
 func (a *AgentTwo) DecideGovernance() utils.Governance {
@@ -27,10 +70,39 @@ func (a *AgentTwo) DecideGovernance() utils.Governance {
 }
 
 func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
-	// TODO: We simply pass in Social Capital values in the map.
-	// If a value does not exist in the map, we set it as the average social capital.
-	// We give ourselves the highest social capital which is 1.
-	return a.BaseBiker.DecideAllocation()
+	socialCapital := maps.Clone(a.Modules.SocialCapital.SocialCapital)
+	// Iterate through agents in social capital
+	for id := range socialCapital {
+		// Iterate through fellow bikers
+		for _, biker := range a.GetFellowBikers() {
+			// If this agent is a fellow biker, move on
+			if biker.GetID() == id {
+				continue
+			}
+		}
+		// This agent is not a fellow biker - remove it from SC
+		delete(socialCapital, id)
+	}
+	// We give ourselves 1.0
+	socialCapital[a.GetID()] = 1.0
+	return socialCapital
+}
+
+func (a *AgentTwo) DecideDictatorAllocation() voting.IdVoteMap {
+	socialCapital := a.DecideAllocation()
+
+	// Calculate the total social capital
+	totalSocialCapital := 0.0
+	for _, sc := range socialCapital {
+		totalSocialCapital += sc
+	}
+
+	// Distribute the allocation based on each agent's share of the total social capital
+	result := make(voting.IdVoteMap)
+	for agentID, sc := range socialCapital {
+		result[agentID] = sc / totalSocialCapital
+	}
+	return result
 }
 
 func (a *AgentTwo) VoteForKickout() map[uuid.UUID]int {
@@ -39,14 +111,33 @@ func (a *AgentTwo) VoteForKickout() map[uuid.UUID]int {
 }
 
 func (a *AgentTwo) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
-	// TODO: Accept all agents we don't know about or are higher in social capital.
+	// Accept all agents we don't know about or are higher in social capital.
 	// If we know about them and they have a lower social capital, reject them.
-	return a.BaseBiker.DecideJoining(pendingAgents)
+
+	decision := make(map[uuid.UUID]bool)
+	for _, agent := range pendingAgents {
+		// If we know about them and they have a higher social capital than threshold, accept them.
+		if _, ok := a.Modules.SocialCapital.SocialCapital[agent]; ok {
+			if a.Modules.SocialCapital.SocialCapital[agent] > modules.AcceptThreshold {
+				decision[agent] = true
+			} else {
+				decision[agent] = false
+			}
+		} else {
+			decision[agent] = true
+		}
+	}
+	return decision
 }
 
 func (a *AgentTwo) ProposeDirection() uuid.UUID {
-	// TODO: Propose direction of lootbox with highest gain of our color.
-	return a.BaseBiker.ProposeDirection()
+	agentID, agentColour, agentEnergy := a.GetID(), a.GetColour(), a.GetEnergyLevel()
+	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
+	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
+	if agentEnergy < modules.EnergyToOptimalLootboxThreshold {
+		return nearestLootbox
+	}
+	return optimalLootbox
 }
 
 func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
@@ -61,7 +152,7 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 	if isChangeBike {
 		return bikeId
 	} else {
-		return uuid.Nil
+		return a.Modules.Environment.BikeId
 	}
 }
 
@@ -101,7 +192,21 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	a.SetForces(force)
 }
 
+func (a *AgentTwo) DictateDirection() uuid.UUID {
+	// Move in opposite direction to Audi in full force
+	if a.Modules.Environment.IsAudiNear() {
+		return a.Modules.Environment.GetNearestLootboxAwayFromAudi()
+	}
+	// Otherwise, move towards the lootbox with the highest gain
+	return a.Modules.Environment.GetHighestGainLootbox()
+}
+
 func (a *AgentTwo) UpdateGameState(gameState objects.IGameState) {
 	a.BaseBiker.UpdateGameState(gameState)
 	a.Modules.Environment.SetGameState(gameState)
+}
+
+func (a *AgentTwo) SetBike(bikeId uuid.UUID) {
+	a.Modules.Environment.BikeId = bikeId
+	a.BaseBiker.SetBike(bikeId)
 }
