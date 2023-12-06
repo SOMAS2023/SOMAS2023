@@ -557,7 +557,7 @@ func (agent *BaselineAgent) nearestLoot() uuid.UUID {
 
 func (agent *BaselineAgent) DictateDirection() uuid.UUID {
 	agent.proposedLootBox = nil
-	if agent.GetEnergyLevel() <= 30 { //prioritize survival, if low on energy, go towards bereast lootbox
+	if agent.GetEnergyLevel() <= 0.4 { //prioritize survival, if low on energy, go towards bereast lootbox
 		return agent.nearestLoot()
 	} else {
 		lootBoxes := agent.GetGameState().GetLootBoxes()
@@ -606,4 +606,28 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	}
 
 	return voteResults
+}
+
+func (agent *BaselineAgent) ChangeBike() uuid.UUID {
+	megaBikes := agent.GetGameState().GetMegaBikes()
+	optimalBike := agent.GetBike()
+	weight := float64(-99)
+	for _, bike := range megaBikes {
+		if bike.GetID() != megaBikes[agent.GetBike()].GetID() { //get all bikes apart from our agent's bike
+			bikeWeight := float64(0)
+
+			for _, biker := range bike.GetAgents() {
+				if biker.GetColour() == agent.GetColour() {
+					bikeWeight += 1.8
+				} else {
+					bikeWeight += 1
+				}
+			}
+
+			if bikeWeight > weight {
+				optimalBike = bike.GetID()
+			}
+		}
+	}
+	return optimalBike
 }
