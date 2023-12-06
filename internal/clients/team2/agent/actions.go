@@ -181,7 +181,7 @@ func (a *AgentTwo) ProposeDirection() uuid.UUID {
 	agentID, agentColour, agentEnergy := a.GetID(), a.GetColour(), a.GetEnergyLevel()
 	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
 	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
-	if agentEnergy < modules.EnergyToOptimalLootboxThreshold {
+	if agentEnergy < modules.EnergyToOptimalLootboxThreshold || optimalLootbox == uuid.Nil {
 		return nearestLootbox
 	}
 	return optimalLootbox
