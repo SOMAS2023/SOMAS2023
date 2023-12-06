@@ -592,16 +592,49 @@ func (agent *BaselineAgent) VoteDictator() voting.IdVoteMap {
 	}
 	return votes
 }
-func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
-	voteResults := make(map[uuid.UUID]int)
-	bikeID := agent.GetBike()
 
-	fellowBikers := agent.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
+	agent.UpdateDecisionData()
+	fmt.Println("Vote for Kickout")
+
+	megabike := agent.GetBike()
+	voteResults := make(map[uuid.UUID]int)
+
+	fellowBikers := agent.GetGameState().GetMegaBikes()[megabike].GetAgents()
+	reputationRank, e1 := agent.rankFellowsReputation(fellowBikers)
+	honestyRank, e2 := agent.rankFellowsHonesty(fellowBikers)
+	if e1 != nil || e2 != nil {
+		panic("unexpected error!")
+
+	}
+	fmt.Println(reputationRank, honestyRank)
+
+	combined := make(map[uuid.UUID]float64)
+	worstRank := float64(1)
+
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
 		if fellowID != agent.GetID() {
-			// random votes to other agents
-			voteResults[fellowID] = 0 // randomly assigns 0 or 1 vote
+			combined[fellowID] = reputationRank[fellowID] * honestyRank[fellowID]
+			if combined[fellowID] < worstRank {
+				worstRank = combined[fellowID]
+			}
+		} else {
+			combined[fellowID] = 1.0
+		}
+	}
+
+	fmt.Println(combined, worstRank)
+
+	for _, fellow := range fellowBikers {
+		fellowID := fellow.GetID()
+		if combined[fellowID] == worstRank {
+			fmt.Println("Worst Fellow ID: ", fellowID)
+			if agent.reputation[fellowID] < agent.getReputationAverage() || agent.honestyMatrix[fellowID] < agent.getHonestyAverage() {
+				voteResults[fellowID] = 1
+			}
+		} else {
+			voteResults[fellowID] = 0
 		}
 	}
 
