@@ -5,6 +5,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"maps"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -69,10 +70,39 @@ func (a *AgentTwo) DecideGovernance() utils.Governance {
 }
 
 func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
-	// TODO: We simply pass in Social Capital values in the map.
-	// If a value does not exist in the map, we set it as the average social capital.
-	// We give ourselves the highest social capital which is 1.
-	return a.BaseBiker.DecideAllocation()
+	socialCapital := maps.Clone(a.Modules.SocialCapital.SocialCapital)
+	// Iterate through agents in social capital
+	for id := range socialCapital {
+		// Iterate through fellow bikers
+		for _, biker := range a.GetFellowBikers() {
+			// If this agent is a fellow biker, move on
+			if biker.GetID() == id {
+				continue
+			}
+		}
+		// This agent is not a fellow biker - remove it from SC
+		delete(socialCapital, id)
+	}
+	// We give ourselves 1.0
+	socialCapital[a.GetID()] = 1.0
+	return socialCapital
+}
+
+func (a *AgentTwo) DecideDictatorAllocation() voting.IdVoteMap {
+	socialCapital := a.DecideAllocation()
+
+	// Calculate the total social capital
+	totalSocialCapital := 0.0
+	for _, sc := range socialCapital {
+		totalSocialCapital += sc
+	}
+
+	// Distribute the allocation based on each agent's share of the total social capital
+	result := make(voting.IdVoteMap)
+	for agentID, sc := range socialCapital {
+		result[agentID] = sc / totalSocialCapital
+	}
+	return result
 }
 
 func (a *AgentTwo) VoteForKickout() map[uuid.UUID]int {
