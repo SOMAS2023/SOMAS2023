@@ -22,6 +22,14 @@ func (sc *SocialCapital) GetAverage(scComponent map[uuid.UUID]float64) float64 {
 	return sum / float64(len(scComponent))
 }
 
+func (sc *SocialCapital) GetSum(scComponent map[uuid.UUID]float64) float64 {
+	var sum = 0.0
+	for _, value := range scComponent {
+		sum += value
+	}
+	return sum
+}
+
 func (sc *SocialCapital) GetMinimumSocialCapital() (uuid.UUID, float64) {
 	min := math.MaxFloat64
 	minAgentId := uuid.Nil

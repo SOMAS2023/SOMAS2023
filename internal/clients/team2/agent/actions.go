@@ -172,9 +172,29 @@ func (a *AgentTwo) ProposeDirection() uuid.UUID {
 }
 
 func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
-	// TODO: If Social Capital of agent who proposed a lootbox is higher than a threshold, vote for it. Weight based on SC.
-	// Otherwise, set a weight of 0.
-	return a.BaseBiker.FinalDirectionVote(proposals)
+	votes := make(voting.LootboxVoteMap)
+
+	// Assume we set our own social capital to 1.0, thus need to account for it
+	weight := 1.0 / (a.Modules.SocialCapital.GetSum(a.Modules.SocialCapital.SocialCapital) + 1)
+
+	for proposerID, proposal := range proposals {
+		scWeight := 0.0
+		if proposerID == a.GetID() {
+			// If the proposal is our own, we vote for it with full weight
+			scWeight = weight
+		} else {
+			scWeight = weight * a.Modules.SocialCapital.SocialCapital[proposerID]
+		}
+
+		// Check if the proposal already exists in votes, if not add it with the calculated weight
+		if _, ok := votes[proposal]; !ok {
+			votes[proposal] = scWeight
+		} else {
+			// If the proposal is already there, update it
+			votes[proposal] += scWeight
+		}
+	}
+	return votes
 }
 
 func (a *AgentTwo) ChangeBike() uuid.UUID {
