@@ -25,6 +25,10 @@ func (t5 *team5Agent) InitialiseReputation() {
 func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep float64) float64 {
 	averagePedalForce := t5.getAverageForceOfAgents()
 	averageEnergy := t5.getAverageEnergyOfAgents()
+	//check energy allocation -> change of energy in each agent
+	//if bike speed slow - lower everyone by small amount
+	//if direction wrong a lot - lower everyone by small amount
+	//Lower forgivenesss rate if in ultristic state
 
 	agentPedalForce := t5.getForceOfOneAgent(agentID)
 	agentEnergy := t5.getEnergyOfOneAgent(agentID)
