@@ -81,26 +81,30 @@ func (bb *Agent8) VoteLeader() voting.IdVoteMap {
 // This function updates all the messages for that agent i.e. both sending and receiving.
 // And returns the new messages from other agents to your agent
 func (bb *Agent8) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
-	// For team's agent add your own logic on chosing when your biker should send messages
+	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
 	wantToSendMsg := false
 	if wantToSendMsg {
 		reputationMsg := bb.CreateReputationMessage()
-		kickOffMsg := bb.CreateKickOffMessage()
+		kickoutMsg := bb.CreatekickoutMessage()
 		lootboxMsg := bb.CreateLootboxMessage()
 		joiningMsg := bb.CreateJoiningMessage()
 		governceMsg := bb.CreateGoverenceMessage()
 		forcesMsg := bb.CreateForcesMessage()
-		return []messaging.IMessage[objects.IBaseBiker]{reputationMsg, kickOffMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg}
+		voteGoveranceMessage := bb.CreateVoteGovernanceMessage()
+		voteLootboxDirectionMessage := bb.CreateVoteLootboxDirectionMessage()
+		voteRulerMessage := bb.CreateVoteRulerMessage()
+		voteKickoutMessage := bb.CreateVotekickoutMessage()
+		return []messaging.IMessage[objects.IBaseBiker]{reputationMsg, kickoutMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg, voteGoveranceMessage, voteLootboxDirectionMessage, voteRulerMessage, voteKickoutMessage}
 	}
 	return []messaging.IMessage[objects.IBaseBiker]{}
 }
 
-func (bb *Agent8) HandleKickOffMessage(msg objects.KickOffAgentMessage) {
+func (bb *Agent8) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 	// Team's agent should implement logic for handling other biker messages that were sent to them.
 
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.AgentId
-	// kickOff := msg.KickOff
+	// kickout := msg.Kickout
 }
 
 func (bb *Agent8) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
@@ -141,6 +145,34 @@ func (bb *Agent8) HandleForcesMessage(msg objects.ForcesMessage) {
 	// agentId := msg.AgentId
 	// agentForces := msg.AgentForces
 
+}
+
+func (bb *Agent8) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
+}
+
+func (bb *Agent8) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxDirectionMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
+}
+
+func (bb *Agent8) HandleVoteRulerMessage(msg objects.VoteRulerMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
+}
+
+func (bb *Agent8) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
 }
 
 //===============================================================================================================================================================
