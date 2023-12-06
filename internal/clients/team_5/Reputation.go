@@ -50,57 +50,30 @@ func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep f
 	weight := 0.2 //maximum change per round
 	newRep := currentRep + (combinedDeviation-1)*weight
 	rValue := math.Min(math.Max(newRep, 0), 1)
-	//fmt.Println("retun", rValue, newRep, currentRep, combinedDeviation, energyDeviation, forceDeviation, agentEnergy, agentPedalForce, averagePedalForce, averageEnergy, currentRep)
+
 	return rValue //capped at 0 and 1
 }
-
-// func (t5 *team5Agent) updateReputationOfAllAgents() {
-// 	// if all agents have a reputation of 0 then update all to have a reputation of 0.5
-
-// 	reputationMap := t5.GetReputation()
-
-// 	if len(reputationMap) == 0 {
-// 		t5.InitialiseReputation()
-// 	}  else{
-
-// 		for agentID, reputaion := range t5.GetReputation() {
-// 			newRep := t5.calculateReputationOfAgent(agentID, reputaion)
-// 			t5.SetReputation(agentID, newRep)
-// 			fmt.Println(newRep)
-// 		}
-
-// 	}
-
-// 	fmt.Println("hnonljknjk")
-// 	fmt.Println(t5.GetReputation())
-
-// }
 
 func (t5 *team5Agent) updateReputationOfAllAgents() {
 	// if all agents have a reputation of 0 then update all to have a reputation of 0.5
 	reputationMap := t5.GetReputation()
-	fmt.Println("REPREP: ", reputationMap)
+
 	if len(reputationMap) == 0 {
-		fmt.Println("INITINIT")
 		t5.InitialiseReputation()
 	}
-	fmt.Println("RepMap: ", reputationMap)
+
 	for agentID, reputation := range reputationMap {
-		//fmt.Println("Reputation: ", reputation)
+
 		//if reuptation is NaN then set to 0.5
 		if (reputation == math.NaN()) || !(0 <= reputation && reputation <= 1) {
 			t5.SetReputation(agentID, 0.5)
 			reputation = 0.5
 		}
-		fmt.Println("Reputation: ", reputation)
 		reputation = t5.calculateReputationOfAgent(agentID, reputation)
 		t5.SetReputation(agentID, reputation)
 
-		fmt.Println("nonce:<", reputation)
 	}
 
-	fmt.Println("hnonljknjk")
-	fmt.Println(t5.GetReputation())
 }
 
 //Useful helper functions:
