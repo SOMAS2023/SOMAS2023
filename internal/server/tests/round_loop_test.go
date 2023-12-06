@@ -319,6 +319,7 @@ func TestRunActionProcessDictator(t *testing.T) {
 	bike.SetRuler(dictator.GetID())
 
 	// run the action process and confirm the direction is that of the dictator
+	s.UpdateGameStates()
 	s.RunActionProcess()
 
 	// check that the direction for the bike with our dictator is the same as the dictator's
@@ -372,6 +373,7 @@ func TestRunActionProcessLeader(t *testing.T) {
 	bike.SetRuler(leader.GetID())
 
 	// run action process
+	s.UpdateGameStates()
 	s.RunActionProcess()
 
 	// check that the direction of the leader is that of its direction (as the weights emulate a dictatorship)
