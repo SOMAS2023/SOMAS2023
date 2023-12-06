@@ -3,6 +3,7 @@ package team_8
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"fmt"
 
 	"SOMAS2023/internal/common/voting"
 	"math"
@@ -20,9 +21,9 @@ type GP struct {
 
 var GlobalParameters GP = GP{
 	EnergyThreshold:              0.5,
-	DistanceThresholdForVoting:   30,
+	DistanceThresholdForVoting:   (utils.GridHeight + utils.GridWidth) / 4,
 	ThresholdForJoiningDecision:  0.2,
-	ThresholdForChangingMegabike: 0.3,
+	ThresholdForChangingMegabike: 0.5,
 }
 
 type IBaselineAgent interface {
@@ -31,8 +32,9 @@ type IBaselineAgent interface {
 
 type Agent8 struct {
 	*objects.BaseBiker
-	overallScores voting.LootboxVoteMap         //rank score for the lootbox
-	agentsActions map[uuid.UUID]map[int]float64 //action score for each agent for the previous 10 loops (-1, 1)
+	overallLootboxPreferences voting.LootboxVoteMap         //rank score for the lootbox
+	agentsActions             map[int]map[uuid.UUID]float64 //action score for each agent for the previous 10 loops (-1, 1)
+	loopScore                 map[int]map[uuid.UUID]float64 //loop score for each loop for our megabike (-1, 1)
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DecideGovernance <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -54,6 +56,7 @@ func (bb *Agent8) VoteDictator() voting.IdVoteMap {
 			votes[fellowBiker.GetID()] = 0.0
 		}
 	}
+	fmt.Println(votes)
 	return votes
 }
 
@@ -73,6 +76,7 @@ func (bb *Agent8) VoteLeader() voting.IdVoteMap {
 }
 
 // ===============================================================================================================================================================
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Message System <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // This function updates all the messages for that agent i.e. both sending and receiving.
 // And returns the new messages from other agents to your agent
@@ -150,7 +154,7 @@ func (bb *Agent8) VoteForKickout() map[uuid.UUID]int {
 	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
 	for _, agent := range fellowBikers {
 		agentID := agent.GetID()
-		if bb.QueryReputation(agentID) < 0 {
+		if bb.QueryReputation(agentID) < 0.0 {
 			// random votes to other agents
 			voteResults[agentID] = 1 // randomly assigns 0 or 1 vote
 		} else {
@@ -164,11 +168,11 @@ func (bb *Agent8) VoteForKickout() map[uuid.UUID]int {
 // only called when the agent is the dictator
 func (bb *Agent8) DecideKickOut() []uuid.UUID {
 	// TODO: implement this function
-	kickoutList := make([]uuid.UUID, 0)
+	kickoutList := make([]uuid.UUID, 0.0)
 	fellowBikers := bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetAgents()
 	for _, agent := range fellowBikers {
 		agentID := agent.GetID()
-		if bb.QueryReputation(agentID) < 0 {
+		if bb.QueryReputation(agentID) < 0.0 {
 			// random votes to other agents
 			kickoutList = append(kickoutList, agentID)
 		}
@@ -206,23 +210,35 @@ func (bb *Agent8) ChangeBike() uuid.UUID {
 
 	// Initialize a map to store Borda scores for each bike
 	bordaScores := make(map[uuid.UUID]float64)
+	acceptBool := make(map[uuid.UUID]bool)
+	acceptBool[bb.GetBike()] = true
 
 	// Iterate through each bike
-	for bikeID, megabike := range megaBikes {
+	for bikeID := range megaBikes {
 		// Calculate the Borda score for the current bike
-		bordaScore := bb.CalculateAverageEnergy(bikeID) +
-			float64(bb.CountAgentsWithSameColour(bikeID)) +
-			CalculateGiniIndexFromAB(float64(bb.CountAgentsWithSameColour(bikeID)), float64(len(megabike.GetAgents())))
+		bordaScore := bb.CalculateAverageEnergy(bikeID) + float64(bb.CountAgentsWithSameColour(bikeID))
 
 		// Store the Borda score in the map
 		bordaScores[bikeID] = bordaScore
+
+		// find the agents on each bike
+		agentsOnBike := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+
+		// iterate the agents and theck their reputation score to see if we could be accepted.
+		var reputationSum = 0.0
+		for _, agent := range agentsOnBike {
+			reputationSum += agent.GetReputation()[bb.GetID()]
+		}
+		if reputationSum >= 0.0 {
+			acceptBool[bikeID] = true
+		}
 	}
 
 	// Find the bike with the highest Borda score
 	var highestBordaScore float64
 	var winningBikeID uuid.UUID
 	for bikeID, score := range bordaScores {
-		if score > highestBordaScore {
+		if score > highestBordaScore && acceptBool[bikeID] {
 			highestBordaScore = score
 			winningBikeID = bikeID
 		}
@@ -235,54 +251,23 @@ func (bb *Agent8) ChangeBike() uuid.UUID {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (bb *Agent8) DecideAction() objects.BikerAction {
+	var selfBikeId = bb.GetBike()
+	var selfBikeScore = 0.0
+	var loopNum = 0.0
 
-	var energyLevels []float64
-	var target_goal int
-	energy_threshold := GlobalParameters.EnergyThreshold
-	changingbike_threshold := GlobalParameters.ThresholdForChangingMegabike
-
-	// utility should be calculated by the fomula outlined on page7 of Lec6
-	utilityLevels := []float64{80.0, 90.0, 75.0, 85.0, 45.0, 35.0, 60.0, 70.0, 65.0}
-	turns := []bool{true, false, true, true, false, true, true, false, true}
-	decisions := []bool{true, false, false, true, true, false, false, true, false}
-
-	// get the energy level of all agents in the megabike
-	fellowBikers := bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetAgents()
-
-	for _, agent := range fellowBikers {
-		if !(agent.GetID() == bb.GetID()) {
-			energy_level := agent.GetEnergyLevel()
-			energyLevels = append(energyLevels, energy_level)
+	// calculate total reflection score for current bike
+	for _, scoremap := range bb.loopScore {
+		for bikeid, score := range scoremap {
+			if bikeid == selfBikeId {
+				selfBikeScore += score
+				loopNum++
+			}
 		}
 	}
+	selfBikeScore = selfBikeScore / loopNum
 
-	goalPreferenceList := make([]int, len(energyLevels))
-	if bb.GetEnergyLevel() >= energy_threshold {
-		target_goal = 1
-	} else {
-		target_goal = 0
-	}
-
-	// Convert energyLevels to 0 or 1 based on the threshold
-	for i, energy := range energyLevels {
-		if energy >= energy_threshold {
-			goalPreferenceList[i] = 1
-		} else {
-			goalPreferenceList[i] = 0
-		}
-	}
-
-	// Find quantified ‘Value-judgement’
-	valueJudgement := bb.calculateValueJudgement(utilityLevels, goalPreferenceList, target_goal, turns)
-
-	// Scale the ‘Cost in the collective improvement’
-	AverageOfCost := bb.calculateAverageOfCostAndPercentage(decisions, energyLevels, energy_threshold)
-
-	// Find the overall ‘changeBike’ coefficient
-	changeBikeCoefficient := 0.6*valueJudgement - 0.4*AverageOfCost
-
-	// Make a decision based on the calculated coefficients
-	if changingbike_threshold > changeBikeCoefficient {
+	// check if we need to change bike
+	if selfBikeScore < GlobalParameters.ThresholdForChangingMegabike {
 		return objects.ChangeBike
 	}
 
@@ -301,9 +286,10 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 	for _, lootBox := range lootBoxes {
 		distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
 		colorPreference := calculateColorPreference(bb.GetColour(), lootBox.GetColour())
-		energyWeighting := calculateEnergyWeighting(bb.GetEnergyLevel())
-
-		preferences[lootBox.GetID()] = colorPreference + (GlobalParameters.DistanceThresholdForVoting-distance)*energyWeighting
+		energyWeighting := bb.GetEnergyLevel()
+		// The higher energy, the higher weight for color
+		preferences[lootBox.GetID()] = colorPreference*energyWeighting +
+			(1-energyWeighting)*(GlobalParameters.DistanceThresholdForVoting-distance)/GlobalParameters.DistanceThresholdForVoting
 	}
 
 	// Apply softmax to convert preferences to a probability distribution
@@ -312,7 +298,7 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 	// Rank loot boxes based on preferences
 	rankedLootBoxes := rankByPreference(softmaxPreferences)
 
-	bb.overallScores = softmaxPreferences
+	bb.overallLootboxPreferences = softmaxPreferences
 
 	return rankedLootBoxes[0]
 }
@@ -336,22 +322,20 @@ func (bb *Agent8) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	weights := make(map[uuid.UUID]float64)
 	agents := bb.GetFellowBikers()
 	for _, agent := range agents {
-		weights[agent.GetID()] = 1.0
+		weights[agent.GetID()] = bb.QueryReputation(agent.GetID())
 	}
-	return weights
+	return softmax(weights)
 }
 
 // Multi-voting system
 func (bb *Agent8) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	// Calculate the biker's individual preference scores
-	preferenceScores := bb.calculatePreferenceScores(proposals)
-
-	combinedScores := make(map[uuid.UUID]float64)
-	for _, proposal := range proposals {
-		combinedScore := preferenceScores[proposal] + bb.overallScores[proposal]
-		combinedScores[proposal] = combinedScore
+	preferenceScores := make(map[uuid.UUID]float64)
+	_ = bb.ProposeDirection()
+	for _, lootboxid := range proposals {
+		preferenceScores[lootboxid] = bb.overallLootboxPreferences[lootboxid]
 	}
-	softmaxScores := softmax(combinedScores)
+	softmaxScores := softmax(preferenceScores)
 
 	return softmaxScores
 }
@@ -359,16 +343,12 @@ func (bb *Agent8) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 // =========================================================================================================================================================
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 5 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// determine the forces (pedalling, breaking and turning)
-// in the MVP the pedalling force will be 1, the breaking 0 and the tunring is determined by the
-// location of the nearest lootbox
-
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	// TODO: implement this function
 	var forces utils.Forces
-	forces.Brake = 0
-	forces.Pedal = 1
+	forces.Brake = 0.0
+	forces.Pedal = 1.0
 	lootboxs := bb.GetGameState().GetLootBoxes()
 	var target objects.ILootBox
 	for key, value := range lootboxs {
@@ -377,7 +357,8 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 			break
 		}
 	}
-	angle := math.Atan2(target.GetPosition().Y-bb.GetLocation().Y, target.GetPosition().X-bb.GetLocation().X)/math.Pi - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+	angle := math.Atan2(target.GetPosition().Y-bb.GetLocation().Y, target.GetPosition().X-bb.GetLocation().X)/math.Pi -
+		bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
 	forces.Turning.SteerBike = true
 	forces.Turning.SteeringForce = angle
 	bb.SetForces(forces)
