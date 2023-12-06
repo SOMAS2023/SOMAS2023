@@ -2,11 +2,14 @@ package team1
 
 import (
 	obj "SOMAS2023/internal/common/objects"
+	physics "SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 	physics "SOMAS2023/internal/common/physics"
 	"math"
+
 	"github.com/google/uuid"
 )
+
 // -------------------SETTERS AND GETTERS-----------------------------
 // Returns a list of bikers on the same bike as the agent
 func (bb *Biker1) GetFellowBikers() []obj.IBaseBiker {
@@ -87,8 +90,10 @@ func (bb *Biker1) GetAgentFromId(agentId uuid.UUID) obj.IBaseBiker {
 func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
 	gs := bb.GetGameState()
 	// get all agents
-	agents := make([]obj.IBaseBiker, 0)
-	for _, agent := range gs.GetAgents() {
+	
+	agentMap := gs.GetAgents() 
+	agents := make([]obj.IBaseBiker, 0, len(agentMap))
+	for _, agent := range agentMap {
 		agents = append(agents, agent)
 	}
 	return agents
@@ -122,4 +127,31 @@ func (bb *Biker1) GetSelfishness(agent obj.IBaseBiker) float64 {
 	ourRelationship := bb.opinions[id].opinion
 	return calculateSelfishnessScore(relativeSuccess, ourRelationship)
 }
+
 // -------------------END OF SELFISHNESS FUNCTIONS----------------------
+// -------------------BIKE CHANGE HELPER FUNCTIONS----------------------
+func (bb *Biker1) GetNearBikeObjects(bike obj.IMegaBike) (int64, int64, int64) {
+	_, reachableDistance := bb.energyToReachableDistance(bb.GetEnergyLevel(), bike)
+	lootBoxCount := 0
+	lootBoxOurColor := 0
+	bikeCount := 0
+	for _, lootbox := range bb.GetGameState().GetLootBoxes() {
+		distance := physics.ComputeDistance(lootbox.GetPosition(), bike.GetPosition())
+		if distance <= reachableDistance {
+			lootBoxCount += 1
+			if lootbox.GetColour() == bb.GetColour() {
+				lootBoxOurColor += 1
+			}
+		}
+	}
+	for _, nearbyBike := range bb.GetGameState().GetMegaBikes() {
+		distance := physics.ComputeDistance(nearbyBike.GetPosition(), bike.GetPosition())
+		if distance <= reachableDistance {
+			bikeCount += 1
+		}
+	}
+
+	return int64(lootBoxCount), int64(lootBoxOurColor), int64(bikeCount)
+}
+
+// -------------------END OF BIKE CHANGE HELPER FUNCTIONS---------------
