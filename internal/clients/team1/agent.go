@@ -41,6 +41,15 @@ const leadershipReputationThreshold = 0.5
 const dictatorshipOpinionThreshold = 0.9
 const dictatorshipReputationThreshold = 0.7
 
+// Bike scoring constants
+
+const majorityWeight = 3.0
+const lootboxWeight = 0.5
+const lootboxColourWeight = 0.5
+const audiDistWeight = 0.5
+const opinionWeight = 0.5
+const nearbyBikeWeight = 0.5
+
 
 
 type Biker1 struct {
@@ -49,6 +58,7 @@ type Biker1 struct {
 	recentDecided  uuid.UUID             // the most recent decision
 	dislikeVote    bool                  // whether the agent disliked the most recent vote
 	opinions       map[uuid.UUID]Opinion
+	desiredBike    uuid.UUID
 }
 
 
@@ -66,10 +76,49 @@ func (bb *Biker1) GetLocation() utils.Coordinates {
 	return position
 }
 
+// -------------------DECISION FUNCTIONS----------------------------
 
+func (bb *Biker1) ScoreBike(bike obj.IMegaBike) float64 {
+	var majorityScore float64
+	if bb.BikeOurColour(bike){
+		majorityScore = 1.0
+	}else{
+		majorityScore = 0.0
+	}
+	boxCount, colourCount, bikeCount := bb.GetNearBikeObjects(bike)
+	score := majorityWeight*majorityScore
+	score += lootboxWeight*bb.GetLootboxScore(bike)
+	score += lootboxColourWeight*bb.GetLootboxColourScore(bike)
+	score += audiDistWeight*bb.DistanceFromAudi(bike)
+	score += opinionWeight*bb.GetAverageOpinionOfBike(bike)
+	score -= nearbyBikeWeight*bb.GetNearbyBikeScore(bike)
+	
+	return score
+}
 
-
-
+func (bb *Biker1) PickBestBike() uuid.UUID {
+	gs := bb.GetGameState()
+	allBikes := gs.GetMegaBikes()
+	scoreMap := make(map[uuid.UUID]float64)
+	for _, bike := range allBikes {
+		if len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.GetBike() {
+			scoreMap[bike.GetID()] = bb.ScoreBike(bike)
+		}
+	}
+	if len(scoreMap) == 0 {
+		return bb.GetBike()
+	}
+	bestBike := bb.GetBike()
+	bestScore := scoreMap[bestBike]
+	for id, score := range scoreMap {
+		if score > bestScore {
+			bestBike = id
+			bestScore = score
+		}
+	}
+	bb.desiredBike = bestBike
+	return bestBike
+}
 
 func (bb *Biker1) DecideAction() obj.BikerAction {
 	bb.UpdateOpinions()
@@ -85,56 +134,20 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 	}
 	if (avg_opinion < leaveThreshold) || bb.dislikeVote {
 		bb.dislikeVote = false
-		return 1
+		newBike := bb.PickBestBike()
+		if newBike != bb.GetBike() {
+			return 1
+		} else {
+			return 0
+		}
 	} else {
 		return 0
 	}
 }
 
-
-
-
-
-
-
+// -------------------END OF DECISION FUNCTIONS---------------------
 // ----------------CHANGE BIKE FUNCTIONS-----------------
-// define a sorter for bikes -> used to change bikes
-type BikeSorter struct {
-	bikes []bikeDistance
-	by    func(b1, b2 *bikeDistance) bool
-}
 
-func (sorter *BikeSorter) Len() int {
-	return len(sorter.bikes)
-}
-func (sorter *BikeSorter) Swap(i, j int) {
-	sorter.bikes[i], sorter.bikes[j] = sorter.bikes[j], sorter.bikes[i]
-}
-func (sorter *BikeSorter) Less(i, j int) bool {
-	return sorter.by(&sorter.bikes[i], &sorter.bikes[j])
-}
-
-type bikeDistance struct {
-	bikeID   uuid.UUID
-	bike     obj.IMegaBike
-	distance float64
-}
-type By func(b1, b2 *bikeDistance) bool
-
-func (by By) Sort(bikes []bikeDistance) {
-	ps := &BikeSorter{
-		bikes: bikes,
-		by:    by,
-	}
-	sort.Sort(ps)
-}
-
-// Calculate how far we can jump for another bike -> based on energy level
-func (bb *Biker1) GetMaxJumpDistance() float64 {
-	//default to half grid size
-	//TODO implement this
-	return utils.GridHeight / 2
-}
 func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 	matchCounter := 0
 	totalAgents := len(bike.GetAgents())
@@ -154,33 +167,7 @@ func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 
 // decide which bike to go to
 func (bb *Biker1) ChangeBike() uuid.UUID {
-	distance := func(b1, b2 *bikeDistance) bool {
-		return b1.distance < b2.distance
-	}
-	gs := bb.GetGameState()
-	allBikes := gs.GetMegaBikes()
-	var bikeDistances []bikeDistance
-	for id, bike := range allBikes {
-		if len(bike.GetAgents()) < 8 && id != bb.GetBike(){
-			dist := physics.ComputeDistance(bb.GetLocation(), bike.GetPosition())
-			bikeDistances = append(bikeDistances, bikeDistance{
-				bikeID:   id,
-				bike:     bike,
-				distance: dist,
-			})
-
-		}
-	}
-	By(distance).Sort(bikeDistances)
-	for _, bike := range bikeDistances {
-		if bb.BikeOurColour(bike.bike) {
-			return bike.bikeID
-		}
-	}
-	if len(bikeDistances) == 0 {
-		return bb.GetBike()
-	}
-	return bikeDistances[0].bikeID
+	return bb.desiredBike
 }
 
 
