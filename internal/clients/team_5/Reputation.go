@@ -42,6 +42,16 @@ func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep f
 }
 
 func (t5 *team5Agent) updateReputationOfAllAgents() {
+	// if all agents have a reputation of 0 then update all to have a reputation of 0.5
+	for _, reputation := range t5.GetReputation() {
+		if reputation != 0 {
+			break
+		}
+		for agentID := range t5.GetReputation() {
+			t5.SetReputation(agentID, 0.5)
+		}
+	}
+
 	for agentID, reputaion := range t5.GetReputation() {
 		newRep := t5.calculateReputationOfAgent(agentID, reputaion)
 		t5.SetReputation(agentID, newRep)

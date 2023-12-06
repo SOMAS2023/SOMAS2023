@@ -33,7 +33,6 @@ const (
 // Creates an instance of Team 5 Biker
 func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
-	// print
 	fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
 		BaseBiker:           *baseBiker,
