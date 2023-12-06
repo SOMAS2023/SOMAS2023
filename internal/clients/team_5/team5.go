@@ -6,7 +6,6 @@ import (
 	"SOMAS2023/internal/common/voting"
 	"fmt"
 
-	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -127,47 +126,4 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 	}
 	return votes
 
-}
-
-func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
-
-	wantToSendMsg := true
-	if wantToSendMsg {
-		forcesMsg := t5.CreateForcesMessage()
-		return []messaging.IMessage[objects.IBaseBiker]{forcesMsg}
-	}
-	return []messaging.IMessage[objects.IBaseBiker]{}
-}
-
-func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
-	fmt.Println()
-	return objects.ForcesMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
-		AgentId:     t5.GetID(),
-		AgentForces: utils.Forces{
-			Pedal: 1.0,
-			Brake: 1.0,
-			Turning: utils.TurningDecision{
-				SteerBike:     false,
-				SteeringForce: 1.0,
-			},
-		},
-	}
-}
-
-func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// agentForces := msg.AgentForces
-
-}
-
-func (bb *team5Agent) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// kickout := msg.kickout
 }
