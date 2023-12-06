@@ -79,7 +79,7 @@ func (msg ReputationOfAgentMessage) InvokeMessageHandler(agent IBaseBiker) {
 }
 
 func (msg KickoutAgentMessage) InvokeMessageHandler(agent IBaseBiker) {
-	agent.HandlekickoutMessage(msg)
+	agent.HandleKickoutMessage(msg)
 }
 
 func (msg JoiningAgentMessage) InvokeMessageHandler(agent IBaseBiker) {

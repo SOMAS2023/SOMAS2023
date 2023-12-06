@@ -56,7 +56,7 @@ type IBaseBiker interface {
 	QueryReputation(uuid.UUID) float64    // query for reputation value of specific agent with UUID
 	SetReputation(uuid.UUID, float64)     // set reputation value of specific agent with UUID
 
-	HandlekickoutMessage(msg KickoutAgentMessage)
+	HandleKickoutMessage(msg KickoutAgentMessage)
 	HandleReputationMessage(msg ReputationOfAgentMessage)
 	HandleJoiningMessage(msg JoiningAgentMessage)
 	HandleLootboxMessage(msg LootboxMessage)
@@ -547,7 +547,7 @@ func (bb *BaseBiker) CreateVotekickoutMessage() VoteKickoutMessage {
 	}
 }
 
-func (bb *BaseBiker) HandlekickoutMessage(msg KickoutAgentMessage) {
+func (bb *BaseBiker) HandleKickoutMessage(msg KickoutAgentMessage) {
 	// Team's agent should implement logic for handling other biker messages that were sent to them.
 
 	// sender := msg.BaseMessage.GetSender()

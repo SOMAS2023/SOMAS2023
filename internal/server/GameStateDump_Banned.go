@@ -141,7 +141,7 @@ func (a AgentDump) HandleLootboxMessage(msg objects.LootboxMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 
-func (a AgentDump) HandlekickoutMessage(msg objects.KickoutAgentMessage) {
+func (a AgentDump) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 
