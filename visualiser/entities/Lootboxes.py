@@ -4,7 +4,7 @@ Logic for handling bikes in the visualiser
 # pylint: disable=import-error, no-name-in-module
 import pygame
 import pygame_gui
-from visualiser.util.Constants import LOOTBOX, OVERLAY, COLOURS
+from visualiser.util.Constants import LOOTBOX, OVERLAY, COLOURS, COORDINATESCALE
 from visualiser.entities.Common import Drawable
 
 class Lootbox(Drawable):
@@ -16,6 +16,7 @@ class Lootbox(Drawable):
             "Velocity" : jsonData["physical_state"]["velocity"],
             "Mass" : jsonData["physical_state"]["mass"],
             "Resources" : jsonData["total_resources"],
+            "Colour" : jsonData["colour"].title()
         }
         self.properties.update(properties)
 
@@ -24,8 +25,8 @@ class Lootbox(Drawable):
         Draw the lootbox
         """
         # Determine the grid size
-        self.trueX = int(self.x * zoom + offsetX)
-        self.trueY = int(self.y * zoom + offsetY)
+        self.trueX = int(self.x*COORDINATESCALE * zoom + offsetX)
+        self.trueY = int(self.y*COORDINATESCALE * zoom + offsetY)
         # Draw the lootbox
         border = pygame.Surface(((2*LOOTBOX["LINE_WIDTH"] + LOOTBOX["WIDTH"])*zoom, (2*LOOTBOX["LINE_WIDTH"] + LOOTBOX["HEIGHT"])*zoom))
         border.fill(LOOTBOX["LINE_COLOUR"])

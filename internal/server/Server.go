@@ -3,6 +3,7 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"SOMAS2023/internal/common/voting"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -20,18 +21,24 @@ type IBaseBikerServer interface {
 	GetMegaBikes() map[uuid.UUID]objects.IMegaBike
 	GetLootBoxes() map[uuid.UUID]objects.ILootBox
 	GetAudi() objects.IAudi
-	GetJoiningRequests() map[uuid.UUID][]uuid.UUID
+	GetJoiningRequests([]uuid.UUID) map[uuid.UUID][]uuid.UUID
 	GetRandomBikeId() uuid.UUID
-	SetBikerBike(biker objects.IBaseBiker, bike uuid.UUID)
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
-	RunRulerAction(bike objects.IMegaBike, governance utils.Governance) uuid.UUID
-	NewGameStateDump() GameStateDump
-	RunDemocraticAction(bike objects.IMegaBike) uuid.UUID
-	GetLeavingDecisions(gameState objects.IGameState)
-	HandleKickoutProcess()
-	ProcessJoiningRequests()
+	RunRulerAction(bike objects.IMegaBike) uuid.UUID
+	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID
+	NewGameStateDump(iteration int) GameStateDump
+	GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID
+	HandleKickoutProcess() []uuid.UUID
+	ProcessJoiningRequests(inLimbo []uuid.UUID)
 	RunActionProcess()
 	AudiCollisionCheck()
+	AddAgentToBike(agent objects.IBaseBiker)
+	FoundingInstitutions()
+	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
+	LootboxCheckAndDistributions()
+	ResetGameState()
+	GetDeadAgents() map[uuid.UUID]objects.IBaseBiker
+	UpdateGameStates()
 }
 
 type Server struct {
@@ -40,8 +47,10 @@ type Server struct {
 	megaBikes map[uuid.UUID]objects.IMegaBike
 	// megaBikeRiders is a mapping from Agent ID -> ID of the bike that they are riding
 	// helps with efficiently managing ridership status
-	megaBikeRiders map[uuid.UUID]uuid.UUID
-	audi           objects.IAudi
+	megaBikeRiders  map[uuid.UUID]uuid.UUID
+	audi            objects.IAudi
+	deadAgents      map[uuid.UUID]objects.IBaseBiker
+	foundingChoices map[uuid.UUID]utils.Governance
 }
 
 func Initialize(iterations int) IBaseBikerServer {
@@ -50,22 +59,20 @@ func Initialize(iterations int) IBaseBikerServer {
 		lootBoxes:      make(map[uuid.UUID]objects.ILootBox),
 		megaBikes:      make(map[uuid.UUID]objects.IMegaBike),
 		megaBikeRiders: make(map[uuid.UUID]uuid.UUID),
+		deadAgents:     make(map[uuid.UUID]objects.IBaseBiker),
 		audi:           objects.GetIAudi(),
 	}
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
-
-	// Randomly allocate bikers to bikes
-	for _, biker := range server.GetAgentMap() {
-		server.SetBikerBike(biker, server.GetRandomBikeId())
-
-	}
 
 	return server
 }
 
 func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
 	id := agent.GetID()
+	// add agent to dead agent map
+	s.deadAgents[id] = agent
+	// remove agent from agent map
 	s.BaseServer.RemoveAgent(agent)
 	if bikeId, ok := s.megaBikeRiders[id]; ok {
 		s.megaBikes[bikeId].RemoveAgent(id)
@@ -73,21 +80,75 @@ func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
 	}
 }
 
-func (s *Server) outputResults(gameStates []GameStateDump) {
-	statisticsJson, err := json.MarshalIndent(CalculateStatistics(gameStates), "", "    ")
+func (s *Server) AddAgentToBike(agent objects.IBaseBiker) {
+	// Remove the agent from the old bike, if it was on one
+	if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {
+		s.megaBikes[oldBikeId].RemoveAgent(agent.GetID())
+	}
+
+	// set agent on desired bike
+	bikeId := agent.GetBike()
+	s.megaBikes[bikeId].AddAgent(agent)
+	s.megaBikeRiders[agent.GetID()] = bikeId
+	if !agent.GetBikeStatus() {
+		agent.ToggleOnBike()
+	}
+}
+
+func (s *Server) RemoveAgentFromBike(agent objects.IBaseBiker) {
+	bike := s.megaBikes[agent.GetBike()]
+	bike.RemoveAgent(agent.GetID())
+	agent.ToggleOnBike()
+	// get new destination for agent
+	agent.SetBike(agent.ChangeBike())
+
+	if _, ok := s.megaBikeRiders[agent.GetID()]; ok {
+		delete(s.megaBikeRiders, agent.GetID())
+	}
+}
+
+func (s *Server) GetDeadAgents() map[uuid.UUID]objects.IBaseBiker {
+	return s.deadAgents
+}
+
+func (s *Server) outputResults(gameStates [][]GameStateDump) {
+	statistics := CalculateStatistics(gameStates)
+
+	statisticsJson, err := json.MarshalIndent(statistics.Average, "", "    ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Statistics:\n" + string(statisticsJson))
+	fmt.Println("Average Statistics:\n" + string(statisticsJson))
 
-	file, err := os.Create("game_dump.json")
+	file, err := os.Create("statistics.xlsx")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	if err := statistics.ToSpreadsheet().Write(file); err != nil {
+		panic(err)
+	}
+
+	var flattenedGameStates []GameStateDump
+	for i := range gameStates {
+		flattenedGameStates = append(flattenedGameStates, gameStates[i]...)
+	}
+
+	file, err = os.Create("game_dump.json")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "    ")
-	if err := encoder.Encode(gameStates); err != nil {
+	if err := encoder.Encode(flattenedGameStates); err != nil {
 		panic(err)
+	}
+}
+
+func (s *Server) UpdateGameStates() {
+	gs := s.NewGameStateDump(0)
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
 	}
 }

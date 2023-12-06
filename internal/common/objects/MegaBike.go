@@ -12,7 +12,7 @@ type IMegaBike interface {
 	RemoveAgent(bikerId uuid.UUID)
 	GetAgents() []IBaseBiker
 	UpdateMass()
-	KickOutAgent() map[uuid.UUID]int
+	KickOutAgent(weights map[uuid.UUID]float64) []uuid.UUID
 	GetGovernance() utils.Governance
 	GetRuler() uuid.UUID
 	SetGovernance(governance utils.Governance)
@@ -97,11 +97,8 @@ func (mb *MegaBike) UpdateOrientation() {
 		// will not have an impact on the direction of the bike.
 		turningDecision := agent.GetForces().Turning
 		if turningDecision.SteerBike {
-			// Only dictators can steer if Governance is set to dictatorship
-			if (mb.governance != utils.Dictatorship) || (agent.GetID() == mb.ruler) {
-				numOfSteeringAgents += 1
-				totalTurning += float64(turningDecision.SteeringForce)
-			}
+			numOfSteeringAgents += 1
+			totalTurning += float64(turningDecision.SteeringForce)
 		}
 	}
 	// Do not update orientation if no biker want to steer
@@ -112,9 +109,9 @@ func (mb *MegaBike) UpdateOrientation() {
 	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
 
 	if mb.orientation > 1.0 {
-		mb.orientation -= 2
+		mb.orientation -= 2.0
 	} else if mb.orientation < -1.0 {
-		mb.orientation += 2
+		mb.orientation += 2.0
 	}
 }
 
@@ -123,21 +120,27 @@ func (mb *MegaBike) GetKickedOutCount() int {
 	return mb.kickedOutCount
 }
 
-func (mb *MegaBike) KickOutAgent() map[uuid.UUID]int {
-	voteCount := make(map[uuid.UUID]int)
+// only called for level 0 and level 1
+func (mb *MegaBike) KickOutAgent(weights map[uuid.UUID]float64) []uuid.UUID {
+	voteCount := make(map[uuid.UUID]float64)
 	// Count votes for each agent
 	for _, agent := range mb.agents {
 		agentVotes := agent.VoteForKickout() // Assuming this now returns map[uuid.UUID]int
 		for agentID, votes := range agentVotes {
-			voteCount[agentID] += votes
+			agentWeight := weights[agentID]
+			if val, ok := voteCount[agentID]; ok {
+				voteCount[agentID] = float64(val) + agentWeight*float64(votes)
+			} else {
+				voteCount[agentID] = float64(votes) * agentWeight
+			}
 		}
 	}
 
 	// Find all agents with votes > half the number of agents
-	agentsToKickOut := make(map[uuid.UUID]int)
+	agentsToKickOut := make([]uuid.UUID, 0)
 	for agentID, votes := range voteCount {
-		if votes > len(mb.agents)/2 {
-			agentsToKickOut[agentID] = votes
+		if votes > float64(len(mb.agents))/2.0 {
+			agentsToKickOut = append(agentsToKickOut, agentID)
 		}
 	}
 

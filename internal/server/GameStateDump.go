@@ -3,11 +3,15 @@ package server
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"github.com/google/uuid"
 	"maps"
+	"reflect"
+	"strings"
+
+	"github.com/google/uuid"
 )
 
 type GameStateDump struct {
+	Iteration int                       `json:"iteration"`
 	Agents    map[uuid.UUID]AgentDump   `json:"agents"`
 	Bikes     map[uuid.UUID]BikeDump    `json:"bikes"`
 	LootBoxes map[uuid.UUID]LootBoxDump `json:"loot_boxes"`
@@ -30,17 +34,17 @@ type BikeDump struct {
 }
 
 type AgentDump struct {
-	ID                       uuid.UUID                        `json:"-"`
-	Forces                   utils.Forces                     `json:"forces"`
-	EnergyLevel              float64                          `json:"energy_level"`
-	Points                   int                              `json:"points"`
-	ResourceAllocationParams objects.ResourceAllocationParams `json:"resource_allocation_params"`
-	Colour                   utils.Colour                     `json:"-"`
-	ColourString             string                           `json:"colour"`
-	Location                 utils.Coordinates                `json:"location"`
-	OnBike                   bool                             `json:"on_bike"`
-	BikeID                   uuid.UUID                        `json:"bike_id"`
-	Reputation               map[uuid.UUID]float64            `json:"reputation"`
+	ID           uuid.UUID             `json:"-"`
+	Class        string                `json:"class"`
+	Forces       utils.Forces          `json:"forces"`
+	EnergyLevel  float64               `json:"energy_level"`
+	Points       int                   `json:"points"`
+	Colour       utils.Colour          `json:"-"`
+	ColourString string                `json:"colour"`
+	Location     utils.Coordinates     `json:"location"`
+	OnBike       bool                  `json:"on_bike"`
+	BikeID       uuid.UUID             `json:"bike_id"`
+	Reputation   map[uuid.UUID]float64 `json:"reputation"`
 }
 
 type LootBoxDump struct {
@@ -65,21 +69,27 @@ func newPhysicsObjectDump(physicsObject objects.IPhysicsObject) PhysicsObjectDum
 	}
 }
 
-func (s *Server) NewGameStateDump() GameStateDump {
+func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
+		var location utils.Coordinates
+		if agent.GetBike() != uuid.Nil {
+			location = s.megaBikes[agent.GetBike()].GetPosition()
+		} else {
+			location = utils.Coordinates{X: 0.0, Y: 0.0}
+		}
 		agents[id] = AgentDump{
-			ID:                       agent.GetID(),
-			Forces:                   agent.GetForces(),
-			EnergyLevel:              agent.GetEnergyLevel(),
-			Points:                   agent.GetPoints(),
-			ResourceAllocationParams: agent.GetResourceAllocationParams(),
-			Colour:                   agent.GetColour(),
-			ColourString:             agent.GetColour().String(),
-			Location:                 s.megaBikes[agent.GetBike()].GetPosition(),
-			OnBike:                   agent.GetBikeStatus(),
-			BikeID:                   agent.GetBike(),
-			Reputation:               maps.Clone(agent.GetReputation()),
+			ID:           agent.GetID(),
+			Class:        strings.TrimPrefix(reflect.TypeOf(agent).String(), "*"),
+			Forces:       agent.GetForces(),
+			EnergyLevel:  agent.GetEnergyLevel(),
+			Points:       agent.GetPoints(),
+			Colour:       agent.GetColour(),
+			ColourString: agent.GetColour().String(),
+			Location:     location,
+			OnBike:       agent.GetBikeStatus(),
+			BikeID:       agent.GetBike(),
+			Reputation:   maps.Clone(agent.GetReputation()),
 		}
 	}
 
@@ -111,6 +121,7 @@ func (s *Server) NewGameStateDump() GameStateDump {
 	}
 
 	return GameStateDump{
+		Iteration: iteration,
 		Agents:    agents,
 		Bikes:     bikes,
 		LootBoxes: lootBoxes,
