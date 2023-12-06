@@ -603,6 +603,7 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	fellowBikers := agent.GetGameState().GetMegaBikes()[megabike].GetAgents()
 	reputationRank, e1 := agent.rankFellowsReputation(fellowBikers)
 	honestyRank, e2 := agent.rankFellowsHonesty(fellowBikers)
+
 	if e1 != nil || e2 != nil {
 		panic("unexpected error!")
 
@@ -614,13 +615,17 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
-		if fellowID != agent.GetID() {
-			combined[fellowID] = reputationRank[fellowID] * honestyRank[fellowID]
-			if combined[fellowID] < worstRank {
-				worstRank = combined[fellowID]
+		if combined[fellowID] == worstRank && fellowID != uuid.Nil {
+
+			if fellowID != agent.GetID() {
+				combined[fellowID] = reputationRank[fellowID] * honestyRank[fellowID]
+				if combined[fellowID] < worstRank {
+					worstRank = combined[fellowID]
+					fmt.Println("worst arnk fellow id:", combined[fellowID])
+				}
+			} else {
+				combined[fellowID] = 1.0
 			}
-		} else {
-			combined[fellowID] = 1.0
 		}
 	}
 
@@ -628,7 +633,8 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
-		if combined[fellowID] == worstRank {
+		fmt.Println(fellowID)
+		if combined[fellowID] == worstRank && fellowID != uuid.Nil {
 			fmt.Println("Worst Fellow ID: ", fellowID)
 			if agent.reputation[fellowID] < agent.getReputationAverage() || agent.honestyMatrix[fellowID] < agent.getHonestyAverage() {
 				voteResults[fellowID] = 1
@@ -637,6 +643,23 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 			voteResults[fellowID] = 0
 		}
 	}
+	println("the voting results are:", voteResults)
 
 	return voteResults
 }
+
+/* func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
+	voteResults := make(map[uuid.UUID]int)
+	bikeID := agent.GetBike()
+
+	fellowBikers := agent.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if agentID != agent.GetID() {
+			// random votes to other agents
+			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
+		}
+	}
+
+	return voteResults
+} */
