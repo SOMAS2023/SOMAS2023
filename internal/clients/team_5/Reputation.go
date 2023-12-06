@@ -30,17 +30,18 @@ func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep f
 	//fmt.Println("DONT BE nan: ", currentRep)
 	averagePedalForce := t5.getAverageForceOfAgents()
 	averageEnergy := t5.getAverageEnergyOfAgents()
+	//fmt.Println("averagePedalForce: ", averagePedalForce, "averageEnergy: ", averageEnergy)
 	//check energy allocation -> change of energy in each agent
 	//if bike speed slow - lower everyone by small amount
 	//if direction wrong a lot - lower everyone by small amount
-	//Lower forgivenesss rate if in ultristic state
+	//Increase forgivenesss rate if in ultristic state
 
 	agentPedalForce := t5.getForceOfOneAgent(agentID)
 	agentEnergy := t5.getEnergyOfOneAgent(agentID)
-
+	//fmt.Print("agentPedalForce: ", agentPedalForce, "agentEnergy: ", agentEnergy)
 	forceDeviation := agentPedalForce / averagePedalForce //fraction of agentMetric/averageMetric
 	energyDeviation := agentEnergy / averageEnergy
-
+	//fmt.Print("forceDeviation: ", forceDeviation, "energyDeviation: ", energyDeviation)
 	combinedDeviation := (forceDeviation + energyDeviation) / 2 // keeps it in range [0,1]
 
 	// get current reputation of the agent
@@ -81,15 +82,20 @@ func (t5 *team5Agent) updateReputationOfAllAgents() {
 	if len(reputationMap) == 0 {
 		fmt.Println("INITINIT")
 		t5.InitialiseReputation()
-	} else {
-		//fmt.Println("RepMap: ", reputationMap)
-		for agentID, reputation := range reputationMap {
-			//fmt.Println("Reputation: ", reputation)
-			newRep := t5.calculateReputationOfAgent(agentID, reputation)
-			t5.SetReputation(agentID, newRep)
-
-			fmt.Println("nonce:<", newRep)
+	}
+	fmt.Println("RepMap: ", reputationMap)
+	for agentID, reputation := range reputationMap {
+		//fmt.Println("Reputation: ", reputation)
+		//if reuptation is NaN then set to 0.5
+		if (reputation == math.NaN()) || !(0 <= reputation && reputation <= 1) {
+			t5.SetReputation(agentID, 0.5)
+			reputation = 0.5
 		}
+		fmt.Println("Reputation: ", reputation)
+		reputation = t5.calculateReputationOfAgent(agentID, reputation)
+		t5.SetReputation(agentID, reputation)
+
+		fmt.Println("nonce:<", reputation)
 	}
 
 	fmt.Println("hnonljknjk")
@@ -165,7 +171,13 @@ func (t5 *team5Agent) getAverageForceOfAgents() float64 {
 			}
 		}
 	}
-	return totalForce / totalAgents
+	//print("totalForce: ", totalForce, "totalAgents: ", totalAgents)
+	//if naan then return 0
+	avgForce := totalForce / totalAgents
+	if avgForce > 0 {
+		return avgForce
+	}
+	return 0
 }
 
 func (t5 *team5Agent) getEnergyOfOneAgent(agentID uuid.UUID) float64 {
