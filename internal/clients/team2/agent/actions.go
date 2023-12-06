@@ -136,6 +136,15 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	a.SetForces(force)
 }
 
+func (a *AgentTwo) DictateDirection() uuid.UUID {
+	// Move in opposite direction to Audi in full force
+	if a.Modules.Environment.IsAudiNear() {
+		return a.Modules.Environment.GetNearestLootboxAwayFromAudi()
+	}
+	// Otherwise, move towards the lootbox with the highest gain
+	return a.Modules.Environment.GetHighestGainLootbox()
+}
+
 func (a *AgentTwo) UpdateGameState(gameState objects.IGameState) {
 	a.BaseBiker.UpdateGameState(gameState)
 	a.Modules.Environment.SetGameState(gameState)

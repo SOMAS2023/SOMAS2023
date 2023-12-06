@@ -102,6 +102,32 @@ func (e *EnvironmentModule) GetHighestGainLootbox() uuid.UUID {
 	return bestLoot
 }
 
+func (e *EnvironmentModule) GetNearestLootboxAwayFromAudi() uuid.UUID {
+	// Find positions.
+	bikePos := e.GetBikeById(e.BikeId).GetPosition()
+	audiPos := e.GetAudi().GetPosition()
+
+	// Find position away from audi.
+	deltaX := audiPos.X - bikePos.X
+	deltaY := audiPos.Y - bikePos.Y
+
+	awayX := bikePos.X - deltaX
+	awayY := bikePos.Y - deltaY
+	awayPos := utils.Coordinates{X: awayX, Y: awayY}
+
+	// Find nearest lootbox away from audi.
+	minLoot := uuid.Nil
+	minDist := math.MaxFloat64
+	for id, lootbox := range e.GetLootBoxes() {
+		dist := e.GetDistance(awayPos, lootbox.GetPosition())
+		if dist < minDist {
+			minDist = dist
+			minLoot = id
+		}
+	}
+	return minLoot
+}
+
 ///
 /// Bikes
 ///
