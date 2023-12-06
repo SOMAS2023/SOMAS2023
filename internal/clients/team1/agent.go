@@ -66,11 +66,6 @@ func (bb *Biker1) GetLocation() utils.Coordinates {
 	return position
 }
 
-
-
-
-
-
 func (bb *Biker1) DecideAction() obj.BikerAction {
 	bb.UpdateOpinions()
 	fellowBikers := bb.GetFellowBikers()
