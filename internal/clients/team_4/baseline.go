@@ -16,32 +16,41 @@ import (
 type IBaselineAgent interface {
 	objects.IBaseBiker
 
-	//INCOMPLETE FUNCTIONS
+	///////////////////////// INCOMPLETE FUNCTIONS /////////////////////////////
+
 	CalculateReputation() map[uuid.UUID]float64    //calculate reputation matrix
 	CalculateHonestyMatrix() map[uuid.UUID]float64 //calculate honesty matrix
 
 	DecideAction() objects.BikerAction //determines what action the agent is going to take this round. (changeBike or Pedal)
 	ChangeBike() uuid.UUID             //called when biker wants to change bike, it will choose which bike to try and join
-	VoteForKickout() map[uuid.UUID]int
-	// dictator functions
-	DictateDirection() uuid.UUID                //called only when the agent is the dictator
-	DecideKickOut() []uuid.UUID                 //decide which agents to kick out (dictator)
-	DecideDictatorAllocation() voting.IdVoteMap //decide the allocation (dictator)
 
-	//CURRENTLY UNUSED/NOT CONSIDERED FUNCTIONS
+	////////////////// CURRENTLY NOT CONSIDERED FUNCTIONS ///////////////////////
 	DecideGovernance() utils.Governance //decide the governance system
 	VoteDictator() voting.IdVoteMap
 	VoteLeader() voting.IdVoteMap
 
-	//IMPLEMENTED FUNCTIONS
+	////////////////////////// IMPLEMENTED FUNCTIONS //////////////////////////
+
 	ProposeDirection() uuid.UUID                                                //returns the id of the desired lootbox
 	FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap //stage 3 of direction voting
 	DecideAllocation() voting.IdVoteMap                                         //decide the allocation parameters
 	DecideJoining(pendinAgents []uuid.UUID) map[uuid.UUID]bool                  //decide whether to accept or not accept bikers, ranks the ones
 	nearestLoot() uuid.UUID                                                     //returns the id of the nearest lootbox
 	DecideForce(direction uuid.UUID)                                            //defines the vector you pass to the bike: [pedal, brake, turning]
+	VoteForKickout() map[uuid.UUID]int
 
-	//HELPER FUNCTIONS
+	///////////////////////// DICATOR FUNCTIONS ///////////////////////////////////
+
+	DictateDirection() uuid.UUID                //called only when the agent is the dictator
+	DecideKickOut() []uuid.UUID                 //decide which agents to kick out (dictator)
+	DecideDictatorAllocation() voting.IdVoteMap //decide the allocation (dictator)
+
+	///////////////////////// LEADER FUNCTIONS ///////////////////////////////////
+
+	DecideWeights(action utils.Action) map[uuid.UUID]float64 // decide on weights for various actions
+
+	////////////////////////// HELPER FUNCTIONS/////////////////////////////////////
+
 	UpdateDecisionData()           //updates all the data needed for the decision making process(call at the start of any decision making function)
 	getHonestyAverage() float64    //returns the average honesty of all agents
 	getReputationAverage() float64 //returns the average reputation of all agents
@@ -54,7 +63,7 @@ type IBaselineAgent interface {
 	IncreaseHonesty(agentID uuid.UUID, increaseAmount float64)
 	DecreaseHonesty(agentID uuid.UUID, decreaseAmount float64)
 
-	//PRINT FUNCTIONS
+	/////////////////////////// PRINT FUNCTIONS ///////////////////////////////////
 	DisplayFellowsEnergyHistory()
 	DisplayFellowsHonesty()
 	DisplayFellowsReputation()
@@ -62,9 +71,10 @@ type IBaselineAgent interface {
 
 type BaselineAgent struct {
 	objects.BaseBiker
-	currentBike       *objects.MegaBike
-	lootBoxColour     utils.Colour
-	proposedLootBox   objects.ILootBox
+	currentBike     *objects.MegaBike
+	lootBoxColour   utils.Colour
+	proposedLootBox objects.ILootBox
+
 	mylocationHistory []utils.Coordinates     //log location history for this agent
 	energyHistory     map[uuid.UUID][]float64 //log energy level for all agents
 	reputation        map[uuid.UUID]float64   //record reputation for other agents, 0-1
@@ -398,32 +408,49 @@ func (agent *BaselineAgent) DisplayFellowsReputation() {
 		fmt.Println("")
 	}
 }
-
+func (agent *BaselineAgent) nearestLoot() uuid.UUID {
+	currLocation := agent.GetLocation()
+	shortestDist := math.MaxFloat64
+	var nearestBox uuid.UUID
+	var currDist float64
+	for _, loot := range agent.GetGameState().GetLootBoxes() {
+		x, y := loot.GetPosition().X, loot.GetPosition().Y
+		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
+		if currDist < shortestDist {
+			nearestBox = loot.GetID()
+			shortestDist = currDist
+		}
+	}
+	return nearestBox
+}
 func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 	fmt.Println("Propose Direction")
 	agent.UpdateDecisionData()
-	// agent.DisplayFellowsEnergyHistory()
-	agent.proposedLootBox = nil
-	lootBoxes := agent.GetGameState().GetLootBoxes()
-	agentLocation := agent.GetLocation() //agent's location
-	shortestDistance := math.MaxFloat64
-	audiPos := agent.GetGameState().GetAudi().GetPosition()
-	distanceThreshold := 20.0
-	for _, lootbox := range lootBoxes {
-		lootboxLocation := lootbox.GetPosition()
-		distance := physics.ComputeDistance(agentLocation, lootboxLocation)
-		lootDistanceFromAudi := physics.ComputeDistance(audiPos, lootboxLocation)
 
-		if agent.proposedLootBox == nil && distance < shortestDistance && lootDistanceFromAudi > distanceThreshold {
-			shortestDistance = distance
-			agent.proposedLootBox = lootbox
-		}
-		if (distance < shortestDistance || agent.GetColour() == lootbox.GetColour()) && lootDistanceFromAudi > distanceThreshold {
-			shortestDistance = distance
-			agent.proposedLootBox = lootbox
+	var lootBoxesWithinThreshold []objects.ILootBox
+	distanceThresholdFromAudi := 20.0 // adjust this value as needed
+	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	agentLocation := agent.GetLocation() // agent's location
+
+	for _, lootbox := range agent.GetGameState().GetLootBoxes() {
+		if physics.ComputeDistance(lootbox.GetPosition(), audiPos) > distanceThresholdFromAudi {
+			lootBoxesWithinThreshold = append(lootBoxesWithinThreshold, lootbox)
 		}
 	}
-	return agent.proposedLootBox.GetID()
+
+	// Sort the lootboxes within threshold by distance from the agent
+	sort.Slice(lootBoxesWithinThreshold, func(i, j int) bool {
+		return physics.ComputeDistance(agentLocation, lootBoxesWithinThreshold[i].GetPosition()) <
+			physics.ComputeDistance(agentLocation, lootBoxesWithinThreshold[j].GetPosition())
+	})
+
+	// Select the closest lootbox if any are within the threshold
+	if len(lootBoxesWithinThreshold) > 0 {
+		closestLootBox := lootBoxesWithinThreshold[0]
+		return closestLootBox.GetID()
+	} else {
+		return agent.nearestLoot()
+	}
 }
 
 // DecideAction only pedal
@@ -510,47 +537,6 @@ func (agent *BaselineAgent) DecideGovernance() utils.Governance {
 	return utils.Democracy
 }
 
-func (agent *BaselineAgent) nearestLoot() uuid.UUID {
-	currLocation := agent.GetLocation()
-	shortestDist := math.MaxFloat64
-	var nearestBox uuid.UUID
-	var currDist float64
-	for _, loot := range agent.GetGameState().GetLootBoxes() {
-		x, y := loot.GetPosition().X, loot.GetPosition().Y
-		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
-		if currDist < shortestDist {
-			nearestBox = loot.GetID()
-			shortestDist = currDist
-		}
-	}
-	return nearestBox
-}
-
-func (agent *BaselineAgent) DictateDirection() uuid.UUID {
-	agent.proposedLootBox = nil
-	if agent.GetEnergyLevel() <= 30 { //prioritize survival, if low on energy, go towards bereast lootbox
-		return agent.nearestLoot()
-	} else {
-		lootBoxes := agent.GetGameState().GetLootBoxes()
-		agentLocation := agent.GetLocation() //agent's location
-		shortestDistance := math.MaxFloat64
-
-		for _, lootbox := range lootBoxes {
-			lootboxLocation := lootbox.GetPosition()
-			distance := physics.ComputeDistance(agentLocation, lootboxLocation)
-			if agent.proposedLootBox == nil && distance < shortestDistance {
-				shortestDistance = distance
-				agent.proposedLootBox = lootbox
-			}
-			if distance < shortestDistance || agent.GetColour() == lootbox.GetColour() {
-				shortestDistance = distance
-				agent.proposedLootBox = lootbox
-			}
-		}
-		return agent.proposedLootBox.GetID()
-	}
-
-}
 func (agent *BaselineAgent) VoteDictator() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)
 	fellowBikers := agent.GetFellowBikers()
@@ -617,4 +603,136 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	println("the voting results are:", voteResults)
 
 	return voteResults
+}
+
+//////////////////////// LEADER FUNCTIONS/////////////////////////
+
+// defaults to an equal distribution over all agents for all actions
+func (agent *BaselineAgent) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	weights := make(map[uuid.UUID]float64)
+	fellows := agent.GetFellowBikers()
+	for _, fellow := range fellows {
+		weights[fellow.GetID()] = 1.0
+	}
+	return weights
+}
+
+//////////////////////// DICATOR FUNCTIONS/////////////////////////
+
+func (agent *BaselineAgent) DictateDirection() uuid.UUID {
+	fmt.Println("Dictate Direction")
+	agent.UpdateDecisionData()
+
+	var lootBoxesWithinThreshold []objects.ILootBox
+	distanceThresholdFromAudi := 20.0 // adjust this value as needed
+	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	agentLocation := agent.GetLocation() // agent's location
+
+	for _, lootbox := range agent.GetGameState().GetLootBoxes() {
+		if physics.ComputeDistance(lootbox.GetPosition(), audiPos) > distanceThresholdFromAudi {
+			lootBoxesWithinThreshold = append(lootBoxesWithinThreshold, lootbox)
+		}
+	}
+
+	// Sort the lootboxes within threshold by distance from the agent
+	sort.Slice(lootBoxesWithinThreshold, func(i, j int) bool {
+		return physics.ComputeDistance(agentLocation, lootBoxesWithinThreshold[i].GetPosition()) <
+			physics.ComputeDistance(agentLocation, lootBoxesWithinThreshold[j].GetPosition())
+	})
+
+	// Select the closest lootbox if any are within the threshold
+	if len(lootBoxesWithinThreshold) > 0 {
+		closestLootBox := lootBoxesWithinThreshold[0]
+		return closestLootBox.GetID()
+	} else {
+		return agent.nearestLoot()
+	}
+}
+
+func (agent *BaselineAgent) DecideKickOut() []uuid.UUID {
+	fmt.Println("Decide Kickout")
+	kickoutResults := make([]uuid.UUID, 0)
+	agent.UpdateDecisionData()
+
+	currentBike := agent.GetBike()
+	fellowBikers := agent.GetGameState().GetMegaBikes()[currentBike].GetAgents()
+	reputationRank, e1 := agent.rankFellowsReputation(fellowBikers)
+	honestyRank, e2 := agent.rankFellowsHonesty(fellowBikers)
+	if e1 != nil || e2 != nil {
+		panic("unexpected error!")
+	}
+	combined := make(map[uuid.UUID]float64)
+	worstRank := float64(1)
+
+	for _, fellow := range fellowBikers {
+		fellowID := fellow.GetID()
+		if combined[fellowID] == worstRank && fellowID != uuid.Nil {
+
+			if fellowID != agent.GetID() {
+				combined[fellowID] = reputationRank[fellowID] * honestyRank[fellowID]
+				if combined[fellowID] < worstRank {
+					worstRank = combined[fellowID]
+				}
+			} else {
+				combined[fellowID] = 1.0
+			}
+		}
+	}
+	for _, fellow := range fellowBikers {
+		fellowID := fellow.GetID()
+		if combined[fellowID] == worstRank && fellowID != uuid.Nil {
+			if agent.reputation[fellowID] < agent.getReputationAverage() || agent.honestyMatrix[fellowID] < agent.getHonestyAverage() {
+				kickoutResults = append(kickoutResults, fellowID)
+			}
+		}
+	}
+	return kickoutResults
+
+}
+
+func (agent *BaselineAgent) DecideDictatorAllocation() voting.IdVoteMap {
+	fmt.Println("Dictate Allocation")
+	agent.UpdateDecisionData()
+	distribution := make(voting.IdVoteMap)
+	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	fellowBikers := currentBike.GetAgents()
+	totalEnergySpent := float64(0)
+	totalAllocation := float64(0)
+
+	reputationRank, e1 := agent.rankFellowsReputation(fellowBikers)
+	honestyRank, e2 := agent.rankFellowsHonesty(fellowBikers)
+	if e1 != nil || e2 != nil {
+		panic("unexpected error!")
+	}
+
+	for _, fellow := range fellowBikers {
+		w1 := 0.3 //weight for reputation
+		w2 := 0.3 //weight for honesty
+		w3 := 0.3 //weight for energy spent
+		w4 := 0.1 //weight for energy level
+		fellowID := fellow.GetID()
+		energyLog := agent.energyHistory[fellowID]
+		energySpent := energyLog[len(energyLog)-2] - energyLog[len(energyLog)-1]
+		totalEnergySpent += energySpent
+		// In the case where the I am the same colour as the lootbox
+		if fellowID == agent.GetID() {
+			w3 = 0.398
+			w4 = 0.4
+			if agent.lootBoxColour == agent.GetColour() {
+				w3 = 0.8
+				w4 = 0.6
+			}
+		}
+		distribution[fellow.GetID()] = float64((w1 * reputationRank[fellowID]) + (w2 * honestyRank[fellowID]) + (w3 * energySpent) + (w4 * fellow.GetEnergyLevel()))
+		// distribution[fellow.GetID()] = energySpent * rand.Float64() // random for now
+		totalAllocation += distribution[fellow.GetID()]
+	}
+
+	//normalize the distribution
+	for _, fellow := range fellowBikers {
+		fellowID := fellow.GetID()
+		distribution[fellowID] = distribution[fellowID] / totalAllocation
+	}
+
+	return distribution
 }
