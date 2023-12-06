@@ -25,6 +25,7 @@ import (
 // 	return distance, energy
 // }
 
+// estimates the force of a given bike according to the number of agents on it
 func (bb *Biker1) estimateForce(velocity float64, numberOfAgents float64) float64 {
 	return (bb.getPedalForce() * numberOfAgents)
 	//return (bb.getPedalForce() * numberOfAgents) - (utils.DragCoefficient * velocity * velocity)
@@ -36,21 +37,21 @@ func (bb *Biker1) energyToReachableDistance(energy float64, bike obj.IMegaBike) 
 	totalDistance := 0.0
 	remainingEnergy := energy
 	var numberOfAgents float64
+	var AddingMass utils.PhysicalState
 	if bike.GetID() == bb.GetBike() {
 		numberOfAgents = float64(len(bike.GetAgents()))
+		AddingMass = bike.GetPhysicalState()
 	} else {
 		numberOfAgents = float64(len(bike.GetAgents())) + 1
+		AddingMass = utils.PhysicalState{
+			Position:     bike.GetPhysicalState().Position,
+			Acceleration: bike.GetPhysicalState().Acceleration,
+			Velocity:     bike.GetPhysicalState().Velocity,
+			Mass:         bike.GetPhysicalState().Mass + 1.0,
+		}
 	}
 
 	estimatedForce := bb.estimateForce(bike.GetVelocity(), numberOfAgents)
-	AddingMass := utils.PhysicalState{
-		Position:     bike.GetPhysicalState().Position,
-		Acceleration: bike.GetPhysicalState().Acceleration,
-		Velocity:     bike.GetPhysicalState().Velocity,
-		Mass:         bike.GetPhysicalState().Mass + 1.0,
-	}
-	//fmt.Printf("estimated forrce is %v\n, agents are %v", estimatedForce, numberOfAgents)
-	//fmt.Printf("inputs are physical state: %v, estimated force: %v, orientation %v\n", bike.GetPhysicalState(), estimatedForce, bike.GetOrientation())
 	newState := physics.GenerateNewState(AddingMass, estimatedForce, bike.GetOrientation())
 	remainingEnergy = remainingEnergy - bb.getPedalForce()*utils.MovingDepletion
 	distance = bb.ComputeDistance(AddingMass.Position, newState.Position)
@@ -59,7 +60,6 @@ func (bb *Biker1) energyToReachableDistance(energy float64, bike obj.IMegaBike) 
 	if bike.GetGovernance() == utils.Democracy {
 		remainingEnergy = remainingEnergy - utils.LeadershipDemocracyPenalty
 	}
-	//fmt.Printf("Our old coordinates are: %v. Our new ones are: %v\n", bb.GetLocation(), newState.Position)
 
 	for remainingEnergy > 0 {
 		estimatedForce = bb.estimateForce(newState.Velocity, numberOfAgents)
