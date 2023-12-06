@@ -8,6 +8,42 @@ import (
 	"github.com/google/uuid"
 )
 
+
+// if t5.prev == nul{
+// 	make map
+// 	make diff map
+// 	t5.prevEnergy = currMap
+// }
+// else{
+// 	current - agent.prev > 0
+// 	then update prev 
+// }
+
+func (t5 *team5Agent) Something(BikeId uuid.UUID) map[uuid.UUID]float64{
+	if(t5.prevEnergy == nil){
+		t5.prevEnergy = make(map[uuid.UUID]float64)
+	}
+
+	bike := t5.GetGameState().GetMegaBikes()[BikeId]
+	agentsOnBike := bike.GetAgents()
+	energyChange := make(map[uuid.UUID]float64)
+
+	for i, agent := range agentsOnBike {
+		fmt.Printf("Agent at index %d: %v\n", i, agent)
+		previousEnergy := t5.prevEnergy[agent.GetID()]
+
+		if(previousEnergy <= agent.GetEnergyLevel()){
+			energyChange[agent.GetID()] = agent.GetEnergyLevel() - previousEnergy
+		}
+
+		t5.prevEnergy[agent.GetID()] = agent.GetEnergyLevel()
+	}	
+
+	return energyChange
+
+}
+
+
 func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 	agentsOnBike := t5.GetFellowBikers()
 	numberOfAgents := float64(len(agentsOnBike))
@@ -19,7 +55,6 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 	a := 1.0
 	b := 1.0
 	c := 0.6
-	// forceMax := utils.BikerMaxForce
 
 	for _, agentB := range agentsOnBike {
 
@@ -30,45 +65,20 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 
 		reputation := t5.QueryReputation(keyId)
 
-		fmt.Println("Hi")
-		fmt.Println(reputation)
-
-		pedallingForce := agentB.GetForces().Pedal
-		utility := (a * pedallingForce) + (b * reputation) + (c * numberOfAgents)
-		utilityNorm := utility / 10.0
+		energyLevel := agentB.GetEnergyLevel()
+		utility := (a * energyLevel) + (b * reputation) + (c * numberOfAgents) 
+		utilityNorm := utility / (2.0 + (c* utils.BikersOnBike))
 
 		internalRanking[keyId] = utilityNorm
 
 		if utilityNorm > threshold {
-			// fmt.Println(utilityNorm)
 			ranking[keyId] = 0
 
 		} else {
-			fmt.Println(utilityNorm)
 			ranking[keyId] = 1
 		}
 
 	}
-
-	// type kv struct {
-	// 	Key   uuid.UUID
-	// 	Value float64
-	// }
-
-	// var ss []kv
-
-	// for k, v := range internalRanking {
-	// 	ss = append(ss, kv{k, v})
-	// }
-
-	// // Sort the slice by values
-	// sort.Slice(ss, func(i, j int) bool {
-	// 	return ss[i].Value < ss[j].Value
-	// })
-
-	// for i, pair := range ss {
-	// 	ranking[pair.Key] = i + 1
-	// }
 
 	return ranking
 }

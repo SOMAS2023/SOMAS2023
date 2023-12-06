@@ -18,7 +18,9 @@ type team5Agent struct {
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
 	state int // 0 = normal, 1 = conservative
+	prevEnergy map[uuid.UUID]float64
 }
+
 
 type ResourceAllocationMethod int
 
