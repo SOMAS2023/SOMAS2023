@@ -16,6 +16,7 @@ class Lootbox(Drawable):
             "Velocity" : jsonData["physical_state"]["velocity"],
             "Mass" : jsonData["physical_state"]["mass"],
             "Resources" : jsonData["total_resources"],
+            "Colour" : jsonData["colour"].title()
         }
         self.properties.update(properties)
 
