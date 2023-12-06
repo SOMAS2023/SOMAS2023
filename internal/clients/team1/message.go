@@ -2,6 +2,7 @@ package team1
 
 import (
 	obj "SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/utils"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
@@ -78,10 +79,14 @@ func (bb *Biker1) HandleForcesMessage(msg obj.ForcesMessage) {
 		//if we are dictator and the pedal force is 0, or they are braking, or they are turning differently, add them to the kick list
 		bikeID := bb.GetBike()
 		gs := bb.GetGameState()
-		if gs.GetMegaBikes()[bikeID].GetGovernance() == 2 {
+		bike := gs.GetMegaBikes()[bikeID]
+		if bb.GetID() == bike.GetRuler() && bike.GetGovernance() == utils.Dictatorship {
 			if msg.AgentForces.Brake > 0 || msg.AgentForces.Turning.SteerBike {
 				//set our opinion of them to 0, should be kicked in next loop
 				bb.UpdateOpinion(sender.GetID(), 0)
+			}
+			if msg.AgentForces.Pedal == 0 {
+				bb.UpdateOpinion(sender.GetID(), bb.opinions[sender.GetID()].opinion*0.9)
 			}
 		}
 		return

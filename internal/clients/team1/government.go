@@ -6,18 +6,20 @@ import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
 )
+
 // -------------------GOVERMENT CHOICE FUNCTIONS--------------------------
 
 // Not implemented on Server yet so this is just a placeholder
 func (bb *Biker1) DecideGovernance() utils.Governance {
 	if bb.DecideDictatorship() {
-		return 2
+		return utils.Dictatorship
 	} else if bb.DecideLeadership() {
-		return 1
+		return utils.Leadership
 	} else {
 		// Democracy
-		return 0
+		return utils.Democracy
 	}
+	//return 2
 }
 
 // Might be unnecesary as this is the default goverment choice for us
@@ -134,8 +136,5 @@ func (bb *Biker1) VoteDictator() voting.IdVoteMap {
 }
 
 //--------------------END OF LEADER/DICTATOR VOTING FUNCTIONS------------------
-
-
-
 
 //--------------------END OF GOVERMENT CHOICE FUNCTIONS------------------
