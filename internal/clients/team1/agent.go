@@ -167,19 +167,16 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 		// if we think we can survive
 		if bb.GetEnergyLevel() > bb.leavingRisk*-utils.LimboEnergyPenalty {
 			bb.dislikeVote = false
-			fmt.Printf("Agent %v is considering leaving bike %v\n", bb.GetID(), bb.GetBike())
 			newBike := bb.PickBestBike()
 			if newBike != bb.GetBike() {
 				// refresh prevEnergy Map
 				bb.prevEnergy = make(map[uuid.UUID]float64)
-				fmt.Printf("Agent %v is leaving bike %v for bike %v\n", bb.GetID(), bb.GetBike(), newBike)
 				return 1
 			} else {
 				bb.updatePrevEnergy()
 				return 0
 			}
 		} else {
-			fmt.Printf("Agent %v is staying on bike %v despite low opinion\n", bb.GetID(), bb.GetBike())
 			bb.updatePrevEnergy()
 			return 0
 		}
@@ -224,7 +221,6 @@ func (bb *Biker1) ChangeBike() uuid.UUID {
 	}
 	if !bb.prevOnBike {
 		bb.timeInLimbo++
-		fmt.Printf("Agent %v is in limbo for %v rounds\n", bb.GetID(), bb.timeInLimbo)
 		bb.pursuedBikes = append(bb.pursuedBikes, bb.desiredBike)
 	}
 	return bb.desiredBike
@@ -244,19 +240,16 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 		bbColour := bb.GetColour()
 		agentColour := agent.GetColour()
 		if agentColour == bbColour {
-			fmt.Printf("Agent %v is accepting agent %v by colour\n", bb.GetID(), agentId)
 			decision[agentId] = true
 			sameColourReward := 1.05
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
 			if bb.opinions[agentId].opinion > joinThreshold {
-				fmt.Printf("Agent %v is accepting agent %v by opinion\n", bb.GetID(), agentId)
 				decision[agentId] = true
 				// penalise for accepting them without same colour
 				penalty := 0.9
 				bb.UpdateOpinion(agentId, penalty)
 			} else {
-				fmt.Printf("Agent %v is rejecting agent %v, because opinion = %v\n", bb.GetID(), agentId, bb.opinions[agentId].opinion)
 				decision[agentId] = false
 			}
 		}
