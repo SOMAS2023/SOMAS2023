@@ -3,7 +3,6 @@ package team_8
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"math/rand"
 
 	"SOMAS2023/internal/common/voting"
 	"math"
@@ -32,7 +31,8 @@ type IBaselineAgent interface {
 
 type Agent8 struct {
 	*objects.BaseBiker
-	overallScores voting.LootboxVoteMap //rank score for the lootbox
+	overallScores voting.LootboxVoteMap         //rank score for the lootbox
+	agentsActions map[uuid.UUID]map[int]float64 //action score for each agent for the previous 10 loops (-1, 1)
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DecideGovernance <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -47,8 +47,8 @@ func (bb *Agent8) VoteDictator() voting.IdVoteMap {
 	// TODO: implement this function
 	votes := make(voting.IdVoteMap)
 	fellowBikers := bb.GetFellowBikers()
-	for i, fellowBiker := range fellowBikers {
-		if i == 0 {
+	for _, fellowBiker := range fellowBikers {
+		if fellowBiker.GetID() == bb.GetID() {
 			votes[fellowBiker.GetID()] = 1.0
 		} else {
 			votes[fellowBiker.GetID()] = 0.0
@@ -62,8 +62,8 @@ func (bb *Agent8) VoteLeader() voting.IdVoteMap {
 	// TODO: implement this function
 	votes := make(voting.IdVoteMap)
 	fellowBikers := bb.GetFellowBikers()
-	for i, fellowBiker := range fellowBikers {
-		if i == 0 {
+	for _, fellowBiker := range fellowBikers {
+		if fellowBiker.GetID() == bb.GetID() {
 			votes[fellowBiker.GetID()] = 1.0
 		} else {
 			votes[fellowBiker.GetID()] = 0.0
@@ -150,9 +150,11 @@ func (bb *Agent8) VoteForKickout() map[uuid.UUID]int {
 	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
 	for _, agent := range fellowBikers {
 		agentID := agent.GetID()
-		if agentID != bb.GetID() {
+		if bb.QueryReputation(agentID) < 0 {
 			// random votes to other agents
-			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
+			voteResults[agentID] = 1 // randomly assigns 0 or 1 vote
+		} else {
+			voteResults[agentID] = 0
 		}
 	}
 
@@ -162,7 +164,16 @@ func (bb *Agent8) VoteForKickout() map[uuid.UUID]int {
 // only called when the agent is the dictator
 func (bb *Agent8) DecideKickOut() []uuid.UUID {
 	// TODO: implement this function
-	return (make([]uuid.UUID, 0))
+	kickoutList := make([]uuid.UUID, 0)
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetAgents()
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if bb.QueryReputation(agentID) < 0 {
+			// random votes to other agents
+			kickoutList = append(kickoutList, agentID)
+		}
+	}
+	return kickoutList
 }
 
 // an agent will have to rank the agents that are trying to join and that they will try to
@@ -311,16 +322,17 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 4 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (bb *Agent8) DictateDirection() uuid.UUID {
 	// TODO: implement this function
-	return bb.GetID()
+	return bb.ProposeDirection()
 }
 
 func (bb *Agent8) LeadDirection() uuid.UUID {
 	// TODO: implement this function
-	return bb.GetID()
+	return bb.ProposeDirection()
 }
 
 // defaults to an equal distribution over all agents for all actions
 func (bb *Agent8) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
+	// TODO: implement this function
 	weights := make(map[uuid.UUID]float64)
 	agents := bb.GetFellowBikers()
 	for _, agent := range agents {
