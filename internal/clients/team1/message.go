@@ -23,7 +23,7 @@ func (bb *Biker1) VerifySender(sender obj.IBaseBiker) bool {
 }
 
 // Agent receives a who to kick off message
-func (bb *Biker1) HandleKickOffMessage(msg obj.KickOffAgentMessage) {
+func (bb *Biker1) HandleKickOffMessage(msg obj.KickoutAgentMessage) {
 	sender := msg.GetSender()
 	verified := bb.VerifySender(sender)
 	if verified {
@@ -105,7 +105,7 @@ func (bb *Biker1) GetTrustedRecepients() []obj.IBaseBiker {
 }
 
 // CREATING MESSAGES
-func (bb *Biker1) CreateKickOffMessage() obj.KickOffAgentMessage {
+func (bb *Biker1) CreateKickOffMessage() obj.KickoutAgentMessage {
 	// Receipients = fellowBikers
 	agentToKick := bb.lowestOpinionKick()
 	var kickDecision bool
@@ -116,10 +116,10 @@ func (bb *Biker1) CreateKickOffMessage() obj.KickOffAgentMessage {
 		kickDecision = false
 	}
 
-	return obj.KickOffAgentMessage{
+	return obj.KickoutAgentMessage{
 		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, bb.GetTrustedRecepients()),
 		AgentId:     agentToKick,
-		KickOff:     kickDecision,
+		Kickout:     kickDecision,
 	}
 }
 

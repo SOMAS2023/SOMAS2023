@@ -15,14 +15,14 @@ import (
 // agent specific parameters
 const deviateNegative = 0.1          // trust loss on deviation
 const deviatePositive = 0.15         // trust gain on non deviation
-const effortScaling = 0.1            // scaling factor for effort, highr it is the more effort chages each round
+const effortScaling = 0.2            // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1          // scaling factor for fairness, higher it is the more fairness changes each round
 const relativeSuccessScaling = 0.1   // scaling factor for relative success, higher it is the more relative success changes each round
 const votingAlignmentThreshold = 0.6 // threshold for voting alignment
 const leaveThreshold = 0.0           // threshold for leaving
 const kickThreshold = 0.0            // threshold for kicking
 const trustThreshold = 0.7           // threshold for trusting (need to tune)
-const fairnessConstant = 0.5         // weight of fairness in opinion
+const fairnessConstant = 1           // weight of fairness in opinion
 const joinThreshold = -0.2           // opinion threshold for joining if not same colour
 const leaderThreshold = 0.95         // opinion threshold for becoming leader
 const trustconstant = 1              // weight of trust in opinion
@@ -141,12 +141,15 @@ func (bb *Biker1) updatePrevEnergy() {
 
 func (bb *Biker1) DecideAction() obj.BikerAction {
 	fellowBikers := bb.GetFellowBikers()
-
 	// Update opinion metrics
-	if bb.recentDecided != uuid.Nil {
+	bb.DetermineOurReputation()
+	if bb.recentDecided != uuid.Nil && fellowBikers != nil {
 		bb.UpdateAllAgentsTrust(fellowBikers)
-		// bb.UpdateAllAgentsEffort()
 		bb.UpdateAllAgentsOpinions(fellowBikers)
+
+		if bb.getPedalForce() > 0 && bb.GetEnergyLevel() < bb.prevEnergy[bb.GetID()] {
+			bb.UpdateAllAgentsEffort()
+		}
 	}
 
 	// update only after receiving a lootbox
@@ -185,6 +188,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 		}
 
 	} else {
+		bb.updatePrevEnergy()
 		return 0
 	}
 }
@@ -260,7 +264,6 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 				decision[agentId] = false
 			}
 		}
-		bb.UpdateRelativeSuccess(agentId)
 
 	}
 
