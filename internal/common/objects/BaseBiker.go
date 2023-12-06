@@ -556,7 +556,7 @@ func (bb *BaseBiker) HandleKickoutMessage(msg KickoutAgentMessage) {
 
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.AgentId
-	// kickout := msg.kickout
+	// kickout := msg.Kickout
 }
 
 func (bb *BaseBiker) HandleReputationMessage(msg ReputationOfAgentMessage) {
