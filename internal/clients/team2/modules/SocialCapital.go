@@ -34,6 +34,18 @@ func (sc *SocialCapital) GetMinimumSocialCapital() (uuid.UUID, float64) {
 	return minAgentId, min
 }
 
+func (sc *SocialCapital) GetMaximumSocialCapital() (uuid.UUID, float64) {
+	max := math.MaxFloat64
+	maxAgentId := uuid.Nil
+	for agentId, value := range sc.SocialCapital {
+		if sc.SocialCapital[agentId] > max {
+			max = value
+			maxAgentId = agentId
+		}
+	}
+	return maxAgentId, max
+}
+
 func (sc *SocialCapital) ClipValues(input float64) float64 {
 	value := input
 	if value < 0 {
