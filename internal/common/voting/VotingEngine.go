@@ -124,6 +124,9 @@ func GetVotesMap(voters map[uuid.UUID]IVoter) map[uuid.UUID]map[uuid.UUID]float6
 		voteSum := SumOfValues(voter)
 		votes := voter.GetVotes()
 		for id := range votes {
+			if id == uuid.Nil {
+				panic("agent voted for a nil uuid")
+			}
 			votes[id] /= voteSum
 		}
 		VotesOfAgents[agentID] = votes
