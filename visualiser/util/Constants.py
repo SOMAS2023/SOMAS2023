@@ -11,6 +11,8 @@ EPSILON = 8
 ENERGYTHRESHOLD = 0.1
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
+MAXSPEED = 50
+ITERATIONLENGTH = 100
 TEXT = {
     "FONT" : "Arial",
     "FONT_SIZE": 1,
@@ -96,7 +98,7 @@ BGCOLOURS = {
 }
 COLOURS = {
     "red": "#E05558",
-    "orange": "#D5C801",
+    "orange": "#D57901",
     "yellow": "#D5C801",
     "green": "#7BBD01",
     "blue": "#5E82FD",
