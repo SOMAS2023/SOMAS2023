@@ -64,10 +64,6 @@ func (a AgentDump) GetID() uuid.UUID {
 	return a.ID
 }
 
-func (a AgentDump) GetForces() utils.Forces {
-	return a.Forces
-}
-
 func (a AgentDump) GetColour() utils.Colour {
 	return a.Colour
 }
