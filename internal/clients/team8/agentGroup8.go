@@ -20,7 +20,7 @@ type GP struct {
 }
 
 var GlobalParameters GP = GP{
-	EnergyThreshold:              0.5,
+	EnergyThreshold:              0.6,
 	DistanceThresholdForVoting:   (utils.GridHeight + utils.GridWidth) / 4,
 	ThresholdForJoiningDecision:  0.2,
 	ThresholdForChangingMegabike: 0.5,
@@ -288,8 +288,18 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 		colorPreference := calculateColorPreference(bb.GetColour(), lootBox.GetColour())
 		energyWeighting := bb.GetEnergyLevel()
 		// The higher energy, the higher weight for color
-		preferences[lootBox.GetID()] = colorPreference*energyWeighting +
-			(1-energyWeighting)*(GlobalParameters.DistanceThresholdForVoting-distance)/GlobalParameters.DistanceThresholdForVoting
+		distanceBoxAudi := calculateDistance(bb.GetGameState().GetAudi().GetPosition(), lootBox.GetPosition())
+		if distanceBoxAudi > 20 {
+			if energyWeighting > GlobalParameters.EnergyThreshold {
+				preferences[lootBox.GetID()] = colorPreference*energyWeighting +
+					(1-energyWeighting)*(GlobalParameters.DistanceThresholdForVoting-distance)/GlobalParameters.DistanceThresholdForVoting
+			} else {
+				preferences[lootBox.GetID()] = (GlobalParameters.DistanceThresholdForVoting - distance)
+			}
+		} else {
+			preferences[lootBox.GetID()] = 0.0
+		}
+
 	}
 
 	// Apply softmax to convert preferences to a probability distribution
@@ -357,8 +367,21 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 			break
 		}
 	}
-	angle := math.Atan2(target.GetPosition().Y-bb.GetLocation().Y, target.GetPosition().X-bb.GetLocation().X)/math.Pi -
-		bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+	distanceAudiBike := calculateDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+	var angle float64
+	if distanceAudiBike > 10 {
+		angle = math.Atan2(target.GetPosition().Y-bb.GetLocation().Y, target.GetPosition().X-bb.GetLocation().X)/math.Pi -
+			bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+	} else {
+		angle = math.Atan2(bb.GetLocation().Y-bb.GetGameState().GetAudi().GetPosition().Y, bb.GetLocation().X-bb.GetGameState().GetAudi().GetPosition().X)/math.Pi -
+			bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+	}
+
+	if angle > 1.0 {
+		angle -= 2.0
+	} else if angle < -1.0 {
+		angle += 2.0
+	}
 	forces.Turning.SteerBike = true
 	forces.Turning.SteeringForce = angle
 	bb.SetForces(forces)
