@@ -47,6 +47,10 @@ func (a AgentDump) DecideForce(uuid.UUID) {
 	panic(bannedFunctionErrorMessage)
 }
 
+func (a AgentDump) GetForces() utils.Forces {
+	panic(bannedFunctionErrorMessage)
+}
+
 func (a AgentDump) DecideJoining([]uuid.UUID) map[uuid.UUID]bool {
 	panic(bannedFunctionErrorMessage)
 }
