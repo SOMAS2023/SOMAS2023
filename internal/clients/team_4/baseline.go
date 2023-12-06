@@ -32,7 +32,6 @@ type IBaselineAgent interface {
 	DecideGovernance() utils.Governance //decide the governance system
 	VoteDictator() voting.IdVoteMap
 	VoteLeader() voting.IdVoteMap
-	LeadDirection() uuid.UUID //called only when the agent is the leader
 
 	//IMPLEMENTED FUNCTIONS
 	ProposeDirection() uuid.UUID                                                //returns the id of the desired lootbox
@@ -485,34 +484,6 @@ func (agent *BaselineAgent) DecideForce(direction uuid.UUID) {
 	}
 }
 
-// DecideForces randomly based on current energyLevel
-func (agent *BaselineAgent) DecideForces(direction uuid.UUID) {
-	//save the target lootbox
-	agent.lootBoxColour = agent.GetGameState().GetLootBoxes()[direction].GetColour()
-	energyLevel := agent.GetEnergyLevel()
-
-	randomBreakForce := float64(0)
-	randomPedalForce := rand.Float64() * energyLevel
-
-	if randomPedalForce == 0 {
-		// just random break force based on energy level, but not too much
-		randomBreakForce += rand.Float64() * energyLevel * 0.5
-	} else {
-		randomBreakForce = 0
-	}
-
-	forces := utils.Forces{
-		Pedal: randomPedalForce,
-		Brake: randomBreakForce, // random for now
-		Turning: utils.TurningDecision{
-			SteerBike:     true,
-			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), agent.GetGameState().GetMegaBikes()[direction].GetPosition()) - agent.GetGameState().GetMegaBikes()[agent.currentBike.GetID()].GetOrientation(),
-		},
-	}
-
-	agent.SetForces(forces)
-}
-
 func (agent *BaselineAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	agent.UpdateDecisionData()
 	decision := make(map[uuid.UUID]bool)
@@ -647,19 +618,3 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 
 	return voteResults
 }
-
-/* func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
-	voteResults := make(map[uuid.UUID]int)
-	bikeID := agent.GetBike()
-
-	fellowBikers := agent.GetGameState().GetMegaBikes()[bikeID].GetAgents()
-	for _, agent := range fellowBikers {
-		agentID := agent.GetID()
-		if agentID != agent.GetID() {
-			// random votes to other agents
-			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
-		}
-	}
-
-	return voteResults
-} */
