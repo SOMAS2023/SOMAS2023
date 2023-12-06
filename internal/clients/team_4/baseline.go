@@ -179,11 +179,18 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 	ranksum := make(map[uuid.UUID]float64)
 	totalsum := float64(0)
 	distanceRank := float64(0)
-	w1 := float64(0.7) //weight for distance
-	w2 := float64(0.2) //weight for reputation
-	w3 := float64(0.1) //weight for honesty
+	w1 := float64(0.4)  //weight for distance
+	w2 := float64(0.05) //weight for reputation
+	w3 := float64(0.05) //weight for honesty
+	w4 := float64(0.5)  //weight for distance from Audi
+
+	//if energy level is below threshold, increase weighting towards distance
+	minEnergyThreshold := 0.2
+	if agent.GetEnergyLevel() < minEnergyThreshold {
+		w1 *= 2
+	}
 	totaloptions := len(proposedLootBox)
-	minEnergyThreshold := 0.2 //if energy level is below this threshold, the agent will increase voting towards its colour lootbox
+	audiPos := agent.GetGameState().GetAudi().GetPosition()
 
 	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	fellowBikers := currentBike.GetAgents()
@@ -202,29 +209,28 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 	})
 
 	for i, lootBox := range proposedLootBox {
+		lootboxID := lootBox.GetID()
+		distanceFromAudi := physics.ComputeDistance(audiPos, lootBox.GetPosition())
+
 		//loop through all fellow bikers and check if they have the same colour as the lootbox
 		for _, fellow := range fellowBikers {
 			distanceRank := float64(totaloptions - i)
 			fellowID := fellow.GetID()
 			if fellow.GetColour() == lootBox.GetColour() {
-				weight := (w1 * distanceRank) + (w2 * reputationRank[fellowID]) + (w3 * honestyRank[fellowID])
-				ranksum[lootBox.GetID()] += weight
+				weight := (w1 * distanceRank) + (w2 * reputationRank[fellowID]) + (w3 * honestyRank[fellowID]) + (w4 * distanceFromAudi)
+				ranksum[lootboxID] += weight
 				totalsum += weight
 			}
 		}
 
 		if lootBox.GetColour() == agent.GetColour() {
-			weight := distanceRank * w1 * 1.25
-			//if energy level is below threshold, increase weighting towards own colour lootbox
-			if agent.GetEnergyLevel() < minEnergyThreshold {
-				weight *= 2
-			}
-			ranksum[lootBox.GetID()] += weight
+			weight := (distanceRank * w1 * 1.25) + (w4 * distanceFromAudi)
+			ranksum[lootboxID] += weight
 			totalsum += weight
 		}
-		if ranksum[lootBox.GetID()] == 0 {
-			weight := (distanceRank * w1 * 2.6)
-			ranksum[lootBox.GetID()] = weight
+		if ranksum[lootboxID] == 0 {
+			weight := (distanceRank * w1 * 2.6) + (w4 * distanceFromAudi)
+			ranksum[lootboxID] = weight
 			totalsum += weight
 		}
 	}
