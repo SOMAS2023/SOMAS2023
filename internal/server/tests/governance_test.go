@@ -14,7 +14,7 @@ func TestRulerElectionDictator(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
@@ -40,7 +40,7 @@ func TestRulerElectionLeader(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
@@ -66,7 +66,7 @@ func TestRunRulerActionDictator(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
@@ -103,7 +103,7 @@ func TestRunRulerActionLeader(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
@@ -139,7 +139,7 @@ func TestRunDemocraticAction(t *testing.T) {
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
 	s.FoundingInstitutions()
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}

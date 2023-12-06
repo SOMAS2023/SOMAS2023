@@ -7,8 +7,30 @@ FRAMERATE = 60
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
 COORDINATESCALE = 15
 PRECISION = 2
-# JSONPATH = "./internal/clients/team_5/visualiser/json/test2.json"
+EPSILON = 8
+ENERGYTHRESHOLD = 0.1
+THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
+MAXSPEED = 50
+ITERATIONLENGTH = 100
+TEXT = {
+    "FONT" : "Arial",
+    "FONT_SIZE": 1,
+    "PADDING": 2,
+    "DEFAULT_COLOUR" : "#FFFFFF",
+    "LINE_SPACING": 2,
+    "BACKGROUND_COLOUR": "#699ff5",
+    "TEXT_COLOUR": "#FFFFFF",
+    "LINE_COLOUR": "#d8e0ed",
+    "LINE_WIDTH": 2,
+    "BORDER_WIDTH": 2,
+    "BORDER_COLOUR": "#000000",
+}
+CONSOLE = {
+    "DEFAULT" : "#FFFFFF",
+    "ERROR" : "#FF0000",
+    "INFO" : "#FFFF00",
+}
 OVERLAY = {
     "FONT" : "Arial",
     "WIDTH": 300,
@@ -21,7 +43,6 @@ OVERLAY = {
     "LINE_WIDTH": 2,
     "BORDER_WIDTH": 2,
     "BORDER_COLOUR": "#000000",
-    "TRANSPARENCY": 240,
     "FPS_PAD" : 5,
 }
 BIKE = {
@@ -63,12 +84,13 @@ DIM = {
     "SCREEN_WIDTH": 1280,
     "SCREEN_HEIGHT": 720,
     "GAME_SCREEN_WIDTH": 1000,
+    "GAME_SCREEN_HEIGHT": 580,
     "UI_WIDTH": 280,
     "BUTTON_WIDTH": 220,
     "BUTTON_HEIGHT": 70,
     "GRIDSPACING": 20,
+    "CONSOLE_WIDTH": 750,
 }
-THEMEJSON = "visualiser/theme.json"
 BGCOLOURS = {
     "GUI" : "#E0E0E0",
     "MAIN" : "#F0F0F0",
@@ -76,7 +98,7 @@ BGCOLOURS = {
 }
 COLOURS = {
     "red": "#E05558",
-    "orange": "#D5C801",
+    "orange": "#D57901",
     "yellow": "#D5C801",
     "green": "#7BBD01",
     "blue": "#5E82FD",

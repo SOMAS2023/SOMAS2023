@@ -26,7 +26,7 @@ type IBaseBikerServer interface {
 	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
 	RunRulerAction(bike objects.IMegaBike) uuid.UUID
 	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID
-	NewGameStateDump() GameStateDump
+	NewGameStateDump(iteration int) GameStateDump
 	GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID
 	HandleKickoutProcess() []uuid.UUID
 	ProcessJoiningRequests(inLimbo []uuid.UUID)
@@ -111,28 +111,69 @@ func (s *Server) GetDeadAgents() map[uuid.UUID]objects.IBaseBiker {
 	return s.deadAgents
 }
 
-func (s *Server) outputResults(gameStates []GameStateDump) {
-	statisticsJson, err := json.MarshalIndent(CalculateStatistics(gameStates), "", "    ")
+func (s *Server) outputResults(gameStates [][]GameStateDump) {
+	statistics := CalculateStatistics(gameStates)
+
+	statisticsJson, err := json.MarshalIndent(statistics.Average, "", "    ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Statistics:\n" + string(statisticsJson))
+	fmt.Println("Average Statistics:\n" + string(statisticsJson))
 
-	file, err := os.Create("game_dump.json")
+	file, err := os.Create("statistics.xlsx")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	if err := statistics.ToSpreadsheet().Write(file); err != nil {
+		panic(err)
+	}
+
+	var flattenedGameStates []GameStateDump
+	for i := range gameStates {
+		flattenedGameStates = append(flattenedGameStates, gameStates[i]...)
+	}
+
+	file, err = os.Create("game_dump.json")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "    ")
-	if err := encoder.Encode(gameStates); err != nil {
+	if err := encoder.Encode(flattenedGameStates); err != nil {
 		panic(err)
 	}
 }
 
 func (s *Server) UpdateGameStates() {
-	gs := s.NewGameStateDump()
+	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
+	}
+}
+
+// had to override to address the fact that agents only have access to the game dump
+// version of agents, so if the recipients are set to be those it will panic as they
+// can't call the handler functions
+func (s *Server) RunMessagingSession() {
+	agentArray := s.GenerateAgentArrayFromMap()
+
+	for _, agent := range s.GetAgentMap() {
+		allMessages := agent.GetAllMessages(agentArray)
+		for _, msg := range allMessages {
+			recipients := msg.GetRecipients()
+			// make recipient list with actual agents
+			usableRecipients := make([]objects.IBaseBiker, len(recipients))
+			for i, recipient := range recipients {
+				usableRecipients[i] = s.GetAgentMap()[recipient.GetID()]
+			}
+			for _, recip := range usableRecipients {
+				if agent.GetID() == recip.GetID() {
+					continue
+				}
+				msg.InvokeMessageHandler(recip)
+			}
+		}
 	}
 }
