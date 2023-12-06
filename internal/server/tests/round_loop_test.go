@@ -167,6 +167,7 @@ func TestRunActionProcess(t *testing.T) {
 			}
 		}
 
+		s.UpdateGameStates()
 		s.RunActionProcess()
 		// check all agents have lost energy (proportionally to how much they have pedalled)
 		for _, agent := range s.GetAgentMap() {
