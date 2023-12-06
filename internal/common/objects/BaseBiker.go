@@ -160,7 +160,7 @@ func (bb *BaseBiker) DecideAction() BikerAction {
 // in the MVP the pedalling force will be 1, the breaking 0 and the tunring is determined by the
 // location of the nearest lootbox
 
-// the function is passed in the id of the voted lootbox, for now ignored
+// the function is passed in the id of the voted lootbox and the default base bikers steer to that lootbox.
 func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 
 	// NEAREST BOX STRATEGY (MVP)
