@@ -3,20 +3,22 @@
 package team1
 
 import (
+	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
 	"math"
+
 	"github.com/google/uuid"
 )
+
 // ---------------DIRECTION DECISION FUNCTIONS------------------
 
 // Simulates a step of the game, assuming all bikers pedal with the same force as us.
 // Returns the distance travelled and the remaining energy
-func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float64) (float64, float64) {
-	bikerNum := len(bb.GetFellowBikers())
-	totalBikerForce := force * float64(len(bb.GetFellowBikers()))
-	totalMass := utils.MassBike + float64(bikerNum)*utils.MassBiker
+func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float64, numberOfBikers float64) (float64, float64) {
+	totalBikerForce := force * numberOfBikers
+	totalMass := utils.MassBike + float64(numberOfBikers)*utils.MassBiker
 	acceleration := physics.CalcAcceleration(totalBikerForce, totalMass, velocity)
 	distance := velocity + 0.5*acceleration
 	energy = energy - force*utils.MovingDepletion
@@ -24,15 +26,22 @@ func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float
 }
 
 // Calculates the approximate distance that can be travelled with the given energy
-func (bb *Biker1) energyToReachableDistance(energy float64) float64 {
+func (bb *Biker1) energyToReachableDistance(energy float64, bike obj.IMegaBike) (float64, float64) {
 	distance := 0.0
 	totalDistance := 0.0
 	remainingEnergy := energy
+	var numberOfAgents float64
+	if bike.GetID() == bb.GetBikeInstance().GetID() {
+		numberOfAgents = float64(len(bike.GetAgents()))
+	} else {
+		numberOfAgents = float64(len(bike.GetAgents())) + 1
+	}
+
 	for remainingEnergy > 0 {
-		distance, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetVelocity(), bb.getPedalForce())
+		distance, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetVelocity(), bb.getPedalForce(), numberOfAgents)
 		totalDistance = totalDistance + distance
 	}
-	return totalDistance
+	return remainingEnergy, totalDistance
 }
 
 // Calculates the energy remaining after travelling the given distance
@@ -41,7 +50,7 @@ func (bb *Biker1) distanceToEnergy(distance float64, initialEnergy float64) floa
 	remainingEnergy := initialEnergy
 	extraDist := 0.0
 	for totalDistance < distance {
-		extraDist, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetPhysicalState().Mass, utils.BikerMaxForce*remainingEnergy)
+		extraDist, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetPhysicalState().Mass, utils.BikerMaxForce*remainingEnergy, float64(len(bb.GetFellowBikers())))
 		totalDistance = totalDistance + extraDist
 	}
 
@@ -58,7 +67,8 @@ func (bb *Biker1) getAllReachableBoxes() []uuid.UUID {
 	for _, loot := range lootBoxes {
 		lootPos := loot.GetPosition()
 		currDist = physics.ComputeDistance(currLocation, lootPos)
-		if currDist < bb.energyToReachableDistance(ourEnergy) {
+		_, distance := bb.energyToReachableDistance(ourEnergy, bb.GetBikeInstance())
+		if currDist < distance {
 			reachableBoxes = append(reachableBoxes, loot.GetID())
 		}
 	}
@@ -73,7 +83,8 @@ func (bb *Biker1) checkBoxNearColour(box uuid.UUID, energy float64) bool {
 	for _, loot := range lootBoxes {
 		lootPos := loot.GetPosition()
 		currDist = physics.ComputeDistance(boxPos, lootPos)
-		if currDist < bb.energyToReachableDistance(energy) && loot.GetColour() == bb.GetColour() {
+		_, distance := bb.energyToReachableDistance(energy, bb.GetBikeInstance())
+		if currDist < distance && loot.GetColour() == bb.GetColour() {
 			return true
 		}
 	}
@@ -163,7 +174,7 @@ func (bb *Biker1) ProposeDirection() uuid.UUID {
 
 	nearestBox, distanceToNearestBox := bb.nearestLootColour()
 	// TODO: check if nearestBox actually exists
-	reachableDistance := bb.energyToReachableDistance(bb.GetEnergyLevel()) // TODO add all other biker energies
+	_, reachableDistance := bb.energyToReachableDistance(bb.GetEnergyLevel(), bb.GetBikeInstance()) // TODO add all other biker energies
 	if distanceToNearestBox < reachableDistance {
 		return nearestBox
 	}
@@ -202,7 +213,7 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 	// if our colour is in those boxes, assign the number of people who voted for that box as the score, else assign, 0
 	// set highest score box to 1, rest to 0 (subject to change)
 	votes := make(voting.LootboxVoteMap)
-	maxDist := bb.energyToReachableDistance(bb.GetEnergyLevel())
+	_, maxDist := bb.energyToReachableDistance(bb.GetEnergyLevel(), bb.GetBikeInstance())
 
 	// pseudocode:
 	// loop through proposals
