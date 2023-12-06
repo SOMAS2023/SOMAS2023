@@ -18,8 +18,9 @@ type team5Agent struct {
 	objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
-	state    int // 0 = normal, 1 = conservative
-	messLoot uuid.UUID
+	state            int // 0 = normal, 1 = conservative
+	OtherBikerForces []utils.Forces
+	OtherBiker       objects.IBaseBiker
 }
 
 type ResourceAllocationMethod int
@@ -42,7 +43,6 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
-		messLoot:            uuid.Nil,
 	}
 }
 
@@ -142,27 +142,35 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 }
 
 func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
-	// For team's agent add your own logic on chosing when your biker should send messages
-	wantToSendMsg := true
-	if wantToSendMsg {
+	forcesMsg := t5.CreateForcesMessage()
+	return []messaging.IMessage[objects.IBaseBiker]{forcesMsg}
+}
 
-		lootboxMsg := t5.CreateLootboxMessage()
-		fmt.Println("GetAllMessages: ", lootboxMsg.LootboxId)
+func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
 
-		return []messaging.IMessage[objects.IBaseBiker]{lootboxMsg}
+	// sender := msg.BaseMessage.GetSender()
+	agentId := msg.AgentId
+	agentForces := msg.AgentForces
+
+	if agentId == t5.OtherBiker.GetID() {
+		t5.OtherBikerForces = append(t5.OtherBikerForces, agentForces)
+		// fmt.Println(len(ebb.OtherBikerForces), ebb.OtherBikerForces)
 	}
-	return []messaging.IMessage[objects.IBaseBiker]{}
+
 }
 
-func (t5 *team5Agent) HandleLootboxMessage(msg objects.LootboxMessage) {
-	// Implement your logic here
-	lootBox := msg.LootboxId
-	t5.messLoot = lootBox
-}
+func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
 
-func (t5 *team5Agent) CreateLootboxMessage() objects.LootboxMessage {
-	return objects.LootboxMessage{
+	return objects.ForcesMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
-		LootboxId:   t5.ProposeDirection(),
+		AgentId:     t5.GetID(),
+		AgentForces: utils.Forces{
+			Pedal: 1.0,
+			Brake: 1.0,
+			Turning: utils.TurningDecision{
+				SteerBike:     false,
+				SteeringForce: 1.0,
+			},
+		},
 	}
 }
