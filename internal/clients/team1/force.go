@@ -22,6 +22,10 @@ func (bb *Biker1) getPedalForce() float64 {
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *Biker1) DecideForce(direction uuid.UUID) {
 
+	bb.recentDecided = direction
+	bb.recentDecidedColour = bb.GetGameState().GetLootBoxes()[direction].GetColour()
+	bb.recentDecidedPosition = bb.GetGameState().GetLootBoxes()[direction].GetPosition()
+
 	bb.prevOnBike = bb.GetBikeStatus()
 	lootBoxes := bb.GetGameState().GetLootBoxes()
 	currLocation := bb.GetLocation()
