@@ -61,7 +61,7 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 	if isChangeBike {
 		return bikeId
 	} else {
-		return uuid.Nil
+		return a.Modules.Environment.BikeId
 	}
 }
 
@@ -104,4 +104,9 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 func (a *AgentTwo) UpdateGameState(gameState objects.IGameState) {
 	a.BaseBiker.UpdateGameState(gameState)
 	a.Modules.Environment.SetGameState(gameState)
+}
+
+func (a *AgentTwo) SetBike(bikeId uuid.UUID) {
+	a.Modules.Environment.BikeId = bikeId
+	a.BaseBiker.SetBike(bikeId)
 }
