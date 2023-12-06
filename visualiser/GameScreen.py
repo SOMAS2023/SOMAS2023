@@ -196,7 +196,7 @@ class GameScreen:
         # Void space
         self.elements["void_button"] = UIButton(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*5.6), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
-            text="Void/Game Toggle",
+            text="-",
             manager=manager,
             container=uiscreen,
             anchors={
