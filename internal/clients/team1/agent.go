@@ -4,12 +4,10 @@ package team1
 
 import (
 	obj "SOMAS2023/internal/common/objects"
-	"SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
 	"fmt"
 	"math"
-	"sort"
 
 	"github.com/google/uuid"
 )
