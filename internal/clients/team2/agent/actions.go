@@ -94,14 +94,9 @@ func (a *AgentTwo) DecideGovernance() utils.Governance {
 	randomNumber := rand.Float64()
 	if randomNumber < democracyWeight {
 		return utils.Democracy
-	} else if randomNumber < leadershipWeight+democracyWeight {
-		return utils.Leadership
-	} else if randomNumber < dictatorshipWeight+leadershipWeight+democracyWeight {
-		return utils.Dictatorship
 	} else {
-		return utils.Invalid
+		return utils.Leadership
 	}
-
 }
 
 func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {

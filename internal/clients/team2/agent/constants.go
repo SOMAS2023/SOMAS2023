@@ -37,8 +37,5 @@ const (
 
 // weights for each type of governance
 const (
-	democracyWeight = 0.6
-	leadershipWeight = 0.2
-	dictatorshipWeight = 0.2
-	invalidWeight = 0.0
+	democracyWeight = 0.5
 )
