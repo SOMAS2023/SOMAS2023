@@ -5,10 +5,9 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"github.com/google/uuid"
 	"math"
 	"sort"
-
-	"github.com/google/uuid"
 )
 
 type ISmartAgent interface {
@@ -98,13 +97,17 @@ func (agent *SmartAgent) DecideForce(direction uuid.UUID) {
 	if pedalForce > utils.BikerMaxForce {
 		pedalForce = utils.BikerMaxForce
 	}
+	steeringForce := 0.0
 	currentBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
+	if direction != uuid.Nil {
+		steeringForce = physics.ComputeOrientation(currentBike.GetPosition(), agent.GetGameState().GetLootBoxes()[direction].GetPosition()) - currentBike.GetOrientation()
+	}
 	forces := utils.Forces{
 		Pedal: pedalForce,
 		Brake: 0.0,
 		Turning: utils.TurningDecision{
 			SteerBike:     true,
-			SteeringForce: physics.ComputeOrientation(agent.GetLocation(), currentBike.GetPosition()) - currentBike.GetOrientation(),
+			SteeringForce: steeringForce,
 		},
 	}
 	agent.lastPedal = pedalForce
@@ -137,6 +140,9 @@ func (agent *SmartAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]
 func (agent *SmartAgent) ChangeBike() (targetId uuid.UUID) {
 	highestAvgScore := 0.0
 	for id, bike := range agent.GetGameState().GetMegaBikes() {
+		if targetId == uuid.Nil {
+			targetId = id
+		}
 		if len(bike.GetAgents()) == utils.BikersOnBike {
 			// ignore the bike with no empty space
 			continue
