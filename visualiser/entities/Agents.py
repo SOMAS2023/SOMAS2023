@@ -23,7 +23,7 @@ class Agent(Drawable):
             "Colour" : colour.title(),
             "Steering?" : f'{jsonData["forces"]["turning"]["steer_bike"] != 0}, {round(jsonData["forces"]["turning"]["steering_force"],PRECISION)}',
             "Energy" : round(jsonData["energy_level"], PRECISION),
-            "GroupID" : groupID,
+            "GroupID" : self.groupID,
         }
         self.properties.update(properties)
 
