@@ -4,9 +4,7 @@ import (
 	obj "SOMAS2023/internal/common/objects"
 	physics "SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
-	physics "SOMAS2023/internal/common/physics"
 	"math"
-
 	"github.com/google/uuid"
 )
 
