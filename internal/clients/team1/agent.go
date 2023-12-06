@@ -87,11 +87,11 @@ func (bb *Biker1) ScoreBike(bike obj.IMegaBike) float64 {
 	}
 	boxCount, colourCount, bikeCount := bb.GetNearBikeObjects(bike)
 	score := majorityWeight*majorityScore
-	score += lootboxWeight*bb.GetLootboxScore(bike)
-	score += lootboxColourWeight*bb.GetLootboxColourScore(bike)
+	score += lootboxWeight*float64(boxCount)
+	score += lootboxColourWeight*float64(colourCount)
 	score += audiDistWeight*bb.DistanceFromAudi(bike)
 	score += opinionWeight*bb.GetAverageOpinionOfBike(bike)
-	score -= nearbyBikeWeight*bb.GetNearbyBikeScore(bike)
+	score -= nearbyBikeWeight*float64(bikeCount)
 	
 	return score
 }
