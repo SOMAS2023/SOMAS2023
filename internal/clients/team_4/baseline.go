@@ -493,6 +493,30 @@ func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 	}
 }
 
+func (agent *BaselineAgent) ChangeBike() uuid.UUID {
+	megaBikes := agent.GetGameState().GetMegaBikes()
+	optimalBike := agent.GetBike()
+	weight := float64(-99)
+	for _, bike := range megaBikes {
+		if bike.GetID() != megaBikes[agent.GetBike()].GetID() { //get all bikes apart from our agent's bike
+			bikeWeight := float64(0)
+
+			for _, biker := range bike.GetAgents() {
+				if biker.GetColour() == agent.GetColour() {
+					bikeWeight += 1.8
+				} else {
+					bikeWeight += 1
+				}
+			}
+
+			if bikeWeight > weight {
+				optimalBike = bike.GetID()
+			}
+		}
+	}
+	return optimalBike
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Reputation and Honesty Matrix Teams Must Implement these or similar functions
@@ -774,7 +798,7 @@ func (agent *BaselineAgent) DecideDictatorAllocation() voting.IdVoteMap {
 	return distribution
 }
 
-// /////////////////////////// DISPLAY FUNCTIONS ////////////////////////////////////////
+// //////////////////////////// DISPLAY FUNCTIONS ////////////////////////////////////////
 func (agent *BaselineAgent) DisplayFellowsEnergyHistory() {
 	fellowBikers := agent.GetFellowBikers()
 	for _, fellow := range fellowBikers {
