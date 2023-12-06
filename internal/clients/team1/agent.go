@@ -22,7 +22,7 @@ const leaveThreshold = 0.0           // threshold for leaving
 const kickThreshold = 0.0            // threshold for kicking
 const trustThreshold = 0.7           // threshold for trusting (need to tune)
 const fairnessConstant = 1           // weight of fairness in opinion
-const joinThreshold = 0.8            // opinion threshold for joining if not same colour
+const joinThreshold = -0.2            // opinion threshold for joining if not same colour
 const leaderThreshold = 0.95         // opinion threshold for becoming leader
 const trustconstant = 1              // weight of trust in opinion
 const effortConstant = 1             // weight of effort in opinion
@@ -30,6 +30,7 @@ const fairnessDifference = 0.5       // modifies how much fairness increases of 
 const lowEnergyLevel = 0.3           // energy level below which the agent will try to get a lootbox of the desired colour
 const leavingThreshold = 0.3         // how low the agent's vote must be to leave bike
 const colorOpinionConstant = 0.2     // how much any agent likes any other of the same colour in the objective function
+const audiDistanceThreshold = 75    // how close the agent must be to the audi to run away
 
 // Governance decision constants
 const democracyOpinonThreshold = 0.5
@@ -186,7 +187,7 @@ func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 // decide which bike to go to
 func (bb *Biker1) ChangeBike() uuid.UUID {
 	// if recently left bike
-	if bb.prevOnBike && bb.GetBikeStatus() {
+	if bb.prevOnBike && !bb.GetBikeStatus() {
 		bb.prevOnBike = false
 		bb.numberOfLeaves++
 
@@ -198,6 +199,7 @@ func (bb *Biker1) ChangeBike() uuid.UUID {
 	}
 	if !bb.prevOnBike {
 		bb.timeInLimbo++
+		fmt.Printf("Agent %v is in limbo for %v rounds\n", bb.GetID(), bb.timeInLimbo)
 		bb.pursuedBikes = append(bb.pursuedBikes, bb.desiredBike)
 	}
 	return bb.desiredBike
@@ -219,23 +221,28 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 		bbColour := bb.GetColour()
 		agentColour := agent.GetColour()
 		if agentColour == bbColour {
+			fmt.Printf("Agent %v is accepting agent %v by colour\n", bb.GetID(), agentId)
 			decision[agentId] = true
 			sameColourReward := 1.05
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
 			if bb.opinions[agentId].opinion > joinThreshold {
+				fmt.Printf("Agent %v is accepting agent %v by opinion\n", bb.GetID(), agentId)
 				decision[agentId] = true
 				// penalise for accepting them without same colour
 				penalty := 0.9
 				bb.UpdateOpinion(agentId, penalty)
+			}else{
+				fmt.Printf("Agent %v is rejecting agent %v, because opinion = %v\n", bb.GetID(), agentId, bb.opinions[agentId].opinion )
+				decision[agentId] = false
 			}
-			decision[agentId] = false
+			
 		}
 	}
 
-	for _, agentId := range pendingAgents {
-		decision[agentId] = true
-	}
+	// for _, agentId := range pendingAgents {
+	// 	decision[agentId] = true
+	// }
 	return decision
 }
 

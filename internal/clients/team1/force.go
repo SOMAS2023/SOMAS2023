@@ -20,6 +20,35 @@ func (bb *Biker1) getPedalForce() float64 {
 // location of the nearest lootboX
 // the function is passed in the id of the voted lootbox, for now ignored
 func (bb *Biker1) DecideForce(direction uuid.UUID) {
+
+	bb.prevOnBike = bb.GetBikeStatus()
+	lootBoxes := bb.GetGameState().GetLootBoxes()
+	currLocation := bb.GetLocation()
+	targetPos := lootBoxes[direction].GetPosition()
+
+	// If audi is close, steer away from it
+	if bb.DistanceFromAudi(bb.GetBikeInstance()) < audiDistanceThreshold {
+		audiPos := bb.GetGameState().GetAudi().GetPosition()
+		deltaX := audiPos.X - currLocation.X
+		deltaY := audiPos.Y - currLocation.Y
+		// Steer in opposite direction to audi
+		angle := math.Atan2(-deltaY, -deltaX)
+		normalisedAngle := angle / math.Pi
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
+		}
+
+		escapeAudiForces := utils.Forces{
+			Pedal:   bb.getPedalForce(),
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+		bb.SetForces(escapeAudiForces)
+	}
+
+	//agent doesn't rebel, just decides to leave next round if dislike vote
+
 	if bb.recentVote != nil {
 		result, ok := bb.recentVote[direction]
 		if ok && result < votingAlignmentThreshold {
@@ -30,10 +59,6 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 		}
 	}
 
-	//agent doesn't rebel, just decides to leave next round if dislike vote
-	lootBoxes := bb.GetGameState().GetLootBoxes()
-	currLocation := bb.GetLocation()
-	targetPos := lootBoxes[direction].GetPosition()
 	deltaX := targetPos.X - currLocation.X
 	deltaY := targetPos.Y - currLocation.Y
 	angle := math.Atan2(deltaY, deltaX)
@@ -49,25 +74,6 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 		Turning: turningDecision,
 	}
 	bb.SetForces(boxForces)
-	// } else { //shouldnt happen, but would just run from audi
-	// 	audiPos := bb.GetGameState().GetAudi().GetPosition()
-	// 	deltaX := audiPos.X - currLocation.X
-	// 	deltaY := audiPos.Y - currLocation.Y
-	// 	// Steer in opposite direction to audi
-	// 	angle := math.Atan2(-deltaY, -deltaX)
-	// 	normalisedAngle := angle / math.Pi
-	// 	turningDecision := utils.TurningDecision{
-	// 		SteerBike:     true,
-	// 		SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
-	// 	}
-
-	// 	escapeAudiForces := utils.Forces{
-	// 		Pedal:   bb.getPedalForce(),
-	// 		Brake:   0.0,
-	// 		Turning: turningDecision,
-	// 	}
-	// 	bb.SetForces(escapeAudiForces)
-	// }
 }
 
 // -----------------END OF PEDALLING FORCE FUNCTIONS------------------
