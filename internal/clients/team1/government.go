@@ -12,12 +12,12 @@ import (
 // Not implemented on Server yet so this is just a placeholder
 func (bb *Biker1) DecideGovernance() utils.Governance {
 	if bb.DecideDictatorship() {
-		return 2
+		return utils.Dictatorship
 	} else if bb.DecideLeadership() {
-		return 1
+		return utils.Leadership
 	} else {
 		// Democracy
-		return 0
+		return utils.Democracy
 	}
 	//return 2
 }
