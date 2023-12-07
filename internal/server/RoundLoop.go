@@ -409,13 +409,14 @@ func (s *Server) LootboxCheckAndDistributions() {
 						// get the map of weights from the leader
 						leader := s.GetAgentMap()[megabike.GetRuler()]
 						weights := leader.DecideWeights(utils.Allocation)
+					outer:
 						for id := range weights {
 							for _, agent := range agents {
 								if agent.GetID() == id {
-									break
+									continue outer
 								}
-								panic("leader gave weight to an agent that isn't on the bike")
 							}
+							panic("leader gave weight to an agent that isn't on the bike")
 						}
 						// get allocation votes from each agent
 						allAllocations := make(map[uuid.UUID]voting.IdVoteMap)
