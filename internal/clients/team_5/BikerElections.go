@@ -30,7 +30,7 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 
 		reputation := t5.QueryReputation(keyId)
 
-		pedallingForce := agentB.GetForces().Pedal
+		pedallingForce := 1.0
 
 		utility := (a * pedallingForce) + (b * reputation) + (c * numberOfAgents)
 		utilityNorm := utility / 10.0
