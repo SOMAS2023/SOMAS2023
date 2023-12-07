@@ -34,9 +34,21 @@ func (bb *Agent8) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[obje
 func (bb *Agent8) CreatekickoutMessage() objects.KickoutAgentMessage {
 	// Currently this returns a default message which sends to all bikers on the biker agent's bike
 	// For team's agent, add your own logic to communicate with other agents
+	bikeID := bb.GetBike()
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	protectagent := uuid.Nil
+	initalreputation := 0.0
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if bb.QueryReputation(agentID) > initalreputation {
+			protectagent = agentID
+			initalreputation = bb.QueryReputation(agentID)
+		}
+	}
+
 	return objects.KickoutAgentMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		AgentId:     uuid.Nil,
+		AgentId:     protectagent,
 		Kickout:     false,
 	}
 }
