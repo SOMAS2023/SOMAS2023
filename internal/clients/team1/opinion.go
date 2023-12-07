@@ -260,7 +260,7 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 	//resultant =
 
 	// bike_force := utils.MassBike * acceleration
-	// fmt.Printf("Bike force: %v\n", bike_force)
+	// //** fmt.Printf("Bike force: %v\n", bike_force)
 	//resultant = force - drag
 	//force = mass*unknown acceleration?
 	//actual acceleration is calculated from (totalpedalforce - CalcDrag(v)) / m

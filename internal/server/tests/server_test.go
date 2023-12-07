@@ -2,7 +2,6 @@ package server_test
 
 import (
 	"SOMAS2023/internal/server"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -31,5 +30,5 @@ func TestInitialize(t *testing.T) {
 
 	//s.RunGameLoop()
 	//s.Start()
-	fmt.Printf("\nInitialize passed \n")
+	//** fmt.Printf("\nInitialize passed \n")
 }

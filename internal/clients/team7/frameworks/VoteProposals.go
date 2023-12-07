@@ -15,7 +15,7 @@ func VoteOnProposalsWrapper(voteInputs VoteInputs) Vote {
 	case YesNo:
 		vote = YesNos(voteInputs)
 	default:
-		fmt.Println("New decision type!")
+		//** fmt.Println("New decision type!")
 		vote = Proportions(voteInputs)
 	}
 

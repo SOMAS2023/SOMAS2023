@@ -14,7 +14,7 @@ func (t5 *team5Agent) updateState() {
 	} else {
 		t5.state = 3
 	}
-	// fmt.Println("Energy Level: ", currentEnergy, "State: ", t5.state, "Round: ", t5.roundCount)
+	// //** fmt.Println("Energy Level: ", currentEnergy, "State: ", t5.state, "Round: ", t5.roundCount)
 }
 
 // func (t5 *team5Agent) DecideAction() objects.BikerAction {

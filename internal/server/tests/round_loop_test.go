@@ -6,7 +6,6 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"SOMAS2023/internal/server"
-	"fmt"
 	"math"
 	"math/rand"
 	"testing"
@@ -41,7 +40,7 @@ func TestGetLeavingDecisions(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nGet leaving decisions passed \n")
+	//** fmt.Printf("\nGet leaving decisions passed \n")
 }
 
 func TestHandleKickout(t *testing.T) {
@@ -67,7 +66,7 @@ func TestHandleKickout(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nHadle kickout passed \n")
+	//** fmt.Printf("\nHadle kickout passed \n")
 }
 
 func TestProcessJoiningRequests(t *testing.T) {
@@ -130,7 +129,7 @@ func TestProcessJoiningRequests(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nProcess joining request passed \n")
+	//** fmt.Printf("\nProcess joining request passed \n")
 }
 
 func TestRunActionProcess(t *testing.T) {
@@ -192,7 +191,7 @@ func TestRunActionProcess(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nRun action process passed \n")
+	//** fmt.Printf("\nRun action process passed \n")
 }
 
 type NegativeAgent struct {
@@ -472,7 +471,7 @@ func TestProcessJoiningRequestsWithLimbo(t *testing.T) {
 		assert.Equal(t, agent.GetBikeStatus(), false, "agent in limbo was accepted")
 	}
 
-	fmt.Printf("\nProcess joining request passed \n")
+	//** fmt.Printf("\nProcess joining request passed \n")
 }
 
 func TestGetWinningDirection1(t *testing.T) {

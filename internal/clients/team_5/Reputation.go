@@ -9,7 +9,7 @@ import (
 )
 
 func (t5 *team5Agent) InitialiseReputation() {
-	//fmt.Println("HAHAHA: ", t5.GetReputation())
+	////** fmt.Println("HAHAHA: ", t5.GetReputation())
 	megaBikes := t5.GetGameState().GetMegaBikes()
 	for _, mb := range megaBikes {
 		// Iterate through all agents on each MegaBike
@@ -18,7 +18,7 @@ func (t5 *team5Agent) InitialiseReputation() {
 			t5.SetReputation(agent.GetID(), 0.5)
 		}
 	}
-	//fmt.Println("HAHAHA22: ", t5.GetReputation())
+	////** fmt.Println("HAHAHA22: ", t5.GetReputation())
 
 }
 
@@ -26,10 +26,10 @@ func (t5 *team5Agent) InitialiseReputation() {
 
 // Reputation calculation currently just based on energy and force
 func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep float64) float64 {
-	//fmt.Println("DONT BE nan: ", currentRep)
+	////** fmt.Println("DONT BE nan: ", currentRep)
 	//averagePedalForce := t5.getAverageForceOfAgents()
 	averageEnergy := t5.getAverageEnergyOfAgents()
-	//fmt.Println("averagePedalForce: ", averagePedalForce, "averageEnergy: ", averageEnergy)
+	////** fmt.Println("averagePedalForce: ", averagePedalForce, "averageEnergy: ", averageEnergy)
 	//Colour of agent
 	//check energy allocation -> change of energy in each agent
 	//if bike speed slow - lower everyone by small amount

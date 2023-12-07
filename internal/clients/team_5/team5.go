@@ -36,7 +36,7 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
 	baseBiker.GroupID = 5
 	// print
-	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
@@ -93,7 +93,7 @@ func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voti
 }
 
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
-	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
+	////** fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
 	method := t5.resourceAllocMethod
 	return t5.calculateResourceAllocation(method)
 }

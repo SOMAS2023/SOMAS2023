@@ -672,7 +672,7 @@ func NewTeam3Agent(totColours utils.Colour, bikeId uuid.UUID) *SmartAgent {
 	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
 	baseBiker.GroupID = 3
 	// print
-	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &SmartAgent{
 		BaseBiker: *baseBiker,
 	}

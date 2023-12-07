@@ -16,25 +16,25 @@ import (
 // so this bassically adjusts the force depending on the energy of the agent
 
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
-	//fmt.Println("testing 1")
+	////** fmt.Println("testing 1")
 
 	currLocation := t5.GetLocation()
 	orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
-	//fmt.Println("Current Location: ", currLocation)
+	////** fmt.Println("Current Location: ", currLocation)
 
 	nearestLoot := t5.ProposeDirection()
-	//fmt.Println("Nearest Loot ID: ", nearestLoot)
+	////** fmt.Println("Nearest Loot ID: ", nearestLoot)
 
 	currentLootBoxes := t5.GetGameState().GetLootBoxes()
-	//fmt.Println("Number of Loot Boxes: ", len(currentLootBoxes))
+	////** fmt.Println("Number of Loot Boxes: ", len(currentLootBoxes))
 
 	if len(currentLootBoxes) > 0 {
 		targetPos := currentLootBoxes[nearestLoot].GetPosition()
-		//fmt.Println("Target Position: ", targetPos)
+		////** fmt.Println("Target Position: ", targetPos)
 
 		deltaXB := targetPos.X - currLocation.X
 		deltaYB := targetPos.Y - currLocation.Y
-		//fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
+		////** fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
 
 		angleToGoal := math.Atan2(deltaYB, deltaXB) / math.Pi
 
@@ -53,16 +53,16 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 
 		steer := min(max((angleToGoal-orientation), -1), 1)
 
-		//fmt.Println("Bike Orientation: ", orientation)
+		////** fmt.Println("Bike Orientation: ", orientation)
 		///(float64(len(t5.GetMegaBike())));
-		// fmt.Println("Normalized Angle: ", angleToGoal, " bike orientation ", orientation, "turning_depending_on_agents_on_that_bike ", steer)
+		// //** fmt.Println("Normalized Angle: ", angleToGoal, " bike orientation ", orientation, "turning_depending_on_agents_on_that_bike ", steer)
 		//and i can change this depending on how the enemy agents are turning
 
 		turningDecision := utils.TurningDecision{
 			SteerBike:     true,
 			SteeringForce: steer,
 		}
-		//fmt.Println("Turning Decision: ", turningDecision)
+		////** fmt.Println("Turning Decision: ", turningDecision)
 
 		ownEnergyLevel := t5.GetEnergyLevel()
 		// ask the guys what number i want to put the own energy level and if it

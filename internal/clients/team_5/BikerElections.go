@@ -27,7 +27,7 @@ func (t5 *team5Agent) CalculateEnergyChange(BikeId uuid.UUID) map[uuid.UUID]floa
 	energyChange := make(map[uuid.UUID]float64)
 
 	for _, agent := range agentsOnBike {
-		// fmt.Printf("Agent at index %d: %v\n", i, agent)
+		// //** fmt.Printf("Agent at index %d: %v\n", i, agent)
 		previousEnergy := t5.prevEnergy[agent.GetID()]
 
 		// Calculate the energy change between agents in the previous round and the current round - help determine who was greedy/pedalling

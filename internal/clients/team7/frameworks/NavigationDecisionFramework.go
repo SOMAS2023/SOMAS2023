@@ -2,7 +2,6 @@ package frameworks
 
 import (
 	utils "SOMAS2023/internal/common/utils"
-	"fmt"
 	"math"
 )
 
@@ -33,10 +32,10 @@ func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) uti
 
 	forces := utils.Forces{Pedal: pedallingForce, Brake: brakingForce, Turning: turningInput}
 
-	fmt.Println("NavigationDecisionFramework: GetDecision called")
-	fmt.Println("NavigationDecisionFramework: Current location: ", ndf.inputs.CurrentLocation)
-	fmt.Println("NavigationDecisionFramework: Desired lootbox: ", ndf.inputs.Destination)
-	fmt.Println("NavigationDecisionFramework: Forces: ", forces)
+	//** fmt.Println("NavigationDecisionFramework: GetDecision called")
+	//** fmt.Println("NavigationDecisionFramework: Current location: ", ndf.inputs.CurrentLocation)
+	//** fmt.Println("NavigationDecisionFramework: Desired lootbox: ", ndf.inputs.Destination)
+	//** fmt.Println("NavigationDecisionFramework: Forces: ", forces)
 
 	return forces
 }

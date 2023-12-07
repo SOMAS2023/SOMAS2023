@@ -87,7 +87,7 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	if agent.reputation == nil {
 		agent.reputation = make(map[uuid.UUID]float64)
 	}
-	fmt.Println("Updating decision data ...")
+	//** fmt.Println("Updating decision data ...")
 	//update location history for the agent
 	agent.mylocationHistory = append(agent.mylocationHistory, agent.GetLocation())
 	//get fellow bikers
@@ -233,7 +233,7 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 /////////////////////////////////////////////// DECISION FUNCTIONS /////////////////////////////////////////////////////////
 
 func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
-	fmt.Println("Final Direction Vote")
+	//** fmt.Println("Final Direction Vote")
 	agent.UpdateDecisionData()
 	//We need to fix this ASAP
 	boxesInMap := agent.GetGameState().GetLootBoxes()
@@ -252,7 +252,7 @@ func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID
 }
 
 func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
-	fmt.Println("Decide Allocation")
+	//** fmt.Println("Decide Allocation")
 	agent.UpdateDecisionData()
 	distribution := make(voting.IdVoteMap) //make(map[uuid.UUID]float64)
 	fellowBikers := agent.GetFellowBikers()
@@ -297,7 +297,7 @@ func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
 
 // DecideAction only pedal
 func (agent *BaselineAgent) DecideAction() objects.BikerAction {
-	// fmt.Println("Team 4")
+	// //** fmt.Println("Team 4")
 	return objects.Pedal
 }
 
@@ -402,7 +402,7 @@ func (agent *BaselineAgent) DecideGovernance() utils.Governance {
 
 func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	agent.UpdateDecisionData()
-	fmt.Println("Vote for Kickout")
+	//** fmt.Println("Vote for Kickout")
 	voteResults := make(map[uuid.UUID]int)
 
 	fellowBikers := agent.GetFellowBikers()
@@ -471,7 +471,7 @@ func (agent *BaselineAgent) nearestLoot() uuid.UUID {
 }
 
 func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
-	fmt.Println("Propose Direction")
+	//** fmt.Println("Propose Direction")
 	agent.UpdateDecisionData()
 
 	var lootBoxesWithinThreshold []objects.ILootBox
@@ -551,7 +551,7 @@ func (agent *BaselineAgent) CalculateReputation() {
 			// Monitor otherAgent's location
 			// location := otherAgent.GetLocation()
 			// RAP := otherAgent.GetResourceAllocationParams()
-			// fmt.Println("Agent ID:", otherAgent.GetID(), "Location:", location, "ResourceAllocationParams:", RAP)
+			// //** fmt.Println("Agent ID:", otherAgent.GetID(), "Location:", location, "ResourceAllocationParams:", RAP)
 
 			// Monitor otherAgent's forces
 			historyenergy := agent.energyHistory[otherAgent.GetID()]
@@ -565,7 +565,7 @@ func (agent *BaselineAgent) CalculateReputation() {
 			energyLevel := otherAgent.GetEnergyLevel()
 			ReputationEnergy := float64((lastEnergy)) / energyLevel //CAUTION: REMOVE THE RANDOM VALUE
 			//print("我是大猴子")
-			//fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Forces:", ReputationEnergy)
+			////** fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Forces:", ReputationEnergy)
 
 			// Monitor otherAgent's bike status
 			bikeStatus := otherAgent.GetBikeStatus()
@@ -574,11 +574,11 @@ func (agent *BaselineAgent) CalculateReputation() {
 			if bikeStatus {
 				ReputationBikeShift = 1.0
 			}
-			//fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Bike_Shift", float64(ReputationBikeShift))
+			////** fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Bike_Shift", float64(ReputationBikeShift))
 
 			// Calculate Overall_reputation
 			OverallReputation := ReputationEnergy * ReputationBikeShift
-			//fmt.Println("Agent ID:", otherAgent.GetID(), "Overall Reputation:", OverallReputation)
+			////** fmt.Println("Agent ID:", otherAgent.GetID(), "Overall Reputation:", OverallReputation)
 
 			// Store Overall_reputation in the reputation map
 			agent.reputation[otherAgent.GetID()] = OverallReputation
@@ -615,13 +615,13 @@ func (agent *BaselineAgent) CalculateReputation() {
 			// Monitor otherAgent's location
 			// location := otherAgent.GetLocation()
 			// RAP := otherAgent.GetResourceAllocationParams()
-			// fmt.Println("Agent ID:", otherAgent.GetID(), "Location:", location, "ResourceAllocationParams:", RAP)
+			// //** fmt.Println("Agent ID:", otherAgent.GetID(), "Location:", location, "ResourceAllocationParams:", RAP)
 
 			// Monitor otherAgent's forces
 			forces := otherAgent.GetForces()
 			energyLevel := otherAgent.GetEnergyLevel()
 			ReputationForces := float64(forces.Pedal+forces.Brake+rand.Float64()) / energyLevel //CAUTION: REMOVE THE RANDOM VALUE
-			// fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Forces:", ReputationForces)
+			// //** fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Forces:", ReputationForces)
 
 			// Monitor otherAgent's bike status
 			bikeStatus := otherAgent.GetBikeStatus()
@@ -630,11 +630,11 @@ func (agent *BaselineAgent) CalculateReputation() {
 			if bikeStatus {
 				ReputationBikeShift = 1.0
 			}
-			// fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Bike_Shift", float64(ReputationBikeShift))
+			// //** fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Bike_Shift", float64(ReputationBikeShift))
 
 			// Calculate Overall_reputation
 			OverallReputation := ReputationForces * ReputationBikeShift
-			// fmt.Println("Agent ID:", otherAgent.GetID(), "Overall Reputation:", OverallReputation)
+			// //** fmt.Println("Agent ID:", otherAgent.GetID(), "Overall Reputation:", OverallReputation)
 
 			// Store Overall_reputation in the reputation map
 			agent.reputation[otherAgent.GetID()] = OverallReputation
@@ -755,7 +755,7 @@ func (agent *BaselineAgent) VoteDictator() voting.IdVoteMap {
 }
 
 func (agent *BaselineAgent) DictateDirection() uuid.UUID {
-	fmt.Println("Dictate Direction")
+	//** fmt.Println("Dictate Direction")
 	agent.UpdateDecisionData()
 
 	var lootBoxesWithinThreshold []objects.ILootBox
@@ -785,7 +785,7 @@ func (agent *BaselineAgent) DictateDirection() uuid.UUID {
 }
 
 func (agent *BaselineAgent) DecideKickOut() []uuid.UUID {
-	fmt.Println("Decide Kickout")
+	//** fmt.Println("Decide Kickout")
 	kickoutResults := make([]uuid.UUID, 0)
 	agent.UpdateDecisionData()
 
@@ -830,7 +830,7 @@ func (agent *BaselineAgent) DecideKickOut() []uuid.UUID {
 }
 
 func (agent *BaselineAgent) DecideDictatorAllocation() voting.IdVoteMap {
-	fmt.Println("Dictate Allocation")
+	//** fmt.Println("Dictate Allocation")
 	agent.UpdateDecisionData()
 	distribution := make(voting.IdVoteMap)
 	fellowBikers := agent.GetFellowBikers()
@@ -878,29 +878,40 @@ func (agent *BaselineAgent) DisplayFellowsEnergyHistory() {
 	fellowBikers := agent.GetFellowBikers()
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
-		fmt.Println("")
-		fmt.Println("Energy history for: ", fellowID)
+		//** fmt.Println("")
+		//** fmt.Println("Energy history for: ", fellowID)
 		fmt.Print(agent.energyHistory[fellowID])
-		fmt.Println("")
+		//** fmt.Println("")
 	}
 }
 func (agent *BaselineAgent) DisplayFellowsHonesty() {
 	fellowBikers := agent.GetFellowBikers()
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
-		fmt.Println("")
-		fmt.Println("Honesty Matrix for: ", fellowID)
+		//** fmt.Println("")
+		//** fmt.Println("Honesty Matrix for: ", fellowID)
 		fmt.Print(agent.honestyMatrix[fellowID])
-		fmt.Println("")
+		//** fmt.Println("")
 	}
 }
 func (agent *BaselineAgent) DisplayFellowsReputation() {
 	fellowBikers := agent.GetFellowBikers()
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
-		fmt.Println("")
-		fmt.Println("Reputation Matrix for: ", fellowID)
+		//** fmt.Println("")
+		//** fmt.Println("Reputation Matrix for: ", fellowID)
 		fmt.Print(agent.reputation[fellowID])
-		fmt.Println("")
+		//** fmt.Println("")
+	}
+}
+
+// Creates an instance of Team 5 Biker
+func BikerAgentGenerator(totColours utils.Colour, bikeId uuid.UUID) *BaselineAgent {
+	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
+	baseBiker.GroupID = 5
+	// print
+	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	return &BaselineAgent{
+		BaseBiker: *baseBiker,
 	}
 }

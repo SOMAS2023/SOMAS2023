@@ -102,7 +102,6 @@ func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
 	return agents
 }
 
-
 // -------------------SELFISHNESS/HELPFUL FUNCTIONS----------------------
 
 // // Success-Relationship algo for calculating selfishness score
@@ -166,7 +165,7 @@ func (bb *Biker1) GetNearBikeObjects(bike obj.IMegaBike) (int64, int64, int64) {
 	bikeCount := 0
 	for _, lootbox := range bb.GetGameState().GetLootBoxes() {
 		distance := bb.ComputeDistance(lootbox.GetPosition(), bike.GetPosition())
-		//fmt.Printf("distance from bike %v to lootox %v is %v\n", bike.GetID(), lootbox.GetID(), distance)
+		////** fmt.Printf("distance from bike %v to lootox %v is %v\n", bike.GetID(), lootbox.GetID(), distance)
 		if distance <= reachableDistance {
 			lootBoxCount += 1
 			if lootbox.GetColour() == bb.GetColour() {

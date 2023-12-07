@@ -18,13 +18,24 @@ import (
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount),
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker2AgentGenerator, BikerAgentCount),
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker3AgentGenerator, BikerAgentCount),
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker4AgentGenerator, BikerAgentCount),
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount),
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker7AgentGenerator, BikerAgentCount),
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount),
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount), //crashes, get follow bikers
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker2AgentGenerator, BikerAgentCount), //works
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker3AgentGenerator, BikerAgentCount), //crashes, non existent lootbox vote
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker4AgentGenerator, BikerAgentCount), //works
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount), //works
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker7AgentGenerator, BikerAgentCount), //crashes GetForces
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount), //works
+		/*
+			Biker 3, 7 fail completely
+			Biker 1 crashes when paired with another biker
+
+			Biker 2, 4, 5, 8 are not compatible with each other
+
+			Biker 2, 4, 8 are compatible with each other
+			Biker 2, 5, 8 are compatible with each other
+			Biker 2, 4, 5 are compatible with each other
+			Biker 4, 5, 8 are compatible with each other
+		*/
 	}
 }
 

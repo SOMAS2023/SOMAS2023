@@ -134,7 +134,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			leaderKickedOut := false
 			allKicked = append(allKicked, agentsVotes...)
 			for _, agentID := range agentsVotes {
-				fmt.Printf("kicking out agent %s\n", agentID)
+				//** fmt.Printf("kicking out agent %s\n", agentID)
 				s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 				// if the leader was kicked out vote for a new one
 				if agentID == bike.GetRuler() {
@@ -172,7 +172,7 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 				// will only be finalised then
 				leavingAgents = append(leavingAgents, agentId)
 				s.RemoveAgentFromBike(agent)
-				fmt.Printf("Agent %s left the bike \n", agentId)
+				//** fmt.Printf("Agent %s left the bike \n", agentId)
 			default:
 				panic("agent decided invalid action")
 			}
@@ -383,7 +383,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 		for lootid, lootbox := range s.GetLootBoxes() {
 			if megabike.CheckForCollision(lootbox) {
 				// Collision detected
-				fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
+				//** fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
@@ -441,11 +441,11 @@ func (s *Server) LootboxCheckAndDistributions() {
 					bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
 					for agentID, allocation := range winningAllocation {
-						fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
+						//** fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
 						lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
 						agent := s.GetAgentMap()[agentID]
 						// Allocate loot based on the calculated utility share
-						fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
+						//** fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 						agent.UpdateEnergyLevel(lootShare)
 						// Allocate points if the box is of the right colour
 						if agent.GetColour() == lootbox.GetColour() {

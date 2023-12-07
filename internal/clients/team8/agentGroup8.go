@@ -3,7 +3,6 @@ package team_8
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"fmt"
 	"math"
 
 	"SOMAS2023/internal/common/voting"
@@ -57,7 +56,7 @@ func (bb *Agent8) VoteDictator() voting.IdVoteMap {
 			votes[fellowBiker.GetID()] = 0.0
 		}
 	}
-	fmt.Println(votes)
+	//** fmt.Println(votes)
 	return votes
 }
 
