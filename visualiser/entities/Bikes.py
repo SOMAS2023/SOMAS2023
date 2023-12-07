@@ -62,7 +62,10 @@ class Bike(Drawable):
         """
         self.agentList = dict()
         for agentid in self.agentData:
-            self.agentList[agentid] = Agent(self.x, self.y, agentid, agentJson[agentid]["colour"], "?", agentJson[agentid])
+            # Allow for older JSONs that do not have group_id
+            if "group_id" not in agentJson[agentid]:
+                agentJson[agentid]["group_id"] = 0
+            self.agentList[agentid] = Agent(self.x, self.y, agentid, agentJson[agentid]["colour"], agentJson[agentid]["group_id"], agentJson[agentid])
 
     def get_agents(self) -> dict:
         """
