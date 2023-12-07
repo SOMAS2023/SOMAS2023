@@ -2,7 +2,6 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/utils"
-	"fmt"
 	"sort"
 
 	"github.com/google/uuid"
@@ -18,7 +17,7 @@ import (
 // 	then update prev
 // }
 
-func (t5 *team5Agent) Something(BikeId uuid.UUID) map[uuid.UUID]float64 {
+func (t5 *team5Agent) CalculateEnergyChange(BikeId uuid.UUID) map[uuid.UUID]float64 {
 	if t5.prevEnergy == nil {
 		t5.prevEnergy = make(map[uuid.UUID]float64)
 	}
@@ -27,13 +26,12 @@ func (t5 *team5Agent) Something(BikeId uuid.UUID) map[uuid.UUID]float64 {
 	agentsOnBike := bike.GetAgents()
 	energyChange := make(map[uuid.UUID]float64)
 
-	for i, agent := range agentsOnBike {
-		fmt.Printf("Agent at index %d: %v\n", i, agent)
+	for _, agent := range agentsOnBike {
+		// fmt.Printf("Agent at index %d: %v\n", i, agent)
 		previousEnergy := t5.prevEnergy[agent.GetID()]
 
-		if previousEnergy <= agent.GetEnergyLevel() {
-			energyChange[agent.GetID()] = agent.GetEnergyLevel() - previousEnergy
-		}
+		// Calculate the energy change between agents in the previous round and the current round - help determine who was greedy/pedalling
+		energyChange[agent.GetID()] = agent.GetEnergyLevel() - previousEnergy
 
 		t5.prevEnergy[agent.GetID()] = agent.GetEnergyLevel()
 	}
