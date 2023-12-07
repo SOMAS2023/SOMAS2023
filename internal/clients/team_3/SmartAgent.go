@@ -33,6 +33,10 @@ type SmartAgent struct {
 	lastPedal                      float64
 }
 
+func BikerAgentGenerator() objects.IBaseBiker {
+	return &SmartAgent{BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())}
+}
+
 func (agent *SmartAgent) DecideGovernance() utils.Governance {
 	currentBike, e := agent.GetGameState().GetMegaBikes()[agent.GetBike()]
 	if e == false { // not on bike at initial state
