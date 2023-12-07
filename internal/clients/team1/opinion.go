@@ -5,7 +5,6 @@ package team1
 import (
 	obj "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -95,10 +94,8 @@ func (bb *Biker1) UpdateFairness(agentID uuid.UUID) {
 
 	if energyChange-helpfulAllocation[agentID] > 0 {
 		//they have more than they should have fairly got
-		fmt.Printf("UNFAIR\n")
 		finalFairness -= (energyChange - helpfulAllocation[agentID]) * fairnessScaling
 	} else {
-		fmt.Printf("FAIR\n")
 		finalFairness += ((1 - (energyChange - helpfulAllocation[agentID])) / 2) * fairnessScaling
 	}
 
@@ -187,7 +184,6 @@ func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 	} else if newOpinion.opinion < 0 {
 		newOpinion.opinion = 0
 	}
-	fmt.Printf("new opinion: %v\n", newOpinion)
 	bb.opinions[id] = newOpinion
 
 }
@@ -224,7 +220,6 @@ func (bb *Biker1) DetermineOurReputation() float64 {
 	for _, agent := range agentsInContext {
 		reputation = reputation + bb.GetRelativeSuccess(bb.GetID(), agent.GetID())
 	}
-	fmt.Printf("Reputation: %v\n", reputation)
 	reputation = reputation / float64(len(agentsInContext))
 	return reputation
 }
@@ -254,7 +249,6 @@ func (bb *Biker1) UpdateAllAgentsOpinions(agents_to_update []obj.IBaseBiker) {
 
 func (bb *Biker1) UpdateAllAgentsEffort() {
 	fellowBikers := bb.GetFellowBikers()
-	fmt.Printf("Fellow bikers: %v\n", len(fellowBikers))
 	bikeId := bb.GetBike()
 	gs := bb.GetGameState()
 	totalMass := utils.MassBike + float64(len(fellowBikers))*utils.MassBiker
@@ -272,16 +266,10 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 	//actual acceleration is calculated from (totalpedalforce - CalcDrag(v)) / m
 	//resultant = mass*actual acceleration
 	totalPedalForce := total_force + drag_force
-	fmt.Printf("Acceleration: %v\n", acceleration)
-	fmt.Printf("Total pedal force: %v\n", totalPedalForce)
-	fmt.Printf("Drag force: %v\n", drag_force)
-	fmt.Printf("Total force: %v\n", total_force)
-	fmt.Printf("ACTUAL BIKE FORCE: %v\n", gs.GetMegaBikes()[bikeId].GetForce())
 
 	// Calculate force pedalled by everyone else
 	remainingForce := totalPedalForce - bb.getPedalForce()
 	effortProbability := make(map[uuid.UUID]float64) //probability that they are exc
-	lootBoxes := bb.GetGameState().GetLootBoxes()
 	totalEffort := 0.0
 	for _, agent := range fellowBikers {
 		id := agent.GetID()
@@ -301,9 +289,6 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 		}
 
 		colourProb := 0.0
-		fmt.Printf("Agent colour: %v\n", agent.GetColour())
-		fmt.Printf("Recent decided: %v\n", bb.recentDecided)
-		fmt.Printf("Lootboxes %v\n", lootBoxes)
 		if agent.GetColour() != bb.recentDecidedColour {
 			//probability should be high
 			//for now set to 0.5 but later change based on how close the lootbox is to their colour lootbox
@@ -324,12 +309,6 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 		agent := bb.GetAgentFromId(agentId)
 
 		//effort expectation is scaled by their energy and compare to our effort
-		fmt.Printf("Remaining force: %v\n", remainingForce)
-		fmt.Printf("Total effort: %v\n", totalEffort)
-		fmt.Printf("Current effort: %v\n", bb.opinions[agentId].effort)
-		fmt.Printf("verified effort prob: %v\n", agent.GetForces())
-		fmt.Printf("Effort probability: %v\n", effortProbability[agentId])
-		fmt.Printf("Pedal force: %v\n", bb.getPedalForce())
 		finalEffort := bb.opinions[agentId].effort + (effortProbability[agentId]-bb.getPedalForce())*effortScaling
 
 		if finalEffort > 1 {
@@ -369,7 +348,6 @@ func (bb *Biker1) UpdateAllAgentsTrust(agents_to_update []obj.IBaseBiker) {
 			bb.opinions[agentId] = newOpinion
 		}
 		bb.UpdateTrust(id)
-		fmt.Printf("Agent %v trust: %v\n", id, bb.opinions[id].trust)
 	}
 }
 
@@ -394,7 +372,6 @@ func (bb *Biker1) UpdateAllAgentsFairness(agents_to_update []obj.IBaseBiker) {
 
 		bikeID := bb.GetBike()
 		governance := bb.GetGameState().GetMegaBikes()[bikeID].GetGovernance()
-		fmt.Printf("Governance %v\n", governance)
 		if governance == 0 {
 			bb.UpdateFairness(id)
 		} else {
@@ -402,7 +379,6 @@ func (bb *Biker1) UpdateAllAgentsFairness(agents_to_update []obj.IBaseBiker) {
 			bb.UpdateFairness(ruler)
 			return
 		}
-		fmt.Printf("Agent %v fairness: %v\n", id, bb.opinions[id].fairness)
 	}
 }
 
@@ -425,7 +401,6 @@ func (bb *Biker1) UpdateAllAgentsRelativeSuccess(agents_to_update []obj.IBaseBik
 			bb.opinions[agentId] = newOpinion
 		}
 		bb.UpdateRelativeSuccess(id)
-		fmt.Printf("Agent %v relative success: %v\n", id, bb.opinions[id].relativeSuccess)
 	}
 }
 

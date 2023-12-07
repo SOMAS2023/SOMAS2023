@@ -4,7 +4,6 @@ package team1
 
 import (
 	utils "SOMAS2023/internal/common/utils"
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -57,7 +56,6 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 	if bb.recentVote != nil {
 		result, ok := bb.recentVote[direction]
 		if ok && result < votingAlignmentThreshold {
-			fmt.Printf("agent %v dislikes vote\n", bb.GetID())
 			bb.dislikeVote = true
 		} else {
 			bb.dislikeVote = false
