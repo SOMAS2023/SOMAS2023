@@ -94,14 +94,9 @@ func (a *AgentTwo) DecideGovernance() utils.Governance {
 	randomNumber := rand.Float64()
 	if randomNumber < democracyWeight {
 		return utils.Democracy
-	} else if randomNumber < leadershipWeight+democracyWeight {
-		return utils.Leadership
-	} else if randomNumber < dictatorshipWeight+leadershipWeight+democracyWeight {
-		return utils.Dictatorship
 	} else {
-		return utils.Invalid
+		return utils.Leadership
 	}
-
 }
 
 func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
@@ -186,7 +181,7 @@ func (a *AgentTwo) ProposeDirection() uuid.UUID {
 	agentID, agentColour, agentEnergy := a.GetID(), a.GetColour(), a.GetEnergyLevel()
 	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
 	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
-	if agentEnergy < modules.EnergyToOptimalLootboxThreshold {
+	if agentEnergy < modules.EnergyToOptimalLootboxThreshold || optimalLootbox == uuid.Nil {
 		return nearestLootbox
 	}
 	return optimalLootbox
@@ -231,7 +226,7 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 func (a *AgentTwo) DecideAction() objects.BikerAction {
 	avgSocialCapital := a.Modules.SocialCapital.GetAverage(a.Modules.SocialCapital.SocialCapital)
 
-	if avgSocialCapital > ChangeBikeSocialCapitalThreshold {
+	if avgSocialCapital >= ChangeBikeSocialCapitalThreshold {
 		// Pedal if members of the bike have high social capital.
 		return objects.Pedal
 	} else {
@@ -241,6 +236,12 @@ func (a *AgentTwo) DecideAction() objects.BikerAction {
 }
 
 func (a *AgentTwo) DecideForce(direction uuid.UUID) {
+	if direction == uuid.Nil {
+		lootboxId := a.Modules.Environment.GetHighestGainLootbox()
+		lootboxPos := a.Modules.Environment.GetLootboxPos(lootboxId)
+		a.SetForces(a.Modules.Utils.GetForcesToTarget(a.GetLocation(), lootboxPos))
+		return
+	}
 
 	a.Modules.VotedDirection = direction
 

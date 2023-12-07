@@ -47,6 +47,10 @@ func (a AgentDump) DecideForce(uuid.UUID) {
 	panic(bannedFunctionErrorMessage)
 }
 
+func (a AgentDump) GetForces() utils.Forces {
+	panic(bannedFunctionErrorMessage)
+}
+
 func (a AgentDump) DecideJoining([]uuid.UUID) map[uuid.UUID]bool {
 	panic(bannedFunctionErrorMessage)
 }
@@ -137,11 +141,27 @@ func (a AgentDump) HandleLootboxMessage(msg objects.LootboxMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 
-func (a AgentDump) HandleKickOffMessage(msg objects.KickOffAgentMessage) {
+func (a AgentDump) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 
 func (a AgentDump) HandleForcesMessage(msg objects.ForcesMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxDirectionMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) HandleVoteRulerMessage(msg objects.VoteRulerMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
+func (a AgentDump) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 

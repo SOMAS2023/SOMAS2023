@@ -15,21 +15,21 @@ func (a *AgentTwo) CreateForcesMessage() obj.ForcesMessage {
 	}
 }
 
-func (a *AgentTwo) CreateKickOffMessage() obj.KickOffAgentMessage {
+func (a *AgentTwo) CreateKickOffMessage() obj.KickoutAgentMessage {
 	agentId, _ := a.Modules.SocialCapital.GetMinimumSocialCapital()
 	kickOff := false
 	if agentId != a.GetID() {
 		kickOff = true
 	}
 
-	return obj.KickOffAgentMessage{
+	return obj.KickoutAgentMessage{
 		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](a, a.GetFellowBikers()),
 		AgentId:     agentId,
-		KickOff:     kickOff,
+		Kickout:     kickOff,
 	}
 }
 
-func (a *AgentTwo) HandleKickOffMessage(msg obj.KickOffAgentMessage) {
+func (a *AgentTwo) HandleKickOffMessage(msg obj.KickoutAgentMessage) {
 	agentId := msg.AgentId
 
 	if agentId != uuid.Nil {

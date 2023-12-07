@@ -15,6 +15,10 @@ type SocialCapital struct {
 }
 
 func (sc *SocialCapital) GetAverage(scComponent map[uuid.UUID]float64) float64 {
+	// Prevent divide
+	if len(scComponent) == 0 {
+		return 0.5
+	}
 	var sum = 0.0
 	for _, value := range scComponent {
 		sum += value
