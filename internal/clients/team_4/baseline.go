@@ -295,6 +295,12 @@ func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
 	return distribution
 }
 
+// DecideAction only pedal
+func (agent *BaselineAgent) DecideAction() objects.BikerAction {
+	// fmt.Println("Team 4")
+	return objects.Pedal
+}
+
 func (agent *BaselineAgent) DecideForce(direction uuid.UUID) {
 
 	currLocation := agent.GetLocation()
