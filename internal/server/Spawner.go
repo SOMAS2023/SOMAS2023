@@ -17,11 +17,11 @@ func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBike
 
 func BikerAgentGenerator() objects.IBaseBiker {
 	// Create a new instance of BaselineAgent
-	baselineAgent := &team4.BaselineAgent{
+	team4Agent := &team4.BaselineAgent{
 		BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New()),
 	}
 	// Return the baselineAgent as an IBaseBiker
-	return baselineAgent
+	return team4Agent
 }
 
 func (s *Server) spawnLootBox() {

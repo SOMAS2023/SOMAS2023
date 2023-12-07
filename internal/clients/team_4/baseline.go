@@ -7,7 +7,6 @@ import (
 	"SOMAS2023/internal/common/voting"
 	"fmt"
 	"math"
-	"math/rand"
 	"sort"
 
 	"github.com/google/uuid"
@@ -104,7 +103,7 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	//save updated reputation and honesty matrix
 	agent.CalculateReputation()
 	agent.CalculateHonestyMatrix()
-	// agent.DisplayFellowsEnergyHistory()
+	//agent.DisplayFellowsEnergyHistory()
 	// agent.DisplayFellowsHonesty()
 	// agent.DisplayFellowsReputation()
 }
@@ -152,6 +151,7 @@ func (agent *BaselineAgent) getReputationAverage() float64 {
 	}
 	return sum / float64(len(agent.reputation))
 }
+
 func (agent *BaselineAgent) getHonestyAverage() float64 {
 	sum := float64(0)
 	//loop through all bikers find the average honesty
@@ -463,6 +463,7 @@ func (agent *BaselineAgent) nearestLoot() uuid.UUID {
 	}
 	return nearestBox
 }
+
 func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 	fmt.Println("Propose Direction")
 	agent.UpdateDecisionData()
@@ -498,7 +499,7 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 	optimalBike := agent.GetBike()
 	weight := float64(-99)
 	for _, bike := range megaBikes {
-		if bike.GetID() != megaBikes[agent.GetBike()].GetID() { //get all bikes apart from our agent's bike
+		if bike.GetID() != megaBikes[agent.GetBike()].GetID() && bike.GetID() != uuid.Nil { //get all bikes apart from our agent's bike
 			bikeWeight := float64(0)
 
 			for _, biker := range bike.GetAgents() {
@@ -519,7 +520,70 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Reputation and Honesty Matrix Teams Must Implement these or similar functions
+//changed version
+
+func (agent *BaselineAgent) CalculateReputation() {
+	////////////////////////////
+	//  As the program I used for debugging invoked "padal" and "break" with values of 0, I conducted tests using random numbers.
+	// In case of an updated main program, I will need to adjust the parameters and expressions of the reputation matrix.
+	// The current version lacks real data during the debugging process.
+	////////////////////////////
+	megaBikes := agent.GetGameState().GetMegaBikes()
+
+	for _, bike := range megaBikes {
+		// Get all agents on MegaBike
+		fellowBikers := bike.GetAgents()
+
+		// Iterate over each agent on MegaBike, generate reputation assessment
+		for _, otherAgent := range fellowBikers {
+			// Exclude self
+			selfTest := otherAgent.GetID() //nolint
+			if selfTest == agent.GetID() && agent.GetID() != uuid.Nil {
+				agent.reputation[otherAgent.GetID()] = 1.0
+			}
+
+			// Monitor otherAgent's location
+			// location := otherAgent.GetLocation()
+			// RAP := otherAgent.GetResourceAllocationParams()
+			// fmt.Println("Agent ID:", otherAgent.GetID(), "Location:", location, "ResourceAllocationParams:", RAP)
+
+			// Monitor otherAgent's forces
+			historyenergy := agent.energyHistory[otherAgent.GetID()]
+			lastEnergy := 1.0
+			if len(historyenergy) >= 2 {
+				lastEnergy = historyenergy[len(historyenergy)-2]
+				// rest of your code
+			} else {
+				lastEnergy = 0.0
+			}
+			energyLevel := otherAgent.GetEnergyLevel()
+			ReputationEnergy := float64((lastEnergy)) / energyLevel //CAUTION: REMOVE THE RANDOM VALUE
+			//print("我是大猴子")
+			//fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Forces:", ReputationEnergy)
+
+			// Monitor otherAgent's bike status
+			bikeStatus := otherAgent.GetBikeStatus()
+			// Convert the boolean value to float64 and print the result
+			ReputationBikeShift := 0.2
+			if bikeStatus {
+				ReputationBikeShift = 1.0
+			}
+			//fmt.Println("Agent ID:", otherAgent.GetID(), "Reputation_Bike_Shift", float64(ReputationBikeShift))
+
+			// Calculate Overall_reputation
+			OverallReputation := ReputationEnergy * ReputationBikeShift
+			//fmt.Println("Agent ID:", otherAgent.GetID(), "Overall Reputation:", OverallReputation)
+
+			// Store Overall_reputation in the reputation map
+			agent.reputation[otherAgent.GetID()] = OverallReputation
+		}
+	}
+	/* 	for agentID, agentReputation := range agent.reputation {
+		print("Agent ID: ", agentID.String(), ", Reputation: ", agentReputation, "\n")
+	} */
+}
+
+/* // Reputation and Honesty Matrix Teams Must Implement these or similar functions
 
 func (agent *BaselineAgent) CalculateReputation() {
 	////////////////////////////
@@ -572,7 +636,7 @@ func (agent *BaselineAgent) CalculateReputation() {
 	// for agentID, agentReputation := range agent.reputation {
 	// 	print("Agent ID: ", agentID.String(), ", Reputation: ", agentReputation, "\n")
 	// }
-}
+} */
 
 func (agent *BaselineAgent) CalculateHonestyMatrix() {
 	for _, bike := range agent.GetGameState().GetMegaBikes() {
@@ -591,7 +655,11 @@ func (agent *BaselineAgent) DecideWeights(action utils.Action) map[uuid.UUID]flo
 	weights := make(map[uuid.UUID]float64)
 	fellows := agent.GetFellowBikers()
 	for _, fellow := range fellows {
-		weights[fellow.GetID()] = 1.0
+		if fellow.GetID() != uuid.Nil {
+			weights[fellow.GetID()] = 1.0
+		} else {
+			weights[fellow.GetID()] = 0.0
+		}
 	}
 	return weights
 }
@@ -715,7 +783,7 @@ func (agent *BaselineAgent) DecideKickOut() []uuid.UUID {
 	agent.UpdateDecisionData()
 
 	fellowBikers := agent.GetFellowBikers()
-	if len(fellowBikers) > 5 {
+	if len(fellowBikers) > 2 {
 
 		reputationRank, e1 := agent.rankFellowsReputation(fellowBikers)
 		honestyRank, e2 := agent.rankFellowsHonesty(fellowBikers)
@@ -778,7 +846,7 @@ func (agent *BaselineAgent) DecideDictatorAllocation() voting.IdVoteMap {
 		energySpent := energyLog[len(energyLog)-2] - energyLog[len(energyLog)-1]
 		totalEnergySpent += energySpent
 		// In the case where the I am the same colour as the lootbox
-		if fellowID == agent.GetID() {
+		if fellowID == agent.GetID() && fellowID != uuid.Nil {
 			w4 = 3.0
 			if agent.lootBoxColour == agent.GetColour() {
 				w3 = 3.0
