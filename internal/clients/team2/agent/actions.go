@@ -6,6 +6,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"fmt"
 	"maps"
 	"math/rand"
 
@@ -91,12 +92,13 @@ func (a *AgentTwo) DecideGovernance() utils.Governance {
 	// Need to decide weights for each type of Governance
 	// Can add an invalid weighting so that it is not 50/50
 
-	randomNumber := rand.Float64()
-	if randomNumber < democracyWeight {
-		return utils.Democracy
-	} else {
-		return utils.Leadership
-	}
+	// randomNumber := rand.Float64()
+	// if randomNumber < democracyWeight {
+	// 	return utils.Democracy
+	// } else {
+	// 	return utils.Leadership
+	// }
+	return utils.Democracy
 }
 
 func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
@@ -182,12 +184,18 @@ func (a *AgentTwo) ProposeDirection() uuid.UUID {
 	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
 	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
 	if agentEnergy < modules.EnergyToOptimalLootboxThreshold || optimalLootbox == uuid.Nil {
+		fmt.Printf("[PProposeDirection] Agent %s proposed nearest lootbox %s\n", agentID, nearestLootbox)
 		return nearestLootbox
 	}
+	fmt.Printf("[PProposeDirection] Agent %s proposed optimal lootbox %s\n", agentID, optimalLootbox)
 	return optimalLootbox
+
 }
 
 func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+	fmt.Printf("[FFinalDirectionVote] Agent %s got proposals %v\n", a.GetID(), proposals)
+	fmt.Printf("[FFinalDirectionVote] Agent %s has Social Capitals %v\n", a.GetID(), a.Modules.SocialCapital.SocialCapital)
+
 	votes := make(voting.LootboxVoteMap)
 
 	// Assume we set our own social capital to 1.0, thus need to account for it
@@ -210,6 +218,7 @@ func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.
 			votes[proposal] += scWeight
 		}
 	}
+	fmt.Printf("[FFinalDirectionVote] Agent %s voted %v\n", a.GetID(), votes)
 	return votes
 }
 
