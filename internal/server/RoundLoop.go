@@ -364,7 +364,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 	looted := make(map[uuid.UUID]int)
 	for _, megabike := range s.GetMegaBikes() {
 		for lootid, lootbox := range s.GetLootBoxes() {
-			if megabike.CheckForCollision(lootbox) {
+			if megabike.CheckForCollision(lootbox) { // && len(megabike.GetAgents()) != 0
 				if value, ok := looted[lootid]; ok {
 					looted[lootid] = value + 1
 				} else {
