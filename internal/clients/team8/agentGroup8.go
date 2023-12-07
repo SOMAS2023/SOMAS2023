@@ -4,9 +4,9 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"fmt"
+	"math"
 
 	"SOMAS2023/internal/common/voting"
-	"math"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
@@ -35,6 +35,7 @@ type Agent8 struct {
 	overallLootboxPreferences voting.LootboxVoteMap         //rank score for the lootbox
 	agentsActions             map[int]map[uuid.UUID]float64 //action score for each agent for the previous 10 loops (-1, 1)
 	loopScore                 map[int]map[uuid.UUID]float64 //loop score for each loop for our megabike (-1, 1)
+	GroupID                   int
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DecideGovernance <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -461,7 +462,9 @@ func (bb *Agent8) UpdateReputation() {
 
 // this function is going to be called by the server to instantiate bikers in the MVP
 func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) objects.IBaseBiker {
+	baseBiker := objects.GetBaseBiker(totColours, bikeId)
+	baseBiker.GroupID = 8
 	return &Agent8{
-		BaseBiker: objects.GetBaseBiker(totColours, bikeId),
+		BaseBiker: baseBiker,
 	}
 }

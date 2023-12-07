@@ -65,7 +65,7 @@ type Biker1 struct {
 	numberOfLeaves        int
 	leavingRisk           float64
 	prevEnergy            map[uuid.UUID]float64 // energy level of each agent in the previous round
-
+	GroupID               int
 }
 
 // part 1:
@@ -305,8 +305,10 @@ func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 // -------------------INSTANTIATION FUNCTIONS----------------------------
 func GetBiker1(colour utils.Colour, id uuid.UUID) *Biker1 {
 	fmt.Printf("Creating Biker1 with id %v\n", id)
+	baseBiker := obj.GetBaseBiker(colour, id)
+	baseBiker.GroupID = 1
 	return &Biker1{
-		BaseBiker:      obj.GetBaseBiker(colour, id),
+		BaseBiker:      baseBiker,
 		opinions:       make(map[uuid.UUID]Opinion),
 		dislikeVote:    false,
 		pursuedBikes:   make([]uuid.UUID, 0),
