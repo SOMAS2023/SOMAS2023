@@ -538,7 +538,7 @@ func (agent *BaselineAgent) CalculateReputation() {
 		for _, otherAgent := range fellowBikers {
 			// Exclude self
 			selfTest := otherAgent.GetID() //nolint
-			if selfTest == agent.GetID() && agent.GetID() != uuid.Nil {
+			if selfTest == agent.GetID() {
 				agent.reputation[otherAgent.GetID()] = 1.0
 			}
 
@@ -581,6 +581,7 @@ func (agent *BaselineAgent) CalculateReputation() {
 	/* 	for agentID, agentReputation := range agent.reputation {
 		print("Agent ID: ", agentID.String(), ", Reputation: ", agentReputation, "\n")
 	} */
+
 }
 
 /* // Reputation and Honesty Matrix Teams Must Implement these or similar functions
