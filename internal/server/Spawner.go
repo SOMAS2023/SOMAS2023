@@ -2,6 +2,7 @@ package server
 
 import (
 	"SOMAS2023/internal/clients/team1"
+	"SOMAS2023/internal/clients/team8"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 
@@ -13,8 +14,9 @@ type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	initFunctions := []AgentInitFunction{
-		nil,             // Base Biker
-		team1.GetBiker1, // Team 1
+		nil,                 // Base Biker
+		team1.GetBiker1,     // Team 1
+		team8.GetIBaseBiker, // Team 8
 	}
 
 	agentGenerators := make([]baseserver.AgentGeneratorCountPair[objects.IBaseBiker], 0, len(initFunctions))
