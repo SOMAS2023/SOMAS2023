@@ -17,15 +17,11 @@ type team5Agent struct {
 	objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
-<<<<<<< HEAD
 	state            int // 0 = normal, 1 = conservative
+	prevEnergy       map[uuid.UUID]float64
+	roundCount       int
 	otherBikerForces []utils.Forces
 	getforce         bool
-=======
-	state      int // 0 = normal, 1 = conservative
-	prevEnergy map[uuid.UUID]float64
-	roundCount int
->>>>>>> main
 }
 
 type ResourceAllocationMethod int
@@ -48,21 +44,15 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
-<<<<<<< HEAD
 		getforce:            false,
-=======
 		roundCount:          0,
->>>>>>> main
 	}
 }
 
 func (t5 *team5Agent) UpdateAgentInternalState() {
 	t5.updateState()
 	t5.updateReputationOfAllAgents()
-<<<<<<< HEAD
-=======
 	t5.roundCount = (t5.roundCount + 1) % utils.RoundIterations
->>>>>>> main
 }
 
 // needs fixing always democracy
@@ -183,11 +173,69 @@ func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
 	}
 }
 
-func (bb *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
+func (t5 *team5Agent) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 	// Team's agent should implement logic for handling other biker messages that were sent to them.
 
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.AgentId
-	// agentForces := msg.AgentForces
+	// kickout := msg.kickout
+}
 
+func (t5 *team5Agent) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// reputation := msg.Reputation
+}
+
+func (t5 *team5Agent) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// agentId := msg.AgentId
+	// bikeId := msg.BikeId
+}
+
+func (t5 *team5Agent) HandleLootboxMessage(msg objects.LootboxMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// lootboxId := msg.LootboxId
+}
+
+func (t5 *team5Agent) HandleGovernanceMessage(msg objects.GovernanceMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// bikeId := msg.BikeId
+	// governanceId := msg.GovernanceId
+}
+
+func (t5 *team5Agent) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
+}
+
+func (t5 *team5Agent) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxDirectionMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
+}
+
+func (t5 *team5Agent) HandleVoteRulerMessage(msg objects.VoteRulerMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
+}
+
+func (t5 *team5Agent) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
 }
