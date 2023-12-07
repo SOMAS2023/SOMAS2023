@@ -367,7 +367,7 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 		votes[proposal] = 0.0
 	}
 	votes[finalProposal] = 1.
-
+	bb.recentVote = votes
 	return votes
 }
 
