@@ -29,21 +29,23 @@ func (bb *Biker1) HandleKickOffMessage(msg obj.KickoutAgentMessage) {
 	verified := bb.VerifySender(sender)
 	if verified {
 		// slightly penalise view of person who sent message
-		if msg.Kickout {
-			if bb.opinions[msg.AgentId].opinion > 0.5 {
-				penalty := 0.9
-				bb.UpdateOpinion(sender.GetID(), penalty)
+		if msg.AgentId != uuid.Nil {
+			if msg.Kickout {
+				if bb.opinions[msg.AgentId].opinion > 0.5 {
+					penalty := 0.9
+					bb.UpdateOpinion(sender.GetID(), penalty)
+				} else {
+					sameOpinionreward := 1.1
+					bb.UpdateOpinion(sender.GetID(), sameOpinionreward)
+				}
 			} else {
-				sameOpinionreward := 1.1
-				bb.UpdateOpinion(sender.GetID(), sameOpinionreward)
-			}
-		} else {
-			if bb.opinions[msg.AgentId].opinion > 0.5 {
-				sameOpinionreward := 1.1
-				bb.UpdateOpinion(sender.GetID(), sameOpinionreward)
-			} else {
-				penalty := 0.9
-				bb.UpdateOpinion(sender.GetID(), penalty)
+				if bb.opinions[msg.AgentId].opinion > 0.5 {
+					sameOpinionreward := 1.1
+					bb.UpdateOpinion(sender.GetID(), sameOpinionreward)
+				} else {
+					penalty := 0.9
+					bb.UpdateOpinion(sender.GetID(), penalty)
+				}
 			}
 		}
 
@@ -55,11 +57,22 @@ func (bb *Biker1) HandleKickOffMessage(msg obj.KickoutAgentMessage) {
 func (bb *Biker1) HandleReputationMessage(msg obj.ReputationOfAgentMessage) {
 	sender := msg.GetSender()
 	verified := bb.VerifySender(sender)
+
 	if verified {
 		// TODO: SOME FORMULA TO UPDATE OPINION BASED ON REPUTATION given
-		currentReputation := bb.GetReputation()[msg.AgentId] + msg.Reputation
-		bb.SetReputation(msg.AgentId, currentReputation*reputationScaling)
+		if msg.AgentId != uuid.Nil {
+			// Retrieve the struct from the map
+			opinion, ok := bb.opinions[msg.AgentId]
+			if ok {
+				// Update the field
+				opinion.trust += msg.Reputation * reputationScaling
+				bb.opinions[msg.AgentId] = opinion
+			}
+			currentReputation := bb.GetReputation()[msg.AgentId] + msg.Reputation
+			bb.SetReputation(msg.AgentId, currentReputation*reputationScaling)
+		}
 	}
+	// ask fellow bikers what their reputation of incoming biker is..
 }
 
 // Agent receives a message from another agent to join
@@ -68,9 +81,12 @@ func (bb *Biker1) HandleJoiningMessage(msg obj.JoiningAgentMessage) {
 	// different from Verify sender since they are not on our bike
 	if bb.opinions[sender.GetID()].trust > trustThreshold && bb.opinions[sender.GetID()].opinion > 0.5 {
 		// check if sender is on our bike
-		if sender.GetColour() == bb.GetColour() {
-			sameColourReward := 1.1
-			bb.UpdateOpinion(sender.GetID(), sameColourReward)
+		if msg.AgentId != uuid.Nil {
+			agentToJoin := bb.GetAgentFromId(msg.AgentId)
+			if agentToJoin.GetColour() == bb.GetColour() {
+				sameColourReward := 1.1
+				bb.UpdateOpinion(sender.GetID(), sameColourReward)
+			}
 		}
 
 	}
@@ -82,9 +98,11 @@ func (bb *Biker1) HandleLootboxMessage(msg obj.LootboxMessage) {
 	sender := msg.GetSender()
 	verified := bb.VerifySender(sender)
 	if verified {
-		if sender.GetColour() == bb.GetColour() {
-			sameColourReward := 1.2
-			bb.UpdateOpinion(sender.GetID(), sameColourReward)
+		if msg.LootboxId != uuid.Nil {
+			if sender.GetColour() == bb.GetColour() {
+				sameColourReward := 1.2
+				bb.UpdateOpinion(sender.GetID(), sameColourReward)
+			}
 		}
 	}
 }
@@ -95,6 +113,7 @@ func (bb *Biker1) HandleGovernanceMessage(msg obj.GovernanceMessage) {
 	verified := bb.VerifySender(sender)
 	if verified {
 		// TODO: some update on governance decision maybe??
+
 	}
 }
 
@@ -153,11 +172,18 @@ func (bb *Biker1) CreateKickOffMessage() obj.KickoutAgentMessage {
 
 func (bb *Biker1) CreateReputationMessage() obj.ReputationOfAgentMessage {
 	// Tell the truth (for now)
-	// TODO: receipients = fellowBikers that we trust?
+	opinions, ok := bb.opinions[bb.GetID()]
+	reputation := opinions.opinion
+	if !ok {
+		reputation = 0.0
+	} else {
+		reputation = bb.opinions[bb.GetID()].opinion
+	}
+
 	return obj.ReputationOfAgentMessage{
 		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, bb.GetTrustedRecepients()),
 		AgentId:     uuid.Nil,
-		Reputation:  1.0,
+		Reputation:  reputation,
 	}
 }
 

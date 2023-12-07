@@ -4,7 +4,6 @@ package team1
 
 import (
 	obj "SOMAS2023/internal/common/objects"
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -15,8 +14,7 @@ type Opinion struct {
 	trust           float64
 	fairness        float64
 	relativeSuccess float64
-	// forgiveness float64
-	opinion float64 // cumulative result of all the above
+	opinion         float64 // cumulative result of all the above
 }
 
 // -----------------OPINION FUNCTIONS------------------
@@ -33,7 +31,6 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 	normalisedAngle := angle / math.Pi
 	steeringAngle := normalisedAngle - bb.GetBikeInstance().GetOrientation()
 	if math.Abs(steeringAngle) < 0.01 { //we are headed in direction towards lootbox
-		fmt.Printf("TRUST\n")
 		finalTrust = bb.opinions[id].trust + deviatePositive //will change to be based on weighting
 	} else {
 		//	need to estimate likelihood of each agent deviating from the correct steeringAngle
@@ -45,14 +42,7 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 		}
 	}
 
-	// Determine the confidence of the agent from relative success
-	// More energy/points they have slightly less confidence since they are more likely to be selfish
-	confidence := bb.GetRelativeSuccess(bb.GetID(), agentID, bb.GetFellowBikers())
-	// Since confidence is not so accurate we don't affect the trust as much
-	confidenceScaling := 0.05
-	finalTrust = finalTrust + -(confidence * confidenceScaling)
-
-	fmt.Printf("Final trust: %v\n", finalTrust)
+	// We update the trust value too of the agent from direct experience from messaging session
 
 	if finalTrust > 1 {
 		finalTrust = 1
@@ -102,10 +92,10 @@ func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID, agentsInContext []obj
 	// get relative success compared to us
 
 	relativeSuccess := bb.GetRelativeSuccess(bb.GetID(), agentID, agentsInContext)
-	fmt.Printf("Current relative success opinion: %v\n", bb.opinions[agentID].relativeSuccess)
-	fmt.Printf("Current relative success: %v\n", relativeSuccess)
+	// fmt.Printf("Current relative success opinion: %v\n", bb.opinions[agentID].relativeSuccess)
+	// fmt.Printf("Current relative success: %v\n", relativeSuccess)
 	finalRelativeSuccess := bb.opinions[agentID].relativeSuccess + (relativeSuccess-bb.opinions[agentID].relativeSuccess)*relativeSuccessScaling
-	fmt.Printf("Final relative success: %v\n", finalRelativeSuccess)
+	// fmt.Printf("Final relative success: %v\n", finalRelativeSuccess)
 	if finalRelativeSuccess > 1 {
 		finalRelativeSuccess = 1
 	}
@@ -195,15 +185,18 @@ func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
 	for _, agent := range bb.GetAllAgents() {
 		agentId := agent.GetID()
-		//if we have no data on an agent, initialise to neutral
-		newOpinion := Opinion{
-			effort:          0.5,
-			trust:           0.5,
-			fairness:        0.5,
-			relativeSuccess: 0.5,
-			opinion:         0.5,
+		_, ok := bb.opinions[agentId]
+		if !ok {
+			//if we have no data on an agent, initialise to neutral
+			newOpinion := Opinion{
+				effort:          0.5,
+				trust:           0.5,
+				fairness:        0.5,
+				relativeSuccess: 0.5,
+				opinion:         0.5,
+			}
+			bb.opinions[agentId] = newOpinion
 		}
-		bb.opinions[agentId] = newOpinion
 	}
 	return bb.opinions
 }
@@ -216,14 +209,13 @@ func (bb *Biker1) DetermineOurAverageReputation() float64 {
 	} else {
 		agentsInContext = bb.GetFellowBikers()
 	}
-
 	reputation := 0.0
 	for _, agent := range agentsInContext {
 		bb.UpdateRelativeSuccess(agent.GetID(), agentsInContext)
 		reputation = reputation + bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext)
 	}
 	reputation = reputation / float64(len(agentsInContext))
-	fmt.Printf("Reputation: %v\n", reputation)
+	// fmt.Printf("Reputation: %v\n", reputation)
 	return reputation
 }
 
@@ -252,7 +244,7 @@ func (bb *Biker1) UpdateAllAgentsOpinions(agents_to_update []obj.IBaseBiker) {
 
 func (bb *Biker1) UpdateAllAgentsEffort() {
 	fellowBikers := bb.GetFellowBikers()
-	fmt.Printf("Fellow bikers: %v\n", len(fellowBikers))
+	// fmt.Printf("Fellow bikers: %v\n", len(fellowBikers))
 
 	// totalPedalForce := total_force + drag_force
 
@@ -407,7 +399,7 @@ func (bb *Biker1) UpdateAllAgentsRelativeSuccess(agents_to_update []obj.IBaseBik
 			bb.opinions[agentId] = newOpinion
 		}
 		bb.UpdateRelativeSuccess(id, bb.GetFellowBikers())
-		fmt.Printf("Agent %v relative success: %v\n", id, bb.opinions[id].relativeSuccess)
+		// fmt.Printf("Agent %v relative success: %v\n", id, bb.opinions[id].relativeSuccess)
 	}
 }
 
