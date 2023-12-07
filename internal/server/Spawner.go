@@ -9,18 +9,30 @@ import (
 	"github.com/google/uuid"
 )
 
+type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
+
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
-	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount),
+	initFunctions := []AgentInitFunction{
+		nil,             // Base Biker
+		team1.GetBiker1, // Team 1
 	}
+
+	agentGenerators := make([]baseserver.AgentGeneratorCountPair[objects.IBaseBiker], 0, len(initFunctions))
+	for _, initFunction := range initFunctions {
+		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), BikerAgentCount/len(initFunctions)))
+	}
+	return agentGenerators
 }
 
-func BikerAgentGenerator() objects.IBaseBiker {
-	return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
-}
-
-func Biker1AgentGenerator() objects.IBaseBiker {
-	return team1.GetBiker1(utils.GenerateRandomColour(), uuid.New())
+func BikerAgentGenerator(initFunc func(baseBiker *objects.BaseBiker) objects.IBaseBiker) func() objects.IBaseBiker {
+	return func() objects.IBaseBiker {
+		baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+		if initFunc == nil {
+			return baseBiker
+		} else {
+			return initFunc(baseBiker)
+		}
+	}
 }
 
 func (s *Server) spawnLootBox() {

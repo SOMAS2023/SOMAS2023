@@ -303,10 +303,10 @@ func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 //--------------------END OF BIKER ACCEPTANCE FUNCTIONS-------------------
 
 // -------------------INSTANTIATION FUNCTIONS----------------------------
-func GetBiker1(colour utils.Colour, id uuid.UUID) *Biker1 {
-	fmt.Printf("Creating Biker1 with id %v\n", id)
+func GetBiker1(baseBiker *obj.BaseBiker) obj.IBaseBiker {
+	fmt.Printf("Creating Biker1 with id %v\n", baseBiker.GetID())
 	return &Biker1{
-		BaseBiker:      obj.GetBaseBiker(colour, id),
+		BaseBiker:      baseBiker,
 		opinions:       make(map[uuid.UUID]Opinion),
 		dislikeVote:    false,
 		pursuedBikes:   make([]uuid.UUID, 0),
