@@ -131,6 +131,7 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 
 func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
 	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
+	fmt.Println("GetAllMessages")
 	wantToSendMsg := true
 	if wantToSendMsg {
 		forcesMsg := t5.CreateForcesMessage()
@@ -149,6 +150,7 @@ func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
 }
 
 func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
+	fmt.Println("CreateForcesMessage")
 	// Currently this returns a default message which sends to all bikers on the biker agent's bike
 	// For team's agent, add your own logic to communicate with other agents
 	return objects.ForcesMessage{
