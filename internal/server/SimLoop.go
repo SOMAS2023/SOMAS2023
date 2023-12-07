@@ -33,6 +33,8 @@ func (s *Server) ResetGameState() {
 	for _, agent := range s.GetAgentMap() {
 		if agent.GetBike() != uuid.Nil {
 			s.RemoveAgentFromBike(agent)
+		} else if agent.GetBikeStatus() {
+			agent.ToggleOnBike()
 		}
 	}
 
@@ -60,12 +62,20 @@ func (s *Server) ResetGameState() {
 		}
 	}
 
+	for _, bike := range s.GetMegaBikes() {
+		bike.SetRuler(uuid.Nil)
+	}
+
 	s.replenishLootBoxes()
 	s.replenishMegaBikes()
 }
 
 func (s *Server) FoundingInstitutions() {
 	// Say which goverance method you might choose
+
+	// run founding messaging session
+	s.UpdateGameStates()
+	s.RunMessagingSession()
 
 	// check which governance method is chosen for each biker
 	s.foundingChoices = make(map[uuid.UUID]utils.Governance)
@@ -107,6 +117,7 @@ func (s *Server) FoundingInstitutions() {
 	for agent, governance := range s.foundingChoices {
 		// randomly select a biker from the bikers who chose this governance method
 		// add that biker to a megabike
+		// if there are more bikers for a governance method than there are seats, then evenly distribute them across megabikes
 
 		// select a bike with this governance method which has been assigned the lowest amount of bikers
 		bikesAvailable := govBikes[governance]
@@ -134,13 +145,8 @@ func (s *Server) FoundingInstitutions() {
 		}
 	}
 
-	// if there are more bikers for a governance method than there are seats, then evenly distribute them across megabikes
+	s.UpdateGameStates()
 
-	// set governance method for each bike so that it stays with the bike during the round
-
-	// bikers comply with governance method on the bike they're on
-
-	// choose leader if required
 }
 
 func (s *Server) Start() {

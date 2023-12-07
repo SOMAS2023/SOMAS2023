@@ -11,6 +11,7 @@ import (
 
 // Not implemented on Server yet so this is just a placeholder
 func (bb *Biker1) DecideGovernance() utils.Governance {
+	bb.setOpinions()
 	if bb.DecideDictatorship() {
 		return utils.Dictatorship
 	} else if bb.DecideLeadership() {
@@ -26,7 +27,7 @@ func (bb *Biker1) DecideGovernance() utils.Governance {
 func (bb *Biker1) DecideDemocracy() bool {
 	founding_agents := bb.GetAllAgents()
 	totalOpinion := 0.0
-	reputation := bb.ourReputation()
+	reputation := bb.DetermineOurReputation()
 	for _, agent := range founding_agents {
 		opinion, ok := bb.opinions[agent.GetID()]
 		if ok {
@@ -44,7 +45,7 @@ func (bb *Biker1) DecideDemocracy() bool {
 func (bb *Biker1) DecideLeadership() bool {
 	founding_agents := bb.GetAllAgents()
 	totalOpinion := 0.0
-	reputation := bb.ourReputation()
+	reputation := bb.DetermineOurReputation()
 	for _, agent := range founding_agents {
 		opinion, ok := bb.opinions[agent.GetID()]
 		if ok {
@@ -62,7 +63,7 @@ func (bb *Biker1) DecideLeadership() bool {
 func (bb *Biker1) DecideDictatorship() bool {
 	founding_agents := bb.GetAllAgents()
 	totalOpinion := 0.0
-	reputation := bb.ourReputation()
+	reputation := bb.DetermineOurReputation()
 	for _, agent := range founding_agents {
 		opinion, ok := bb.opinions[agent.GetID()]
 		if ok {
@@ -81,7 +82,7 @@ func (bb *Biker1) DecideDictatorship() bool {
 func (bb *Biker1) VoteLeader() voting.IdVoteMap {
 
 	votes := make(voting.IdVoteMap)
-	fellowBikers := bb.GetAllAgents()
+	fellowBikers := bb.GetFellowBikers()
 
 	for _, agent := range fellowBikers {
 		votes[agent.GetID()] = 0.0
@@ -111,7 +112,6 @@ func (bb *Biker1) VoteDictator() voting.IdVoteMap {
 
 	for _, agent := range fellowBikers {
 		votes[agent.GetID()] = 0.0
-		bb.UpdateOpinions()
 		if agent.GetID() != bb.GetID() {
 			val, ok := bb.opinions[agent.GetID()]
 			if ok {

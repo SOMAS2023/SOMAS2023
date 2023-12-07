@@ -102,7 +102,8 @@ func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
 	return agents
 }
 
-// -------------------SELFISHNESS FUNCTIONS----------------------
+
+// -------------------SELFISHNESS/HELPFUL FUNCTIONS----------------------
 
 // // Success-Relationship algo for calculating selfishness score
 func calculateSelfishnessScore(success float64, relationship float64) float64 {
@@ -117,20 +118,46 @@ func calculateSelfishnessScore(success float64, relationship float64) float64 {
 }
 
 func (bb *Biker1) GetSelfishness(agent obj.IBaseBiker) float64 {
-	pointSum := bb.GetPoints() + agent.GetPoints()
+	maxPoints := 0
+	for _, agents := range bb.GetFellowBikers() {
+		if agents.GetPoints() > maxPoints {
+			maxPoints = agents.GetPoints()
+		}
+	}
 	var relativeSuccess float64
-	if pointSum == 0 {
+	if maxPoints == 0 {
 		relativeSuccess = 0.5
 	} else {
-		relativeSuccess = float64((agent.GetPoints() - bb.GetPoints()) / (pointSum)) //-1 to 1
-		relativeSuccess = (relativeSuccess + 1.0) / 2.0                              //shift to 0 to 1
+		relativeSuccess = float64((agent.GetPoints() - bb.GetPoints()) / (maxPoints)) //-1 to 1
+		relativeSuccess = (relativeSuccess + 1.0) / 2.0                               //shift to 0 to 1
 	}
 	id := agent.GetID()
 	ourRelationship := bb.opinions[id].opinion
 	return calculateSelfishnessScore(relativeSuccess, ourRelationship)
 }
 
-// -------------------END OF SELFISHNESS FUNCTIONS----------------------
+func (bb *Biker1) getHelpfulAllocation() map[uuid.UUID]float64 {
+	fellowBikers := bb.GetFellowBikers()
+
+	sumEnergyNeeds := 0.0
+	helpfulAllocation := make(map[uuid.UUID]float64)
+	for _, agent := range fellowBikers {
+		// energyNeed := 1.0 - agent.GetEnergyLevel()
+		energyNeed := 1.0 - bb.prevEnergy[agent.GetID()]
+
+		helpfulAllocation[agent.GetID()] = energyNeed
+		sumEnergyNeeds = sumEnergyNeeds + energyNeed
+		if sumEnergyNeeds != 0 {
+			for agentId := range helpfulAllocation {
+				helpfulAllocation[agentId] /= sumEnergyNeeds
+			}
+		}
+
+	}
+	return helpfulAllocation
+}
+
+// -------------------END OF SELFISHNESS/HELPFUL FUNCTIONS----------------------
 // -------------------BIKE CHANGE HELPER FUNCTIONS----------------------
 func (bb *Biker1) GetNearBikeObjects(bike obj.IMegaBike) (int64, int64, int64) {
 	_, reachableDistance := bb.energyToReachableDistance(bb.GetEnergyLevel(), bike)

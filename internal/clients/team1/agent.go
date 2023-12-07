@@ -13,16 +13,17 @@ import (
 )
 
 // agent specific parameters
-const deviateNegative = -0.2         // trust loss on deviation
-const deviatePositive = 0.1          // trust gain on non deviation
+const deviateNegative = 0.1          // trust loss on deviation
+const deviatePositive = 0.15         // trust gain on non deviation
 const effortScaling = 0.1            // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1          // scaling factor for fairness, higher it is the more fairness changes each round
+const relativeSuccessScaling = 0.1   // scaling factor for relative success, higher it is the more relative success changes each round
 const votingAlignmentThreshold = 0.6 // threshold for voting alignment
 const leaveThreshold = 0.0           // threshold for leaving
 const kickThreshold = 0.0            // threshold for kicking
 const trustThreshold = 0.7           // threshold for trusting (need to tune)
-const fairnessConstant = 1           // weight of fairness in opinion
-const joinThreshold = -0.2            // opinion threshold for joining if not same colour
+const fairnessConstant = 0.5         // weight of fairness in opinion
+const joinThreshold = -0.2           // opinion threshold for joining if not same colour
 const leaderThreshold = 0.95         // opinion threshold for becoming leader
 const trustconstant = 1              // weight of trust in opinion
 const effortConstant = 1             // weight of effort in opinion
@@ -30,7 +31,7 @@ const fairnessDifference = 0.5       // modifies how much fairness increases of 
 const lowEnergyLevel = 0.3           // energy level below which the agent will try to get a lootbox of the desired colour
 const leavingThreshold = 0.3         // how low the agent's vote must be to leave bike
 const colorOpinionConstant = 0.2     // how much any agent likes any other of the same colour in the objective function
-const audiDistanceThreshold = 75    // how close the agent must be to the audi to run away
+const audiDistanceThreshold = 75     // how close the agent must be to the audi to run away
 
 // Governance decision constants
 const democracyOpinonThreshold = 0.5
@@ -49,22 +50,23 @@ const audiDistWeight = 0.7
 const opinionWeight = 0.5
 const nearbyBikeWeight = 0.5
 
-
-
 type Biker1 struct {
-	*obj.BaseBiker                       // BaseBiker inherits functions from BaseAgent such as GetID(), GetAllMessages() and UpdateAgentInternalState()
-	recentVote     voting.LootboxVoteMap // the agent's most recent vote
-	recentDecided  uuid.UUID             // the most recent decision
-	dislikeVote    bool                  // whether the agent disliked the most recent vote
-	opinions       map[uuid.UUID]Opinion
-	desiredBike    uuid.UUID
-	pursuedBikes   []uuid.UUID
-	timeInLimbo    int
-	prevOnBike     bool  
-	numberOfLeaves int
-	leavingRisk	   float64
-}
+	*obj.BaseBiker                              // BaseBiker inherits functions from BaseAgent such as GetID(), GetAllMessages() and UpdateAgentInternalState()
+	recentVote            voting.LootboxVoteMap // the agent's most recent vote
+	recentDecided         uuid.UUID             // the most recent decision
+	recentDecidedColour   utils.Colour          // the colour of the most recent decision (protects if another bike has taken the box)
+	recentDecidedPosition utils.Coordinates     // recent decided position (protects if another bike has taken the box)
+	dislikeVote           bool                  // whether the agent disliked the most recent vote
+	opinions              map[uuid.UUID]Opinion
+	desiredBike           uuid.UUID
+	pursuedBikes          []uuid.UUID
+	timeInLimbo           int
+	prevOnBike            bool
+	numberOfLeaves        int
+	leavingRisk           float64
+	prevEnergy            map[uuid.UUID]float64 // energy level of each agent in the previous round
 
+}
 
 // part 1:
 // the biker itself doesn't technically have a location (as it's on the map only when it's on a bike)
@@ -84,19 +86,19 @@ func (bb *Biker1) GetLocation() utils.Coordinates {
 
 func (bb *Biker1) ScoreBike(bike obj.IMegaBike) float64 {
 	var majorityScore float64
-	if bb.BikeOurColour(bike){
+	if bb.BikeOurColour(bike) {
 		majorityScore = 1.0
-	}else{
+	} else {
 		majorityScore = 0.0
 	}
 	boxCount, colourCount, bikeCount := bb.GetNearBikeObjects(bike)
-	score := majorityWeight*majorityScore
-	score += lootboxWeight*float64(boxCount)
-	score += lootboxColourWeight*float64(colourCount)
-	score += audiDistWeight*bb.DistanceFromAudi(bike)
-	score += opinionWeight*bb.GetAverageOpinionOfBike(bike)
-	score -= nearbyBikeWeight*float64(bikeCount)
-	
+	score := majorityWeight * majorityScore
+	score += lootboxWeight * float64(boxCount)
+	score += lootboxColourWeight * float64(colourCount)
+	score += audiDistWeight * bb.DistanceFromAudi(bike)
+	score += opinionWeight * bb.GetAverageOpinionOfBike(bike)
+	score -= nearbyBikeWeight * float64(bikeCount)
+
 	return score
 }
 
@@ -107,11 +109,11 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 	for _, bike := range allBikes {
 		tried := false
 		for _, pursuedId := range bb.pursuedBikes {
-			if pursuedId == bike.GetID(){
+			if pursuedId == bike.GetID() {
 				tried = true
 			}
 		}
-		if (len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.GetBike()) && !tried{
+		if (len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.GetBike()) && !tried {
 			scoreMap[bike.GetID()] = bb.ScoreBike(bike)
 		}
 	}
@@ -130,9 +132,28 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 	return bestBike
 }
 
-func (bb *Biker1) DecideAction() obj.BikerAction {
-	bb.UpdateOpinions()
+func (bb *Biker1) updatePrevEnergy() {
 	fellowBikers := bb.GetFellowBikers()
+	for _, agent := range fellowBikers {
+		bb.prevEnergy[agent.GetID()] = agent.GetEnergyLevel()
+	}
+}
+
+func (bb *Biker1) DecideAction() obj.BikerAction {
+	fellowBikers := bb.GetFellowBikers()
+
+	// Update opinion metrics
+	if bb.recentDecided != uuid.Nil {
+		bb.UpdateAllAgentsTrust(fellowBikers)
+		// bb.UpdateAllAgentsEffort()
+		bb.UpdateAllAgentsOpinions(fellowBikers)
+	}
+
+	// update only after receiving a lootbox
+	if bb.GetEnergyLevel() > bb.prevEnergy[bb.GetID()] {
+		bb.UpdateAllAgentsFairness(fellowBikers)
+	}
+
 	avg_opinion := 0.0
 	for _, agent := range fellowBikers {
 		avg_opinion = avg_opinion + bb.opinions[agent.GetID()].opinion
@@ -144,21 +165,22 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 	}
 	if (avg_opinion < leaveThreshold) || bb.dislikeVote {
 		// if we think we can survive
-		if bb.GetEnergyLevel() > bb.leavingRisk * -utils.LimboEnergyPenalty {
+		if bb.GetEnergyLevel() > bb.leavingRisk*-utils.LimboEnergyPenalty {
 			bb.dislikeVote = false
-			fmt.Printf("Agent %v is considering leaving bike %v\n", bb.GetID(), bb.GetBike())
 			newBike := bb.PickBestBike()
 			if newBike != bb.GetBike() {
-				fmt.Printf("Agent %v is leaving bike %v for bike %v\n", bb.GetID(), bb.GetBike(), newBike)
+				// refresh prevEnergy Map
+				bb.prevEnergy = make(map[uuid.UUID]float64)
 				return 1
 			} else {
+				bb.updatePrevEnergy()
 				return 0
 			}
 		} else {
-			fmt.Printf("Agent %v is staying on bike %v despite low opinion\n", bb.GetID(), bb.GetBike())
+			bb.updatePrevEnergy()
 			return 0
 		}
-		
+
 	} else {
 		return 0
 	}
@@ -199,13 +221,10 @@ func (bb *Biker1) ChangeBike() uuid.UUID {
 	}
 	if !bb.prevOnBike {
 		bb.timeInLimbo++
-		fmt.Printf("Agent %v is in limbo for %v rounds\n", bb.GetID(), bb.timeInLimbo)
 		bb.pursuedBikes = append(bb.pursuedBikes, bb.desiredBike)
 	}
 	return bb.desiredBike
 }
-
-
 
 // -------------------BIKER ACCEPTANCE FUNCTIONS------------------------
 // an agent will have to rank the agents that are trying to join and that they will try to
@@ -221,23 +240,21 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 		bbColour := bb.GetColour()
 		agentColour := agent.GetColour()
 		if agentColour == bbColour {
-			fmt.Printf("Agent %v is accepting agent %v by colour\n", bb.GetID(), agentId)
 			decision[agentId] = true
 			sameColourReward := 1.05
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
 			if bb.opinions[agentId].opinion > joinThreshold {
-				fmt.Printf("Agent %v is accepting agent %v by opinion\n", bb.GetID(), agentId)
 				decision[agentId] = true
 				// penalise for accepting them without same colour
 				penalty := 0.9
 				bb.UpdateOpinion(agentId, penalty)
-			}else{
-				fmt.Printf("Agent %v is rejecting agent %v, because opinion = %v\n", bb.GetID(), agentId, bb.opinions[agentId].opinion )
+			} else {
 				decision[agentId] = false
 			}
-			
 		}
+		bb.UpdateRelativeSuccess(agentId)
+
 	}
 
 	// for _, agentId := range pendingAgents {
@@ -285,20 +302,17 @@ func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 
 //--------------------END OF BIKER ACCEPTANCE FUNCTIONS-------------------
 
-
-
-
-
 // -------------------INSTANTIATION FUNCTIONS----------------------------
 func GetBiker1(colour utils.Colour, id uuid.UUID) *Biker1 {
 	fmt.Printf("Creating Biker1 with id %v\n", id)
 	return &Biker1{
-		BaseBiker:   obj.GetBaseBiker(colour, id),
-		opinions:    make(map[uuid.UUID]Opinion),
-		dislikeVote: false,
-		pursuedBikes: make([]uuid.UUID, 0),
+		BaseBiker:      obj.GetBaseBiker(colour, id),
+		opinions:       make(map[uuid.UUID]Opinion),
+		dislikeVote:    false,
+		pursuedBikes:   make([]uuid.UUID, 0),
 		numberOfLeaves: 0,
-		leavingRisk: 0.0,
+		leavingRisk:    0.0,
+		prevEnergy:     make(map[uuid.UUID]float64),
 	}
 }
 

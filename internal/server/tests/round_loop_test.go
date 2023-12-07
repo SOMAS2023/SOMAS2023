@@ -372,6 +372,8 @@ func TestRunActionProcessLeader(t *testing.T) {
 	bike.AddAgent(leader)
 	bike.SetRuler(leader.GetID())
 
+	s.UpdateGameStates()
+
 	// run action process
 	s.UpdateGameStates()
 	s.RunActionProcess()
