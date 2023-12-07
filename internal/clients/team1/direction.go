@@ -16,13 +16,19 @@ import (
 
 // Simulates a step of the game, assuming all bikers pedal with the same force as us.
 // Returns the distance travelled and the remaining energy
-func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float64, numberOfBikers float64) (float64, float64) {
-	totalBikerForce := force * numberOfBikers
-	totalMass := utils.MassBike + float64(numberOfBikers)*utils.MassBiker
-	acceleration := physics.CalcAcceleration(totalBikerForce, totalMass, velocity)
-	distance := velocity + 0.5*acceleration
-	energy = energy - force*utils.MovingDepletion
-	return distance, energy
+// func (bb *Biker1) simulateGameStep(energy float64, velocity float64, force float64, numberOfBikers float64) (float64, float64) {
+// 	totalBikerForce := (force * numberOfBikers) - (utils.DragCoefficient * velocity * velocity)
+// 	totalMass := utils.MassBike + float64(numberOfBikers)*utils.MassBiker
+// 	acceleration := physics.CalcAcceleration(totalBikerForce, totalMass, velocity)
+// 	distance := velocity + 0.5*acceleration
+// 	energy = energy - force*utils.MovingDepletion
+// 	return distance, energy
+// }
+
+// estimates the force of a given bike according to the number of agents on it
+func (bb *Biker1) estimateForce(velocity float64, numberOfAgents float64) float64 {
+	return (bb.getPedalForce() * numberOfAgents)
+	//return (bb.getPedalForce() * numberOfAgents) - (utils.DragCoefficient * velocity * velocity)
 }
 
 // Calculates the approximate distance that can be travelled with the given energy
@@ -31,15 +37,40 @@ func (bb *Biker1) energyToReachableDistance(energy float64, bike obj.IMegaBike) 
 	totalDistance := 0.0
 	remainingEnergy := energy
 	var numberOfAgents float64
-	if bike.GetID() == bb.GetBikeInstance().GetID() {
+	var AddingMass utils.PhysicalState
+	if bike.GetID() == bb.GetBike() {
 		numberOfAgents = float64(len(bike.GetAgents()))
+		AddingMass = bike.GetPhysicalState()
 	} else {
 		numberOfAgents = float64(len(bike.GetAgents())) + 1
+		AddingMass = utils.PhysicalState{
+			Position:     bike.GetPhysicalState().Position,
+			Acceleration: bike.GetPhysicalState().Acceleration,
+			Velocity:     bike.GetPhysicalState().Velocity,
+			Mass:         bike.GetPhysicalState().Mass + 1.0,
+		}
+	}
+
+	estimatedForce := bb.estimateForce(bike.GetVelocity(), numberOfAgents)
+	newState := physics.GenerateNewState(AddingMass, estimatedForce, bike.GetOrientation())
+	remainingEnergy = remainingEnergy - bb.getPedalForce()*utils.MovingDepletion
+	distance = bb.ComputeDistance(AddingMass.Position, newState.Position)
+	totalDistance = totalDistance + distance
+	oldState := newState
+	if bike.GetGovernance() == utils.Democracy {
+		remainingEnergy = remainingEnergy - utils.LeadershipDemocracyPenalty
 	}
 
 	for remainingEnergy > 0 {
-		distance, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetVelocity(), bb.getPedalForce(), numberOfAgents)
+		estimatedForce = bb.estimateForce(newState.Velocity, numberOfAgents)
+		newState = physics.GenerateNewState(newState, estimatedForce, bike.GetOrientation())
+		distance = bb.ComputeDistance(oldState.Position, newState.Position)
+		oldState = newState
 		totalDistance = totalDistance + distance
+		remainingEnergy = remainingEnergy - bb.getPedalForce()*utils.MovingDepletion
+		if bike.GetGovernance() == utils.Democracy {
+			remainingEnergy = remainingEnergy - utils.LeadershipDemocracyPenalty
+		}
 	}
 	return remainingEnergy, totalDistance
 }
@@ -49,8 +80,20 @@ func (bb *Biker1) distanceToEnergy(distance float64, initialEnergy float64) floa
 	totalDistance := 0.0
 	remainingEnergy := initialEnergy
 	extraDist := 0.0
+
+	estimatedForce := bb.estimateForce(bb.GetBikeInstance().GetVelocity(), float64(len(bb.GetFellowBikers())))
+	newState := physics.GenerateNewState(bb.GetBikeInstance().GetPhysicalState(), estimatedForce, bb.GetBikeInstance().GetOrientation())
+	remainingEnergy = remainingEnergy - bb.getPedalForce()*utils.MovingDepletion
+	extraDist = bb.ComputeDistance(bb.GetBikeInstance().GetPhysicalState().Position, newState.Position)
+	totalDistance = totalDistance + extraDist
+	oldState := newState
+
 	for totalDistance < distance {
-		extraDist, remainingEnergy = bb.simulateGameStep(remainingEnergy, bb.GetBikeInstance().GetPhysicalState().Mass, utils.BikerMaxForce*remainingEnergy, float64(len(bb.GetFellowBikers())))
+		estimatedForce = bb.estimateForce(newState.Velocity, float64(len(bb.GetFellowBikers())))
+		newState = physics.GenerateNewState(newState, estimatedForce, bb.GetBikeInstance().GetOrientation())
+		extraDist = bb.ComputeDistance(oldState.Position, newState.Position)
+		oldState = newState
+		remainingEnergy = remainingEnergy - bb.getPedalForce()*utils.MovingDepletion
 		totalDistance = totalDistance + extraDist
 	}
 
@@ -66,7 +109,7 @@ func (bb *Biker1) getAllReachableBoxes() []uuid.UUID {
 	var currDist float64
 	for _, loot := range lootBoxes {
 		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(currLocation, lootPos)
+		currDist = bb.ComputeDistance(currLocation, lootPos)
 		_, distance := bb.energyToReachableDistance(ourEnergy, bb.GetBikeInstance())
 		if currDist < distance {
 			reachableBoxes = append(reachableBoxes, loot.GetID())
@@ -75,24 +118,23 @@ func (bb *Biker1) getAllReachableBoxes() []uuid.UUID {
 	return reachableBoxes
 }
 
-// // returns the nearest lootbox with respect to the agent's bike current position
-// // in the MVP this is used to determine the pedalling forces as all agent will be
-// // aiming to get to the closest lootbox by default
-// func (bb *Biker1) nearestLoot() uuid.UUID {
-// 	currLocation := bb.GetLocation()
-// 	shortestDist := math.MaxFloat64
-// 	var nearestBox uuid.UUID
-// 	var currDist float64
-// 	for _, loot := range bb.GetGameState().GetLootBoxes() {
-// 		x, y := loot.GetPosition().X, loot.GetPosition().Y
-// 		currDist = math.Sqrt(math.Pow(currLocation.X-x, 2) + math.Pow(currLocation.Y-y, 2))
-// 		if currDist < shortestDist {
-// 			nearestBox = loot.GetID()
-// 			shortestDist = currDist
-// 		}
-// 	}
-// 	return nearestBox
-// }
+
+// Checks whether a box of the desired colour is within our reachable distance from a given box
+func (bb *Biker1) checkBoxNearColour(box uuid.UUID, energy float64) bool {
+	lootBoxes := bb.GetGameState().GetLootBoxes()
+	boxPos := lootBoxes[box].GetPosition()
+	var currDist float64
+	for _, loot := range lootBoxes {
+		lootPos := loot.GetPosition()
+		currDist = bb.ComputeDistance(boxPos, lootPos)
+		_, distance := bb.energyToReachableDistance(energy, bb.GetBikeInstance())
+		if currDist < distance && loot.GetColour() == bb.GetColour() {
+			return true
+		}
+	}
+	return false
+}
+
 
 func (bb *Biker1) getNearestBox() uuid.UUID {
 	currLocation := bb.GetLocation()
@@ -107,7 +149,7 @@ func (bb *Biker1) getNearestBox() uuid.UUID {
 			initialized = true
 		}
 		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(currLocation, lootPos)
+		currDist = bb.ComputeDistance(currLocation, lootPos)
 		if currDist < shortestDist {
 			nearestBox = id
 			shortestDist = currDist
@@ -130,7 +172,7 @@ func (bb *Biker1) nearestLootColour() (uuid.UUID, float64) {
 			initialized = true
 		}
 		lootPos := loot.GetPosition()
-		currDist = physics.ComputeDistance(currLocation, lootPos)
+		currDist = bb.ComputeDistance(currLocation, lootPos)
 		if (currDist < shortestDist) && (loot.GetColour() == bb.GetColour()) {
 			nearestBox = id
 			shortestDist = currDist
@@ -186,12 +228,12 @@ func (bb *Biker1) ProposeDirection() uuid.UUID {
 func (bb *Biker1) distanceToBox(box uuid.UUID) float64 {
 	currLocation := bb.GetLocation()
 	boxPos := bb.GetGameState().GetLootBoxes()[box].GetPosition()
-	currDist := physics.ComputeDistance(currLocation, boxPos)
+	currDist := bb.ComputeDistance(currLocation, boxPos)
 	return currDist
 }
 
 func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
-	dist := physics.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetLootBoxes()[box].GetPosition())
+	dist := bb.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetLootBoxes()[box].GetPosition())
 	remainingEnergy := bb.distanceToEnergy(dist, bb.GetEnergyLevel())
 	return remainingEnergy
 }
