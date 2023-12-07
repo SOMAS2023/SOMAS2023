@@ -119,22 +119,6 @@ func (bb *Biker1) getAllReachableBoxes() []uuid.UUID {
 }
 
 
-// Checks whether a box of the desired colour is within our reachable distance from a given box
-func (bb *Biker1) checkBoxNearColour(box uuid.UUID, energy float64) bool {
-	lootBoxes := bb.GetGameState().GetLootBoxes()
-	boxPos := lootBoxes[box].GetPosition()
-	var currDist float64
-	for _, loot := range lootBoxes {
-		lootPos := loot.GetPosition()
-		currDist = bb.ComputeDistance(boxPos, lootPos)
-		_, distance := bb.energyToReachableDistance(energy, bb.GetBikeInstance())
-		if currDist < distance && loot.GetColour() == bb.GetColour() {
-			return true
-		}
-	}
-	return false
-}
-
 
 func (bb *Biker1) getNearestBox() uuid.UUID {
 	currLocation := bb.GetLocation()
