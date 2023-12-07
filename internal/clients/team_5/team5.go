@@ -149,6 +149,7 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
 	var messages []messaging.IMessage[objects.IBaseBiker]
 
+	// send message to all other agents on the bike containing our reputation value on them, expecting them to send back their reputation value on us
 	for _, agent := range t5.GetFellowBikers() {
 		if agent.GetID() != t5.GetID() {
 
@@ -158,6 +159,7 @@ func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[
 		}
 	}
 
+	// send message to all other agents on the bike containing our forces, expecting them to send back their forces
 	forcesMsg := t5.CreateForcesMessage()
 
 	messages = append(messages, forcesMsg)
