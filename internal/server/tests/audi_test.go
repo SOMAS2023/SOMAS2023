@@ -54,6 +54,10 @@ func TestAudiTargeting(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
+	gs := s.NewGameStateDump(0)
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
 	s.FoundingInstitutions()
 	i := 0
 	emptyBikeId := uuid.UUID{}
@@ -84,7 +88,6 @@ func TestAudiTargeting(t *testing.T) {
 		}
 		i += 1
 	}
-	gs := s.NewGameStateDump(0)
 	s.GetAudi().UpdateGameState(gs)
 	s.GetAudi().UpdateForce()
 	targetId := s.GetAudi().GetTargetID()
