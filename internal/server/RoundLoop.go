@@ -408,11 +408,19 @@ func (s *Server) LootboxCheckAndDistributions() {
 						for _, agent := range agents {
 							weights[agent.GetID()] = 1.0
 						}
-						winningAllocation, _ = voting.CumulativeDist(Iallocations, weights)
+						winningAllocation = voting.CumulativeDist(Iallocations, weights)
 					case utils.Leadership:
 						// get the map of weights from the leader
 						leader := s.GetAgentMap()[megabike.GetRuler()]
 						weights := leader.DecideWeights(utils.Allocation)
+						for id := range weights {
+							for _, agent := range agents {
+								if agent.GetID() == id {
+									break
+								}
+								panic("leader gave weight to an agent that isn't on the bike")
+							}
+						}
 						// get allocation votes from each agent
 						allAllocations := make(map[uuid.UUID]voting.IdVoteMap)
 						for _, agent := range agents {
@@ -422,7 +430,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 						for i, v := range allAllocations {
 							Iallocations[i] = v
 						}
-						winningAllocation, _ = voting.CumulativeDist(Iallocations, weights)
+						winningAllocation = voting.CumulativeDist(Iallocations, weights)
 					case utils.Dictatorship:
 						// dictator decides the allocation
 						leader := s.GetAgentMap()[megabike.GetRuler()]
