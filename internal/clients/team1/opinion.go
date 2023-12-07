@@ -46,7 +46,7 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 	}
 
 	// Determine the confidence of the agent from relative success
-	// More points they have slightly less confidence since they are more likely to be selfish
+	// More energy/points they have slightly less confidence since they are more likely to be selfish
 	confidence := bb.GetRelativeSuccess(bb.GetID(), agentID, bb.GetFellowBikers())
 	// Since confidence is not so accurate we don't affect the trust as much
 	confidenceScaling := 0.05
@@ -100,6 +100,7 @@ func (bb *Biker1) UpdateFairness(agentID uuid.UUID) {
 
 func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID, agentsInContext []obj.IBaseBiker) {
 	// get relative success compared to us
+
 	relativeSuccess := bb.GetRelativeSuccess(bb.GetID(), agentID, agentsInContext)
 	fmt.Printf("Current relative success opinion: %v\n", bb.opinions[agentID].relativeSuccess)
 	fmt.Printf("Current relative success: %v\n", relativeSuccess)
@@ -111,6 +112,22 @@ func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID, agentsInContext []obj
 	if finalRelativeSuccess < 0 {
 		finalRelativeSuccess = 0
 	}
+
+	// incase an agent opinion is not initialised
+	_, ok := bb.opinions[agentID]
+
+	if !ok {
+		//if we have no data on an agent, initialise to neutral
+		newOpinion := Opinion{
+			effort:          0.5,
+			trust:           0.5,
+			fairness:        0.5,
+			relativeSuccess: 0.5,
+			opinion:         0.5,
+		}
+		bb.opinions[agentID] = newOpinion
+	}
+
 	newOpinion := Opinion{
 		effort:          bb.opinions[agentID].effort,
 		fairness:        bb.opinions[agentID].fairness,
@@ -162,7 +179,8 @@ func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 		trust:           bb.opinions[id].trust,
 		fairness:        bb.opinions[id].fairness,
 		relativeSuccess: bb.opinions[id].relativeSuccess,
-		opinion:         ((bb.opinions[id].trust*trustconstant + bb.opinions[id].effort*effortConstant + bb.opinions[id].fairness*fairnessConstant) / (trustconstant + effortConstant + fairnessConstant)) * multiplier,
+		opinion: ((bb.opinions[id].trust*trustconstant + bb.opinions[id].effort*effortConstant +
+			bb.opinions[id].fairness*fairnessConstant) / (trustconstant + effortConstant + fairnessConstant)) * multiplier,
 	}
 
 	if newOpinion.opinion > 1 {
@@ -170,26 +188,22 @@ func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 	} else if newOpinion.opinion < 0 {
 		newOpinion.opinion = 0
 	}
-	fmt.Printf("new opinion: %v\n", newOpinion)
 	bb.opinions[id] = newOpinion
 
 }
 
 func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
-	if bb.opinions == nil {
-		bb.opinions = make(map[uuid.UUID]Opinion)
-		for _, agent := range bb.GetAllAgents() {
-			agentId := agent.GetID()
-			//if we have no data on an agent, initialise to neutral
-			newOpinion := Opinion{
-				effort:          0.5,
-				trust:           0.5,
-				fairness:        0.5,
-				relativeSuccess: 0.5,
-				opinion:         0.5,
-			}
-			bb.opinions[agentId] = newOpinion
+	for _, agent := range bb.GetAllAgents() {
+		agentId := agent.GetID()
+		//if we have no data on an agent, initialise to neutral
+		newOpinion := Opinion{
+			effort:          0.5,
+			trust:           0.5,
+			fairness:        0.5,
+			relativeSuccess: 0.5,
+			opinion:         0.5,
 		}
+		bb.opinions[agentId] = newOpinion
 	}
 	return bb.opinions
 }
@@ -340,7 +354,6 @@ func (bb *Biker1) UpdateAllAgentsTrust(agents_to_update []obj.IBaseBiker) {
 			bb.opinions[agentId] = newOpinion
 		}
 		bb.UpdateTrust(id)
-		fmt.Printf("Agent %v trust: %v\n", id, bb.opinions[id].trust)
 	}
 }
 

@@ -82,7 +82,7 @@ func (bb *Biker1) DecideDictatorship() bool {
 func (bb *Biker1) VoteLeader() voting.IdVoteMap {
 
 	votes := make(voting.IdVoteMap)
-	fellowBikers := bb.GetAllAgents()
+	fellowBikers := bb.GetFellowBikers()
 
 	for _, agent := range fellowBikers {
 		votes[agent.GetID()] = 0.0

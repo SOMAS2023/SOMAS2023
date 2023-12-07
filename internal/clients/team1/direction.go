@@ -7,7 +7,6 @@ import (
 	"SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -170,12 +169,10 @@ func (bb *Biker1) ProposeDirection() uuid.UUID {
 		_, reachableDistance := bb.energyToReachableDistance(bb.GetEnergyLevel(), bb.GetBikeInstance())
 		if distanceToNearestBox < reachableDistance {
 			// if reachable, nominate C
-			fmt.Printf("agent %v nominated nearest COLOUR %v box %v \n", bb.GetColour(), bb.GetGameState().GetLootBoxes()[nearestColourBox].GetColour(), nearestColourBox)
 			return nearestColourBox
 		} else {
 			nearestBox := bb.FindReachableBoxNearestToBox(nearestColourBox)
 			if nearestBox != uuid.Nil {
-				fmt.Printf("agent %v nominated %v box nearest to COLOUR %v %v \n", bb.GetColour(), bb.GetGameState().GetLootBoxes()[nearestBox].GetColour(), bb.GetColour(), nearestBox)
 				return nearestBox
 			}
 		}
@@ -183,7 +180,6 @@ func (bb *Biker1) ProposeDirection() uuid.UUID {
 
 	// assumed that box always exists
 	nearestBox := bb.getNearestBox()
-	fmt.Printf("agent %v nominated nearest %v box %v \n", bb.GetColour(), bb.GetGameState().GetLootBoxes()[nearestBox].GetColour(), nearestBox)
 	return nearestBox
 }
 
@@ -280,11 +276,9 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 			}
 		}
 	}
-	fmt.Printf("Max Votes: %v\n", maxVotes)
 	// if our proposal has majority noms, vote for it
 	if proposalNoOfNoms[proposals[bb.GetID()]] > maxVotes {
 		votes[proposals[bb.GetID()]] = 1
-		fmt.Printf("%v votes for its own nomination %v\n", bb.GetColour(), votes)
 		return votes
 	}
 
@@ -336,7 +330,6 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 	for key := range votes {
 		votes[key] /= sum
 	}
-	fmt.Printf("%v normalised votes pre-selection: %v\n", bb.GetColour(), votes)
 
 	maxVote := 0.0
 	var finalProposal uuid.UUID
@@ -348,7 +341,6 @@ func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 		votes[proposal] = 0.0
 	}
 	votes[finalProposal] = 1.
-	fmt.Printf("%v normalised votes post-selection: %v\n", bb.GetColour(), votes)
 
 	return votes
 }

@@ -29,8 +29,24 @@ func (bb *Biker1) HandleKickOffMessage(msg obj.KickoutAgentMessage) {
 	verified := bb.VerifySender(sender)
 	if verified {
 		// slightly penalise view of person who sent message
-		penalty := 0.9
-		bb.UpdateOpinion(sender.GetID(), penalty)
+		if msg.Kickout {
+			if bb.opinions[msg.AgentId].opinion > 0.5 {
+				penalty := 0.9
+				bb.UpdateOpinion(sender.GetID(), penalty)
+			} else {
+				sameOpinionreward := 1.1
+				bb.UpdateOpinion(sender.GetID(), sameOpinionreward)
+			}
+		} else {
+			if bb.opinions[msg.AgentId].opinion > 0.5 {
+				sameOpinionreward := 1.1
+				bb.UpdateOpinion(sender.GetID(), sameOpinionreward)
+			} else {
+				penalty := 0.9
+				bb.UpdateOpinion(sender.GetID(), penalty)
+			}
+		}
+
 	}
 
 }
@@ -41,6 +57,8 @@ func (bb *Biker1) HandleReputationMessage(msg obj.ReputationOfAgentMessage) {
 	verified := bb.VerifySender(sender)
 	if verified {
 		// TODO: SOME FORMULA TO UPDATE OPINION BASED ON REPUTATION given
+		currentReputation := bb.GetReputation()[msg.AgentId] + msg.Reputation
+		bb.SetReputation(msg.AgentId, currentReputation*reputationScaling)
 	}
 }
 
@@ -172,8 +190,17 @@ func (bb *Biker1) CreateGoverenceMessage() obj.GovernanceMessage {
 	// receipients = fellowBikers
 	chosenGovernance := bb.DecideGovernance()
 	// convert to int for now
+	// send governance message to all agents (as not on a  bike yet)
+	// todo: improve it so that it only sends it to trusted agents (among all the other agents in the game)
+	agentMap := bb.GetGameState().GetAgents()
+	allAgents := make([]obj.IBaseBiker, len(agentMap))
+	i := 0
+	for _, agent := range agentMap {
+		allAgents[i] = agent
+		i++
+	}
 	return obj.GovernanceMessage{
-		BaseMessage:  messaging.CreateMessage[obj.IBaseBiker](bb, bb.GetTrustedRecepients()),
+		BaseMessage:  messaging.CreateMessage[obj.IBaseBiker](bb, allAgents),
 		BikeId:       bb.GetBike(),
 		GovernanceId: int(chosenGovernance),
 	}

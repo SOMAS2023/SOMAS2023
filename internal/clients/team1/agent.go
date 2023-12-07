@@ -19,7 +19,7 @@ const effortScaling = 0.2            // scaling factor for effort, highr it is t
 const fairnessScaling = 0.1          // scaling factor for fairness, higher it is the more fairness changes each round
 const relativeSuccessScaling = 0.1   // scaling factor for relative success, higher it is the more relative success changes each round
 const votingAlignmentThreshold = 0.6 // threshold for voting alignment
-const leaveThreshold = 0.0           // threshold for leaving
+const leaveThreshold = 0.1           // threshold for leaving
 const kickThreshold = 0.1            // threshold for kicking
 const trustThreshold = 0.7           // threshold for trusting (need to tune) MINIMUM AMOUNT OF TRUST TO ACCEPT A MESSAGE
 const fairnessConstant = 1           // weight of fairness in opinion
@@ -29,9 +29,9 @@ const trustconstant = 1              // weight of trust in opinion
 const effortConstant = 1             // weight of effort in opinion
 const fairnessDifference = 0.5       // modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
 const lowEnergyLevel = 0.3           // energy level below which the agent will try to get a lootbox of the desired colour
-const leavingThreshold = 0.3         // how low the agent's vote must be to leave bike
 const colorOpinionConstant = 0.2     // how much any agent likes any other of the same colour in the objective function
 const audiDistanceThreshold = 75     // how close the agent must be to the audi to run away
+const reputationScaling = 0.1        //scaling factor for effort, the higher it is the more other agents' opinion influences ours
 
 // Governance decision constants
 const democracyOpinonThreshold = 0.5
@@ -217,6 +217,7 @@ func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 // decide which bike to go to
 func (bb *Biker1) ChangeBike() uuid.UUID {
 	// if recently left bike
+	bb.desiredBike = bb.PickBestBike()
 	if bb.prevOnBike && !bb.GetBikeStatus() {
 		bb.prevOnBike = false
 		bb.numberOfLeaves++
@@ -292,6 +293,7 @@ func (bb *Biker1) lowestOpinionKick() uuid.UUID {
 }
 
 func (bb *Biker1) DecideKick(agent uuid.UUID) int {
+	return 1
 	if bb.opinions[agent].opinion < kickThreshold {
 		return 1
 	}
