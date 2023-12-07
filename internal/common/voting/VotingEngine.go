@@ -58,7 +58,7 @@ func GetAcceptanceRanking(rankings map[uuid.UUID]map[uuid.UUID]bool, weights map
 	// sort according to ranking
 	unsortedAcceptedList := make([]uuid.UUID, len(passedUnsorted))
 	i := 0
-	for key, _ := range passedUnsorted {
+	for key := range passedUnsorted {
 		unsortedAcceptedList[i] = key
 		i += 1
 	}
@@ -87,7 +87,7 @@ func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) 
 	aggregateVotes := make(map[uuid.UUID]float64)
 
 	// initialise votes to 0.0
-	for voter, _ := range voters {
+	for voter := range voters {
 		aggregateVotes[voter] = 0.0
 	}
 

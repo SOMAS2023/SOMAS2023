@@ -33,6 +33,8 @@ func (s *Server) ResetGameState() {
 	for _, agent := range s.GetAgentMap() {
 		if agent.GetBike() != uuid.Nil {
 			s.RemoveAgentFromBike(agent)
+		} else if agent.GetBikeStatus() {
+			agent.ToggleOnBike()
 		}
 	}
 
@@ -58,6 +60,10 @@ func (s *Server) ResetGameState() {
 		for _, agent := range s.GetAgentMap() {
 			agent.ResetPoints()
 		}
+	}
+
+	for _, bike := range s.GetMegaBikes() {
+		bike.SetRuler(uuid.Nil)
 	}
 
 	s.replenishLootBoxes()

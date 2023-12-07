@@ -6,6 +6,7 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -118,8 +119,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			case utils.Leadership:
 				// get the map of weights from the leader
 				ruler := bike.GetRuler()
-				fmt.Printf("the ruler is %s \n", ruler)
-				leader := s.GetAgentMap()[bike.GetRuler()]
+				leader := s.GetAgentMap()[ruler]
 				weights := leader.DecideWeights(utils.Kickout)
 				// get which agents are getting kicked out
 				agentsVotes = bike.KickOutAgent(weights)
@@ -134,7 +134,6 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			leaderKickedOut := false
 			allKicked = append(allKicked, agentsVotes...)
 			for _, agentID := range agentsVotes {
-				fmt.Println("kicking out someone")
 				s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 				// if the leader was kicked out vote for a new one
 				if agentID == bike.GetRuler() {
@@ -172,11 +171,17 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 				// will only be finalised then
 				leavingAgents = append(leavingAgents, agentId)
 				s.RemoveAgentFromBike(agent)
+				fmt.Printf("Agent %s left the bike \n", agentId)
 			default:
 				panic("agent decided invalid action")
 			}
-		} else {
-
+		}
+	}
+	s.UpdateGameStates()
+	for _, bike := range s.GetMegaBikes() {
+		if slices.Contains(leavingAgents, bike.GetRuler()) {
+			ruler := s.RulerElection(bike.GetAgents(), utils.Leadership)
+			bike.SetRuler(ruler)
 		}
 	}
 	return leavingAgents
@@ -382,7 +387,6 @@ func (s *Server) LootboxCheckAndDistributions() {
 				totAgents := len(agents)
 
 				if totAgents > 0 {
-					fmt.Printf("Total agents: %d \n", totAgents)
 					gov := s.GetMegaBikes()[bikeid].GetGovernance()
 					var winningAllocation voting.IdVoteMap
 					switch gov {
