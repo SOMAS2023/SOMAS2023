@@ -195,7 +195,7 @@ func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
 }
 
 // infer our reputation from the average relative success of agents in the current context
-func (bb *Biker1) DetermineOurReputation() float64 {
+func (bb *Biker1) DetermineOurAverageReputation() float64 {
 	var agentsInContext []obj.IBaseBiker
 	if bb.GetBike() == uuid.Nil {
 		agentsInContext = bb.GetAllAgents()

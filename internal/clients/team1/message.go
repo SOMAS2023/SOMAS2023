@@ -206,8 +206,7 @@ func (bb *Biker1) GetAllMessages([]obj.IBaseBiker) []messaging.IMessage[obj.IBas
 			if (bb.opinions[agent.GetID()].trust > trustThreshold) && (bb.opinions[agent.GetID()].opinion > 0.5) {
 				sendGovernanceMessage = true
 				sendLootboxMessage = true
-				// Never send reputation message
-				sendReputationMessage = false
+				// Never send reputation message			}
 			}
 		}
 	}

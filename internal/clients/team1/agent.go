@@ -142,7 +142,7 @@ func (bb *Biker1) updatePrevEnergy() {
 func (bb *Biker1) DecideAction() obj.BikerAction {
 	fellowBikers := bb.GetFellowBikers()
 	// Update opinion metrics
-	bb.DetermineOurReputation()
+	bb.DetermineOurAverageReputation()
 	if bb.recentDecided != uuid.Nil && fellowBikers != nil {
 		bb.UpdateAllAgentsTrust(fellowBikers)
 		bb.UpdateAllAgentsOpinions(fellowBikers)
