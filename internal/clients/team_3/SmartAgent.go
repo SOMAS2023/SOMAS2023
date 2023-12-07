@@ -5,9 +5,10 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"github.com/google/uuid"
 	"math"
 	"sort"
+
+	"github.com/google/uuid"
 )
 
 type ISmartAgent interface {
@@ -660,4 +661,15 @@ func measureOrder(input []float64) float64 {
 		}
 	}
 	return 1.0 - 2.0*inversionCnt/float64(size*(size-1))
+}
+
+// Creates an instance of Team 3 Biker
+func NewTeam3Agent(totColours utils.Colour, bikeId uuid.UUID) *SmartAgent {
+	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
+	baseBiker.GroupID = 3
+	// print
+	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	return &SmartAgent{
+		BaseBiker: *baseBiker,
+	}
 }

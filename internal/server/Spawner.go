@@ -2,10 +2,10 @@ package server
 
 import (
 	team_1 "SOMAS2023/internal/clients/team1"
-	// team_3 "SOMAS2023/internal/clients/team_3"
 	team_7 "SOMAS2023/internal/clients/team7/agents"
 	team_8 "SOMAS2023/internal/clients/team8"
-	team5Agent "SOMAS2023/internal/clients/team_5"
+	team_3 "SOMAS2023/internal/clients/team_3"
+	team_5 "SOMAS2023/internal/clients/team_5"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 
@@ -16,14 +16,23 @@ import (
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount),
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount),
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount),
 		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker7AgentGenerator, BikerAgentCount),
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount),
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker3AgentGenerator, BikerAgentCount),
 	}
 }
 
+func Biker1AgentGenerator() objects.IBaseBiker {
+	return team_1.GetBiker1(utils.GenerateRandomColour(), uuid.New())
+}
+
+func Biker3AgentGenerator() objects.IBaseBiker {
+	return team_3.NewTeam3Agent(utils.GenerateRandomColour(), uuid.New())
+}
+
 func Biker5AgentGenerator() objects.IBaseBiker {
-	return team5Agent.NewTeam5Agent(utils.GenerateRandomColour(), uuid.New())
+	return team_5.NewTeam5Agent(utils.GenerateRandomColour(), uuid.New())
 }
 
 func Biker7AgentGenerator() objects.IBaseBiker {
@@ -32,14 +41,6 @@ func Biker7AgentGenerator() objects.IBaseBiker {
 
 func Biker8AgentGenerator() objects.IBaseBiker {
 	return team_8.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
-}
-
-// func Biker3AgentGenerator() objects.IBaseBiker {
-// 	return objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
-// }
-
-func Biker1AgentGenerator() objects.IBaseBiker {
-	return team_1.GetBiker1(utils.GenerateRandomColour(), uuid.New())
 }
 
 func (s *Server) spawnLootBox() {
