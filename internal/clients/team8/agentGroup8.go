@@ -8,7 +8,6 @@ import (
 	"SOMAS2023/internal/common/voting"
 	"math"
 
-	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -76,106 +75,6 @@ func (bb *Agent8) VoteLeader() voting.IdVoteMap {
 }
 
 // ===============================================================================================================================================================
-
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Message System <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// This function updates all the messages for that agent i.e. both sending and receiving.
-// And returns the new messages from other agents to your agent
-func (bb *Agent8) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
-	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
-	wantToSendMsg := false
-	if wantToSendMsg {
-		reputationMsg := bb.CreateReputationMessage()
-		kickoutMsg := bb.CreatekickoutMessage()
-		lootboxMsg := bb.CreateLootboxMessage()
-		joiningMsg := bb.CreateJoiningMessage()
-		governceMsg := bb.CreateGoverenceMessage()
-		forcesMsg := bb.CreateForcesMessage()
-		voteGoveranceMessage := bb.CreateVoteGovernanceMessage()
-		voteLootboxDirectionMessage := bb.CreateVoteLootboxDirectionMessage()
-		voteRulerMessage := bb.CreateVoteRulerMessage()
-		voteKickoutMessage := bb.CreateVotekickoutMessage()
-		return []messaging.IMessage[objects.IBaseBiker]{reputationMsg, kickoutMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg, voteGoveranceMessage, voteLootboxDirectionMessage, voteRulerMessage, voteKickoutMessage}
-	}
-	return []messaging.IMessage[objects.IBaseBiker]{}
-}
-
-func (bb *Agent8) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// kickout := msg.Kickout
-}
-
-func (bb *Agent8) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// reputation := msg.Reputation
-}
-
-func (bb *Agent8) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// bikeId := msg.BikeId
-}
-
-func (bb *Agent8) HandleLootboxMessage(msg objects.LootboxMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// lootboxId := msg.LootboxId
-}
-
-func (bb *Agent8) HandleGovernanceMessage(msg objects.GovernanceMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// bikeId := msg.BikeId
-	// governanceId := msg.GovernanceId
-}
-
-func (bb *Agent8) HandleForcesMessage(msg objects.ForcesMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// agentForces := msg.AgentForces
-
-}
-
-func (bb *Agent8) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
-}
-
-func (bb *Agent8) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxDirectionMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
-}
-
-func (bb *Agent8) HandleVoteRulerMessage(msg objects.VoteRulerMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
-}
-
-func (bb *Agent8) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
-}
-
-//===============================================================================================================================================================
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 1 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 func (bb *Agent8) VoteForKickout() map[uuid.UUID]int {
@@ -450,6 +349,14 @@ func (bb *Agent8) DecideDictatorAllocation() voting.IdVoteMap {
 		distribution[agent.GetID()] = equalDist
 	}
 	return distribution
+}
+
+func (bb *Agent8) updateAgentActionMap() {
+
+}
+
+func (bb *Agent8) updateLoopScoreMap() {
+
 }
 
 // update the reputation for other agents
