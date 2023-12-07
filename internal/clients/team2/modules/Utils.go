@@ -53,10 +53,16 @@ func (um *UtilsModule) GetForcesToTargetWithDirectionOffset(force, degree float6
 	deltaX := targetPos.X - currPos.X
 	deltaY := targetPos.Y - currPos.Y
 	angle := math.Atan2(deltaY, deltaX)
-	normalisedAngle := angle / math.Pi
+	normalisedAngle := angle/math.Pi + math.Remainder(degree, 2)
+
+	if normalisedAngle < -1 {
+		normalisedAngle = normalisedAngle + 2
+	} else if normalisedAngle > 1 {
+		normalisedAngle = normalisedAngle - 2
+	}
 	turningDecision := utils.TurningDecision{
 		SteerBike:     true,
-		SteeringForce: normalisedAngle - degree,
+		SteeringForce: normalisedAngle,
 	}
 	return utils.Forces{
 		Pedal:   force,

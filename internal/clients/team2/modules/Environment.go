@@ -3,6 +3,7 @@ package modules
 import (
 	objects "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -76,6 +77,9 @@ func (e *EnvironmentModule) GetNearestLootboxByColor(agentId uuid.UUID, color ut
 			minDist = dist
 			nearestLootbox = lootbox.GetID()
 		}
+	}
+	if nearestLootbox == uuid.Nil {
+		return e.GetNearestLootbox(e.AgentId)
 	}
 	return nearestLootbox
 }
@@ -226,10 +230,14 @@ func (e *EnvironmentModule) GetBikeWithMaximumSocialCapital(sc *SocialCapital) u
 func (e *EnvironmentModule) GetDistanceToAudi() float64 {
 	bikePos, audiPos := e.GetBikeById(e.BikeId).GetPosition(), e.GetAudi().GetPosition()
 
+	fmt.Printf("[GetDistanceToAudi] Pos of bike: %f\n", bikePos)
+	fmt.Printf("[GetDistanceToAudi] Pos of Audi: %f\n", audiPos)
+
 	return e.GetDistance(bikePos, audiPos)
 }
 
 func (e *EnvironmentModule) IsAudiNear() bool {
+	fmt.Printf("[IsAudiNear] Distance to audi: %f\n", e.GetDistanceToAudi())
 	return e.GetDistanceToAudi() <= AudiRange
 }
 

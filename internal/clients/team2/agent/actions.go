@@ -6,6 +6,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"fmt"
 	"maps"
 	"math/rand"
 
@@ -87,16 +88,19 @@ func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
 }
 
 func (a *AgentTwo) DecideGovernance() utils.Governance {
+	fmt.Printf("[DecideGovernance] Agent %s has Social Capitals %v\n", a.GetID(), a.Modules.SocialCapital.SocialCapital)
+	a.Modules.SocialCapital.UpdateSocialCapital()
 	// All possibilities except dictatorship.
 	// Need to decide weights for each type of Governance
 	// Can add an invalid weighting so that it is not 50/50
 
-	randomNumber := rand.Float64()
-	if randomNumber < democracyWeight {
-		return utils.Democracy
-	} else {
-		return utils.Leadership
-	}
+	// randomNumber := rand.Float64()
+	// if randomNumber < democracyWeight {
+	// 	return utils.Democracy
+	// } else {
+	// 	return utils.Leadership
+	// }
+	return utils.Democracy
 }
 
 func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
@@ -182,12 +186,18 @@ func (a *AgentTwo) ProposeDirection() uuid.UUID {
 	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
 	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
 	if agentEnergy < modules.EnergyToOptimalLootboxThreshold || optimalLootbox == uuid.Nil {
+		fmt.Printf("[PProposeDirection] Agent %s proposed nearest lootbox %s\n", agentID, nearestLootbox)
 		return nearestLootbox
 	}
+	fmt.Printf("[PProposeDirection] Agent %s proposed optimal lootbox %s\n", agentID, optimalLootbox)
 	return optimalLootbox
+
 }
 
 func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+	fmt.Printf("[FFinalDirectionVote] Agent %s got proposals %v\n", a.GetID(), proposals)
+	fmt.Printf("[FFinalDirectionVote] Agent %s has Social Capitals %v\n", a.GetID(), a.Modules.SocialCapital.SocialCapital)
+
 	votes := make(voting.LootboxVoteMap)
 
 	// Assume we set our own social capital to 1.0, thus need to account for it
@@ -210,6 +220,7 @@ func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.
 			votes[proposal] += scWeight
 		}
 	}
+	fmt.Printf("[FFinalDirectionVote] Agent %s voted %v\n", a.GetID(), votes)
 	return votes
 }
 
@@ -221,6 +232,10 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 	} else {
 		return a.Modules.Environment.BikeId
 	}
+}
+
+func (bb *AgentTwo) GetGroupID() int {
+	return 5
 }
 
 func (a *AgentTwo) DecideAction() objects.BikerAction {
@@ -246,9 +261,10 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	a.Modules.VotedDirection = direction
 
 	if a.Modules.Environment.IsAudiNear() {
+		fmt.Printf("[DecideForce] Agent %s is near Audi\n", a.GetID())
 		// Move in opposite direction to Audi in full force
 		bikePos, audiPos := a.Modules.Environment.GetBike().GetPosition(), a.Modules.Environment.GetAudi().GetPosition()
-		force := a.Modules.Utils.GetForcesToTargetWithDirectionOffset(utils.BikerMaxForce, -180.0, bikePos, audiPos)
+		force := a.Modules.Utils.GetForcesToTargetWithDirectionOffset(utils.BikerMaxForce, 1.0-a.Modules.Environment.GetBikeOrientation(), bikePos, audiPos)
 		a.SetForces(force)
 		return
 	}
@@ -261,13 +277,14 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 		lootboxID = a.Modules.Environment.GetHighestGainLootbox()
 	}
 	lootboxPosition := a.Modules.Environment.GetLootboxPos(lootboxID)
-	force := a.Modules.Utils.GetForcesToTarget(agentPosition, lootboxPosition)
+	force := a.Modules.Utils.GetForcesToTargetWithDirectionOffset(utils.BikerMaxForce, -a.Modules.Environment.GetBikeOrientation(), agentPosition, lootboxPosition)
 	a.SetForces(force)
 }
 
 func (a *AgentTwo) DictateDirection() uuid.UUID {
 	// Move in opposite direction to Audi in full force
 	if a.Modules.Environment.IsAudiNear() {
+		// fmt.Printf("[DictateDirection] Agent %s is near Audi\n", a.GetID())
 		return a.Modules.Environment.GetNearestLootboxAwayFromAudi()
 	}
 	// Otherwise, move towards the lootbox with the highest gain
