@@ -130,7 +130,6 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 }
 
 func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
-	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
 	fmt.Println("GetAllMessages")
 	wantToSendMsg := true
 	if wantToSendMsg {
@@ -141,7 +140,6 @@ func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[
 }
 
 func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
 
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.AgentId
@@ -155,7 +153,7 @@ func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
 	// For team's agent, add your own logic to communicate with other agents
 	return objects.ForcesMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
-		AgentId:     uuid.Nil,
+		AgentId:     t5.GetID(),
 		AgentForces: utils.Forces{
 			Pedal: 0.0,
 			Brake: 0.0,
