@@ -11,8 +11,8 @@ import (
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator(objects.GetIBaseBiker), 2),
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator(team2.GetBiker), 6),
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator(objects.GetIBaseBiker), 8),
+		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator(team2.GetBiker), 8),
 	}
 }
 

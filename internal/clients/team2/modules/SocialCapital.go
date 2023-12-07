@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -91,28 +92,31 @@ func (sc *SocialCapital) UpdateSocialNetwork(agentId uuid.UUID, eventValue float
 }
 
 // Must be called once every round.
-func (sc *SocialCapital) UpdateSocialCapital(agentID uuid.UUID) float64 {
+func (sc *SocialCapital) UpdateSocialCapital() {
+	fmt.Printf("[UpdateSocialCapital] Social Capital Before: %v\n", sc.SocialCapital)
 
-	// Add to Forgiveness Counters.
-	if _, ok := sc.forgivenessCounter[agentID]; !ok {
-		sc.forgivenessCounter[agentID] = 0.0
+	for id := range sc.SocialNetwork { // Assumes all maps have the same keys.
+		// Add to Forgiveness Counters.
+		if _, ok := sc.forgivenessCounter[id]; !ok {
+			sc.forgivenessCounter[id] = 0.0
+		}
+
+		// Update Forgiveness Counter.
+		newSocialCapital := ReputationWeight*sc.Reputation[id] + InstitutionWeight*sc.Institution[id] + NetworkWeight*sc.SocialNetwork[id]
+
+		if sc.SocialCapital[id] < newSocialCapital {
+			sc.forgivenessCounter[id] = 0
+		}
+
+		if sc.SocialCapital[id] > newSocialCapital && sc.forgivenessCounter[id] <= 3 {
+			// Forgive if forgiveness counter is less than 3 and new social capital is less.
+			sc.forgivenessCounter[id]++
+			sc.SocialCapital[id] = newSocialCapital + forgivenessFactor*(sc.SocialCapital[id]-newSocialCapital)
+		} else {
+			sc.SocialCapital[id] = newSocialCapital
+		}
 	}
-
-	// Update Forgiveness Counter.
-	newSocialCapital := ReputationWeight*sc.Reputation[agentID] + InstitutionWeight*sc.Institution[agentID] + NetworkWeight*sc.SocialNetwork[agentID]
-
-	if sc.SocialCapital[agentID] < newSocialCapital {
-		sc.forgivenessCounter[agentID] = 0
-	}
-
-	if sc.SocialCapital[agentID] > newSocialCapital && sc.forgivenessCounter[agentID] <= 3 {
-		// Forgive if forgiveness counter is less than 3 and new social capital is less.
-		sc.forgivenessCounter[agentID]++
-		sc.SocialCapital[agentID] = newSocialCapital + forgivenessFactor*(sc.SocialCapital[agentID]-newSocialCapital)
-	} else {
-		sc.SocialCapital[agentID] = newSocialCapital
-	}
-	return sc.SocialCapital[agentID]
+	fmt.Printf("[UpdateSocialCapital] Social Capital After: %v\n", sc.SocialCapital)
 }
 
 func NewSocialCapital() *SocialCapital {

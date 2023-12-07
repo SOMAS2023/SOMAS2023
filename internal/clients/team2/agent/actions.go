@@ -88,6 +88,8 @@ func (a *AgentTwo) VoteLeader() voting.IdVoteMap {
 }
 
 func (a *AgentTwo) DecideGovernance() utils.Governance {
+	fmt.Printf("[DecideGovernance] Agent %s has Social Capitals %v\n", a.GetID(), a.Modules.SocialCapital.SocialCapital)
+	a.Modules.SocialCapital.UpdateSocialCapital()
 	// All possibilities except dictatorship.
 	// Need to decide weights for each type of Governance
 	// Can add an invalid weighting so that it is not 50/50
