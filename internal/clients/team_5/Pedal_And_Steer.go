@@ -71,7 +71,7 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		//if our own agents on a bike or just us on a bike we use full force this is only when we are on a bike with other agents or more than 3 agents
 		if len(t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetAgents()) > 3 {
 			if t5.state == 0 {
-				Biker_pedal = ownEnergyLevel * utils.BikerMaxForce
+				Biker_pedal = ownEnergyLevel * utils.BikerMaxForce * 0.5
 			}
 		}
 
