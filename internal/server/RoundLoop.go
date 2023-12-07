@@ -134,6 +134,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			leaderKickedOut := false
 			allKicked = append(allKicked, agentsVotes...)
 			for _, agentID := range agentsVotes {
+				fmt.Printf("kicking out agent %s\n", agentID)
 				s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 				// if the leader was kicked out vote for a new one
 				if agentID == bike.GetRuler() {
@@ -369,7 +370,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 	looted := make(map[uuid.UUID]int)
 	for _, megabike := range s.GetMegaBikes() {
 		for lootid, lootbox := range s.GetLootBoxes() {
-			if megabike.CheckForCollision(lootbox) {
+			if megabike.CheckForCollision(lootbox) { // && len(megabike.GetAgents()) != 0
 				if value, ok := looted[lootid]; ok {
 					looted[lootid] = value + 1
 				} else {

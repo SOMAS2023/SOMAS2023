@@ -7,3 +7,4 @@ statistics.xlsx
 Test/
 *.pyc
 /venv
+*.txt
