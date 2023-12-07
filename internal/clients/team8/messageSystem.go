@@ -36,30 +36,55 @@ func (bb *Agent8) CreatekickoutMessage() objects.KickoutAgentMessage {
 	// For team's agent, add your own logic to communicate with other agents
 	bikeID := bb.GetBike()
 	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
-	protectagent := uuid.Nil
+	kickAgent := uuid.Nil
+	protectAgent := uuid.Nil
 	initalreputation := 0.0
 	for _, agent := range fellowBikers {
 		agentID := agent.GetID()
-		if bb.QueryReputation(agentID) > initalreputation {
-			protectagent = agentID
+		if bb.QueryReputation(agentID) < initalreputation {
+			kickAgent = agentID
 			initalreputation = bb.QueryReputation(agentID)
 		}
 	}
-
+	if kickAgent == uuid.Nil {
+		for _, agent := range fellowBikers {
+			agentID := agent.GetID()
+			if bb.QueryReputation(agentID) > initalreputation {
+				protectAgent = agentID
+				initalreputation = bb.QueryReputation(agentID)
+			}
+		}
+		return objects.KickoutAgentMessage{
+			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
+			AgentId:     protectAgent,
+			Kickout:     false,
+		}
+	}
 	return objects.KickoutAgentMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		AgentId:     protectagent,
-		Kickout:     false,
+		AgentId:     kickAgent,
+		Kickout:     true,
 	}
 }
 
 func (bb *Agent8) CreateReputationMessage() objects.ReputationOfAgentMessage {
 	// Currently this returns a default message which sends to all bikers on the biker agent's bike
 	// For team's agent, add your own logic to communicate with other agents
+	bikeID := bb.GetBike()
+	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	bestAgent := uuid.Nil
+	reputation := -1.0
+	for _, agent := range fellowBikers {
+		agentID := agent.GetID()
+		if bb.QueryReputation(agentID) > reputation {
+			bestAgent = agentID
+			reputation = bb.QueryReputation(agentID)
+		}
+	}
 	return objects.ReputationOfAgentMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		AgentId:     uuid.Nil,
-		Reputation:  1.0,
+		AgentId:     bestAgent,
+		Reputation:  reputation,
 	}
 }
 
@@ -77,7 +102,7 @@ func (bb *Agent8) CreateLootboxMessage() objects.LootboxMessage {
 	// For team's agent, add your own logic to communicate with other agents
 	return objects.LootboxMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		LootboxId:   uuid.Nil,
+		LootboxId:   bb.ProposeDirection(),
 	}
 }
 
@@ -86,8 +111,8 @@ func (bb *Agent8) CreateGoverenceMessage() objects.GovernanceMessage {
 	// For team's agent, add your own logic to communicate with other agents
 	return objects.GovernanceMessage{
 		BaseMessage:  messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		BikeId:       uuid.Nil,
-		GovernanceId: 0,
+		BikeId:       bb.ChangeBike(),
+		GovernanceId: int(bb.DecideGovernance()),
 	}
 }
 
