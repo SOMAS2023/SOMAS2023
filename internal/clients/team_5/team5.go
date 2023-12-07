@@ -4,7 +4,6 @@ import (
 	"SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
@@ -18,9 +17,15 @@ type team5Agent struct {
 	objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
+<<<<<<< HEAD
 	state            int // 0 = normal, 1 = conservative
 	otherBikerForces []utils.Forces
 	getforce         bool
+=======
+	state      int // 0 = normal, 1 = conservative
+	prevEnergy map[uuid.UUID]float64
+	roundCount int
+>>>>>>> main
 }
 
 type ResourceAllocationMethod int
@@ -38,18 +43,26 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
 	baseBiker.GroupID = 5
 	// print
-	fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
+<<<<<<< HEAD
 		getforce:            false,
+=======
+		roundCount:          0,
+>>>>>>> main
 	}
 }
 
 func (t5 *team5Agent) UpdateAgentInternalState() {
 	t5.updateState()
 	t5.updateReputationOfAllAgents()
+<<<<<<< HEAD
+=======
+	t5.roundCount = (t5.roundCount + 1) % utils.RoundIterations
+>>>>>>> main
 }
 
 // needs fixing always democracy
