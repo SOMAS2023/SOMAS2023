@@ -2,12 +2,16 @@ package team1
 
 import (
 	obj "SOMAS2023/internal/common/objects"
-	physics "SOMAS2023/internal/common/physics"
 	utils "SOMAS2023/internal/common/utils"
 	"math"
 
 	"github.com/google/uuid"
 )
+
+// -------------------MATHS HELPER FUNCTIONS ------------------------
+func (bb *Biker1) ComputeDistance(a utils.Coordinates, b utils.Coordinates) float64 {
+	return math.Sqrt((math.Pow((a.X-b.X), 2) + math.Pow((a.Y-b.Y), 2)))
+}
 
 // -------------------SETTERS AND GETTERS-----------------------------
 // Returns a list of bikers on the same bike as the agent
@@ -71,7 +75,7 @@ func (bb *Biker1) GetAverageOpinionOfBike(megabike obj.IMegaBike) float64 {
 // -------------------END OF SETTERS AND GETTERS----------------------
 
 func (bb *Biker1) DistanceFromAudi(obj.IMegaBike) float64 {
-	return physics.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+	return bb.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
 }
 
 // Find an agent from their id
@@ -97,6 +101,7 @@ func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
 	}
 	return agents
 }
+
 
 // -------------------SELFISHNESS/HELPFUL FUNCTIONS----------------------
 
@@ -160,7 +165,8 @@ func (bb *Biker1) GetNearBikeObjects(bike obj.IMegaBike) (int64, int64, int64) {
 	lootBoxOurColor := 0
 	bikeCount := 0
 	for _, lootbox := range bb.GetGameState().GetLootBoxes() {
-		distance := physics.ComputeDistance(lootbox.GetPosition(), bike.GetPosition())
+		distance := bb.ComputeDistance(lootbox.GetPosition(), bike.GetPosition())
+		//fmt.Printf("distance from bike %v to lootox %v is %v\n", bike.GetID(), lootbox.GetID(), distance)
 		if distance <= reachableDistance {
 			lootBoxCount += 1
 			if lootbox.GetColour() == bb.GetColour() {
@@ -169,8 +175,11 @@ func (bb *Biker1) GetNearBikeObjects(bike obj.IMegaBike) (int64, int64, int64) {
 		}
 	}
 	for _, nearbyBike := range bb.GetGameState().GetMegaBikes() {
-		distance := physics.ComputeDistance(nearbyBike.GetPosition(), bike.GetPosition())
-		if distance <= reachableDistance {
+		if nearbyBike.GetID() == bike.GetID() {
+			continue
+		}
+		distance := bb.ComputeDistance(nearbyBike.GetPosition(), bike.GetPosition())
+		if distance <= 20.0 {
 			bikeCount += 1
 		}
 	}
