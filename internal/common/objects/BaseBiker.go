@@ -456,7 +456,7 @@ func (bb *BaseBiker) CreatekickoutMessage() KickoutAgentMessage {
 	return KickoutAgentMessage{
 		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
 		AgentId:     uuid.Nil,
-		kickout:     false,
+		Kickout:     false,
 	}
 }
 
@@ -556,7 +556,7 @@ func (bb *BaseBiker) HandleKickoutMessage(msg KickoutAgentMessage) {
 
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.AgentId
-	// kickout := msg.kickout
+	// kickout := msg.Kickout
 }
 
 func (bb *BaseBiker) HandleReputationMessage(msg ReputationOfAgentMessage) {
