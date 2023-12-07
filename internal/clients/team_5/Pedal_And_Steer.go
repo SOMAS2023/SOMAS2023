@@ -51,7 +51,7 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
 		}
 
-		steer := (angleToGoal - orientation)
+		steer := min(max((angleToGoal-orientation), -1), 1)
 
 		//fmt.Println("Bike Orientation: ", orientation)
 		///(float64(len(t5.GetMegaBike())));
@@ -71,7 +71,7 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		//if our own agents on a bike or just us on a bike we use full force this is only when we are on a bike with other agents or more than 3 agents
 		if len(t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetAgents()) > 3 {
 			if t5.state == 0 {
-				Biker_pedal = ownEnergyLevel * utils.BikerMaxForce
+				Biker_pedal = ownEnergyLevel * utils.BikerMaxForce * 0.5
 			}
 		}
 
