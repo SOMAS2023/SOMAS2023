@@ -20,8 +20,8 @@ type team5Agent struct {
 	state            int // 0 = normal, 1 = conservative
 	prevEnergy       map[uuid.UUID]float64
 	roundCount       int
-	otherBikerForces []utils.Forces
-	getforce         bool
+	otherBikerForces map[uuid.UUID]utils.Forces
+	otherBikerRep    map[uuid.UUID]float64
 }
 
 type ResourceAllocationMethod int
@@ -44,8 +44,9 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
-		getforce:            false,
 		roundCount:          0,
+		otherBikerForces:    make(map[uuid.UUID]utils.Forces),
+		otherBikerRep:       make(map[uuid.UUID]float64),
 	}
 }
 
@@ -145,20 +146,26 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 
 }
 
-var callCount int = 0
-
 func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
-	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
-	if t5.getforce {
-		forcesMsg := t5.CreateForcesMessage()
-		return []messaging.IMessage[objects.IBaseBiker]{forcesMsg}
+	var messages []messaging.IMessage[objects.IBaseBiker]
+
+	for _, agent := range t5.GetFellowBikers() {
+		if agent.GetID() != t5.GetID() {
+
+			repMsg := t5.CreateReputationMessage(agent)
+
+			messages = append(messages, repMsg)
+		}
 	}
-	return []messaging.IMessage[objects.IBaseBiker]{}
+
+	forcesMsg := t5.CreateForcesMessage()
+
+	messages = append(messages, forcesMsg)
+
+	return messages
 }
 
 func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
-	// Currently this returns a default message which sends to all bikers on the biker agent's bike
-	// For team's agent, add your own logic to communicate with other agents
 	return objects.ForcesMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
 		AgentId:     t5.GetID(),
@@ -166,76 +173,41 @@ func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
 			Pedal: t5.GetForces().Pedal,
 			Brake: t5.GetForces().Brake,
 			Turning: utils.TurningDecision{
-				SteerBike:     false,
-				SteeringForce: 0.0,
+				SteerBike:     t5.GetForces().Turning.SteerBike,
+				SteeringForce: t5.GetForces().Turning.SteeringForce,
 			},
 		},
 	}
 }
 
-func (t5 *team5Agent) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// kickout := msg.kickout
+func (t5 *team5Agent) CreateReputationMessage(agent objects.IBaseBiker) objects.ReputationOfAgentMessage {
+	return objects.ReputationOfAgentMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
+		AgentId:     agent.GetID(),
+		Reputation:  1.0,
+	}
 }
 
 func (t5 *team5Agent) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
+	senderID := msg.BaseMessage.GetSender().GetID()
+	agentId := msg.AgentId
+	reputation := msg.Reputation
 
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// reputation := msg.Reputation
+	// If the agent ID is the agent itself, store the reputation value
+	if agentId == t5.GetID() {
+		t5.otherBikerRep[senderID] = reputation
+	}
 }
 
-func (t5 *team5Agent) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
+func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
+	senderID := msg.BaseMessage.GetSender().GetID()
+	agentId := msg.AgentId
+	forces := msg.AgentForces
 
-	// sender := msg.BaseMessage.GetSender()
-	// agentId := msg.AgentId
-	// bikeId := msg.BikeId
-}
-
-func (t5 *team5Agent) HandleLootboxMessage(msg objects.LootboxMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// lootboxId := msg.LootboxId
-}
-
-func (t5 *team5Agent) HandleGovernanceMessage(msg objects.GovernanceMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// bikeId := msg.BikeId
-	// governanceId := msg.GovernanceId
-}
-
-func (t5 *team5Agent) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
-}
-
-func (t5 *team5Agent) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxDirectionMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
-}
-
-func (t5 *team5Agent) HandleVoteRulerMessage(msg objects.VoteRulerMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
-}
-
-func (t5 *team5Agent) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
-	// Team's agent should implement logic for handling other biker messages that were sent to them.
-
-	// sender := msg.BaseMessage.GetSender()
-	// voteMap := msg.VoteMap
+	// If the sender gives his own forces and is on our bike, store the forces
+	for _, agent := range t5.GetFellowBikers() {
+		if senderID == agentId && agent.GetID() == senderID {
+			t5.otherBikerForces[senderID] = forces
+		}
+	}
 }
