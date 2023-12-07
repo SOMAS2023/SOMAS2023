@@ -51,7 +51,7 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
 		}
 
-		steer := (angleToGoal - orientation)
+		steer := min(max((angleToGoal-orientation), -1), 1)
 
 		//fmt.Println("Bike Orientation: ", orientation)
 		///(float64(len(t5.GetMegaBike())));
