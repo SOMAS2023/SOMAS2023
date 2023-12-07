@@ -2,6 +2,7 @@ package server
 
 import (
 	team_1 "SOMAS2023/internal/clients/team1"
+	team_2 "SOMAS2023/internal/clients/team2"
 	team_7 "SOMAS2023/internal/clients/team7/agents"
 	team_8 "SOMAS2023/internal/clients/team8"
 	team_3 "SOMAS2023/internal/clients/team_3"
@@ -16,15 +17,20 @@ import (
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount),
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker2AgentGenerator, BikerAgentCount),
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker3AgentGenerator, BikerAgentCount),
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount),
 		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker7AgentGenerator, BikerAgentCount),
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount),
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker3AgentGenerator, BikerAgentCount),
 	}
 }
 
 func Biker1AgentGenerator() objects.IBaseBiker {
 	return team_1.GetBiker1(utils.GenerateRandomColour(), uuid.New())
+}
+
+func Biker2AgentGenerator() objects.IBaseBiker {
+	return team_2.GetBiker(utils.GenerateRandomColour(), uuid.New())
 }
 
 func Biker3AgentGenerator() objects.IBaseBiker {

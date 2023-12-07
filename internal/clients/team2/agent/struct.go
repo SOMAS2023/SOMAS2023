@@ -27,7 +27,7 @@ type AgentTwo struct {
 
 func NewBaseTeam2Biker(agentId uuid.UUID, colour utils.Colour) *AgentTwo {
 	baseBiker := objects.GetBaseBiker(colour, agentId)
-
+	baseBiker.GroupID = 2
 	return &AgentTwo{
 		BaseBiker: baseBiker,
 		Modules: AgentModules{
