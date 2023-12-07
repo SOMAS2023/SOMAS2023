@@ -14,6 +14,9 @@ import (
 func (bb *Biker1) GetFellowBikers() []obj.IBaseBiker {
 	gs := bb.GetGameState()
 	bikeId := bb.GetBike()
+	if bikeId == uuid.Nil {
+		return nil
+	}
 	return gs.GetMegaBikes()[bikeId].GetAgents()
 }
 

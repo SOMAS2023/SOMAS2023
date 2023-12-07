@@ -3,6 +3,7 @@ package team1
 import (
 	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"fmt"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
@@ -15,7 +16,7 @@ func (bb *Biker1) VerifySender(sender obj.IBaseBiker) bool {
 	// check if sender is on our bike
 	if sender.GetBike() == bb.GetBike() {
 		// check if sender is trustworthy
-		if bb.opinions[sender.GetID()].trust > trustThreshold {
+		if bb.opinions[sender.GetID()].trust > trustThreshold && bb.opinions[sender.GetID()].opinion > 0.5 {
 			return true
 		}
 	}
@@ -46,9 +47,14 @@ func (bb *Biker1) HandleReputationMessage(msg obj.ReputationOfAgentMessage) {
 // Agent receives a message from another agent to join
 func (bb *Biker1) HandleJoiningMessage(msg obj.JoiningAgentMessage) {
 	sender := msg.GetSender()
-	// check if sender is trustworthy
-	if bb.opinions[sender.GetID()].trust > trustThreshold {
-		// TODO: some update on opinon maybe???
+	// different from Verify sender since they are not on our bike
+	if bb.opinions[sender.GetID()].trust > trustThreshold && bb.opinions[sender.GetID()].opinion > 0.5 {
+		// check if sender is on our bike
+		if sender.GetColour() == bb.GetColour() {
+			sameColourReward := 1.1
+			bb.UpdateOpinion(sender.GetID(), sameColourReward)
+		}
+
 	}
 
 }
@@ -58,7 +64,10 @@ func (bb *Biker1) HandleLootboxMessage(msg obj.LootboxMessage) {
 	sender := msg.GetSender()
 	verified := bb.VerifySender(sender)
 	if verified {
-		// TODO: some update on lootbox decision maybe??
+		if sender.GetColour() == bb.GetColour() {
+			sameColourReward := 1.2
+			bb.UpdateOpinion(sender.GetID(), sameColourReward)
+		}
 	}
 }
 
@@ -85,8 +94,9 @@ func (bb *Biker1) HandleForcesMessage(msg obj.ForcesMessage) {
 				//set our opinion of them to 0, should be kicked in next loop
 				bb.UpdateOpinion(sender.GetID(), 0)
 			}
+			// Lower opinion if they are not pedalling
 			if msg.AgentForces.Pedal == 0 {
-				bb.UpdateOpinion(sender.GetID(), bb.opinions[sender.GetID()].opinion*0.9)
+				bb.UpdateOpinion(sender.GetID(), 0.9)
 			}
 		}
 		return
@@ -136,9 +146,11 @@ func (bb *Biker1) CreateReputationMessage() obj.ReputationOfAgentMessage {
 func (bb *Biker1) CreateJoiningMessage() obj.JoiningAgentMessage {
 	// Tell the truth (for now)
 	// receipients = fellowBikers
-	biketoJoin := bb.ChangeBike()
+	biketoJoin := bb.PickBestBike()
+	fmt.Printf(biketoJoin.String())
 	gs := bb.GetGameState()
 	joiningBike := gs.GetMegaBikes()[biketoJoin]
+	fmt.Printf("Joining bike: %v", joiningBike)
 	return obj.JoiningAgentMessage{
 		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, joiningBike.GetAgents()),
 		AgentId:     bb.GetID(),
@@ -170,8 +182,37 @@ func (bb *Biker1) CreateGoverenceMessage() obj.GovernanceMessage {
 // Agent sending messages to other agents
 func (bb *Biker1) GetAllMessages([]obj.IBaseBiker) []messaging.IMessage[obj.IBaseBiker] {
 	var sendKickMessage, sendReputationMessage, sendJoiningMessage, sendLootboxMessage, sendGovernanceMessage bool
+	sendKickMessage = false
+	sendReputationMessage = false
+	sendJoiningMessage = false
+	sendLootboxMessage = false
+	sendGovernanceMessage = false
 
 	// TODO: add logic to decide which messages to send and when
+	fmt.Printf("Bike: %v, BikeStatus: %v", bb.GetBike(), bb.GetBikeStatus())
+	if bb.GetBike() == uuid.Nil && bb.GetBikeStatus() == false {
+		sendGovernanceMessage = true
+		sendJoiningMessage = false
+		fmt.Printf("Bike is nil and bike status is false\n")
+	} else if bb.GetBike() == uuid.Nil {
+		fmt.Printf("Bike is nil\n")
+		sendJoiningMessage = true
+	} else {
+		for _, agent := range bb.GetFellowBikers() {
+			if bb.opinions[agent.GetID()].opinion < kickThreshold {
+				sendKickMessage = true
+			}
+			if bb.opinions[agent.GetID()].trust < kickThreshold {
+				sendReputationMessage = true
+			}
+			if (bb.opinions[agent.GetID()].trust > trustThreshold) && (bb.opinions[agent.GetID()].opinion > 0.5) {
+				sendGovernanceMessage = true
+				sendLootboxMessage = true
+				// Never send reputation message
+				sendReputationMessage = false
+			}
+		}
+	}
 
 	var messageList []messaging.IMessage[obj.IBaseBiker]
 	if sendKickMessage {

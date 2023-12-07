@@ -33,6 +33,7 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 	normalisedAngle := angle / math.Pi
 	steeringAngle := normalisedAngle - bb.GetBikeInstance().GetOrientation()
 	if math.Abs(steeringAngle) < 0.01 { //we are headed in direction towards lootbox
+		fmt.Printf("TRUST\n")
 		finalTrust = bb.opinions[id].trust + deviatePositive //will change to be based on weighting
 	} else {
 		//	need to estimate likelihood of each agent deviating from the correct steeringAngle
@@ -43,6 +44,15 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 			finalTrust = bb.opinions[id].trust - deviateNegative
 		}
 	}
+
+	// Determine the confidence of the agent from relative success
+	// More points they have slightly less confidence since they are more likely to be selfish
+	confidence := bb.GetRelativeSuccess(bb.GetID(), agentID, bb.GetFellowBikers())
+	// Since confidence is not so accurate we don't affect the trust as much
+	confidenceScaling := 0.05
+	finalTrust = finalTrust + -(confidence * confidenceScaling)
+
+	fmt.Printf("Final trust: %v\n", finalTrust)
 
 	if finalTrust > 1 {
 		finalTrust = 1
@@ -88,10 +98,13 @@ func (bb *Biker1) UpdateFairness(agentID uuid.UUID) {
 	bb.opinions[agentID] = newOpinion
 }
 
-func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID) {
+func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID, agentsInContext []obj.IBaseBiker) {
 	// get relative success compared to us
-	relativeSuccess := bb.GetRelativeSuccess(bb.GetID(), agentID)
+	relativeSuccess := bb.GetRelativeSuccess(bb.GetID(), agentID, agentsInContext)
+	fmt.Printf("Current relative success opinion: %v\n", bb.opinions[agentID].relativeSuccess)
+	fmt.Printf("Current relative success: %v\n", relativeSuccess)
 	finalRelativeSuccess := bb.opinions[agentID].relativeSuccess + (relativeSuccess-bb.opinions[agentID].relativeSuccess)*relativeSuccessScaling
+	fmt.Printf("Final relative success: %v\n", finalRelativeSuccess)
 	if finalRelativeSuccess > 1 {
 		finalRelativeSuccess = 1
 	}
@@ -109,7 +122,7 @@ func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID) {
 }
 
 // how well does agent 1 like agent 2 according to objective metrics
-func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID) float64 {
+func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID, all_agents []obj.IBaseBiker) float64 {
 	agent1 := bb.GetAgentFromId(id1)
 	agent2 := bb.GetAgentFromId(id2)
 	relativeSuccess := 0.0
@@ -117,7 +130,6 @@ func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID) float64 {
 		relativeSuccess = relativeSuccess + colorOpinionConstant
 	}
 	relativeSuccess = relativeSuccess + (agent1.GetEnergyLevel() - agent2.GetEnergyLevel())
-	all_agents := bb.GetAllAgents()
 	maxpoints := 0
 	for _, agent := range all_agents {
 		if agent.GetPoints() > maxpoints {
@@ -193,10 +205,11 @@ func (bb *Biker1) DetermineOurReputation() float64 {
 
 	reputation := 0.0
 	for _, agent := range agentsInContext {
-		bb.UpdateRelativeSuccess(agent.GetID())
-		reputation = reputation + bb.GetRelativeSuccess(bb.GetID(), agent.GetID())
+		bb.UpdateRelativeSuccess(agent.GetID(), agentsInContext)
+		reputation = reputation + bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext)
 	}
 	reputation = reputation / float64(len(agentsInContext))
+	fmt.Printf("Reputation: %v\n", reputation)
 	return reputation
 }
 
@@ -281,12 +294,14 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 		agent := bb.GetAgentFromId(agentId)
 
 		//effort expectation is scaled by their energy and compare to our effort
-		fmt.Printf("Total effort probability: %v\n", totalEffort)
-		fmt.Printf("Agent's effort probability: %v\n", effortProbability[agentId])
-		fmt.Printf("Old agent's effort probability: %v\n", bb.opinions[agentId].effort)
-		fmt.Printf("Energy difference %v\n", fellowBikersExpendedEnergy[agentId]-OurExpendedEnergy)
-		finalEffort := bb.opinions[agentId].effort + effortProbability[agentId]*(fellowBikersExpendedEnergy[agentId]-OurExpendedEnergy)*effortScaling
-		fmt.Printf("Final effort: %v\n", finalEffort)
+		// fmt.Printf("Total effort probability: %v\n", totalEffort)
+		// fmt.Printf("Agent's effort probability: %v\n", effortProbability[agentId])
+		// fmt.Printf("Old agent's effort probability: %v\n", bb.opinions[agentId].effort)
+		// fmt.Printf("Energy difference %v\n", fellowBikersExpendedEnergy[agentId]-OurExpendedEnergy)
+
+		// Effort = Current effort + trust * effort probability * (fellow biker's expended energy - our expended energy)
+		finalEffort := bb.opinions[agentId].effort + bb.opinions[agentId].trust*effortProbability[agentId]*(fellowBikersExpendedEnergy[agentId]-OurExpendedEnergy)*effortScaling
+		// fmt.Printf("Final effort: %v\n", finalEffort)
 
 		if finalEffort > 1 {
 			finalEffort = 1
@@ -378,7 +393,7 @@ func (bb *Biker1) UpdateAllAgentsRelativeSuccess(agents_to_update []obj.IBaseBik
 			}
 			bb.opinions[agentId] = newOpinion
 		}
-		bb.UpdateRelativeSuccess(id)
+		bb.UpdateRelativeSuccess(id, bb.GetFellowBikers())
 		fmt.Printf("Agent %v relative success: %v\n", id, bb.opinions[id].relativeSuccess)
 	}
 }
