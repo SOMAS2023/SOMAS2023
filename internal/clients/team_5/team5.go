@@ -186,7 +186,7 @@ func (t5 *team5Agent) CreateReputationMessage(agent objects.IBaseBiker) objects.
 	return objects.ReputationOfAgentMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
 		AgentId:     agent.GetID(),
-		Reputation:  1.0,
+		Reputation:  1.0, // TODO: change this to the actual reputation value maybe
 	}
 }
 
