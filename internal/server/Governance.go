@@ -66,5 +66,8 @@ func (s *Server) RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UU
 
 	// ---------------------------VOTING ROUTINE - STEP 3 --------------
 	direction := s.GetWinningDirection(finalVotes, weights)
+	if _, ok := s.lootBoxes[direction]; !ok {
+		panic("agents voted on a non-existent lootbox")
+	}
 	return direction
 }
