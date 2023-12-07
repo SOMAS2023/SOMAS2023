@@ -6,3 +6,4 @@ statistics.xlsx
 .DS_store
 Test/
 *.pyc
+/venv

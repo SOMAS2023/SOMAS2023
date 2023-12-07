@@ -14,7 +14,7 @@ import (
 
 const LootBoxCount = BikerAgentCount * 2
 const MegaBikeCount = BikerAgentCount / 2
-const BikerAgentCount = 6
+const BikerAgentCount = 9
 
 type IBaseBikerServer interface {
 	baseserver.IServer[objects.IBaseBiker]
@@ -150,5 +150,30 @@ func (s *Server) UpdateGameStates() {
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
+	}
+}
+
+// had to override to address the fact that agents only have access to the game dump
+// version of agents, so if the recipients are set to be those it will panic as they
+// can't call the handler functions
+func (s *Server) RunMessagingSession() {
+	agentArray := s.GenerateAgentArrayFromMap()
+
+	for _, agent := range s.GetAgentMap() {
+		allMessages := agent.GetAllMessages(agentArray)
+		for _, msg := range allMessages {
+			recipients := msg.GetRecipients()
+			// make recipient list with actual agents
+			usableRecipients := make([]objects.IBaseBiker, len(recipients))
+			for i, recipient := range recipients {
+				usableRecipients[i] = s.GetAgentMap()[recipient.GetID()]
+			}
+			for _, recip := range usableRecipients {
+				if agent.GetID() == recip.GetID() {
+					continue
+				}
+				msg.InvokeMessageHandler(recip)
+			}
+		}
 	}
 }
