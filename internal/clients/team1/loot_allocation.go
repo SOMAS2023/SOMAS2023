@@ -3,8 +3,8 @@ package team1
 import (
 	voting "SOMAS2023/internal/common/voting"
 	"fmt"
-	"math"
 	"github.com/google/uuid"
+	"math"
 )
 
 // ---------------LOOT ALLOCATION FUNCTIONS------------------
@@ -29,13 +29,13 @@ func (bb *Biker1) DecideAllocation() voting.IdVoteMap {
 		sumEnergyNeeds = sumEnergyNeeds + energyNeed
 	}
 
-	for agentId, _ := range helpfulAllocation {
+	for agentId := range helpfulAllocation {
 		helpfulAllocation[agentId] /= sumEnergyNeeds
 	}
 
 	sumEnergyNeeds -= (1.0 - bb.GetEnergyLevel()) // remove our energy need from the sum
 
-	for agentId, _ := range selfishAllocation {
+	for agentId := range selfishAllocation {
 		if agentId != bb.GetID() {
 			selfishAllocation[agentId] = (selfishAllocation[agentId] / sumEnergyNeeds) * bb.GetEnergyLevel() //NB assuming energy is 0-1
 		}
@@ -66,7 +66,7 @@ func (bb *Biker1) DecideAllocation() voting.IdVoteMap {
 		distribution[id] = Adistribution
 		runningDistribution = runningDistribution + Adistribution
 	}
-	for agentId, _ := range distribution {
+	for agentId := range distribution {
 		distribution[agentId] = distribution[agentId] / runningDistribution // Normalise!
 	}
 	if math.IsNaN(distribution[bb.GetID()]) {

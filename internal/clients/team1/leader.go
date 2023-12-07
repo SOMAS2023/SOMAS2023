@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 )
+
 // --------------------LEADER FUNCTIONS------------------
 func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	// decides the weights of other peoples votes

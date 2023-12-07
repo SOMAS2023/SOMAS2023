@@ -102,7 +102,6 @@ func (bb *Biker1) GetAllAgents() []obj.IBaseBiker {
 	return agents
 }
 
-
 // -------------------SELFISHNESS/HELPFUL FUNCTIONS----------------------
 
 // // Success-Relationship algo for calculating selfishness score
