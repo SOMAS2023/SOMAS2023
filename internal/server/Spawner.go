@@ -6,7 +6,9 @@ import (
 	team_7 "SOMAS2023/internal/clients/team7/agents"
 	team_8 "SOMAS2023/internal/clients/team8"
 	team_3 "SOMAS2023/internal/clients/team_3"
+	team_4 "SOMAS2023/internal/clients/team_4"
 	team_5 "SOMAS2023/internal/clients/team_5"
+
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 
@@ -16,9 +18,10 @@ import (
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
 	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount),
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount),
 		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker2AgentGenerator, BikerAgentCount),
 		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker3AgentGenerator, BikerAgentCount),
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker4AgentGenerator, BikerAgentCount),
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount),
 		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker7AgentGenerator, BikerAgentCount),
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount),
@@ -35,6 +38,10 @@ func Biker2AgentGenerator() objects.IBaseBiker {
 
 func Biker3AgentGenerator() objects.IBaseBiker {
 	return team_3.NewTeam3Agent(utils.GenerateRandomColour(), uuid.New())
+}
+
+func Biker4AgentGenerator() objects.IBaseBiker {
+	return team_4.BikerAgentGenerator(utils.GenerateRandomColour(), uuid.New())
 }
 
 func Biker5AgentGenerator() objects.IBaseBiker {
