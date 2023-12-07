@@ -174,6 +174,8 @@ class Visualiser:
                 if filepath != "":
                     self.json_parser(filepath)
                     self.gameScreenManager.change_round(0)
+                    self.gameScreenManager.log("Welcome to the visualiser!")
+                    self.gameScreenManager.log(f"Max rounds: {self.gameScreenManager.maxRound}", "INFO")
                     self.switch_screen("game_screen")
 
     def process_game_screen_events(self, event:pygame.event.Event) -> None:
@@ -202,10 +204,11 @@ class Visualiser:
         Test function
         """
         filepath = sys.argv[0] + "/../" + JSONPATH
-        # filepath = JSONPATH
         if exists(filepath):
             self.json_parser(filepath)
             self.gameScreenManager.change_round(0)
+            self.gameScreenManager.log("Welcome to the visualiser!")
+            self.gameScreenManager.log(f"Max rounds: {self.gameScreenManager.maxRound}", "INFO")
             self.run_loop("game_screen")
         else:
             self.run_loop()
