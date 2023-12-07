@@ -121,6 +121,8 @@ func TestResetGameState(t *testing.T) {
 }
 
 func TestFoundingInstitutions(t *testing.T) {
+	OnlySpawnBaseBikers(t)
+
 	it := 2
 	s := server.Initialize(it)
 

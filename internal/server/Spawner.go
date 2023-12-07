@@ -12,16 +12,16 @@ import (
 
 type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
 
-func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
-	initFunctions := []AgentInitFunction{
-		nil,                 // Base Biker
-		team1.GetBiker1,     // Team 1
-		team8.GetIBaseBiker, // Team 8
-	}
+var AgentInitFunctions = []AgentInitFunction{
+	nil,                 // Base Biker
+	team1.GetBiker1,     // Team 1
+	team8.GetIBaseBiker, // Team 8
+}
 
-	agentGenerators := make([]baseserver.AgentGeneratorCountPair[objects.IBaseBiker], 0, len(initFunctions))
-	for _, initFunction := range initFunctions {
-		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), BikerAgentCount/len(initFunctions)))
+func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
+	agentGenerators := make([]baseserver.AgentGeneratorCountPair[objects.IBaseBiker], 0, len(AgentInitFunctions))
+	for _, initFunction := range AgentInitFunctions {
+		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), BikerAgentCount/len(AgentInitFunctions)))
 	}
 	return agentGenerators
 }
