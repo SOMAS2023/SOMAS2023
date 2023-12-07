@@ -18,7 +18,9 @@ type team5Agent struct {
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
 	state int // 0 = normal, 1 = conservative
+	prevEnergy map[uuid.UUID]float64
 }
+
 
 type ResourceAllocationMethod int
 
@@ -44,8 +46,8 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 }
 
 func (t5 *team5Agent) UpdateAgentInternalState() {
-	t5.updateReputationOfAllAgents()
 	t5.updateState()
+	t5.updateReputationOfAllAgents()
 }
 
 // needs fixing always democracy
@@ -82,7 +84,7 @@ func (t5 *team5Agent) ChangeBike() uuid.UUID {
 
 func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	gameState := t5.GetGameState()
-	finalPreferences := CalculateLootBoxPreferences(gameState, t5, proposals /*t5.cumulativePreferences*/)
+	finalPreferences := t5.CalculateLootBoxPreferences(gameState, proposals /*t5.cumulativePreferences*/)
 
 	finalVote := SortPreferences(finalPreferences)
 
