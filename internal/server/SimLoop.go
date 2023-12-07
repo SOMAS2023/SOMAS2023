@@ -99,6 +99,9 @@ func (s *Server) FoundingInstitutions() {
 		// get bikes for this governance
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
+			if len(bikesUsed) == len(s.megaBikes) {
+				break
+			}
 			for !foundBike {
 				bike := s.GetRandomBikeId()
 				if !slices.Contains(bikesUsed, bike) {
