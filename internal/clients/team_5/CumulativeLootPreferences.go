@@ -26,10 +26,10 @@ func (t5 *team5Agent) CalculateLootBoxPreferences(gameState objects.IGameState, 
 		energyPreference := calculateEnergyPreference(t5.GetEnergyLevel(), lootBox.GetTotalResources())
 
 		distanceFromAudi := calculateDistanceToObject(audiPos, lootBox.GetPosition())
-		var audiModifier float64 = 0
+		finalPreferences[lootBoxID] = 0.4*(1/distanceFromBike) + 0.3*colorPreference + 0.2*energyPreference
 
 		if distanceFromAudi < (2 * utils.CollisionThreshold) {
-			audiModifier = -0.5
+			finalPreferences[lootBoxID] = 0
 		}
 
 		// cumulativePreference := cumulativePreferences[id]
@@ -37,7 +37,6 @@ func (t5 *team5Agent) CalculateLootBoxPreferences(gameState objects.IGameState, 
 		// combine preferences (weights: 0.4 for distance, 0.3 for color, 0.2 for energy, 0.1 for cumulative)
 		// ensure that if cant get first preference, get second preference and so on
 
-		finalPreferences[lootBoxID] = 0.4*(1/distanceFromBike) + 0.3*colorPreference + 0.2*energyPreference + audiModifier
 	}
 
 	return finalPreferences
