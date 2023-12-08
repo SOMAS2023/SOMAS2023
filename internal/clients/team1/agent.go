@@ -60,7 +60,7 @@ type Biker1 struct {
 	opinions              map[uuid.UUID]Opinion
 	desiredBike           uuid.UUID
 	pursuedBikes          []uuid.UUID
-	mostRecentBike		  uuid.UUID
+	mostRecentBike        uuid.UUID
 	timeInLimbo           int
 	prevOnBike            bool
 	numberOfLeaves        int
