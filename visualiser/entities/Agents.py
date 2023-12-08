@@ -81,5 +81,10 @@ class Agent(Drawable):
         Overlay agent properties when clicked.
         """
         if self.clicked:
-            self.draw_arrow(screen, self.colour, (self.trueX, self.trueY), self.bikeOrientation+self.nextOrient)
+            angle = self.bikeOrientation+self.nextOrient
+            if angle > 1:
+                angle -= 2
+            elif angle < -1:
+                angle += 2
+            self.draw_arrow(screen, self.colour, (self.trueX, self.trueY), angle)
         super().draw_overlay(screen, offsetX, offsetY, zoom)

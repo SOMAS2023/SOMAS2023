@@ -375,7 +375,10 @@ class GameScreen:
             nextRound = self.jsonData[min(self.round+1, self.maxRound)]["bikes"]
             if bikeid in nextRound:
                 nextPos = nextRound[bikeid]["physical_state"]["position"]["x"], nextRound[bikeid]["physical_state"]["position"]["y"]
-                nextOrient = nextRound[bikeid]["orientation"]
+                if "orientation" in nextRound[bikeid]:
+                    nextOrient = nextRound[bikeid]["orientation"]
+                else:
+                    nextOrient = 0
             else:
             #If bike is dead, draw arrow to empty
                 nextPos = 0, 0
