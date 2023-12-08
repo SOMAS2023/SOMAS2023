@@ -20,7 +20,7 @@ type KeyValuePair struct {
 }
 
 type SmartAgent struct {
-	objects.BaseBiker
+	*objects.BaseBiker
 	targetLootBox objects.ILootBox
 	reputationMap map[uuid.UUID]reputation
 
@@ -33,8 +33,8 @@ type SmartAgent struct {
 	lastPedal                      float64
 }
 
-func GetT3Agent() objects.IBaseBiker {
-	return &SmartAgent{BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())}
+func GetT3Agent(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+	return &SmartAgent{BaseBiker: baseBiker}
 }
 
 func (agent *SmartAgent) DecideGovernance() utils.Governance {
