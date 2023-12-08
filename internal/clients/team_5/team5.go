@@ -4,7 +4,6 @@ import (
 	"SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -17,7 +16,9 @@ type team5Agent struct {
 	objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
-	state int // 0 = normal, 1 = conservative
+	state      int // 0 = normal, 1 = conservative
+	prevEnergy map[uuid.UUID]float64
+	roundCount int
 }
 
 type ResourceAllocationMethod int
@@ -33,18 +34,21 @@ const (
 // Creates an instance of Team 5 Biker
 func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
+	baseBiker.GroupID = 5
 	// print
-	fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
 		BaseBiker:           *baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
+		roundCount:          0,
 	}
 }
 
 func (t5 *team5Agent) UpdateAgentInternalState() {
-	t5.updateReputationOfAllAgents()
 	t5.updateState()
+	t5.updateReputationOfAllAgents()
+	t5.roundCount = (t5.roundCount + 1) % utils.RoundIterations
 }
 
 // needs fixing always democracy

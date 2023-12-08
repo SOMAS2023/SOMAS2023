@@ -13,13 +13,19 @@ class Agent(Drawable):
         super().__init__(agentid, jsonData, x, y)
         self.colour = COLOURS[colour]
         self.radius = AGENT["SIZE"]
-        self.groupID = groupID
+        self.onBike = jsonData["on_bike"]
+        if groupID == 0:
+            self.groupID = "?"
+        else:
+            self.groupID = str(groupID)
         properties = {
             "Pedal" : jsonData["forces"]["pedal"],
             "Brake" : jsonData["forces"]["brake"],
             "Colour" : colour.title(),
             "Steering?" : f'{jsonData["forces"]["turning"]["steer_bike"] != 0}, {round(jsonData["forces"]["turning"]["steering_force"],PRECISION)}',
-            "Energy" : round(jsonData["energy_level"], PRECISION)
+            "Energy" : round(jsonData["energy_level"], PRECISION),
+            "Points" : jsonData["points"],
+            "GroupID" : self.groupID,
         }
         self.properties.update(properties)
 
@@ -45,10 +51,18 @@ class Agent(Drawable):
         # Draw group ID
         font = pygame.font.SysFont("Arial", int(AGENT["FONT_SIZE"]*zoom))
         if self.colour in (COLOURS["white"]):
-            text = font.render(str(self.groupID), True, (0, 0, 0))
+            text = font.render(self.groupID, True, (0, 0, 0))
         else:
-            text = font.render(str(self.groupID), True, (255, 255, 255))
+            text = font.render(self.groupID, True, (255, 255, 255))
         textRect = text.get_rect()
         textRect.center = (self.trueX, self.trueY)
         screen.blit(text, textRect)
         self.overlay = self.update_overlay(zoom)
+
+    def get_properties(self) -> dict:
+        """
+        Return the properties of the agent.
+        """
+        properties =  super().get_properties()
+        properties["onBike"] = self.onBike
+        return properties

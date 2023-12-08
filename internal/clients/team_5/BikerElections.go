@@ -7,49 +7,86 @@ import (
 	"github.com/google/uuid"
 )
 
+// if t5.prev == nul{
+// 	make map
+// 	make diff map
+// 	t5.prevEnergy = currMap
+// }
+// else{
+// 	current - agent.prev > 0
+// 	then update prev
+// }
+
+func (t5 *team5Agent) CalculateEnergyChange(BikeId uuid.UUID) map[uuid.UUID]float64 {
+	if t5.prevEnergy == nil {
+		t5.prevEnergy = make(map[uuid.UUID]float64)
+	}
+
+	bike := t5.GetGameState().GetMegaBikes()[BikeId]
+	agentsOnBike := bike.GetAgents()
+	energyChange := make(map[uuid.UUID]float64)
+
+	for _, agent := range agentsOnBike {
+		// fmt.Printf("Agent at index %d: %v\n", i, agent)
+		previousEnergy := t5.prevEnergy[agent.GetID()]
+
+		// Calculate the energy change between agents in the previous round and the current round - help determine who was greedy/pedalling
+		energyChange[agent.GetID()] = agent.GetEnergyLevel() - previousEnergy
+
+		t5.prevEnergy[agent.GetID()] = agent.GetEnergyLevel()
+	}
+
+	return energyChange
+
+}
+
 func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 	agentsOnBike := t5.GetFellowBikers()
 	numberOfAgents := float64(len(agentsOnBike))
 
 	internalRanking := make(map[uuid.UUID]float64)
 	ranking := make(map[uuid.UUID]int)
+	threshold := 0.25 // need to tune
 
 	a := 1.0
 	b := 1.0
 	c := 0.6
-	forceMax := utils.BikerMaxForce
 
-	for _, agent := range agentsOnBike {
+	scaleFactor := 1.0
 
-		key := agent.GetID()
-		reputation := t5.QueryReputation(key)
-		pedallingForce := t5.GetForces().Pedal
-
-		utility := (a * pedallingForce) + (b * reputation) + (c * numberOfAgents)
-		utilityNorm := utility / ((a * forceMax) + b + c)
-
-		internalRanking[key] = utilityNorm
+	if t5.state == 0 {
+		scaleFactor = 0.2
+	} else if t5.state == 1 {
+		scaleFactor = 0.5
+	} else if t5.state == 2 {
+		scaleFactor = 0.6
+	} else if t5.state == 3 {
+		scaleFactor = 0.8
 	}
 
-	// Extras for sorting
-	type kv struct {
-		Key   uuid.UUID
-		Value float64
-	}
+	for _, agentB := range agentsOnBike {
 
-	var ss []kv
+		keyId := agentB.GetID()
+		if keyId == t5.GetID() {
+			continue
+		}
 
-	for k, v := range internalRanking {
-		ss = append(ss, kv{k, v})
-	}
+		reputation := t5.QueryReputation(keyId)
 
-	// Sort the slice by values
-	sort.Slice(ss, func(i, j int) bool {
-		return ss[i].Value < ss[j].Value
-	})
+		energyLevel := agentB.GetEnergyLevel()
+		utility := (a * energyLevel) + (b * reputation) + (c * numberOfAgents)
+		utilityNorm := utility / (2.0 + (c * utils.BikersOnBike))
+		utilityNorm = utilityNorm * scaleFactor
 
-	for i, pair := range ss {
-		ranking[pair.Key] = i + 1
+		internalRanking[keyId] = utilityNorm
+
+		if utilityNorm > threshold {
+			ranking[keyId] = 0
+
+		} else {
+			ranking[keyId] = 1
+		}
+
 	}
 
 	return ranking
@@ -67,14 +104,26 @@ func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 	a := 1.0
 	b := 1.0
 	c := 1.0
-	energyMax := 1.0
+	// energyMax := 1.0
 	targetColor := t5.GetColour()
+
+	scaleFactor := 1.0
+
+	if t5.state == 0 {
+		scaleFactor = 0.2
+	} else if t5.state == 1 {
+		scaleFactor = 0.5
+	} else if t5.state == 2 {
+		scaleFactor = 0.6
+	} else if t5.state == 3 {
+		scaleFactor = 0.8
+	}
 
 	for _, agentID := range pendingAgents {
 		agentState := agentMap[agentID]
 
 		key := agentState.GetID()
-		reputation := agentState.QueryReputation(key)
+		reputation := t5.QueryReputation(key)
 		energyLevel := agentState.GetEnergyLevel()
 		pendingAgentColor := agentState.GetColour()
 
@@ -86,7 +135,8 @@ func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 
 		// color has to be a 0/1 and replaced with
 		utility := (a * energyLevel) + (b * reputation) + (c * isColorSame)
-		utilityNorm := utility / ((a * energyMax) + b + c)
+		utilityNorm := utility / 3.0
+		utilityNorm = utilityNorm * scaleFactor
 
 		pendingAgentUtility[agentID] = utilityNorm
 

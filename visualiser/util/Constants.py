@@ -7,7 +7,7 @@ FRAMERATE = 60
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.5
 COORDINATESCALE = 15
 PRECISION = 2
-EPSILON = 8
+EPSILON = 12
 ENERGYTHRESHOLD = 0.1
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
@@ -63,7 +63,7 @@ AWDI = {
     "LINE_WIDTH": 2,
     "LINE_COLOUR": "#000000",
     "FONT_SIZE": 30,
-    "SIZE": 60,
+    "SIZE": 140,
 }
 AGENT = {
     "SIZE": 10,
@@ -74,7 +74,7 @@ AGENT = {
 }
 LOOTBOX = {
     "DEFAULT_COLOUR" : "#000000",
-    "HEIGHT" : 30,
+    "HEIGHT" : 60,
     "WIDTH": 120,
     "LINE_WIDTH": 2,
     "LINE_COLOUR": "#000000",
@@ -84,10 +84,10 @@ DIM = {
     "SCREEN_WIDTH": 1280,
     "SCREEN_HEIGHT": 720,
     "GAME_SCREEN_WIDTH": 1000,
-    "GAME_SCREEN_HEIGHT": 580,
+    "GAME_SCREEN_HEIGHT": 575,
     "UI_WIDTH": 280,
     "BUTTON_WIDTH": 220,
-    "BUTTON_HEIGHT": 70,
+    "BUTTON_HEIGHT": 60,
     "GRIDSPACING": 20,
     "CONSOLE_WIDTH": 750,
 }

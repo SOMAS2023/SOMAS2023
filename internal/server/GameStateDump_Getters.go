@@ -64,10 +64,6 @@ func (a AgentDump) GetID() uuid.UUID {
 	return a.ID
 }
 
-func (a AgentDump) GetForces() utils.Forces {
-	return a.Forces
-}
-
 func (a AgentDump) GetColour() utils.Colour {
 	return a.Colour
 }
@@ -94,6 +90,10 @@ func (a AgentDump) GetBikeStatus() bool {
 
 func (a AgentDump) GetReputation() map[uuid.UUID]float64 {
 	return maps.Clone(a.Reputation)
+}
+
+func (a AgentDump) GetGroupID() int {
+	return a.GroupID
 }
 
 func (b BikeDump) GetAgents() []objects.IBaseBiker {
