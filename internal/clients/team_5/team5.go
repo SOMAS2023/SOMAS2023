@@ -16,9 +16,12 @@ type team5Agent struct {
 	objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
-	state      int // 0 = normal, 1 = conservative
-	prevEnergy map[uuid.UUID]float64
-	roundCount int
+	state            int // 0 = normal, 1 = conservative
+	prevEnergy       map[uuid.UUID]float64
+	roundCount       int
+	otherBikerForces map[uuid.UUID]utils.Forces
+	otherBikerRep    map[uuid.UUID]float64
+	finalPreferences map[uuid.UUID]float64
 }
 
 type ResourceAllocationMethod int
@@ -42,6 +45,9 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 		resourceAllocMethod: Equal,
 		state:               0,
 		roundCount:          0,
+		otherBikerForces:    make(map[uuid.UUID]utils.Forces),
+		otherBikerRep:       make(map[uuid.UUID]float64),
+		finalPreferences:    make(map[uuid.UUID]float64),
 	}
 }
 

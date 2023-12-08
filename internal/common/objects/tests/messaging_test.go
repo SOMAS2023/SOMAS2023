@@ -44,7 +44,6 @@ func (ebb *ExtendedBaseBiker) HandleForcesMessage(msg obj.ForcesMessage) {
 		ebb.OtherBikerForces = append(ebb.OtherBikerForces, agentForces)
 		// fmt.Println(len(ebb.OtherBikerForces), ebb.OtherBikerForces)
 	}
-
 }
 
 // Send messages to server which will be sent to the reciepients of the messages

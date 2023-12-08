@@ -439,7 +439,7 @@ func (bb *BaseBiker) DecideDictatorAllocation() voting.IdVoteMap {
 // And returns the new messages from other agents to your agent
 func (bb *BaseBiker) GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker] {
 	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
-	wantToSendMsg := false
+	wantToSendMsg := true
 	if wantToSendMsg {
 		reputationMsg := bb.CreateReputationMessage()
 		kickoutMsg := bb.CreatekickoutMessage()
