@@ -1,4 +1,4 @@
-package team_4
+package team4
 
 import (
 	"SOMAS2023/internal/common/objects"
@@ -55,7 +55,7 @@ type IBaselineAgent interface {
 }
 
 // general weights
-const audiDistanceThreshold = 78
+const audiDistanceThreshold = 75
 const minEnergyThreshold = 0.2
 
 const audiDistanceWeight = 8.0
@@ -76,7 +76,7 @@ const dictatorRepWeight = 2.0
 const dictatorHonestWeight = 1.0
 
 type BaselineAgent struct {
-	objects.BaseBiker
+	*objects.BaseBiker
 	currentBike       uuid.UUID
 	capacity          int       //number of agents on my bike
 	audiTarget        uuid.UUID //current bike audi is targeting
@@ -104,11 +104,10 @@ func (agent *BaselineAgent) DecideAction() objects.BikerAction {
 	return objects.Pedal
 }
 
-func GetBiker4() objects.IBaseBiker {
-	// Create a new instance of BaselineAgent
+// called by the spawner/server to instantiate bikers in the MVP
+func GetBiker4(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 	team4Agent := &BaselineAgent{
-		BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New()),
+		BaseBiker: baseBiker,
 	}
-	// Return the baselineAgent as an IBaseBiker
 	return team4Agent
 }

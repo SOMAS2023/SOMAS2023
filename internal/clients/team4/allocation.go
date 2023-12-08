@@ -1,4 +1,4 @@
-package team_4
+package team4
 
 import (
 	"SOMAS2023/internal/common/voting"
