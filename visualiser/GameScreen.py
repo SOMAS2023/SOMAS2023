@@ -378,7 +378,7 @@ class GameScreen:
                 if "orientation" in nextRound[bikeid]:
                     nextOrient = nextRound[bikeid]["orientation"]
                 else:
-                    nextOrient = 0
+                    nextOrient = -2
             else:
             #If bike is dead, draw arrow to empty
                 nextPos = 0, 0

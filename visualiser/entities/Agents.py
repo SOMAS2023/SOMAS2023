@@ -86,5 +86,5 @@ class Agent(Drawable):
                 angle -= 2
             elif angle < -1:
                 angle += 2
-            self.draw_arrow(screen, self.colour, (self.trueX, self.trueY), angle)
+            # self.draw_arrow(screen, self.colour, (self.trueX, self.trueY), angle)
         super().draw_overlay(screen, offsetX, offsetY, zoom)

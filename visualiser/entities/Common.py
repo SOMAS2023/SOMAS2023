@@ -104,7 +104,7 @@ class Drawable:
         """
         Draw a line with multiple arrowheads to indicate direction.
         """
-        if secondArg == (0, 0):
+        if secondArg == (0, 0) or secondArg == -2:
             return
         arrowLength = ARROWS["ARROW_LENGTH"]
         arrowAngle = ARROWS["ARROW_ANGLE"] * math.pi / 180
