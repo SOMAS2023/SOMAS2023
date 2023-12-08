@@ -27,7 +27,7 @@ func (bb *Biker1) DecideGovernance() utils.Governance {
 func (bb *Biker1) DecideDemocracy() bool {
 	founding_agents := bb.GetAllAgents()
 	totalOpinion := 0.0
-	reputation := bb.DetermineOurReputation()
+	reputation := bb.DetermineOurAverageReputation()
 	for _, agent := range founding_agents {
 		opinion, ok := bb.opinions[agent.GetID()]
 		if ok {
@@ -45,7 +45,7 @@ func (bb *Biker1) DecideDemocracy() bool {
 func (bb *Biker1) DecideLeadership() bool {
 	founding_agents := bb.GetAllAgents()
 	totalOpinion := 0.0
-	reputation := bb.DetermineOurReputation()
+	reputation := bb.DetermineOurAverageReputation()
 	for _, agent := range founding_agents {
 		opinion, ok := bb.opinions[agent.GetID()]
 		if ok {
@@ -63,7 +63,7 @@ func (bb *Biker1) DecideLeadership() bool {
 func (bb *Biker1) DecideDictatorship() bool {
 	founding_agents := bb.GetAllAgents()
 	totalOpinion := 0.0
-	reputation := bb.DetermineOurReputation()
+	reputation := bb.DetermineOurAverageReputation()
 	for _, agent := range founding_agents {
 		opinion, ok := bb.opinions[agent.GetID()]
 		if ok {
