@@ -13,6 +13,7 @@ class Agent(Drawable):
         super().__init__(agentid, jsonData, x, y)
         self.colour = COLOURS[colour]
         self.radius = AGENT["SIZE"]
+        self.onBike = jsonData["on_bike"]
         if groupID == 0:
             self.groupID = "?"
         else:
@@ -24,7 +25,7 @@ class Agent(Drawable):
             "Steering?" : f'{jsonData["forces"]["turning"]["steer_bike"] != 0}, {round(jsonData["forces"]["turning"]["steering_force"],PRECISION)}',
             "Energy" : round(jsonData["energy_level"], PRECISION),
             "Points" : jsonData["points"],
-            "GroupID" : groupID,
+            "GroupID" : self.groupID,
         }
         self.properties.update(properties)
 
@@ -57,3 +58,11 @@ class Agent(Drawable):
         textRect.center = (self.trueX, self.trueY)
         screen.blit(text, textRect)
         self.overlay = self.update_overlay(zoom)
+
+    def get_properties(self) -> dict:
+        """
+        Return the properties of the agent.
+        """
+        properties =  super().get_properties()
+        properties["onBike"] = self.onBike
+        return properties

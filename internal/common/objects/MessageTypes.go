@@ -20,7 +20,7 @@ type ReputationOfAgentMessage struct {
 type KickoutAgentMessage struct {
 	messaging.BaseMessage[IBaseBiker]
 	AgentId uuid.UUID // agent who you do/do not want to kick off
-	kickout bool      // true if you want to kick off, otherwise false
+	Kickout bool      // true if you want to kick off, otherwise false
 }
 
 // "I want to move to this bike"
