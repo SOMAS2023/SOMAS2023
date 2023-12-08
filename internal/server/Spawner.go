@@ -5,6 +5,7 @@ import (
 	"SOMAS2023/internal/clients/team2"
 	"SOMAS2023/internal/clients/team8"
 	// "SOMAS2023/internal/clients/team7"
+	"SOMAS2023/internal/clients/team4"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	//team7agents "SOMAS2023/internal/clients/team7/agents"
@@ -21,6 +22,7 @@ var AgentInitFunctions = []AgentInitFunction{
 	team2.GetBiker,      // Team 2
 	team8.GetIBaseBiker, // Team 8
 	//team7agents.NewBaseTeamSevenBiker, // Team 7
+	team4.GetBiker4, // Team 4
  }
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {

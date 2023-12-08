@@ -74,7 +74,7 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
 		var location utils.Coordinates
-		if agent.GetBike() != uuid.Nil {
+		if s.megaBikes[agent.GetBike()] != nil {
 			location = s.megaBikes[agent.GetBike()].GetPosition()
 		} else {
 			location = utils.Coordinates{X: 0.0, Y: 0.0}

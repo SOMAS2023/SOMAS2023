@@ -46,9 +46,9 @@ const PointsFromSameColouredLootBox = 5.0
 /*
 Audi Behavior
 */
-const AudiTargetsEmptyMegaBike bool = false
-const AudiOnlyTargetsStationaryMegaBike bool = true // if false, targeting slowest
-const AudiRemovesMegaBike bool = false
+const AudiTargetsEmptyMegaBike bool = true
+const AudiOnlyTargetsStationaryMegaBike bool = false // if false, targeting slowest
+const AudiRemovesMegaBike bool = true
 
 /*
 Voting Method Choice
