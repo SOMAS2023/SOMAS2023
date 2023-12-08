@@ -78,7 +78,7 @@ func (bb *Biker1) GetLocation() utils.Coordinates {
 	megaBikes := gs.GetMegaBikes()
 	position := megaBikes[bikeId].GetPosition()
 	if math.IsNaN(position.X) {
-		fmt.Printf("agent %v has no position\n", bb.GetID())
+		// fmt.Printf("agent %v has no position\n", bb.GetID())
 	}
 	return position
 }
@@ -173,19 +173,19 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 		// if we think we can survive
 		if bb.GetEnergyLevel() > bb.leavingRisk*-utils.LimboEnergyPenalty {
 			bb.dislikeVote = false
-			fmt.Printf("Agent %v is considering leaving bike %v\n", bb.GetID(), bb.GetBike())
+			// fmt.Printf("Agent %v is considering leaving bike %v\n", bb.GetID(), bb.GetBike())
 			newBike := bb.PickBestBike()
 			if newBike != bb.GetBike() {
 				// refresh prevEnergy Map
 				bb.prevEnergy = make(map[uuid.UUID]float64)
-				fmt.Printf("Agent %v is leaving bike %v for bike %v\n", bb.GetID(), bb.GetBike(), newBike)
+				// fmt.Printf("Agent %v is leaving bike %v for bike %v\n", bb.GetID(), bb.GetBike(), newBike)
 				return 1
 			} else {
 				bb.updatePrevEnergy()
 				return 0
 			}
 		} else {
-			fmt.Printf("Agent %v is staying on bike %v despite low opinion\n", bb.GetID(), bb.GetBike())
+			// fmt.Printf("Agent %v is staying on bike %v despite low opinion\n", bb.GetID(), bb.GetBike())
 			bb.updatePrevEnergy()
 			return 0
 		}
@@ -266,19 +266,19 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 		bbColour := bb.GetColour()
 		agentColour := agent.GetColour()
 		if agentColour == bbColour {
-			fmt.Printf("Agent %v is accepting agent %v by colour\n", bb.GetID(), agentId)
+			// fmt.Printf("Agent %v is accepting agent %v by colour\n", bb.GetID(), agentId)
 			decision[agentId] = true
 			sameColourReward := 1.05
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
 			if bb.opinions[agentId].opinion >= averageBikeOpinion || agent_reputation > joinReputationThreshold {
-				fmt.Printf("Agent %v is accepting agent %v by opinion\n", bb.GetID(), agentId)
+				// fmt.Printf("Agent %v is accepting agent %v by opinion\n", bb.GetID(), agentId)
 				decision[agentId] = true
 				// penalise for accepting them without same colour
 				penalty := 0.9
 				bb.UpdateOpinion(agentId, penalty)
 			} else {
-				fmt.Printf("Agent %v is rejecting agent %v, because opinion = %v\n", bb.GetID(), agentId, bb.opinions[agentId].opinion)
+				// fmt.Printf("Agent %v is rejecting agent %v, because opinion = %v\n", bb.GetID(), agentId, bb.opinions[agentId].opinion)
 				decision[agentId] = false
 			}
 		}
