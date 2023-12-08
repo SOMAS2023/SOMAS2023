@@ -22,15 +22,15 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
 	////** fmt.Println("Current Location: ", currLocation)
 
-	nearestLoot := t5.ProposeDirection()
-	////** fmt.Println("Nearest Loot ID: ", nearestLoot)
+	// nearestLoot := t5.ProposeDirection()
+	//fmt.Println("Nearest Loot ID: ", nearestLoot)
 
 	currentLootBoxes := t5.GetGameState().GetLootBoxes()
 	////** fmt.Println("Number of Loot Boxes: ", len(currentLootBoxes))
 
 	if len(currentLootBoxes) > 0 {
-		targetPos := currentLootBoxes[nearestLoot].GetPosition()
-		////** fmt.Println("Target Position: ", targetPos)
+		targetPos := currentLootBoxes[targetLootBoxID].GetPosition()
+		//fmt.Println("Target Position: ", targetPos)
 
 		deltaXB := targetPos.X - currLocation.X
 		deltaYB := targetPos.Y - currLocation.Y
@@ -43,21 +43,18 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 
 		angleToGoal := math.Atan2(deltaYB, deltaXB) / math.Pi
 		angleToAudi := math.Atan2(deltaYA, deltaXA) / math.Pi
-		distanceToAudi := math.Sqrt(deltaXA*deltaXA + deltaYA*deltaYA)
 
-		// Check if Audi is too close and adjust angleToGoal if necessary
-		if distanceToAudi < (2.25*utils.CollisionThreshold) && math.Abs(angleToAudi-angleToGoal) < 0.5 {
-			// Smoothing the adjustment by reducing the impact
-			adjustment := 0.5 * math.Copysign(1, angleToAudi-angleToGoal)
-			angleToGoal = (angleToGoal + angleToAudi - adjustment) / 2
+		distance_to_audi := math.Sqrt((((deltaXA) * (deltaXA)) + (deltaYA * (deltaYA))))
+
+		if distance_to_audi < (2*utils.CollisionThreshold) && math.Abs(angleToAudi-angleToGoal) < 0.5 {
+			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
 		}
 
-		// Normalize the steering angle between -1 and 1
-		steer := angleToGoal - orientation
-		if steer > 1 {
-			steer = 1
-		} else if steer < -1 {
-			steer = -1
+		steer := (angleToGoal - orientation)
+		if steer < -1 {
+			steer = steer + 2
+		} else if steer > 1 {
+			steer = steer - 2
 		}
 
 		////** fmt.Println("Bike Orientation: ", orientation)
