@@ -75,6 +75,7 @@ func createMockBikers(s server.IBaseBikerServer, count int) []*MockBiker {
 func TestResetGameState(t *testing.T) {
 	it := 2
 	s := server.Initialize(it)
+	s.FoundingInstitutions()
 
 	// remove 4 agents from the map
 	i := 0
