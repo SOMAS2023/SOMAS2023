@@ -18,10 +18,12 @@ func (bb *Biker1) ComputeDistance(a utils.Coordinates, b utils.Coordinates) floa
 func (bb *Biker1) GetFellowBikers() []obj.IBaseBiker {
 	gs := bb.GetGameState()
 	bikeId := bb.GetBike()
-	if bikeId == uuid.Nil {
+	result, ok := gs.GetMegaBikes()[bikeId]
+	if ok {
+		return result.GetAgents()
+	}else{
 		return []obj.IBaseBiker{}
 	}
-	return gs.GetMegaBikes()[bikeId].GetAgents()
 }
 
 func (bb *Biker1) GetBikeInstance() obj.IMegaBike {
