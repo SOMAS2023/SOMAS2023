@@ -33,7 +33,7 @@ type SmartAgent struct {
 	lastPedal                      float64
 }
 
-func BikerAgentGenerator() objects.IBaseBiker {
+func GetT3Agent() objects.IBaseBiker {
 	return &SmartAgent{BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())}
 }
 
