@@ -8,25 +8,29 @@ import (
 	"github.com/google/uuid"
 )
 
-func ProposeDirection(gameState objects.IGameState, b *team5Agent) uuid.UUID {
+func (t5 *team5Agent) ProposeDirection() uuid.UUID {
 	preferenceMap := make(map[uuid.UUID]float64)
+	gameState := t5.GetGameState()
 
 	// Get the megabike, agent and lootboxes
-	bikeId := b.GetBike()
+	bikeId := t5.GetBike()
 	bike := gameState.GetMegaBikes()[bikeId]
 	lootBoxes := gameState.GetLootBoxes()
 
 	// Weights for distance, energy and colour
 	var wd, we, wc = 0.3, 0.3, 0.4
 
-	averageEnergyOthers := calculateAverageEnergyOthers(gameState, b)                 // Average energy of other agents on the bike
-	urgencyFactor := averageEnergyPreference(b.GetEnergyLevel(), averageEnergyOthers) // Urgency factor based on agent's energy level compared to his bike mates
+	averageEnergyOthers := calculateAverageEnergyOthers(gameState, t5)                 // Average energy of other agents on the bike
+	urgencyFactor := averageEnergyPreference(t5.GetEnergyLevel(), averageEnergyOthers) // Urgency factor based on agent's energy level compared to his bike mates
+	audiPos := t5.GetGameState().GetAudi().GetPosition()
 
 	// Calculate the preference for each lootbox
 	for id, loot := range lootBoxes {
 		distance := calculateDistance(bike.GetPosition(), loot.GetPosition())
-		energy := energyPreference(b.GetEnergyLevel(), loot.GetTotalResources())
-		colour := colourMatch(b.GetColour(), loot.GetColour())
+		energy := energyPreference(t5.GetEnergyLevel(), loot.GetTotalResources())
+		colour := colourMatch(t5.GetColour(), loot.GetColour())
+
+		distanceFromAudi := calculateDistance(audiPos, loot.GetPosition())
 
 		weightedDistancePreference := urgencyFactor * wd / (0.01 * distance)
 		weightedEnergyPreference := we * energy
@@ -34,6 +38,10 @@ func ProposeDirection(gameState objects.IGameState, b *team5Agent) uuid.UUID {
 
 		preference := weightedDistancePreference + weightedEnergyPreference + weightedColourPreference
 		preferenceMap[id] = preference
+
+		if distanceFromAudi < (2 * utils.CollisionThreshold) {
+			preferenceMap[id] = 0
+		}
 	}
 
 	// Find the lootbox with the highest preference

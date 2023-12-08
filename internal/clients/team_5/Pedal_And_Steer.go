@@ -22,14 +22,14 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 	orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
 	//fmt.Println("Current Location: ", currLocation)
 
-	nearestLoot := t5.ProposeDirection()
+	// nearestLoot := t5.ProposeDirection()
 	//fmt.Println("Nearest Loot ID: ", nearestLoot)
 
 	currentLootBoxes := t5.GetGameState().GetLootBoxes()
 	//fmt.Println("Number of Loot Boxes: ", len(currentLootBoxes))
 
 	if len(currentLootBoxes) > 0 {
-		targetPos := currentLootBoxes[nearestLoot].GetPosition()
+		targetPos := currentLootBoxes[targetLootBoxID].GetPosition()
 		//fmt.Println("Target Position: ", targetPos)
 
 		deltaXB := targetPos.X - currLocation.X
