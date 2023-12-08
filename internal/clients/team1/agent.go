@@ -182,6 +182,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 			// fmt.Printf("Agent %v is considering leaving bike %v\n", bb.GetID(), bb.GetBike())
 			newBike := bb.PickBestBike()
 			if newBike != bb.GetBike() {
+				bb.desiredBike = newBike
 				// refresh prevEnergy Map
 				bb.prevEnergy = make(map[uuid.UUID]float64)
 				// fmt.Printf("Agent %v is leaving bike %v for bike %v\n", bb.GetID(), bb.GetBike(), newBike)
@@ -225,9 +226,7 @@ func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 // decide which bike to go to
 func (bb *Biker1) ChangeBike() uuid.UUID {
 	// if recently left bike
-	if bb.desiredBike == uuid.Nil {
-		bb.desiredBike = bb.PickBestBike()
-	}
+	bb.desiredBike = bb.PickBestBike()
 	if bb.prevOnBike && !bb.GetBikeStatus() {
 		bb.prevOnBike = false
 		bb.numberOfLeaves++
