@@ -86,6 +86,7 @@ type BaselineAgent struct {
 	lootBoxColour     utils.Colour
 	lootBoxLocation   utils.Coordinates
 	timeInLimbo       int
+	onBike            bool
 	optimalBike       uuid.UUID               //best bike on the map
 	mylocationHistory []utils.Coordinates     //log location history for this agent
 	energyHistory     map[uuid.UUID][]float64 //log energy level for all agents

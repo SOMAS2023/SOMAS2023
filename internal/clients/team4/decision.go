@@ -43,6 +43,7 @@ func (agent *BaselineAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UU
 	return decision
 }
 func (agent *BaselineAgent) ChangeBike() uuid.UUID {
+	agent.UpdateDecisionData()
 	megaBikes := agent.GetGameState().GetMegaBikes()
 	optimalBike := agent.currentBike
 	weight := float64(-99)
