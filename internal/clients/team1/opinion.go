@@ -133,9 +133,11 @@ func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID, all_agents []
 	agent1 := bb.GetAgentFromId(id1)
 	agent2 := bb.GetAgentFromId(id2)
 	relativeSuccess := 0.0
+	// Colour comparison
 	if agent1.GetColour() == agent2.GetColour() {
 		relativeSuccess = relativeSuccess + colorOpinionConstant
 	}
+	//Energy comparison
 	relativeSuccess = relativeSuccess + (agent1.GetEnergyLevel() - agent2.GetEnergyLevel())
 	maxpoints := 0
 	for _, agent := range all_agents {
@@ -143,6 +145,7 @@ func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID, all_agents []
 			maxpoints = agent.GetPoints()
 		}
 	}
+	// Points comparison
 	if maxpoints != 0 {
 		relativeSuccess = relativeSuccess + float64((agent1.GetPoints()-agent2.GetPoints())/maxpoints)
 	}
@@ -204,18 +207,28 @@ func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
 // infer our reputation from the average relative success of agents in the current context
 func (bb *Biker1) DetermineOurAverageReputation() float64 {
 	var agentsInContext []obj.IBaseBiker
+	var numberOnBike float64
 	if bb.GetBike() == uuid.Nil {
 		agentsInContext = bb.GetAllAgents()
 	} else {
 		agentsInContext = bb.GetFellowBikers()
 	}
+	if len(agentsInContext) == 0 {
+		numberOnBike = 1
+	} else {
+		numberOnBike = float64(len(agentsInContext))
+	}
+
 	reputation := 0.0
 	for _, agent := range agentsInContext {
 		// bb.UpdateRelativeSuccess(agent.GetID(), agentsInContext)
+		// fmt.Printf("Agent %v relative success: %v\n", agent.GetID(), bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext))
 		reputation = reputation + bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext)
 	}
-	reputation = reputation / float64(len(agentsInContext))
-	// fmt.Printf("Reputation: %v\n", reputation)
+	// fmt.Printf("Agents in context: %v\n", numberOnBike)
+	// fmt.Printf("Our total reputation : %v\n", reputation)
+	reputation = reputation / numberOnBike
+	// fmt.Printf("Our average Reputation: %v\n", reputation)
 	return reputation
 }
 
