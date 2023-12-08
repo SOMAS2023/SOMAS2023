@@ -122,7 +122,7 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 		//if tried all bikes, reset
 		bb.pursuedBikes = make([]uuid.UUID, 0)
 		for _, bike := range allBikes {
-			if (len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.mostRecentBike) {
+			if len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.mostRecentBike {
 				scoreMap[bike.GetID()] = bb.ScoreBike(bike)
 			}
 		}
@@ -154,7 +154,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 	if bb.recentDecided != uuid.Nil && fellowBikers != nil {
 		bb.UpdateAllAgentsTrust(fellowBikers)
 		bb.UpdateAllAgentsOpinions(fellowBikers)
-		bb.UpdateAllAgentsRelativeSuccess(fellowBikers)
+		// bb.UpdateAllAgentsRelativeSuccess(fellowBikers)
 
 		if bb.getPedalForce() > 0 && bb.GetEnergyLevel() < bb.prevEnergy[bb.GetID()] {
 			bb.UpdateAllAgentsEffort()

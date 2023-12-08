@@ -10,11 +10,11 @@ import (
 )
 
 type Opinion struct {
-	effort          float64
-	trust           float64
-	fairness        float64
-	relativeSuccess float64
-	opinion         float64 // cumulative result of all the above
+	effort   float64
+	trust    float64
+	fairness float64
+	// relativeSuccess float64
+	opinion float64 // cumulative result of all the above
 }
 
 // -----------------OPINION FUNCTIONS------------------
@@ -50,11 +50,11 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 		finalTrust = 0
 	}
 	newOpinion := Opinion{
-		effort:          bb.opinions[id].effort,
-		fairness:        bb.opinions[id].fairness,
-		trust:           finalTrust,
-		relativeSuccess: bb.opinions[id].relativeSuccess,
-		opinion:         bb.opinions[id].opinion,
+		effort:   bb.opinions[id].effort,
+		fairness: bb.opinions[id].fairness,
+		trust:    finalTrust,
+		// relativeSuccess: bb.opinions[id].relativeSuccess,
+		opinion: bb.opinions[id].opinion,
 	}
 	bb.opinions[id] = newOpinion
 }
@@ -79,63 +79,65 @@ func (bb *Biker1) UpdateFairness(agentID uuid.UUID) {
 	}
 
 	newOpinion := Opinion{
-		effort:          bb.opinions[agentID].effort,
-		fairness:        finalFairness,
-		trust:           bb.opinions[agentID].trust,
-		relativeSuccess: bb.opinions[agentID].relativeSuccess,
-		opinion:         bb.opinions[agentID].opinion,
+		effort:   bb.opinions[agentID].effort,
+		fairness: finalFairness,
+		trust:    bb.opinions[agentID].trust,
+		// relativeSuccess: bb.opinions[agentID].relativeSuccess,
+		opinion: bb.opinions[agentID].opinion,
 	}
 	bb.opinions[agentID] = newOpinion
 }
 
-func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID, agentsInContext []obj.IBaseBiker) {
-	// get relative success compared to us
+// func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID, agentsInContext []obj.IBaseBiker) {
+// 	// get relative success compared to us
 
-	relativeSuccess := bb.GetRelativeSuccess(bb.GetID(), agentID, agentsInContext)
-	// fmt.Printf("Current relative success opinion: %v\n", bb.opinions[agentID].relativeSuccess)
-	// fmt.Printf("Current relative success: %v\n", relativeSuccess)
-	finalRelativeSuccess := bb.opinions[agentID].relativeSuccess + (relativeSuccess-bb.opinions[agentID].relativeSuccess)*relativeSuccessScaling
-	// fmt.Printf("Final relative success: %v\n", finalRelativeSuccess)
-	if finalRelativeSuccess > 1 {
-		finalRelativeSuccess = 1
-	}
-	if finalRelativeSuccess < 0 {
-		finalRelativeSuccess = 0
-	}
+// 	relativeSuccess := bb.GetRelativeSuccess(bb.GetID(), agentID, agentsInContext)
+// 	// fmt.Printf("Current relative success opinion: %v\n", bb.opinions[agentID].relativeSuccess)
+// 	// fmt.Printf("Current relative success: %v\n", relativeSuccess)
+// 	finalRelativeSuccess := bb.opinions[agentID].relativeSuccess + (relativeSuccess-bb.opinions[agentID].relativeSuccess)*relativeSuccessScaling
+// 	// fmt.Printf("Final relative success: %v\n", finalRelativeSuccess)
+// 	if finalRelativeSuccess > 1 {
+// 		finalRelativeSuccess = 1
+// 	}
+// 	if finalRelativeSuccess < 0 {
+// 		finalRelativeSuccess = 0
+// 	}
 
-	// incase an agent opinion is not initialised
-	_, ok := bb.opinions[agentID]
+// 	// incase an agent opinion is not initialised
+// 	_, ok := bb.opinions[agentID]
 
-	if !ok {
-		//if we have no data on an agent, initialise to neutral
-		newOpinion := Opinion{
-			effort:          0.5,
-			trust:           0.5,
-			fairness:        0.5,
-			relativeSuccess: 0.5,
-			opinion:         0.5,
-		}
-		bb.opinions[agentID] = newOpinion
-	}
+// 	if !ok {
+// 		//if we have no data on an agent, initialise to neutral
+// 		newOpinion := Opinion{
+// 			effort:          0.5,
+// 			trust:           0.5,
+// 			fairness:        0.5,
+// 			relativeSuccess: 0.5,
+// 			opinion:         0.5,
+// 		}
+// 		bb.opinions[agentID] = newOpinion
+// 	}
 
-	newOpinion := Opinion{
-		effort:          bb.opinions[agentID].effort,
-		fairness:        bb.opinions[agentID].fairness,
-		trust:           bb.opinions[agentID].trust,
-		relativeSuccess: finalRelativeSuccess,
-		opinion:         bb.opinions[agentID].opinion,
-	}
-	bb.opinions[agentID] = newOpinion
-}
+// 	newOpinion := Opinion{
+// 		effort:          bb.opinions[agentID].effort,
+// 		fairness:        bb.opinions[agentID].fairness,
+// 		trust:           bb.opinions[agentID].trust,
+// 		relativeSuccess: finalRelativeSuccess,
+// 		opinion:         bb.opinions[agentID].opinion,
+// 	}
+// 	bb.opinions[agentID] = newOpinion
+// }
 
 // how well does agent 1 like agent 2 according to objective metrics
 func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID, all_agents []obj.IBaseBiker) float64 {
 	agent1 := bb.GetAgentFromId(id1)
 	agent2 := bb.GetAgentFromId(id2)
 	relativeSuccess := 0.0
+	// Colour comparison
 	if agent1.GetColour() == agent2.GetColour() {
 		relativeSuccess = relativeSuccess + colorOpinionConstant
 	}
+	//Energy comparison
 	relativeSuccess = relativeSuccess + (agent1.GetEnergyLevel() - agent2.GetEnergyLevel())
 	maxpoints := 0
 	for _, agent := range all_agents {
@@ -143,6 +145,7 @@ func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID, all_agents []
 			maxpoints = agent.GetPoints()
 		}
 	}
+	// Points comparison
 	if maxpoints != 0 {
 		relativeSuccess = relativeSuccess + float64((agent1.GetPoints()-agent2.GetPoints())/maxpoints)
 	}
@@ -155,20 +158,20 @@ func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 	if !ok {
 		//if we have no data on an agent, initialise to neutral
 		newOpinion := Opinion{
-			effort:          0.5,
-			trust:           0.5,
-			fairness:        0.5,
-			relativeSuccess: 0.5,
-			opinion:         0.5,
+			effort:   0.5,
+			trust:    0.5,
+			fairness: 0.5,
+			// relativeSuccess: 0.5,
+			opinion: 0.5,
 		}
 		bb.opinions[id] = newOpinion
 	}
 
 	newOpinion := Opinion{
-		effort:          bb.opinions[id].effort,
-		trust:           bb.opinions[id].trust,
-		fairness:        bb.opinions[id].fairness,
-		relativeSuccess: bb.opinions[id].relativeSuccess,
+		effort:   bb.opinions[id].effort,
+		trust:    bb.opinions[id].trust,
+		fairness: bb.opinions[id].fairness,
+		// relativeSuccess: bb.opinions[id].relativeSuccess,
 		opinion: ((bb.opinions[id].trust*trustconstant + bb.opinions[id].effort*effortConstant +
 			bb.opinions[id].fairness*fairnessConstant) / (trustconstant + effortConstant + fairnessConstant)) * multiplier,
 	}
@@ -189,11 +192,11 @@ func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
 		if !ok {
 			//if we have no data on an agent, initialise to neutral
 			newOpinion := Opinion{
-				effort:          0.5,
-				trust:           0.5,
-				fairness:        0.5,
-				relativeSuccess: 0.5,
-				opinion:         0.5,
+				effort:   0.5,
+				trust:    0.5,
+				fairness: 0.5,
+				// relativeSuccess: 0.5,
+				opinion: 0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -204,18 +207,28 @@ func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
 // infer our reputation from the average relative success of agents in the current context
 func (bb *Biker1) DetermineOurAverageReputation() float64 {
 	var agentsInContext []obj.IBaseBiker
+	var numberOnBike float64
 	if bb.GetBike() == uuid.Nil {
 		agentsInContext = bb.GetAllAgents()
 	} else {
 		agentsInContext = bb.GetFellowBikers()
 	}
+	if len(agentsInContext) == 0 {
+		numberOnBike = 1
+	} else {
+		numberOnBike = float64(len(agentsInContext))
+	}
+
 	reputation := 0.0
 	for _, agent := range agentsInContext {
-		bb.UpdateRelativeSuccess(agent.GetID(), agentsInContext)
+		// bb.UpdateRelativeSuccess(agent.GetID(), agentsInContext)
+		// fmt.Printf("Agent %v relative success: %v\n", agent.GetID(), bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext))
 		reputation = reputation + bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext)
 	}
-	reputation = reputation / float64(len(agentsInContext))
-	// fmt.Printf("Reputation: %v\n", reputation)
+	// fmt.Printf("Agents in context: %v\n", numberOnBike)
+	// fmt.Printf("Our total reputation : %v\n", reputation)
+	reputation = reputation / numberOnBike
+	// fmt.Printf("Our average Reputation: %v\n", reputation)
 	return reputation
 }
 
@@ -229,11 +242,11 @@ func (bb *Biker1) UpdateAllAgentsOpinions(agents_to_update []obj.IBaseBiker) {
 			agentId := agent.GetID()
 			//if we have no data on an agent, initialise to neutral
 			newOpinion := Opinion{
-				effort:          0.5,
-				trust:           0.5,
-				fairness:        0.5,
-				relativeSuccess: 0.5,
-				opinion:         0.5,
+				effort:   0.5,
+				trust:    0.5,
+				fairness: 0.5,
+				// relativeSuccess: 0.5,
+				opinion: 0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -270,11 +283,11 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 			agentId := agent.GetID()
 			//if we have no data on an agent, initialise to neutral
 			newOpinion := Opinion{
-				effort:          0.5,
-				trust:           0.5,
-				fairness:        0.5,
-				relativeSuccess: 0.5,
-				opinion:         0.5,
+				effort:   0.5,
+				trust:    0.5,
+				fairness: 0.5,
+				// relativeSuccess: 0.5,
+				opinion: 0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -316,11 +329,11 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 			finalEffort = 0
 		}
 		newOpinion := Opinion{
-			effort:          finalEffort,
-			fairness:        bb.opinions[agentId].fairness,
-			trust:           bb.opinions[agentId].trust,
-			relativeSuccess: bb.opinions[agentId].relativeSuccess,
-			opinion:         bb.opinions[agentId].opinion,
+			effort:   finalEffort,
+			fairness: bb.opinions[agentId].fairness,
+			trust:    bb.opinions[agentId].trust,
+			// relativeSuccess: bb.opinions[agentId].relativeSuccess,
+			opinion: bb.opinions[agentId].opinion,
 		}
 		bb.opinions[agent.GetID()] = newOpinion
 	}
@@ -337,11 +350,11 @@ func (bb *Biker1) UpdateAllAgentsTrust(agents_to_update []obj.IBaseBiker) {
 			agentId := agent.GetID()
 			//if we have no data on an agent, initialise to neutral
 			newOpinion := Opinion{
-				effort:          0.5,
-				trust:           0.5,
-				fairness:        0.5,
-				relativeSuccess: 0.5,
-				opinion:         0.5,
+				effort:   0.5,
+				trust:    0.5,
+				fairness: 0.5,
+				// relativeSuccess: 0.5,
+				opinion: 0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -359,11 +372,11 @@ func (bb *Biker1) UpdateAllAgentsFairness(agents_to_update []obj.IBaseBiker) {
 			agentId := agent.GetID()
 			//if we have no data on an agent, initialise to neutral
 			newOpinion := Opinion{
-				effort:          0.5,
-				trust:           0.5,
-				fairness:        0.5,
-				relativeSuccess: 0.5,
-				opinion:         0.5,
+				effort:   0.5,
+				trust:    0.5,
+				fairness: 0.5,
+				// relativeSuccess: 0.5,
+				opinion: 0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -380,27 +393,27 @@ func (bb *Biker1) UpdateAllAgentsFairness(agents_to_update []obj.IBaseBiker) {
 	}
 }
 
-func (bb *Biker1) UpdateAllAgentsRelativeSuccess(agents_to_update []obj.IBaseBiker) {
-	bb.setOpinions()
-	for _, agent := range agents_to_update {
-		id := agent.GetID()
-		_, ok := bb.opinions[id]
+// func (bb *Biker1) UpdateAllAgentsRelativeSuccess(agents_to_update []obj.IBaseBiker) {
+// 	bb.setOpinions()
+// 	for _, agent := range agents_to_update {
+// 		id := agent.GetID()
+// 		_, ok := bb.opinions[id]
 
-		if !ok {
-			agentId := agent.GetID()
-			//if we have no data on an agent, initialise to neutral
-			newOpinion := Opinion{
-				effort:          0.5,
-				trust:           0.5,
-				fairness:        0.5,
-				relativeSuccess: 0.5,
-				opinion:         0.5,
-			}
-			bb.opinions[agentId] = newOpinion
-		}
-		bb.UpdateRelativeSuccess(id, bb.GetFellowBikers())
-		// fmt.Printf("Agent %v relative success: %v\n", id, bb.opinions[id].relativeSuccess)
-	}
-}
+// 		if !ok {
+// 			agentId := agent.GetID()
+// 			//if we have no data on an agent, initialise to neutral
+// 			newOpinion := Opinion{
+// 				effort:   0.5,
+// 				trust:    0.5,
+// 				fairness: 0.5,
+// 				// relativeSuccess: 0.5,
+// 				opinion: 0.5,
+// 			}
+// 			bb.opinions[agentId] = newOpinion
+// 		}
+// 		bb.UpdateRelativeSuccess(id, bb.GetFellowBikers())
+// 		// fmt.Printf("Agent %v relative success: %v\n", id, bb.opinions[id].relativeSuccess)
+// 	}
+// }
 
 // ----------------END OF OPINION FUNCTIONS--------------
