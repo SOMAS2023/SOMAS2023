@@ -5,7 +5,6 @@ import (
 	utils "SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
-	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -22,6 +21,7 @@ type team5Agent struct {
 	roundCount       int
 	otherBikerForces map[uuid.UUID]utils.Forces
 	otherBikerRep    map[uuid.UUID]float64
+	finalPreferences map[uuid.UUID]float64
 }
 
 type ResourceAllocationMethod int
@@ -47,6 +47,7 @@ func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
 		roundCount:          0,
 		otherBikerForces:    make(map[uuid.UUID]utils.Forces),
 		otherBikerRep:       make(map[uuid.UUID]float64),
+		finalPreferences:    make(map[uuid.UUID]float64),
 	}
 }
 
@@ -144,72 +145,4 @@ func (t5 *team5Agent) VoteLeader() voting.IdVoteMap {
 	}
 	return votes
 
-}
-
-func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
-	var messages []messaging.IMessage[objects.IBaseBiker]
-
-	// send message to all other agents on the bike containing our reputation value on them, expecting them to send back their reputation value on us
-	for _, agent := range t5.GetFellowBikers() {
-		if agent.GetID() != t5.GetID() {
-
-			repMsg := t5.CreateReputationMessage(agent)
-
-			messages = append(messages, repMsg)
-		}
-	}
-
-	// send message to all other agents on the bike containing our forces, expecting them to send back their forces
-	forcesMsg := t5.CreateForcesMessage()
-
-	messages = append(messages, forcesMsg)
-
-	return messages
-}
-
-func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
-	return objects.ForcesMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
-		AgentId:     t5.GetID(),
-		AgentForces: utils.Forces{
-			Pedal: t5.GetForces().Pedal,
-			Brake: t5.GetForces().Brake,
-			Turning: utils.TurningDecision{
-				SteerBike:     t5.GetForces().Turning.SteerBike,
-				SteeringForce: t5.GetForces().Turning.SteeringForce,
-			},
-		},
-	}
-}
-
-func (t5 *team5Agent) CreateReputationMessage(agent objects.IBaseBiker) objects.ReputationOfAgentMessage {
-	return objects.ReputationOfAgentMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
-		AgentId:     agent.GetID(),
-		Reputation:  1.0, // TODO: change this to the actual reputation value maybe
-	}
-}
-
-func (t5 *team5Agent) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
-	senderID := msg.BaseMessage.GetSender().GetID()
-	agentId := msg.AgentId
-	reputation := msg.Reputation
-
-	// If the agent ID is the agent itself, store the reputation value
-	if agentId == t5.GetID() {
-		t5.otherBikerRep[senderID] = reputation
-	}
-}
-
-func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
-	senderID := msg.BaseMessage.GetSender().GetID()
-	agentId := msg.AgentId
-	forces := msg.AgentForces
-
-	// If the sender gives his own forces and is on our bike, store the forces
-	for _, agent := range t5.GetFellowBikers() {
-		if senderID == agentId && agent.GetID() == senderID {
-			t5.otherBikerForces[senderID] = forces
-		}
-	}
 }
