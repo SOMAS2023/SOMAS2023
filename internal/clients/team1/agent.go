@@ -119,10 +119,16 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 		}
 	}
 	if len(scoreMap) == 0 {
-		return bb.mostRecentBike
+		//if tried all bikes, reset
+		bb.pursuedBikes = make([]uuid.UUID, 0)
+		for _, bike := range allBikes {
+			if (len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.mostRecentBike) {
+				scoreMap[bike.GetID()] = bb.ScoreBike(bike)
+			}
+		}
 	}
-	bestBike := bb.GetBike()
-	bestScore := scoreMap[bestBike]
+	bestBike := uuid.Nil
+	bestScore := 0.0
 	for id, score := range scoreMap {
 		if score > bestScore {
 			bestBike = id
