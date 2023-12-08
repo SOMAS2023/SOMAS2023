@@ -60,6 +60,7 @@ type Biker1 struct {
 	opinions              map[uuid.UUID]Opinion
 	desiredBike           uuid.UUID
 	pursuedBikes          []uuid.UUID
+	mostRecentBike		  uuid.UUID
 	timeInLimbo           int
 	prevOnBike            bool
 	numberOfLeaves        int
@@ -113,7 +114,7 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 				tried = true
 			}
 		}
-		if (len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.GetBike()) && !tried {
+		if (len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.mostRecentBike) && !tried {
 			scoreMap[bike.GetID()] = bb.ScoreBike(bike)
 		}
 	}
@@ -141,7 +142,7 @@ func (bb *Biker1) updatePrevEnergy() {
 
 func (bb *Biker1) DecideAction() obj.BikerAction {
 	fellowBikers := bb.GetFellowBikers()
-
+	bb.mostRecentBike = bb.GetBike()
 	// Update opinion metrics
 	if bb.recentDecided != uuid.Nil {
 		bb.UpdateAllAgentsTrust(fellowBikers)
@@ -209,6 +210,7 @@ func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 // decide which bike to go to
 func (bb *Biker1) ChangeBike() uuid.UUID {
 	// if recently left bike
+	bb.desiredBike = bb.PickBestBike()
 	if bb.prevOnBike && !bb.GetBikeStatus() {
 		bb.prevOnBike = false
 		bb.numberOfLeaves++
@@ -223,6 +225,7 @@ func (bb *Biker1) ChangeBike() uuid.UUID {
 		bb.timeInLimbo++
 		bb.pursuedBikes = append(bb.pursuedBikes, bb.desiredBike)
 	}
+	fmt.Printf("Agent %v is changing bike to %v\n", bb.GetID(), bb.desiredBike)
 	return bb.desiredBike
 }
 
