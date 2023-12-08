@@ -48,19 +48,21 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 	optimalBike := agent.currentBike
 	weight := float64(-99)
 	for _, bike := range megaBikes {
-		if bike.GetID() != agent.currentBike && bike.GetID() != uuid.Nil { //get all bikes apart from our agent's bike
-			bikeWeight := float64(0)
+		if agent.evaluateBike(bike.GetID()) {
+			if bike.GetID() != agent.currentBike && bike.GetID() != uuid.Nil { //get all bikes apart from our agent's bike
+				bikeWeight := float64(0)
 
-			for _, biker := range bike.GetAgents() {
-				if biker.GetColour() == agent.GetColour() {
-					bikeWeight += 1.8
-				} else {
-					bikeWeight += 1
+				for _, biker := range bike.GetAgents() {
+					if biker.GetColour() == agent.GetColour() {
+						bikeWeight += 1.8
+					} else {
+						bikeWeight += 1
+					}
 				}
-			}
 
-			if bikeWeight > weight {
-				optimalBike = bike.GetID()
+				if bikeWeight > weight {
+					optimalBike = bike.GetID()
+				}
 			}
 		}
 	}
@@ -69,7 +71,6 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 }
 
 func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evaluate the bike's reputation and honesty. If true, it means it's a good bike.
-	agent.UpdateDecisionData()
 	bike := agent.GetGameState().GetMegaBikes()[evaluateBike]
 	badBikers := 0
 	goodBikers := 0
@@ -78,18 +79,20 @@ func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evalua
 	averageReputation := float64(0) //average Reputation of the bike
 	averageHonesty := float64(0)    //average Honesty of the bike
 	length := 0
-	for _, biker := range bike.GetAgents() {
-		if biker.GetID() != agent.GetID() {
-			sumReputation += agent.reputation[biker.GetID()]
-			sumHonesty += agent.honestyMatrix[biker.GetID()]
-			length += 1
-			if agent.reputation[biker.GetID()] < agent.getReputationAverage() || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage() {
-				badBikers += 1
-			} else {
-				goodBikers += 1
-			}
-		}
+	if len(bike.GetAgents()) > 0 {
+		for _, biker := range bike.GetAgents() {
+			if biker.GetID() != agent.GetID() {
+				sumReputation += agent.reputation[biker.GetID()]
+				sumHonesty += agent.honestyMatrix[biker.GetID()]
 
+				if agent.reputation[biker.GetID()] < agent.getReputationAverage() || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage() {
+					badBikers += 1
+				} else {
+					goodBikers += 1
+				}
+			}
+
+		}
 	}
 	if length > 0 {
 		averageReputation = sumReputation / float64(length)
