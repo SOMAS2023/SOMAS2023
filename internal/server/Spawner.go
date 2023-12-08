@@ -3,15 +3,16 @@ package server
 import (
 	"SOMAS2023/internal/clients/team1"
 	"SOMAS2023/internal/clients/team2"
+	"SOMAS2023/internal/clients/team_3"
 	"SOMAS2023/internal/clients/team8"
+	"SOMAS2023/internal/clients/team_3"
 	// "SOMAS2023/internal/clients/team7"
 	"SOMAS2023/internal/clients/team4"
 	"SOMAS2023/internal/common/objects"
-	"SOMAS2023/internal/common/utils"
+	//"SOMAS2023/internal/common/utils"
 	//team7agents "SOMAS2023/internal/clients/team7/agents"
 
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
-	"github.com/google/uuid"
 )
 
 type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
@@ -20,9 +21,11 @@ var AgentInitFunctions = []AgentInitFunction{
 	nil,                 // Base Biker
 	team1.GetBiker1,     // Team 1
 	team2.GetBiker,      // Team 2
+	team_3.GetT3Agent,   // Team 3
+	team4.GetBiker4, // Team 4
 	team8.GetIBaseBiker, // Team 8
 	//team7agents.NewBaseTeamSevenBiker, // Team 7
-	team4.GetBiker4, // Team 4
+	
  }
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
@@ -35,12 +38,13 @@ func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBike
 
 func BikerAgentGenerator(initFunc func(baseBiker *objects.BaseBiker) objects.IBaseBiker) func() objects.IBaseBiker {
 	return func() objects.IBaseBiker {
-		baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
-		if initFunc == nil {
-			return baseBiker
-		} else {
-			return initFunc(baseBiker)
-		}
+		//baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+		baseBiker := team_3.GetT3Agent()
+		//if initFunc == nil {
+		return baseBiker
+		//} else {
+		//	return initFunc(baseBiker)
+		//}
 	}
 }
 
