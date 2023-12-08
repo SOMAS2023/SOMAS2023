@@ -58,12 +58,12 @@ type IBaselineAgent interface {
 const audiDistanceThreshold = 75
 const minEnergyThreshold = 0.2
 
-const audiDistanceWeight = 10.0
-const distanceWeight = 5.0
-const reputationWeight = 1.0
+const audiDistanceWeight = 8.0
+const distanceWeight = 7.0
+const reputationWeight = 2.0
 const honestyWeight = 1.0
-const energySpentWeight = 0.5
-const energyLevelWeight = 1.0
+const energySpentWeight = 1.0
+const energyLevelWeight = 1.4
 
 const minFellowBikers = 6         //if we have less than this number of fellows, we will not kick anyone out
 const dictatorMinFellowBikers = 6 //if we have less than this number of fellows, we will not kick anyone out
@@ -76,7 +76,13 @@ const dictatorHonestWeight = 1.0
 
 type BaselineAgent struct {
 	objects.BaseBiker
+	currentBike       uuid.UUID
+	capacity          int //number of agents on my bike
+	targetLoot        uuid.UUID
 	lootBoxColour     utils.Colour
+	lootBoxLocation   utils.Coordinates
+	timeInLimbo       int
+	optimalBike       uuid.UUID               //best bike on the map
 	mylocationHistory []utils.Coordinates     //log location history for this agent
 	energyHistory     map[uuid.UUID][]float64 //log energy level for all agents
 	reputation        map[uuid.UUID]float64   //record reputation for other agents, 0-1

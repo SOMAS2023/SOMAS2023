@@ -8,7 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func (agent *BaselineAgent) UpdateDecisionData() {
+func (agent *BaselineAgent) InitializeDecisionData() {
+	fmt.Println("Initializing decision data ...")
 	//Initialize mapping if not initialized yet (= nil)
 	if agent.energyHistory == nil {
 		agent.energyHistory = make(map[uuid.UUID][]float64)
@@ -22,11 +23,18 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	if agent.reputation == nil {
 		agent.reputation = make(map[uuid.UUID]float64)
 	}
+}
+func (agent *BaselineAgent) UpdateDecisionData() {
 	fmt.Println("Updating decision data ...")
-	//update location history for the agent
-	agent.mylocationHistory = append(agent.mylocationHistory, agent.GetLocation())
+	agent.InitializeDecisionData()
 	//get fellow bikers
 	fellowBikers := agent.GetFellowBikers()
+	//update current bike for the agent
+	agent.currentBike = agent.GetBike()
+	//update location history for the agent
+	agent.mylocationHistory = append(agent.mylocationHistory, agent.GetLocation())
+	//update capacity (number of agents on my bike)
+	agent.capacity = len(fellowBikers)
 	//update energy history for each fellow biker
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()

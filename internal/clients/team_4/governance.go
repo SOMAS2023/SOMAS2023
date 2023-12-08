@@ -16,8 +16,7 @@ func (agent *BaselineAgent) DecideGovernance() utils.Governance {
 
 func (agent *BaselineAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	agent.UpdateDecisionData()
-	fellowBikers := agent.GetFellowBikers()
-	spare := minFellowBikers - len(fellowBikers)
+	spare := minFellowBikers - agent.capacity
 	decision := make(map[uuid.UUID]bool)
 
 	var scoredAgents []agentScore
@@ -64,6 +63,7 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 			}
 		}
 	}
+	agent.optimalBike = optimalBike
 	return optimalBike
 }
 
@@ -100,10 +100,10 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
-		if len(fellowBikers) > minFellowBikers {
+		if agent.capacity > minFellowBikers {
 			if combined[fellowID] == worstRank && fellowID != uuid.Nil {
 				if agent.reputation[fellowID] < agent.getReputationAverage() || agent.honestyMatrix[fellowID] < agent.getHonestyAverage() {
-					if len(fellowBikers) > 4 {
+					if agent.capacity > 4 {
 						voteResults[fellowID] = 1
 					} else {
 						voteResults[fellowID] = 0
@@ -211,7 +211,7 @@ func (agent *BaselineAgent) DecideKickOut() []uuid.UUID {
 	agent.UpdateDecisionData()
 
 	fellowBikers := agent.GetFellowBikers()
-	if len(fellowBikers) > dictatorMinFellowBikers {
+	if agent.capacity > dictatorMinFellowBikers {
 
 		reputationRank, e1 := agent.rankFellowsReputation(fellowBikers)
 		honestyRank, e2 := agent.rankFellowsHonesty(fellowBikers)

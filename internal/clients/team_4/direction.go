@@ -91,11 +91,14 @@ func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID
 }
 
 func (agent *BaselineAgent) DecideForce(direction uuid.UUID) {
-
+	agent.targetLoot = direction
 	currLocation := agent.GetLocation()
-	targetLoot := direction
 	currentLootBoxes := agent.GetGameState().GetLootBoxes()
 	audiPos := agent.GetGameState().GetAudi().GetPosition()
+
+	agent.lootBoxColour = currentLootBoxes[direction].GetColour()
+	agent.lootBoxLocation = currentLootBoxes[direction].GetPosition()
+
 	distanceFromAudi := physics.ComputeDistance(currLocation, audiPos)
 	pedalForce := 1.0
 
@@ -123,7 +126,7 @@ func (agent *BaselineAgent) DecideForce(direction uuid.UUID) {
 		}
 		agent.SetForces(escapeAudiForces)
 	} else {
-		targetPos := currentLootBoxes[targetLoot].GetPosition()
+		targetPos := currentLootBoxes[agent.targetLoot].GetPosition()
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
 		angle := math.Atan2(deltaY, deltaX)
