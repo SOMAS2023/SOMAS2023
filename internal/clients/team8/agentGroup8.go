@@ -384,6 +384,9 @@ func (bb *Agent8) updateAgentActionMap() {
 		// }
 		currentLoopAgentActionMap[agent.GetID()] = agent.GetEnergyLevel()
 	}
+	if bb.agentsActionsMap == nil {
+		bb.agentsActionsMap = make(map[int]map[uuid.UUID]float64)
+	}
 	for i := 1; i < 10; i++ {
 		bb.agentsActionsMap[i] = bb.agentsActionsMap[i+1]
 	}
@@ -404,9 +407,13 @@ func (bb *Agent8) updateLoopScoreMap() {
 		}
 	}
 
+	if bb.loopScoreMap == nil {
+		bb.loopScoreMap = make(map[int]map[uuid.UUID]float64)
+	}
 	for i := 1; i < 10; i++ {
 		bb.loopScoreMap[i] = bb.loopScoreMap[i+1]
 	}
+	bb.loopScoreMap[10] = make(map[uuid.UUID]float64)
 	bb.loopScoreMap[10][bb.GetBike()] = loopScore
 }
 
@@ -434,13 +441,5 @@ func (bb *Agent8) UpdateReputation() {
 func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) objects.IBaseBiker {
 	return &Agent8{
 		BaseBiker: objects.GetBaseBiker(totColours, bikeId),
-		overallLootboxPreferences voting.LootboxVoteMap         
-		agentsActionsMap          map[int]map[uuid.UUID]float64 
-		loopScoreMap              map[int]map[uuid.UUID]float64 
-		previousLocation          utils.Coordinates             
-		previousTargetLocation    utils.Coordinates             
-		previousEnergy            float64                       
-		previousPoints            int                           
-		messageReputation         map[uuid.UUID]float64         
 	}
 }
