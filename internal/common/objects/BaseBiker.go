@@ -649,7 +649,7 @@ func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 	return &BaseBiker{
 		BaseAgent:    baseAgent.NewBaseAgent[IBaseBiker](),
 		soughtColour: utils.GenerateRandomColour(),
-		onBike:       true,
+		onBike:       false,
 		energyLevel:  1.0,
 		points:       0,
 		GroupID:      0,
