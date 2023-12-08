@@ -121,6 +121,8 @@ func TestResetGameState(t *testing.T) {
 }
 
 func TestFoundingInstitutions(t *testing.T) {
+	OnlySpawnBaseBikers(t)
+
 	it := 2
 	s := server.Initialize(it)
 
@@ -135,7 +137,10 @@ func TestFoundingInstitutions(t *testing.T) {
 		s.AddAgent(mockBiker)
 		mockBikers[i] = mockBiker
 	}
-
+	gs := s.NewGameStateDump(0)
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
 	s.FoundingInstitutions()
 
 	/* 	for _, agent := range s.GetAgentMap() {
