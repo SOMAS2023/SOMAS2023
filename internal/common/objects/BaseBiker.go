@@ -41,6 +41,7 @@ type IBaseBiker interface {
 	GetBike() uuid.UUID             // tells the biker which bike it is on
 	GetEnergyLevel() float64        // returns the energy level of the agent
 	GetPoints() int
+	GetGroupID() int
 	GetBikeStatus() bool // returns whether the biker is on a bike or not
 
 	SetBike(uuid.UUID)                     // sets the megaBikeID. this is either the id of the bike that the agent is on or the one that it's trying to join
@@ -87,6 +88,7 @@ type BaseBiker struct {
 	megaBikeId                       uuid.UUID             // if they are not on a bike it will be 0
 	gameState                        IGameState            // updated by the server at every round
 	reputation                       map[uuid.UUID]float64 // record reputation for other agents in float
+	GroupID                          int
 }
 
 func (bb *BaseBiker) GetEnergyLevel() float64 {
@@ -247,6 +249,10 @@ func (bb *BaseBiker) GetBike() uuid.UUID {
 	return bb.megaBikeId
 }
 
+func (bb *BaseBiker) GetGroupID() int {
+	return bb.GroupID
+}
+
 // this is called when a lootbox of the desidered colour has been looted in order to update the sought colour
 func (bb *BaseBiker) UpdateColour(totColours utils.Colour) {
 	bb.soughtColour = utils.Colour(rand.Intn(int(totColours)))
@@ -361,8 +367,7 @@ func (bb *BaseBiker) VoteForKickout() map[uuid.UUID]int {
 		agentID := agent.GetID()
 		if agentID != bb.GetID() {
 			// random votes to other agents
-			// voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
-			voteResults[agentID] = 0 // randomly assigns 0 or 1 vote
+			voteResults[agentID] = rand.Intn(2) // randomly assigns 0 or 1 vote
 		}
 	}
 
@@ -635,6 +640,7 @@ func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) IBaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
+		GroupID:      0,
 	}
 }
 
@@ -646,5 +652,6 @@ func GetBaseBiker(totColours utils.Colour, bikeId uuid.UUID) *BaseBiker {
 		onBike:       true,
 		energyLevel:  1.0,
 		points:       0,
+		GroupID:      0,
 	}
 }
