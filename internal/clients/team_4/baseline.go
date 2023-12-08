@@ -103,3 +103,12 @@ func (agent *BaselineAgent) DecideAction() objects.BikerAction {
 	// fmt.Println("Team 4")
 	return objects.Pedal
 }
+
+func GetBiker4() objects.IBaseBiker {
+	// Create a new instance of BaselineAgent
+	team4Agent := &BaselineAgent{
+		BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New()),
+	}
+	// Return the baselineAgent as an IBaseBiker
+	return team4Agent
+}
