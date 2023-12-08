@@ -11,6 +11,8 @@ EPSILON = 8
 ENERGYTHRESHOLD = 0.1
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
+MAXSPEED = 50
+ITERATIONLENGTH = 100
 TEXT = {
     "FONT" : "Arial",
     "FONT_SIZE": 1,
@@ -82,10 +84,10 @@ DIM = {
     "SCREEN_WIDTH": 1280,
     "SCREEN_HEIGHT": 720,
     "GAME_SCREEN_WIDTH": 1000,
-    "GAME_SCREEN_HEIGHT": 580,
+    "GAME_SCREEN_HEIGHT": 575,
     "UI_WIDTH": 280,
     "BUTTON_WIDTH": 220,
-    "BUTTON_HEIGHT": 70,
+    "BUTTON_HEIGHT": 60,
     "GRIDSPACING": 20,
     "CONSOLE_WIDTH": 750,
 }
@@ -96,7 +98,7 @@ BGCOLOURS = {
 }
 COLOURS = {
     "red": "#E05558",
-    "orange": "#D5C801",
+    "orange": "#D57901",
     "yellow": "#D5C801",
     "green": "#7BBD01",
     "blue": "#5E82FD",

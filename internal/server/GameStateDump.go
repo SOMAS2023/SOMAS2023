@@ -45,6 +45,7 @@ type AgentDump struct {
 	OnBike       bool                  `json:"on_bike"`
 	BikeID       uuid.UUID             `json:"bike_id"`
 	Reputation   map[uuid.UUID]float64 `json:"reputation"`
+	GroupID      int                   `json:"group_id"`
 }
 
 type LootBoxDump struct {
@@ -73,7 +74,7 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
 		var location utils.Coordinates
-		if agent.GetBike() != uuid.Nil {
+		if s.megaBikes[agent.GetBike()] != nil {
 			location = s.megaBikes[agent.GetBike()].GetPosition()
 		} else {
 			location = utils.Coordinates{X: 0.0, Y: 0.0}
@@ -90,6 +91,7 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 			OnBike:       agent.GetBikeStatus(),
 			BikeID:       agent.GetBike(),
 			Reputation:   maps.Clone(agent.GetReputation()),
+			GroupID:      agent.GetGroupID(),
 		}
 	}
 
