@@ -1,7 +1,9 @@
 package server
 
 import (
-	team_8 "SOMAS2023/internal/clients/team8"
+	"SOMAS2023/internal/clients/team1"
+	"SOMAS2023/internal/clients/team2"
+	"SOMAS2023/internal/clients/team8"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 
@@ -9,16 +11,32 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
-	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](BikerAgentGenerator, BikerAgentCount),
-	}
+type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
+
+var AgentInitFunctions = []AgentInitFunction{
+	nil,                 // Base Biker
+	team1.GetBiker1,     // Team 1
+	team2.GetBiker,      // Team 2
+	team8.GetIBaseBiker, // Team 8
 }
 
-func BikerAgentGenerator() objects.IBaseBiker {
-	//return objects.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
-	return team_8.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
+func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
+	agentGenerators := make([]baseserver.AgentGeneratorCountPair[objects.IBaseBiker], 0, len(AgentInitFunctions))
+	for _, initFunction := range AgentInitFunctions {
+		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), BikerAgentCount/len(AgentInitFunctions)))
+	}
+	return agentGenerators
+}
 
+func BikerAgentGenerator(initFunc func(baseBiker *objects.BaseBiker) objects.IBaseBiker) func() objects.IBaseBiker {
+	return func() objects.IBaseBiker {
+		baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+		if initFunc == nil {
+			return baseBiker
+		} else {
+			return initFunc(baseBiker)
+		}
+	}
 }
 
 func (s *Server) spawnLootBox() {

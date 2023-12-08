@@ -1,4 +1,4 @@
-package team_8
+package team8
 
 import (
 	"SOMAS2023/internal/common/objects"
@@ -438,8 +438,8 @@ func (bb *Agent8) UpdateReputation() {
 // =========================================================================================================================================================
 
 // this function is going to be called by the server to instantiate bikers in the MVP
-func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) objects.IBaseBiker {
+func GetIBaseBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 	return &Agent8{
-		BaseBiker: objects.GetBaseBiker(totColours, bikeId),
+		BaseBiker: baseBiker,
 	}
 }
