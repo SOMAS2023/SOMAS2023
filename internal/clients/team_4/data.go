@@ -31,6 +31,12 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	fellowBikers := agent.GetFellowBikers()
 	//update current bike for the agent
 	agent.currentBike = agent.GetBike()
+	//update the audi's current target bike ID
+	agent.audiTarget = agent.GetGameState().GetAudi().GetTargetID()
+	//update governance for the current bike
+	agent.currentGovernance = agent.GetGameState().GetMegaBikes()[agent.currentBike].GetGovernance()
+	//update ruler for the current bike
+	agent.currentRuler = agent.GetGameState().GetMegaBikes()[agent.currentBike].GetRuler()
 	//update location history for the agent
 	agent.mylocationHistory = append(agent.mylocationHistory, agent.GetLocation())
 	//update capacity (number of agents on my bike)

@@ -36,6 +36,7 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 
 	for i, lootBox := range proposedLootBox {
 		lootboxID := lootBox.GetID()
+		lootboxResources := lootBox.GetTotalResources()
 		distanceFromAudi := physics.ComputeDistance(audiPos, lootBox.GetPosition())
 		//if energy level is below threshold, increase weighting towards distance
 		distanceRank := float64(totaloptions - i)
@@ -47,19 +48,19 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 		for _, fellow := range fellowBikers {
 			fellowID := fellow.GetID()
 			if fellow.GetColour() == lootBox.GetColour() {
-				weight := (distanceWeight * distanceRank) + (reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (audiDistanceWeight * distanceFromAudi)
+				weight := (distanceWeight * distanceRank) + (reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (audiDistanceWeight * distanceFromAudi) + (resourceWeight * lootboxResources)
 				ranksum[lootboxID] += weight
 				totalsum += weight
 			}
 		}
 
 		if lootBox.GetColour() == agent.GetColour() {
-			weight := (distanceRank * distanceWeight * 1.25) + (audiDistanceWeight * distanceFromAudi)
+			weight := (distanceRank * distanceWeight * 1.25) + (audiDistanceWeight * distanceFromAudi) + (resourceWeight * lootboxResources)
 			ranksum[lootboxID] += weight
 			totalsum += weight
 		}
 		if ranksum[lootboxID] == 0 {
-			weight := (distanceRank * distanceWeight * 2.6) + (audiDistanceWeight * distanceFromAudi)
+			weight := (distanceRank * distanceWeight * 2.6) + (audiDistanceWeight * distanceFromAudi) + (resourceWeight * lootboxResources)
 			ranksum[lootboxID] = weight
 			totalsum += weight
 		}

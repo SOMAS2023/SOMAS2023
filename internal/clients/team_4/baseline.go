@@ -55,7 +55,7 @@ type IBaselineAgent interface {
 }
 
 // general weights
-const audiDistanceThreshold = 75
+const audiDistanceThreshold = 78
 const minEnergyThreshold = 0.2
 
 const audiDistanceWeight = 8.0
@@ -64,8 +64,9 @@ const reputationWeight = 2.0
 const honestyWeight = 1.0
 const energySpentWeight = 1.0
 const energyLevelWeight = 1.4
+const resourceWeight = 1.0
 
-const minFellowBikers = 6         //if we have less than this number of fellows, we will not kick anyone out
+const minFellowBikers = 6         //if we have less than this number of fellows, we will not vote to kick anyone out
 const dictatorMinFellowBikers = 6 //if we have less than this number of fellows, we will not kick anyone out
 
 // for voting for leader and dictator
@@ -77,7 +78,10 @@ const dictatorHonestWeight = 1.0
 type BaselineAgent struct {
 	objects.BaseBiker
 	currentBike       uuid.UUID
-	capacity          int //number of agents on my bike
+	capacity          int       //number of agents on my bike
+	audiTarget        uuid.UUID //current bike audi is targeting
+	currentGovernance utils.Governance
+	currentRuler      uuid.UUID //ruler of the current bike = uuid.Nil if no ruler
 	targetLoot        uuid.UUID
 	lootBoxColour     utils.Colour
 	lootBoxLocation   utils.Coordinates
