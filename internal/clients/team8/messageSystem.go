@@ -14,7 +14,7 @@ import (
 // And returns the new messages from other agents to your agent
 func (bb *Agent8) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
 	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
-	wantToSendMsg := false
+	wantToSendMsg := true
 	if wantToSendMsg {
 		reputationMsg := bb.CreateReputationMessage()
 		kickoutMsg := bb.CreatekickoutMessage()
@@ -34,8 +34,7 @@ func (bb *Agent8) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[obje
 func (bb *Agent8) CreatekickoutMessage() objects.KickoutAgentMessage {
 	// Currently this returns a default message which sends to all bikers on the biker agent's bike
 	// For team's agent, add your own logic to communicate with other agents
-	bikeID := bb.GetBike()
-	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	fellowBikers := bb.GetFellowBikers()
 	kickAgent := uuid.Nil
 	protectAgent := uuid.Nil
 	initalreputation := 0.0
@@ -70,8 +69,7 @@ func (bb *Agent8) CreatekickoutMessage() objects.KickoutAgentMessage {
 func (bb *Agent8) CreateReputationMessage() objects.ReputationOfAgentMessage {
 	// Currently this returns a default message which sends to all bikers on the biker agent's bike
 	// For team's agent, add your own logic to communicate with other agents
-	bikeID := bb.GetBike()
-	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	fellowBikers := bb.GetFellowBikers()
 	bestAgent := uuid.Nil
 	reputation := -1.0
 	for _, agent := range fellowBikers {
@@ -149,9 +147,8 @@ func (bb *Agent8) CreateVoteRulerMessage() objects.VoteRulerMessage {
 	// Currently this returns a default/meaningless message
 	// For team's agent, add your own logic to communicate with other agents
 	reputationMap := bb.GetReputation()
-	bikeID := bb.GetBike()
 	voteRulerMap := make(voting.IdVoteMap)
-	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	fellowBikers := bb.GetFellowBikers()
 	for _, agent := range fellowBikers {
 		agentID := agent.GetID()
 		voteRulerMap[agentID] = reputationMap[agentID]
@@ -170,10 +167,9 @@ func (bb *Agent8) CreateVotekickoutMessage() objects.VoteKickoutMessage {
 	// Currently this returns a default/meaningless message
 	// For team's agent, add your own logic to communicate with other agents
 	voteResults := make(map[uuid.UUID]int)
-	bikeID := bb.GetBike()
 	kickAgentID := uuid.Nil
 	lowestReputation := 0.0
-	fellowBikers := bb.GetGameState().GetMegaBikes()[bikeID].GetAgents()
+	fellowBikers := bb.GetFellowBikers()
 	for _, agent := range fellowBikers {
 		agentID := agent.GetID()
 		voteResults[agentID] = 0

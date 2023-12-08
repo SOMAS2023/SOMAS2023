@@ -221,7 +221,10 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 
 	// Calculate preferences
 	for _, lootBox := range lootBoxes {
-		distance := calculateDistance(bb.GetLocation(), lootBox.GetPosition())
+		distance := 0.0
+		if bb.GetBike() != uuid.Nil {
+			distance = calculateDistance(bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetPosition(), lootBox.GetPosition())
+		}
 		colorPreference := calculateColorPreference(bb.GetColour(), lootBox.GetColour())
 		energyWeighting := bb.GetEnergyLevel()
 		// The higher energy, the higher weight for color
@@ -295,7 +298,7 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	// TODO: implement this function
 	var forces utils.Forces
 	forces.Brake = 0.0
-	forces.Pedal = 1.0
+	forces.Pedal = bb.GetEnergyLevel()
 	lootboxs := bb.GetGameState().GetLootBoxes()
 	var target objects.ILootBox
 	for key, value := range lootboxs {
@@ -304,14 +307,19 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 			break
 		}
 	}
-	distanceAudiBike := calculateDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+	distanceAudiBike := 0.0
+	if bb.GetBike() != uuid.Nil {
+		distanceAudiBike = calculateDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+	}
 	var angle float64
 	if distanceAudiBike > 10 {
 		angle = math.Atan2(target.GetPosition().Y-bb.GetLocation().Y, target.GetPosition().X-bb.GetLocation().X)/math.Pi -
 			bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
 	} else {
-		angle = math.Atan2(bb.GetLocation().Y-bb.GetGameState().GetAudi().GetPosition().Y, bb.GetLocation().X-bb.GetGameState().GetAudi().GetPosition().X)/math.Pi -
-			bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+		if bb.GetBike() != uuid.Nil {
+			angle = math.Atan2(bb.GetLocation().Y-bb.GetGameState().GetAudi().GetPosition().Y, bb.GetLocation().X-bb.GetGameState().GetAudi().GetPosition().X)/math.Pi -
+				bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+		}
 	}
 
 	if angle > 1.0 {
@@ -330,7 +338,9 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 
 	// store the target and location of current loop for score calculation
 	bb.previousTargetLocation = bb.GetGameState().GetLootBoxes()[direction].GetPosition()
-	bb.previousLocation = bb.GetLocation()
+	if bb.GetBike() != uuid.Nil {
+		bb.previousLocation = bb.GetLocation()
+	}
 	bb.previousEnergy = bb.GetEnergyLevel()
 	bb.previousPoints = bb.GetPoints()
 }
@@ -395,7 +405,10 @@ func (bb *Agent8) updateAgentActionMap() {
 
 func (bb *Agent8) updateLoopScoreMap() {
 	previousDistanceBikeBox := calculateDistance(bb.previousLocation, bb.previousTargetLocation)
-	currentDistanceBikeBox := calculateDistance(bb.GetLocation(), bb.previousTargetLocation)
+	currentDistanceBikeBox := 0.0
+	if bb.GetBike() != uuid.Nil {
+		currentDistanceBikeBox = calculateDistance(bb.GetLocation(), bb.previousTargetLocation)
+	}
 	loopScore := 0.0
 	if bb.GetEnergyLevel() < bb.previousEnergy {
 		loopScore = (previousDistanceBikeBox - currentDistanceBikeBox) / previousDistanceBikeBox / (bb.previousEnergy - bb.GetEnergyLevel())
@@ -439,7 +452,9 @@ func (bb *Agent8) UpdateReputation() {
 
 // this function is going to be called by the server to instantiate bikers in the MVP
 func GetIBaseBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
-	return &Agent8{
+	pointer := &Agent8{
 		BaseBiker: baseBiker,
 	}
+	pointer.GroupID = 8
+	return pointer
 }
