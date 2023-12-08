@@ -77,8 +77,8 @@ func (bb *Biker1) GetAverageOpinionOfBike(megabike obj.IMegaBike) float64 {
 
 // -------------------END OF SETTERS AND GETTERS----------------------
 
-func (bb *Biker1) DistanceFromAudi(obj.IMegaBike) float64 {
-	return bb.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+func (bb *Biker1) DistanceFromAudi(bike obj.IMegaBike) float64 {
+	return bb.ComputeDistance(bike.GetPosition(), bb.GetGameState().GetAudi().GetPosition())
 }
 
 // Find an agent from their id
