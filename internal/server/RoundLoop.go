@@ -180,7 +180,7 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 	}
 	s.UpdateGameStates()
 	for _, bike := range s.GetMegaBikes() {
-		if slices.Contains(leavingAgents, bike.GetRuler()) {
+		if slices.Contains(leavingAgents, bike.GetRuler()) && len(bike.GetAgents()) != 0 {
 			ruler := s.RulerElection(bike.GetAgents(), utils.Leadership)
 			bike.SetRuler(ruler)
 		}
