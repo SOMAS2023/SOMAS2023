@@ -2,10 +2,7 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/objects"
-	"SOMAS2023/internal/common/utils"
 	"math"
-
-	"github.com/google/uuid"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 )
@@ -36,14 +33,7 @@ func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
 	return objects.ForcesMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
 		AgentId:     t5.GetID(),
-		AgentForces: utils.Forces{
-			Pedal: t5.GetForces().Pedal,
-			Brake: t5.GetForces().Brake,
-			Turning: utils.TurningDecision{
-				SteerBike:     t5.GetForces().Turning.SteerBike,
-				SteeringForce: t5.GetForces().Turning.SteeringForce,
-			},
-		},
+		AgentForces: t5.GetForces(),
 	}
 }
 
@@ -74,7 +64,7 @@ func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
 	agentId := msg.AgentId
 	forces := msg.AgentForces
 
-	c := 0.02
+	c := 0.05
 
 	// If the sender gives his own forces and is on our bike, store the forces
 	for _, agent := range t5.GetFellowBikers() {
@@ -82,7 +72,7 @@ func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
 			t5.otherBikerForces[senderID] = forces
 
 			// If the sender is slacking, lower the reputation value
-			if forces.Pedal < 0.2 {
+			if forces.Pedal < 0.3 {
 				t5.SetReputation(senderID, math.Max(t5.QueryReputation(senderID)-c, -1))
 			}
 		}
@@ -93,20 +83,13 @@ func (t5 *team5Agent) HandleLootboxMessage(msg objects.LootboxMessage) {
 	senderID := msg.BaseMessage.GetSender().GetID()
 	preferredLootbox := msg.LootboxId
 
-	ourPreferences := t5.finalPreferences
+	ourPreference := t5.ProposeDirection()
 
-	c := 0.02
-	max := 0.0
-	prefLootId := uuid.Nil
+	c := 0.05
 
-	for lootId, preference := range ourPreferences {
-		if preference > max {
-			prefLootId = lootId
-			max = preference
-		}
-	}
-
-	if preferredLootbox == prefLootId {
+	if preferredLootbox == ourPreference {
 		t5.SetReputation(senderID, math.Min(t5.QueryReputation(senderID)+c, 1))
+	} else {
+		t5.SetReputation(senderID, math.Max(t5.QueryReputation(senderID)-c, -1))
 	}
 }
