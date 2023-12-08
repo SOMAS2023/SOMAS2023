@@ -47,11 +47,16 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 
 		distance_to_audi := math.Sqrt((((deltaXA) * (deltaXA)) + (deltaYA * (deltaYA))))
 
-		if distance_to_audi < (2.25*utils.CollisionThreshold) && math.Abs(angleToAudi-angleToGoal) < 0.5 {
+		if distance_to_audi < (1.5*utils.CollisionThreshold) && math.Abs(angleToAudi-angleToGoal) < 0.5 {
 			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
 		}
 
-		steer := min(max((angleToGoal-orientation), -1), 1)
+		steer := (angleToGoal - orientation)
+		if steer < -1 {
+			steer = steer + 2
+		} else if steer > 1 {
+			steer = steer - 2
+		}
 
 		//fmt.Println("Bike Orientation: ", orientation)
 		///(float64(len(t5.GetMegaBike())));

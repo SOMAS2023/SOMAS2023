@@ -39,7 +39,7 @@ func (t5 *team5Agent) ProposeDirection() uuid.UUID {
 		preference := weightedDistancePreference + weightedEnergyPreference + weightedColourPreference
 		preferenceMap[id] = preference
 
-		if distanceFromAudi < (2 * utils.CollisionThreshold) {
+		if distanceFromAudi < (1.5 * utils.CollisionThreshold) {
 			preferenceMap[id] = 0
 		}
 	}
