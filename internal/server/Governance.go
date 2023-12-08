@@ -49,7 +49,11 @@ func (s *Server) RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UU
 		// will participate in the voting for the directions
 		// ---------------------------VOTING ROUTINE - STEP 1 ---------------------
 		if agent.GetBikeStatus() {
-			proposedDirections[agent.GetID()] = agent.ProposeDirection()
+			proposedDirection := agent.ProposeDirection()
+			if _, ok := s.lootBoxes[proposedDirection]; !ok {
+				panic("agent proposed a non-existent lootbox")
+			}
+			proposedDirections[agent.GetID()] = proposedDirection
 		}
 	}
 
@@ -62,5 +66,8 @@ func (s *Server) RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UU
 
 	// ---------------------------VOTING ROUTINE - STEP 3 --------------
 	direction := s.GetWinningDirection(finalVotes, weights)
+	if _, ok := s.lootBoxes[direction]; !ok {
+		panic("agents voted on a non-existent lootbox")
+	}
 	return direction
 }

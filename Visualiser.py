@@ -12,7 +12,7 @@ import pygame_gui
 from pygame_gui import UIManager
 from pygame_gui.elements import UIButton, UIImage
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH
+from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, ITERATIONLENGTH
 from visualiser.util.HelperFunc import make_center
 from visualiser.GameScreen import GameScreen
 
@@ -172,11 +172,19 @@ class Visualiser:
                 )
                 root.destroy()
                 if filepath != "":
-                    self.json_parser(filepath)
-                    self.gameScreenManager.change_round(0)
-                    self.gameScreenManager.log("Welcome to the visualiser!")
-                    self.gameScreenManager.log(f"Max rounds: {self.gameScreenManager.maxRound}", "INFO")
-                    self.switch_screen("game_screen")
+                    self.load_game(filepath)
+
+    def load_game(self, filepath:str) -> None:
+        """
+        Load the game from the JSON file
+        """
+        self.json_parser(filepath)
+        self.gameScreenManager.change_round(0)
+        self.gameScreenManager.log("Welcome to the visualiser!")
+        self.gameScreenManager.log(f"Max Iterations: {self.gameScreenManager.maxRound}", "INFO")
+        self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound % ITERATIONLENGTH}", "INFO")
+        self.gameScreenManager.log(f"There are {ITERATIONLENGTH} iterations per round.", "INFO")
+        self.switch_screen("game_screen")
 
     def process_game_screen_events(self, event:pygame.event.Event) -> None:
         """
@@ -205,10 +213,7 @@ class Visualiser:
         """
         filepath = sys.argv[0] + "/../" + JSONPATH
         if exists(filepath):
-            self.json_parser(filepath)
-            self.gameScreenManager.change_round(0)
-            self.gameScreenManager.log("Welcome to the visualiser!")
-            self.gameScreenManager.log(f"Max rounds: {self.gameScreenManager.maxRound}", "INFO")
+            self.load_game(filepath)
             self.run_loop("game_screen")
         else:
             self.run_loop()
