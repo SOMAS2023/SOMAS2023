@@ -68,9 +68,46 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 	return optimalBike
 }
 
-// func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evaluate the bike's reputation and honesty. If true, it means it's a good bike.
-// 	bike := agent.GetGameState().GetMegaBikes()[evaluateBike]
-// }
+func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evaluate the bike's reputation and honesty. If true, it means it's a good bike.
+	agent.UpdateDecisionData()
+	bike := agent.GetGameState().GetMegaBikes()[evaluateBike]
+	badBikers := 0
+	goodBikers := 0
+	sumReputation := float64(0)
+	sumHonesty := float64(0)
+	averageReputation := float64(0) //average Reputation of the bike
+	averageHonesty := float64(0)    //average Honesty of the bike
+	length := 0
+	for _, biker := range bike.GetAgents() {
+		if biker.GetID() != agent.GetID() {
+			sumReputation += agent.reputation[biker.GetID()]
+			sumHonesty += agent.honestyMatrix[biker.GetID()]
+			length += 1
+			if agent.reputation[biker.GetID()] < agent.getReputationAverage() || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage() {
+				badBikers += 1
+			} else {
+				goodBikers += 1
+			}
+		}
+
+	}
+	if length > 0 {
+		averageReputation = sumReputation / float64(length)
+		averageHonesty = sumHonesty / float64(length)
+	}
+
+	if badBikers > goodBikers {
+		return false
+	} else if goodBikers > badBikers {
+		return true
+	} else {
+		if averageReputation > agent.getReputationAverage() || averageHonesty > agent.getHonestyAverage() { //if the average reputation for the bike or the average honesty of the bike is above the average in the map, return true.
+			return true
+		} else {
+			return false
+		}
+	}
+}
 
 func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	agent.UpdateDecisionData()
