@@ -71,6 +71,8 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 }
 
 func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evaluate the bike's reputation and honesty. If true, it means it's a good bike.
+
+	//fmt.Println("Gamw ton PAOK ", agent.GetGameState().GetMegaBikes()[evaluateBike])
 	bike := agent.GetGameState().GetMegaBikes()[evaluateBike]
 	badBikers := 0
 	goodBikers := 0

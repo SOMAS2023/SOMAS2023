@@ -100,6 +100,20 @@ type agentScore struct {
 }
 
 // DecideAction only pedal
+// func (agent *BaselineAgent) DecideAction() objects.BikerAction {
+// 	if agent.onBike {
+// 		fmt.Println("Gamw ton panathinaiko ", agent.currentBike)
+// 		if agent.evaluateBike(agent.currentBike) {
+// 			return objects.Pedal
+// 		} else {
+// 			fmt.Println("Gamw kai tin AEK ", agent.currentBike)
+// 			return objects.ChangeBike
+// 		}
+// 	} else {
+// 		return objects.Pedal
+// 	}
+
+// }
 func (agent *BaselineAgent) DecideAction() objects.BikerAction {
 	// fmt.Println("Team 4")
 	return objects.Pedal
