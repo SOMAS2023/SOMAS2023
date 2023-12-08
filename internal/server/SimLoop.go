@@ -66,6 +66,10 @@ func (s *Server) ResetGameState() {
 		bike.SetRuler(uuid.Nil)
 	}
 
+	for _, agent := range s.GetAgentMap() {
+		agent.SetBike(uuid.Nil)
+	}
+
 	s.replenishLootBoxes()
 	s.replenishMegaBikes()
 }
