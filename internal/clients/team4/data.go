@@ -14,15 +14,19 @@ func (agent *BaselineAgent) InitializeDecisionData() {
 	if agent.energyHistory == nil {
 		agent.energyHistory = make(map[uuid.UUID][]float64)
 	}
+	fmt.Println("Energy history")
 	if len(agent.mylocationHistory) == 0 {
 		agent.mylocationHistory = make([]utils.Coordinates, 0)
 	}
+	fmt.Println("Location history")
 	if agent.honestyMatrix == nil {
 		agent.honestyMatrix = make(map[uuid.UUID]float64)
 	}
+	fmt.Println("Honesty matrix")
 	if agent.reputation == nil {
 		agent.reputation = make(map[uuid.UUID]float64)
 	}
+	fmt.Println("Reputation matrix")
 }
 func (agent *BaselineAgent) UpdateDecisionData() {
 	fmt.Println("Updating decision data ...")
@@ -36,7 +40,11 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	//update governance for the current bike
 	agent.currentGovernance = agent.GetGameState().GetMegaBikes()[agent.currentBike].GetGovernance()
 	//update ruler for the current bike
-	agent.currentRuler = agent.GetGameState().GetMegaBikes()[agent.currentBike].GetRuler()
+	fmt.Println("Current bike ruler: ", agent.GetGameState().GetMegaBikes()[agent.currentBike].GetRuler())
+	ruler := agent.GetGameState().GetMegaBikes()[agent.currentBike].GetRuler()
+	if ruler != uuid.Nil {
+		agent.currentRuler = agent.GetGameState().GetMegaBikes()[agent.currentBike].GetRuler()
+	}
 	//update location history for the agent
 	agent.mylocationHistory = append(agent.mylocationHistory, agent.GetLocation())
 	//update capacity (number of agents on my bike)
@@ -44,10 +52,13 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	//update energy history for each fellow biker
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
-		currentEnergyLevel := fellow.GetEnergyLevel()
-		//Append bikers current energy level to the biker's history
-		agent.energyHistory[fellowID] = append(agent.energyHistory[fellowID], currentEnergyLevel)
+		if fellowID != uuid.Nil {
+			currentEnergyLevel := fellow.GetEnergyLevel()
+			//Append bikers current energy level to the biker's history
+			agent.energyHistory[fellowID] = append(agent.energyHistory[fellowID], currentEnergyLevel)
+		}
 	}
+	fmt.Println("Energy history for")
 	//call reputation and honesty matrix to calcuiate/update them
 	//save updated reputation and honesty matrix
 	agent.CalculateReputation()
