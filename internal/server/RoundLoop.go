@@ -195,7 +195,12 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 	bikeRequests := s.GetJoiningRequests(inLimbo)
 	// 2. pass to agents on each of the desired bikes a list of all agents trying to join
 	for bikeID, pendingAgents := range bikeRequests {
-		agents := s.megaBikes[bikeID].GetAgents()
+		bikes, ok := s.megaBikes[bikeID]
+		if !ok {
+			fmt.Printf("bike %s not found \n", bikeID)
+			panic("bike not found")
+		}
+		agents := bikes.GetAgents()
 		if len(agents) == 0 {
 			for i, pendingAgent := range pendingAgents {
 				if i <= utils.BikersOnBike {

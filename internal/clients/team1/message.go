@@ -242,11 +242,9 @@ func (bb *Biker1) GetAllMessages([]obj.IBaseBiker) []messaging.IMessage[obj.IBas
 	sendGovernanceMessage = false
 
 	// TODO: add logic to decide which messages to send and when
-	fmt.Printf("Bike: %v, BikeStatus: %v", bb.GetBike(), bb.GetBikeStatus())
-	if bb.GetBike() == uuid.Nil && bb.GetBikeStatus() == false {
+	if bb.GetBike() == uuid.Nil && !bb.GetBikeStatus(){
 		sendGovernanceMessage = true
 		sendJoiningMessage = false
-		fmt.Printf("Bike is nil and bike status is false\n")
 	} else if bb.GetBike() == uuid.Nil {
 		fmt.Printf("Bike is nil\n")
 		sendJoiningMessage = true
