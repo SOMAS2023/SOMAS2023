@@ -24,8 +24,8 @@ class Awdi(Drawable):
         Draw the lootbox
         """
         # Determine the grid size
-        self.trueX = int(self.x * COORDINATESCALE * zoom + offsetX)
-        self.trueY = int(self.y * COORDINATESCALE * zoom + offsetY)
+        self.trueX = int(self.x * COORDINATESCALE * zoom + offsetX - AWDI["SIZE"]*zoom/2)
+        self.trueY = int(self.y * COORDINATESCALE * zoom + offsetY - AWDI["SIZE"]*zoom/2)
         # Draw the awdi
         border = pygame.Surface(((2*AWDI["LINE_WIDTH"] + AWDI["SIZE"])*zoom, (2*AWDI["LINE_WIDTH"] + AWDI["SIZE"])*zoom))
         border.fill(AWDI["LINE_COLOUR"])
@@ -40,6 +40,7 @@ class Awdi(Drawable):
         overlay.blit(text, (textX, textY))
         # add the overlay to the border
         border.blit(overlay, (AWDI["LINE_WIDTH"]*zoom, AWDI["LINE_WIDTH"]*zoom))
+        # Center the awdi
         screen.blit(border, (self.trueX, self.trueY))
         # update the overlay
         self.overlay = self.update_overlay(zoom)

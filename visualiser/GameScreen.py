@@ -364,11 +364,7 @@ class GameScreen:
         self.elements["round_count"].set_text(f"Iteration: {self.round}")
         self.elements["iteration_count"].set_text(f"Round: {self.round // ITERATIONLENGTH}")
         self.elements["console"].html_text = ""
-        self.elements["console"].rebuild()
         self.stats["Void Agents"] = 0
-        if self.round % ITERATIONLENGTH == 0:
-            self.stats["Dead Agents"] = 0
-        self.elements["stats"].rebuild()
         #Reload bikes
         bikes = {}
         agents = {}
@@ -386,6 +382,8 @@ class GameScreen:
         self.compare_lootboxes(lootboxes)
         self.awdi = Awdi(self.jsonData[self.round]["audi"])
         self.update_stats()
+        self.elements["stats"].rebuild()
+        self.elements["console"].rebuild()
 
     def allocate_colour(self) -> str:
         """
@@ -468,14 +466,15 @@ class GameScreen:
         for agentid, agent in self.agents.items():
             if agentid not in newAgents:
                 # Agent has died from exhaustion
+                groupID = agent["GroupID"]
                 if agent["Energy"] < ENERGYTHRESHOLD:
-                    self.log(f"Agent {agentid} has run out of energy!", "ERROR")
+                    self.log(f"Agent {agentid} ({groupID}) has run out of energy!", "ERROR")
                 # Agent has died from being run over
                 elif (pow(agent["X"]-self.awdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["Y"]-self.awdi.y, 2) < pow(EPSILON, 2)):
-                    self.log(f"Agent {agentid} has been run over by the Owdi!", "ERROR")
+                    self.log(f"Agent {agentid} ({groupID}) has been run over by the Owdi!", "ERROR")
                 # Agent has died for unknown reasons
                 else:
-                    self.log(f"Agent {agentid} has died for unknown reasons!", "ERROR")
+                    self.log(f"Agent {agentid} ({groupID}) has died for unknown reasons!", "ERROR")
                 dead += 1
             else:
                 #Check if agent has moved bikes
@@ -488,6 +487,8 @@ class GameScreen:
                 self.deadCount[str(self.round)] = self.deadCount[str(self.round-1)] + dead
             else:
                 self.stats["Dead Agents"] = "N/A"
+            if self.round % ITERATIONLENGTH == 0:
+                self.deadCount[str(self.round)] = 0
         if str(self.round) in self.deadCount:
             self.stats["Dead Agents"] = self.deadCount[str(self.round)]
         self.agents = newAgents
@@ -500,7 +501,7 @@ class GameScreen:
         for bikeid, _ in self.bikes.items():
             if bikeid not in newBikes:
                 self.log(f"Bike {bikeid} has died!", "ERROR")
-            if len(newBikes[bikeid].get_agents()) > 0:
+            elif len(newBikes[bikeid].get_agents()) > 0:
                 activeBikes += 1
         self.stats["Active Bikes"] = activeBikes
         self.bikes = newBikes
