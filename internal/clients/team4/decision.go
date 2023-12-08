@@ -43,6 +43,7 @@ func (agent *BaselineAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UU
 	return decision
 }
 func (agent *BaselineAgent) ChangeBike() uuid.UUID {
+	agent.UpdateDecisionData()
 	megaBikes := agent.GetGameState().GetMegaBikes()
 	optimalBike := agent.GetBike()
 	weight := float64(-99)
@@ -66,6 +67,10 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 	agent.optimalBike = optimalBike
 	return optimalBike
 }
+
+// func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evaluate the bike's reputation and honesty. If true, it means it's a good bike.
+// 	bike := agent.GetGameState().GetMegaBikes()[evaluateBike]
+// }
 
 func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	agent.UpdateDecisionData()
