@@ -64,7 +64,7 @@ class Bike(Drawable):
         averageEnergy = 0
         averagePedal = 0
         averageBrake = 0
-        averageTurning = 0
+        averageSteering = 0
         averagePoints = 0
         for agentid in self.agentData:
             # Allow for older JSONs that do not have group_id
@@ -75,25 +75,25 @@ class Bike(Drawable):
             averageEnergy += agentJson[agentid]["energy_level"]
             averagePedal += agentJson[agentid]["forces"]["pedal"]
             averageBrake += agentJson[agentid]["forces"]["brake"]
-            averageTurning += agentJson[agentid]["forces"]["turning"]["steer_bike"]
+            averageSteering += agentJson[agentid]["forces"]["turning"]["steering_force"]
             averagePoints += agentJson[agentid]["points"]
         if len(self.agentData) == 0:
             averageEnergy = "N/A"
             averagePedal = "N/A"
             averageBrake = "N/A"
-            averageTurning = "N/A"
+            averageSteering = "N/A"
             averagePoints = "N/A"
         else:
             averageEnergy = round(averageEnergy / len(self.agentData), PRECISION)
             averagePedal = round(averagePedal / len(self.agentData), PRECISION)
             averageBrake = round(averageBrake / len(self.agentData), PRECISION)
-            averageTurning = round(averageTurning / len(self.agentData), PRECISION)
+            averageSteering = round(averageSteering / len(self.agentData), PRECISION)
             averagePoints = round(averagePoints / len(self.agentData), PRECISION)
         avgs = {
             "Average Energy" : averageEnergy,
             "Average Pedal" : averagePedal,
             "Average Brake" : averageBrake,
-            "Average Turning" : averageTurning,
+            "Average Steering" : averageSteering,
             "Average Points" : averagePoints,
         }
         self.properties.update(avgs)
