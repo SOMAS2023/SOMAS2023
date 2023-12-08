@@ -32,8 +32,13 @@ type IBaselineAgent interface {
 type Agent8 struct {
 	*objects.BaseBiker
 	overallLootboxPreferences voting.LootboxVoteMap         //rank score for the lootbox
-	agentsActions             map[int]map[uuid.UUID]float64 //action score for each agent for the previous 10 loops (-1, 1)
-	loopScore                 map[int]map[uuid.UUID]float64 //loop score for each loop for our megabike (-1, 1)
+	agentsActionsMap          map[int]map[uuid.UUID]float64 //action score for each agent for the previous 10 loops (-1, 1)
+	loopScoreMap              map[int]map[uuid.UUID]float64 //loop score for each loop for our megabike (-1, 1)
+	previousLocation          utils.Coordinates             // record the location of last loop
+	previousTargetLocation    utils.Coordinates             //record the final target lootbox of last loop
+	previousEnergy            float64                       // record the energy level of last loop
+	previousPoints            int                           // record the point of last loop
+	messageReputation         map[uuid.UUID]float64         // record the extra reputation from Message System
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DecideGovernance <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -187,7 +192,7 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 	var loopNum = 0.0
 
 	// calculate total reflection score for current bike
-	for _, scoremap := range bb.loopScore {
+	for _, scoremap := range bb.loopScoreMap {
 		for bikeid, score := range scoremap {
 			if bikeid == selfBikeId {
 				selfBikeScore += score
@@ -198,7 +203,7 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 	selfBikeScore = selfBikeScore / loopNum
 
 	// check if we need to change bike
-	if selfBikeScore < GlobalParameters.ThresholdForChangingMegabike {
+	if selfBikeScore < GlobalParameters.ThresholdForChangingMegabike && bb.GetEnergyLevel() >= 0.7 {
 		return objects.ChangeBike
 	}
 
@@ -209,6 +214,7 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 // =========================================================================================================================================================
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 3 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 func (bb *Agent8) ProposeDirection() uuid.UUID {
 	lootBoxes := bb.GetGameState().GetLootBoxes()
 	preferences := make(map[uuid.UUID]float64)
@@ -316,6 +322,17 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	forces.Turning.SteerBike = true
 	forces.Turning.SteeringForce = angle
 	bb.SetForces(forces)
+
+	// update the state of last loop
+	bb.updateAgentActionMap()
+	bb.updateLoopScoreMap()
+	bb.UpdateReputation()
+
+	// store the target and location of current loop for score calculation
+	bb.previousTargetLocation = bb.GetGameState().GetLootBoxes()[direction].GetPosition()
+	bb.previousLocation = bb.GetLocation()
+	bb.previousEnergy = bb.GetEnergyLevel()
+	bb.previousPoints = bb.GetPoints()
 }
 
 // =========================================================================================================================================================
@@ -352,16 +369,63 @@ func (bb *Agent8) DecideDictatorAllocation() voting.IdVoteMap {
 }
 
 func (bb *Agent8) updateAgentActionMap() {
-
+	currentLoopAgentActionMap := make(map[uuid.UUID]float64)
+	agents := bb.GetFellowBikers()
+	for _, agent := range agents {
+		// agentForce := agent.GetForces()
+		// if agentForce.Turning.SteerBike {
+		// 	if agentForce.Turning.SteeringForce == bb.GetForces().Turning.SteeringForce {
+		// 		currentLoopAgentActionMap[agent.GetID()] = 1 * math.Max(0, agentForce.Pedal-agentForce.Brake)
+		// 	} else {
+		// 		currentLoopAgentActionMap[agent.GetID()] = -1 * math.Min(1, agentForce.Pedal+agentForce.Brake)
+		// 	}
+		// } else {
+		// 	currentLoopAgentActionMap[agent.GetID()] = 0.7 * math.Max(0, agentForce.Pedal-agentForce.Brake)
+		// }
+		currentLoopAgentActionMap[agent.GetID()] = agent.GetEnergyLevel()
+	}
+	for i := 1; i < 10; i++ {
+		bb.agentsActionsMap[i] = bb.agentsActionsMap[i+1]
+	}
+	bb.agentsActionsMap[10] = currentLoopAgentActionMap
 }
 
 func (bb *Agent8) updateLoopScoreMap() {
+	previousDistanceBikeBox := calculateDistance(bb.previousLocation, bb.previousTargetLocation)
+	currentDistanceBikeBox := calculateDistance(bb.GetLocation(), bb.previousTargetLocation)
+	loopScore := 0.0
+	if bb.GetEnergyLevel() < bb.previousEnergy {
+		loopScore = (previousDistanceBikeBox - currentDistanceBikeBox) / previousDistanceBikeBox / (bb.previousEnergy - bb.GetEnergyLevel())
+	} else {
+		if bb.GetPoints() > bb.previousPoints {
+			loopScore = 1 * 5 * (bb.GetEnergyLevel() - bb.previousEnergy)
+		} else {
+			loopScore = 1 * 1 * (bb.GetEnergyLevel() - bb.previousEnergy)
+		}
+	}
 
+	for i := 1; i < 10; i++ {
+		bb.loopScoreMap[i] = bb.loopScoreMap[i+1]
+	}
+	bb.loopScoreMap[10][bb.GetBike()] = loopScore
 }
 
 // update the reputation for other agents
 func (bb *Agent8) UpdateReputation() {
 	// TODO: implement this function
+	agentCount := make(map[uuid.UUID]float64)
+	agentScore := make(map[uuid.UUID]float64)
+	for i := 1; i <= 10; i++ {
+		for agentId, Score := range bb.agentsActionsMap[i] {
+			if Score != 0.0 {
+				agentScore[agentId] += Score
+				agentCount[agentId]++
+			}
+		}
+	}
+	for agentId, scoreSum := range agentScore {
+		bb.SetReputation(agentId, scoreSum/agentCount[agentId]+bb.messageReputation[agentId])
+	}
 }
 
 // =========================================================================================================================================================
@@ -370,5 +434,13 @@ func (bb *Agent8) UpdateReputation() {
 func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) objects.IBaseBiker {
 	return &Agent8{
 		BaseBiker: objects.GetBaseBiker(totColours, bikeId),
+		overallLootboxPreferences voting.LootboxVoteMap         
+		agentsActionsMap          map[int]map[uuid.UUID]float64 
+		loopScoreMap              map[int]map[uuid.UUID]float64 
+		previousLocation          utils.Coordinates             
+		previousTargetLocation    utils.Coordinates             
+		previousEnergy            float64                       
+		previousPoints            int                           
+		messageReputation         map[uuid.UUID]float64         
 	}
 }

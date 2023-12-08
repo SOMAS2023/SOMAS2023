@@ -200,13 +200,13 @@ func (bb *Agent8) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 	if kickout {
 		if senderReputation > 0.5 {
 			if kickAgentReputation < 0.2 {
-				bb.SetReputation(agentId, math.Max(kickAgentReputation-0.05, -1))
+				bb.setMessageReputation(agentId, math.Max(kickAgentReputation-0.05, -1))
 			}
 		}
 	} else {
 		if senderReputation > 0.5 {
 			if kickAgentReputation > 0.2 {
-				bb.SetReputation(agentId, math.Min(kickAgentReputation+0.05, 1))
+				bb.setMessageReputation(agentId, math.Min(kickAgentReputation+0.05, 1))
 			}
 		}
 	}
@@ -221,7 +221,7 @@ func (bb *Agent8) HandleReputationMessage(msg objects.ReputationOfAgentMessage) 
 	reputation := msg.Reputation
 
 	if senderReputation > 0.5 {
-		bb.SetReputation(agentId, math.Min(1, math.Max(-1, bb.QueryReputation(agentId)+
+		bb.setMessageReputation(agentId, math.Min(1, math.Max(-1, bb.QueryReputation(agentId)+
 			0.1*(reputation-bb.GetAverageReputation(sender))/bb.GetAverageReputation(sender))))
 	}
 }
@@ -239,9 +239,9 @@ func (bb *Agent8) HandleLootboxMessage(msg objects.LootboxMessage) {
 	senderReputation := bb.QueryReputation(sender.GetID())
 	if senderReputation >= 0.0 {
 		if lootboxId == bb.ProposeDirection() {
-			bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.05, 1))
+			bb.setMessageReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.05, 1))
 		} else {
-			bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.05, -1))
+			bb.setMessageReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.05, -1))
 		}
 	}
 }
@@ -256,9 +256,9 @@ func (bb *Agent8) HandleGovernanceMessage(msg objects.GovernanceMessage) {
 	if senderReputation >= 0.0 {
 		if bikeId == bb.GetBike() {
 			if governanceId == int(bb.DecideGovernance()) {
-				bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.05, 1))
+				bb.setMessageReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.05, 1))
 			} else {
-				bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())+0.05, -1))
+				bb.setMessageReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())+0.05, -1))
 			}
 		}
 	}
@@ -273,9 +273,9 @@ func (bb *Agent8) HandleForcesMessage(msg objects.ForcesMessage) {
 	senderReputation := bb.QueryReputation(sender.GetID())
 	if senderReputation >= 0.0 {
 		if agentForces.Turning == bb.GetForces().Turning {
-			bb.SetReputation(agentId, math.Min(bb.QueryReputation(agentId)+0.05*agentForces.Pedal, 1))
+			bb.setMessageReputation(agentId, math.Min(bb.QueryReputation(agentId)+0.05*agentForces.Pedal, 1))
 		} else {
-			bb.SetReputation(agentId, math.Max(bb.QueryReputation(agentId)-0.05*agentForces.Pedal, -1))
+			bb.setMessageReputation(agentId, math.Max(bb.QueryReputation(agentId)-0.05*agentForces.Pedal, -1))
 		}
 	}
 }
@@ -313,13 +313,13 @@ func (bb *Agent8) HandleVoteRulerMessage(msg objects.VoteRulerMessage) {
 	}
 
 	if firstRuler == bb.GetID() {
-		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.1, 1))
+		bb.setMessageReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.1, 1))
 	}
 
 	if chooseMe {
-		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.05, 1))
+		bb.setMessageReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.05, 1))
 	} else {
-		bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.1, -1))
+		bb.setMessageReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.1, -1))
 	}
 }
 
@@ -330,7 +330,7 @@ func (bb *Agent8) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
 	voteMap := msg.VoteMap
 	for agent, score := range voteMap {
 		if agent == bb.GetID() && score == 1 {
-			bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.2, -1))
+			bb.setMessageReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.2, -1))
 		}
 	}
 }

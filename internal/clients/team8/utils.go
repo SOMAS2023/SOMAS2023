@@ -148,3 +148,10 @@ func (bb *Agent8) GetAverageReputation(agent objects.IBaseBiker) float64 {
 	}
 	return averageReputation / float64(agentNum)
 }
+
+func (bb *Agent8) setMessageReputation(agentId uuid.UUID, reputation float64) {
+	if bb.messageReputation == nil {
+		bb.messageReputation = make(map[uuid.UUID]float64)
+	}
+	bb.messageReputation[agentId] = reputation
+}
