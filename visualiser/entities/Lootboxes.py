@@ -25,8 +25,8 @@ class Lootbox(Drawable):
         Draw the lootbox
         """
         # Determine the grid size
-        self.trueX = int(self.x*COORDINATESCALE * zoom + offsetX)
-        self.trueY = int(self.y*COORDINATESCALE * zoom + offsetY)
+        self.trueX = int(self.x*COORDINATESCALE * zoom + offsetX - LOOTBOX["WIDTH"]*zoom/2)
+        self.trueY = int(self.y*COORDINATESCALE * zoom + offsetY - LOOTBOX["HEIGHT"]*zoom/2)
         # Draw the lootbox
         border = pygame.Surface(((2*LOOTBOX["LINE_WIDTH"] + LOOTBOX["WIDTH"])*zoom, (2*LOOTBOX["LINE_WIDTH"] + LOOTBOX["HEIGHT"])*zoom))
         border.fill(LOOTBOX["LINE_COLOUR"])
@@ -44,6 +44,7 @@ class Lootbox(Drawable):
         overlay.blit(text, (textX, textY))
         # add the overlay to the border
         border.blit(overlay, (LOOTBOX["LINE_WIDTH"]*zoom, LOOTBOX["LINE_WIDTH"]*zoom))
+        # Center the lootbox
         screen.blit(border, (self.trueX, self.trueY))
         # Draw the agents within the bike
         self.overlay = self.update_overlay(zoom)

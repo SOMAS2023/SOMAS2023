@@ -7,7 +7,7 @@ func (t5 *team5Agent) updateState() {
 	// Example condition: switch to conservative (Boris biker) if energy is low
 	if t5.roundCount <= 5 {
 		t5.state = 1
-	} else if currentEnergy < 0.2 {
+	} else if currentEnergy < 0.3 {
 		t5.state = 0
 	} else if currentEnergy < 0.85 {
 		t5.state = 2

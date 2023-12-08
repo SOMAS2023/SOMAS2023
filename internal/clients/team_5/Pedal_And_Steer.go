@@ -36,22 +36,29 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		deltaYB := targetPos.Y - currLocation.Y
 		////** fmt.Println("Delta X: ", deltaX, "Delta Y: ", deltaY)
 
-		angleToGoal := math.Atan2(deltaYB, deltaXB) / math.Pi
-
 		audiPos := t5.GetGameState().GetAudi().GetPosition()
 
 		deltaXA := audiPos.X - currLocation.X
 		deltaYA := audiPos.Y - currLocation.Y
 
+		angleToGoal := math.Atan2(deltaYB, deltaXB) / math.Pi
 		angleToAudi := math.Atan2(deltaYA, deltaXA) / math.Pi
+		distanceToAudi := math.Sqrt(deltaXA*deltaXA + deltaYA*deltaYA)
 
-		distance_to_audi := math.Sqrt((((deltaXA) * (deltaXA)) + (deltaYA * (deltaYA))))
-
-		if distance_to_audi < (2.25*utils.CollisionThreshold) && math.Abs(angleToAudi-angleToGoal) < 0.5 {
-			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
+		// Check if Audi is too close and adjust angleToGoal if necessary
+		if distanceToAudi < (2.25*utils.CollisionThreshold) && math.Abs(angleToAudi-angleToGoal) < 0.5 {
+			// Smoothing the adjustment by reducing the impact
+			adjustment := 0.5 * math.Copysign(1, angleToAudi-angleToGoal)
+			angleToGoal = (angleToGoal + angleToAudi - adjustment) / 2
 		}
 
-		steer := min(max((angleToGoal-orientation), -1), 1)
+		// Normalize the steering angle between -1 and 1
+		steer := angleToGoal - orientation
+		if steer > 1 {
+			steer = 1
+		} else if steer < -1 {
+			steer = -1
+		}
 
 		////** fmt.Println("Bike Orientation: ", orientation)
 		///(float64(len(t5.GetMegaBike())));
@@ -82,10 +89,6 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		}
 		t5.SetForces(Forces_movement)
 	}
-}
-
-func calculatePedalForceBasedOnEnergy() {
-	panic("unimplemented")
 }
 
 // here I can add implementation of stategy like:

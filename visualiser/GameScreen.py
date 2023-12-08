@@ -364,11 +364,7 @@ class GameScreen:
         self.elements["round_count"].set_text(f"Iteration: {self.round}")
         self.elements["iteration_count"].set_text(f"Round: {self.round // ITERATIONLENGTH}")
         self.elements["console"].html_text = ""
-        self.elements["console"].rebuild()
         self.stats["Void Agents"] = 0
-        if self.round % ITERATIONLENGTH == 0:
-            self.stats["Dead Agents"] = 0
-        self.elements["stats"].rebuild()
         #Reload bikes
         bikes = {}
         agents = {}
@@ -386,6 +382,8 @@ class GameScreen:
         self.compare_lootboxes(lootboxes)
         self.awdi = Awdi(self.jsonData[self.round]["audi"])
         self.update_stats()
+        self.elements["stats"].rebuild()
+        self.elements["console"].rebuild()
 
     def allocate_colour(self) -> str:
         """
@@ -489,6 +487,8 @@ class GameScreen:
                 self.deadCount[str(self.round)] = self.deadCount[str(self.round-1)] + dead
             else:
                 self.stats["Dead Agents"] = "N/A"
+            if self.round % ITERATIONLENGTH == 0:
+                self.deadCount[str(self.round)] = 0
         if str(self.round) in self.deadCount:
             self.stats["Dead Agents"] = self.deadCount[str(self.round)]
         self.agents = newAgents
