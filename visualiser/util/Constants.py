@@ -13,6 +13,11 @@ THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
 MAXSPEED = 50
 ITERATIONLENGTH = 100
+ARROWS = {
+    "NUM_ARROWS": 5,
+    "ARROW_LENGTH": 15,
+    "ARROW_ANGLE": 30,
+}
 TEXT = {
     "FONT" : "Arial",
     "FONT_SIZE": 1,

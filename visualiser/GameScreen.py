@@ -256,10 +256,10 @@ class GameScreen:
             bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Draw overlays
         for bike in self.bikes.values():
-            bike.draw_overlay(screen)
+            bike.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         for lootbox in self.lootboxes.values():
-            lootbox.draw_overlay(screen)
-        self.awdi.draw_overlay(screen)
+            lootbox.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
+        self.awdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         self.draw_mouse_coords(screen)
         # Divider line
         lineWidth = 1
@@ -371,7 +371,16 @@ class GameScreen:
         for bikeid, bike in self.jsonData[self.round]["bikes"].items():
             if bikeid not in self.bikeColourMap:
                 self.bikeColourMap[bikeid] = self.allocate_colour()
-            bikes[bikeid] = Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"])
+            #Determine next position for arrow drawing
+            nextRound = self.jsonData[min(self.round+1, self.maxRound)]["bikes"]
+            if bikeid in nextRound:
+                nextPos = nextRound[bikeid]["physical_state"]["position"]["x"], nextRound[bikeid]["physical_state"]["position"]["y"]
+                nextOrient = nextRound[bikeid]["orientation"]
+            else:
+            #If bike is dead, draw arrow to empty
+                nextPos = 0, 0
+                nextOrient = 0
+            bikes[bikeid] = Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"], nextPos, nextOrient, self.jsonData[min(self.round+1, self.maxRound)]["agents"])
             agents.update(bikes[bikeid].get_agents())
         self.compare_agents(agents)
         self.compare_bikes(bikes)

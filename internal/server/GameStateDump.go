@@ -27,10 +27,11 @@ type PhysicsObjectDump struct {
 
 type BikeDump struct {
 	PhysicsObjectDump
-	Agents     []AgentDump      `json:"-"`
-	AgentIDs   []uuid.UUID      `json:"agent_ids"`
-	Governance utils.Governance `json:"governance"`
-	Ruler      uuid.UUID        `json:"ruler"`
+	Agents      []AgentDump      `json:"-"`
+	AgentIDs    []uuid.UUID      `json:"agent_ids"`
+	Governance  utils.Governance `json:"governance"`
+	Ruler       uuid.UUID        `json:"ruler"`
+	Orientation float64          `json:"orientation"`
 }
 
 type AgentDump struct {
@@ -109,6 +110,7 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 			AgentIDs:          agentIDs,
 			Governance:        bike.GetGovernance(),
 			Ruler:             bike.GetRuler(),
+			Orientation:       bike.GetOrientation(),
 		}
 	}
 

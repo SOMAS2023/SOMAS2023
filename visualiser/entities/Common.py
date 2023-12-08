@@ -1,9 +1,10 @@
 """
 Common functions between entities.
 """
+import math
 import pygame
 import pygame_gui
-from visualiser.util.Constants import OVERLAY, COORDINATESCALE, PRECISION
+from visualiser.util.Constants import OVERLAY, COORDINATESCALE, PRECISION, DIM, ARROWS, COLOURS
 class Drawable:
     def __init__(self, entityid:str, jsonData:dict, x=None, y=None) -> None:
         if x is None or y is None:
@@ -81,7 +82,7 @@ class Drawable:
         """
         raise NotImplementedError
 
-    def draw_overlay(self, screen:pygame_gui.core.UIContainer) -> None:
+    def draw_overlay(self, screen:pygame_gui.core.UIContainer, offsetX:int, offsetY:int, zoom:float) -> None:
         """
         Overlay agent properties when clicked.
         """
@@ -98,3 +99,59 @@ class Drawable:
         }
         properties.update(self.properties)
         return properties
+
+    def draw_arrow(self, screen, colour, startPoint, secondArg):
+        """
+        Draw a line with multiple arrowheads to indicate direction.
+        """
+        arrowLength = ARROWS["ARROW_LENGTH"]
+        arrowAngle = ARROWS["ARROW_ANGLE"] * math.pi / 180
+        numArrows = ARROWS["NUM_ARROWS"]
+        length = 10
+        if colour == COLOURS["white"]:
+            colour = "black"
+        # Determine if secondArg is an endPoint or an orientation
+        if isinstance(secondArg, tuple):  # If secondArg is a tuple, assume it's an endPoint
+            endPoint = secondArg
+        else:  # If secondArg is not a tuple, calculate endPoint based on orientation
+            orientation = secondArg
+            angle = orientation * math.pi
+            endPoint = (startPoint[0] + length * math.cos(angle), startPoint[1] + length * math.sin(angle))
+        # Calculate the direction of the line
+        dx, dy = endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]
+        gradient = dy / dx if dx != 0 else float('inf')
+
+        # Place arrowheads along the line
+        def get_intersections(x, y, grad):
+            points = []
+            if grad != 0:
+                yLeft = y - grad * x
+                if 0 <= yLeft <= DIM["GAME_SCREEN_HEIGHT"]:
+                    points.append((0, yLeft))
+                yRight = y + grad * (DIM["GAME_SCREEN_WIDTH"] - x)
+                if 0 <= yRight <= DIM["GAME_SCREEN_HEIGHT"]:
+                    points.append((DIM["GAME_SCREEN_WIDTH"], yRight))
+                xTop = x - y / grad
+                if 0 <= xTop <= DIM["GAME_SCREEN_WIDTH"]:
+                    points.append((xTop, 0))
+                xBottom = x + (DIM["GAME_SCREEN_HEIGHT"] - y) / grad
+                if 0 <= xBottom <= DIM["GAME_SCREEN_WIDTH"]:
+                    points.append((xBottom, DIM["GAME_SCREEN_HEIGHT"]))
+            else:
+                points.extend([(0, y), (DIM["GAME_SCREEN_WIDTH"], y)])
+            return points
+
+        def draw_arrowhead(screen, color, tip, direction, length, angle):
+            dx1, dy1 = length * math.cos(direction + angle), length * math.sin(direction + angle)
+            dx2, dy2 = length * math.cos(direction - angle), length * math.sin(direction - angle)
+            pygame.draw.polygon(screen, color, [tip, (tip[0] - dx1, tip[1] - dy1), (tip[0] - dx2, tip[1] - dy2)])
+
+        # Get intersections with screen boundaries
+        intersections = get_intersections(startPoint[0], startPoint[1], gradient)
+        if len(intersections) == 2:
+            pygame.draw.line(screen, colour, intersections[0], intersections[1], 3)
+            lineDir = math.atan2(dy, dx)
+            for i in range(1, numArrows + 1):
+                fraction = i / (numArrows + 1)
+                x, y = [p0 + fraction * (p1 - p0) for p0, p1 in zip(intersections[0], intersections[1])]
+                draw_arrowhead(screen, colour, (x, y), lineDir, arrowLength, arrowAngle)

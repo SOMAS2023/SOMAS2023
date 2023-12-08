@@ -48,7 +48,6 @@ class Lootbox(Drawable):
         screen.blit(border, (self.trueX, self.trueY))
         # Draw the agents within the bike
         self.overlay = self.update_overlay(zoom)
-        self.draw_overlay(screen)
 
     def check_collision(self, mouseX: int, mouseY: int, zoom:float) -> bool:
         """
