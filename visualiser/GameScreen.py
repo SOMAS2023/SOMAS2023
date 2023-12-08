@@ -389,7 +389,7 @@ class GameScreen:
         for lootboxid, lootbox in self.jsonData[self.round]["loot_boxes"].items():
             lootboxes[lootboxid] = Lootbox(lootboxid, lootbox)
         self.compare_lootboxes(lootboxes)
-        self.awdi = Awdi(self.jsonData[self.round]["audi"])
+        self.awdi = Awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
         self.update_stats()
         self.elements["stats"].rebuild()
         self.elements["console"].rebuild()

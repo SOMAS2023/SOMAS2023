@@ -8,8 +8,13 @@ from visualiser.util.Constants import AWDI, OVERLAY, COORDINATESCALE
 from visualiser.entities.Common import Drawable
 
 class Awdi(Drawable):
-    def __init__(self, jsonData:dict) -> None:
+    def __init__(self, jsonData:dict, targetPosition:dict) -> None:
         super().__init__("owdi", jsonData)
+        if jsonData["target_bike"] in targetPosition:
+            location = targetPosition[jsonData["target_bike"]]["physical_state"]["position"]
+            self.targetPosition = (location["x"], location["y"])
+        else:
+            self.targetPosition = (0, 0)
         self.colour = AWDI["COLOUR"]
         properties = {
             "Target" : jsonData["target_bike"],
@@ -57,3 +62,8 @@ class Awdi(Drawable):
         Propagate the click
         """
         self.click(mouseX, mouseY, zoom)
+
+    def draw_overlay(self, screen:pygame_gui.core.UIContainer, offsetX: int, offsetY: int, zoom: float) -> None:
+        if self.clicked and self.targetPosition != (0, 0):
+            self.draw_arrow(screen, self.colour, (self.trueX+AWDI["SIZE"]*zoom/2, self.trueY+AWDI["SIZE"]*zoom/2), (self.targetPosition[0]*COORDINATESCALE*zoom+offsetX, self.targetPosition[1]*COORDINATESCALE*zoom+offsetY))
+        super().draw_overlay(screen, offsetX, offsetY, zoom)
