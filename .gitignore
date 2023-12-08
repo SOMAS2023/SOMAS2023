@@ -9,4 +9,4 @@ Test/
 /venv
 venv
 **.txt
-
+*.txt

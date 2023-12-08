@@ -22,7 +22,7 @@ const ReplenishMegaBikes bool = true
 /*
 Physics Parameters
 */
-const MassBike float64 = .01
+const MassBike float64 = 1.0
 const MassBiker float64 = 1.0
 const MassAudi float64 = 10.0
 

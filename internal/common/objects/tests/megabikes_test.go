@@ -153,8 +153,6 @@ func TestKickOutAgent(t *testing.T) {
 	}
 	s.FoundingInstitutions()
 
-
-
 	mb := objects.GetMegaBike()
 
 	//biker1 := NewMockBiker(uuid.New(), map[uuid.UUID]int{ /* votes */ })

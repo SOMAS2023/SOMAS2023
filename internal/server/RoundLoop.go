@@ -134,7 +134,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			leaderKickedOut := false
 			allKicked = append(allKicked, agentsVotes...)
 			for _, agentID := range agentsVotes {
-				//** fmt.Printf("kicking out agent %s\n", agentID)
+				fmt.Printf("kicking out agent %s\n", agentID)
 				s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 				// if the leader was kicked out vote for a new one
 				if agentID == bike.GetRuler() {
@@ -180,7 +180,7 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 	}
 	s.UpdateGameStates()
 	for _, bike := range s.GetMegaBikes() {
-		if slices.Contains(leavingAgents, bike.GetRuler()) {
+		if slices.Contains(leavingAgents, bike.GetRuler()) && len(bike.GetAgents()) != 0 {
 			ruler := s.RulerElection(bike.GetAgents(), utils.Leadership)
 			bike.SetRuler(ruler)
 		}
@@ -414,13 +414,14 @@ func (s *Server) LootboxCheckAndDistributions() {
 						// get the map of weights from the leader
 						leader := s.GetAgentMap()[megabike.GetRuler()]
 						weights := leader.DecideWeights(utils.Allocation)
+					outer:
 						for id := range weights {
 							for _, agent := range agents {
 								if agent.GetID() == id {
-									break
+									continue outer
 								}
-								panic("leader gave weight to an agent that isn't on the bike")
 							}
+							panic("leader gave weight to an agent that isn't on the bike")
 						}
 						// get allocation votes from each agent
 						allAllocations := make(map[uuid.UUID]voting.IdVoteMap)

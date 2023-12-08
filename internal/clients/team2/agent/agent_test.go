@@ -2,6 +2,7 @@ package agent
 
 import (
 	"SOMAS2023/internal/clients/team2/modules"
+	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"testing"
 
@@ -10,15 +11,14 @@ import (
 )
 
 func TestNewBaseTeam2Biker(t *testing.T) {
-	agentId := uuid.New()
-	agent := NewBaseTeam2Biker(agentId, utils.GenerateRandomColour())
+	agent := NewBaseTeam2Biker(objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New()))
 	assert.NotNil(t, agent)
 	assert.Equal(t, 0, agent.BaseBiker.GetPoints())
 	assert.Equal(t, 1.0, agent.BaseBiker.GetEnergyLevel())
 }
 
 func TestClippingSocialCapital(t *testing.T) {
-	agent := NewBaseTeam2Biker(uuid.New(), utils.GenerateRandomColour())
+	agent := NewBaseTeam2Biker(objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New()))
 	testAgentID := uuid.New()
 
 	// Set up predefined values for trust, institution, and network

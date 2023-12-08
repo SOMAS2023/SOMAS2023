@@ -118,8 +118,6 @@ func (bb *Biker1) getAllReachableBoxes() []uuid.UUID {
 	return reachableBoxes
 }
 
-
-
 func (bb *Biker1) getNearestBox() uuid.UUID {
 	currLocation := bb.GetLocation()
 	shortestDist := math.MaxFloat64

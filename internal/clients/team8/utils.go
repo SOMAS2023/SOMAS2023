@@ -1,4 +1,4 @@
-package team_8
+package team8
 
 import (
 	"SOMAS2023/internal/common/objects"
@@ -135,4 +135,16 @@ func (bb *Agent8) CountAgentsWithSameColour(bikeID uuid.UUID) int {
 	}
 
 	return count
+}
+
+func (bb *Agent8) GetAverageReputation(agent objects.IBaseBiker) float64 {
+	averageReputation := 0.0
+	agentNum := 0
+	for _, reputation := range agent.GetReputation() {
+		averageReputation += reputation
+		if reputation != 0 {
+			agentNum++
+		}
+	}
+	return averageReputation / float64(agentNum)
 }
