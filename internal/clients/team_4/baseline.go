@@ -908,7 +908,7 @@ func (agent *BaselineAgent) DisplayFellowsReputation() {
 // Creates an instance of Team 5 Biker
 func BikerAgentGenerator(totColours utils.Colour, bikeId uuid.UUID) *BaselineAgent {
 	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
-	baseBiker.GroupID = 5
+	baseBiker.GroupID = 4
 	// print
 	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &BaselineAgent{

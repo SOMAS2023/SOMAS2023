@@ -2,7 +2,7 @@ package server
 
 import (
 	team_1 "SOMAS2023/internal/clients/team1"
-	team_2 "SOMAS2023/internal/clients/team2"
+	team_2 "SOMAS2023/internal/clients/team2/agent"
 	team_7 "SOMAS2023/internal/clients/team7/agents"
 	team_8 "SOMAS2023/internal/clients/team8"
 	team_3 "SOMAS2023/internal/clients/team_3"
@@ -24,7 +24,7 @@ func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBike
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker4AgentGenerator, BikerAgentCount), //works
 		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount), //works
 		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker7AgentGenerator, BikerAgentCount), //crashes GetForces
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount), //works
+		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount), //works
 		/*
 			Biker 3, 7 fail completely
 			Biker 1 crashes when paired with another biker
@@ -44,7 +44,7 @@ func Biker1AgentGenerator() objects.IBaseBiker {
 }
 
 func Biker2AgentGenerator() objects.IBaseBiker {
-	return team_2.GetBiker(utils.GenerateRandomColour(), uuid.New())
+	return team_2.NewBaseTeam2Biker(uuid.New(), utils.GenerateRandomColour())
 }
 
 func Biker3AgentGenerator() objects.IBaseBiker {
