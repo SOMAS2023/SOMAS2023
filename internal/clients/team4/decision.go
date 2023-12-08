@@ -44,10 +44,10 @@ func (agent *BaselineAgent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UU
 }
 func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 	megaBikes := agent.GetGameState().GetMegaBikes()
-	optimalBike := agent.GetBike()
+	optimalBike := agent.currentBike
 	weight := float64(-99)
 	for _, bike := range megaBikes {
-		if bike.GetID() != megaBikes[agent.GetBike()].GetID() && bike.GetID() != uuid.Nil { //get all bikes apart from our agent's bike
+		if bike.GetID() != uuid.Nil && bike.GetID() != agent.currentBike { //get all bikes apart from our agent's bike
 			bikeWeight := float64(0)
 
 			for _, biker := range bike.GetAgents() {
