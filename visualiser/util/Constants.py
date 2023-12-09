@@ -113,3 +113,9 @@ COLOURS = {
     "gray": "#666666",
     "white": "#FFFFFF"
 }
+GOVERNANCE = {
+    0: ("Democracy", COLOURS["blue"]),
+    1: ("Leadership", COLOURS["green"]),
+    2: ("Dictatorship", COLOURS["red"]),
+    3: ("Invalid", "#000000"),
+}

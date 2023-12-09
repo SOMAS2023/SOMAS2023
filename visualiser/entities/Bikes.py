@@ -5,7 +5,7 @@ Logic for handling bikes in the visualiser
 import math
 import pygame
 import pygame_gui
-from visualiser.util.Constants import AGENT, BIKE, PRECISION, COORDINATESCALE
+from visualiser.util.Constants import AGENT, BIKE, PRECISION, COORDINATESCALE, GOVERNANCE
 from visualiser.entities.Agents import Agent
 from visualiser.entities.Common import Drawable
 
@@ -17,11 +17,12 @@ class Bike(Drawable):
         self.squareSide = 0
         self.orientation = nextOrient
         self.nextPos = nextPos
-        self.colour = colour
+        self.governance, self.colour = GOVERNANCE[jsonData["governance"]]
         properties = {
             "Acceleration" : round(jsonData["physical_state"]["acceleration"], PRECISION),
             "Velocity" : round(jsonData["physical_state"]["velocity"], PRECISION),
             "Mass" : jsonData["physical_state"]["mass"],
+            "Governance" : self.governance,
         }
         self.properties.update(properties)
         self.set_agents(agentData, nextRound)
