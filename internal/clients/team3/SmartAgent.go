@@ -170,7 +170,8 @@ func (agent *SmartAgent) ChangeBike() (targetId uuid.UUID) {
 
 func (agent *SmartAgent) ProposeDirection() uuid.UUID {
 	// direction is targetLootBox
-	id := agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
+	boxes := agent.GetGameState().GetLootBoxes()
+	id := agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), boxes)
 	return id
 }
 
@@ -405,6 +406,9 @@ func (agent *SmartAgent) find_same_colour_highest_loot_lootbox(proposedLootBox m
 	max_loot := 0.0
 	id := uuid.Nil
 	for _, lootbox := range proposedLootBox {
+		if id == uuid.Nil {
+			id = lootbox.GetID()
+		}
 		loot := lootbox.GetTotalResources()
 		if loot > max_loot {
 			max_loot = loot
@@ -463,6 +467,9 @@ func (agent *SmartAgent) find_closest_lootbox(proposedLootBox map[uuid.UUID]obje
 	min_distance := math.MaxFloat64
 	id := uuid.Nil
 	for _, lootbox := range proposedLootBox {
+		if id == uuid.Nil {
+			id = lootbox.GetID()
+		}
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
 		// no need to normalize
 		if distance < min_distance {
