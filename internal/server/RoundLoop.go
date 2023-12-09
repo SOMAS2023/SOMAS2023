@@ -172,7 +172,7 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 				// will only be finalised then
 				leavingAgents = append(leavingAgents, agentId)
 				s.RemoveAgentFromBike(agent)
-				//** fmt.Printf("Agent %s left the bike \n", agentId)
+				fmt.Printf("Agent %s left the bike \n", agentId)
 			default:
 				panic("agent decided invalid action")
 			}
@@ -195,12 +195,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 	bikeRequests := s.GetJoiningRequests(inLimbo)
 	// 2. pass to agents on each of the desired bikes a list of all agents trying to join
 	for bikeID, pendingAgents := range bikeRequests {
-		bikes, ok := s.megaBikes[bikeID]
-		if !ok {
-			fmt.Printf("bike %s not found \n", bikeID)
-			panic("bike not found")
-		}
-		agents := bikes.GetAgents()
+		agents := s.megaBikes[bikeID].GetAgents()
 		if len(agents) == 0 {
 			for i, pendingAgent := range pendingAgents {
 				if i <= utils.BikersOnBike {
@@ -388,7 +383,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 		for lootid, lootbox := range s.GetLootBoxes() {
 			if megabike.CheckForCollision(lootbox) {
 				// Collision detected
-				//** fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
+				fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
@@ -447,11 +442,11 @@ func (s *Server) LootboxCheckAndDistributions() {
 					bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
 					for agentID, allocation := range winningAllocation {
-						//** fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
+						fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
 						lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
 						agent := s.GetAgentMap()[agentID]
 						// Allocate loot based on the calculated utility share
-						//** fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
+						fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 						agent.UpdateEnergyLevel(lootShare)
 						// Allocate points if the box is of the right colour
 						if agent.GetColour() == lootbox.GetColour() {
@@ -483,7 +478,6 @@ func (s *Server) unaliveAgents() {
 	for id, agent := range s.GetAgentMap() {
 		if agent.GetEnergyLevel() < 0 {
 			fmt.Printf("Agent %s got game ended\n", id)
-			//s.deadAgents[agent.GetID()] = agent
 			s.RemoveAgent(agent)
 		}
 	}
