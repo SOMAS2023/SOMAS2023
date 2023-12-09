@@ -121,6 +121,206 @@ func TestUpdateMass(t *testing.T) {
 	}
 }
 
+func TestUpdateOrientation(t *testing.T) {
+	// Scenario 1: Single Biker Test
+	t.Run("Single Biker Test", func(t *testing.T) {
+		mb := objects.GetMegaBike()
+		biker := NewMockBiker()
+
+		turningDecision := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: 0.3,
+		}
+
+		force := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision,
+		}
+
+		biker.SetForces(force)
+		mb.AddAgent(biker)
+
+		mb.UpdateOrientation()
+
+		// Check if orientation updated correctly
+		// Assuming initial orientation is 0.0 and your logic for orientation update
+		expectedOrientation := 0.3 // Adjust this value based on your orientation update logic
+		if mb.GetOrientation() != expectedOrientation {
+			t.Errorf("got %v, want %v", mb.GetOrientation(), expectedOrientation)
+		}
+	})
+
+	// Scenario 2: Biker doesn't want to steer
+	t.Run("Multiple Bikers Test", func(t *testing.T) {
+		mb := objects.GetMegaBike()
+		biker1 := NewMockBiker()
+		biker2 := NewMockBiker()
+
+		turningDecision1 := utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: 0.6,
+		}
+
+		force1 := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision1,
+		}
+
+		turningDecision2 := utils.TurningDecision{
+			SteerBike:     false,
+			SteeringForce: 0.3,
+		}
+
+		force2 := utils.Forces{
+			Pedal:   utils.BikerMaxForce,
+			Brake:   0.0,
+			Turning: turningDecision2,
+		}
+
+		biker1.SetForces(force1)
+		biker2.SetForces(force2)
+		mb.AddAgent(biker1)
+		mb.AddAgent(biker2)
+
+		mb.UpdateOrientation()
+
+		// Check if orientation updated correctly
+		// Assuming each biker contributes equally and your logic for orientation update
+		expectedOrientation := 0.6 // This assumes the orientation averages the forces
+		if mb.GetOrientation() != expectedOrientation {
+			t.Errorf("got %v, want %v", mb.GetOrientation(), expectedOrientation)
+		}
+	})
+
+	// Scenario 3: Five Bikers with Different Directions
+	t.Run("Five Bikers Different Directions", func(t *testing.T) {
+		mb := objects.GetMegaBike()
+		biker1 := NewMockBiker()
+		biker2 := NewMockBiker()
+		biker3 := NewMockBiker()
+		biker4 := NewMockBiker()
+		biker5 := NewMockBiker()
+
+		// Set unique forces for each biker
+		forces := []utils.Forces{
+			{Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: 0.1}},
+			{Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: -0.2}},
+			{Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: 0.3}},
+			{Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: -0.4}},
+			{Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: 0.5}},
+		}
+
+		bikers := []*MockBiker{biker1, biker2, biker3, biker4, biker5}
+		for i, biker := range bikers {
+			biker.SetForces(forces[i])
+			mb.AddAgent(biker)
+		}
+
+		mb.UpdateOrientation()
+
+		// Hardcoded expected orientation
+		expectedOrientation := 0.06
+		tolerance := 0.001 // Define a small tolerance for floating-point comparison
+
+		actualOrientation := mb.GetOrientation()
+		if actualOrientation < expectedOrientation-tolerance || actualOrientation > expectedOrientation+tolerance {
+			t.Errorf("got %v, want %v (within a tolerance of %v)", actualOrientation, expectedOrientation, tolerance)
+		}
+	})
+
+	// Scenario 4: Two Bikers, one with -1 and one with 1, expected orientation 1
+	t.Run("Two Bikers Opposite Forces", func(t *testing.T) {
+		mb := objects.GetMegaBike()
+		biker1 := NewMockBiker()
+		biker2 := NewMockBiker()
+
+		// Set forces for each biker
+		force1 := utils.Forces{
+			Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: -1},
+		}
+		force2 := utils.Forces{
+			Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: 1},
+		}
+
+		biker1.SetForces(force1)
+		biker2.SetForces(force2)
+		mb.AddAgent(biker1)
+		mb.AddAgent(biker2)
+
+		mb.UpdateOrientation()
+
+		// Hardcoded expected orientation
+		expectedOrientation := 1.0
+
+		actualOrientation := mb.GetOrientation()
+		if actualOrientation != expectedOrientation {
+			t.Errorf("got %v, want %v", actualOrientation, expectedOrientation)
+		}
+	})
+
+	// Scenario 5: Two Bikers, one with -0.6 (-108°) and one with 0.7 (126°), expected orientation 0.95 (−171°)
+	t.Run("Two Bikers Opposite Forces", func(t *testing.T) {
+		mb := objects.GetMegaBike()
+		biker1 := NewMockBiker()
+		biker2 := NewMockBiker()
+
+		// Set forces for each biker
+		force1 := utils.Forces{
+			Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: -0.6},
+		}
+		force2 := utils.Forces{
+			Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: 0.7},
+		}
+
+		biker1.SetForces(force1)
+		biker2.SetForces(force2)
+		mb.AddAgent(biker1)
+		mb.AddAgent(biker2)
+
+		mb.UpdateOrientation()
+
+		// Hardcoded expected orientation
+		expectedOrientation := 0.95
+
+		actualOrientation := mb.GetOrientation()
+		if actualOrientation != expectedOrientation {
+			t.Errorf("got %v, want %v", actualOrientation, expectedOrientation)
+		}
+	})
+
+	// Scenario 6: Two Bikers, one with -0.1 (-18°) and one with 0.2 (36°), expected orientation 0.05 (9°)
+	t.Run("Two Bikers Opposite Forces", func(t *testing.T) {
+		mb := objects.GetMegaBike()
+		biker1 := NewMockBiker()
+		biker2 := NewMockBiker()
+
+		// Set forces for each biker
+		force1 := utils.Forces{
+			Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: -0.6},
+		}
+		force2 := utils.Forces{
+			Pedal: utils.BikerMaxForce, Brake: 0.0, Turning: utils.TurningDecision{SteerBike: true, SteeringForce: 0.7},
+		}
+
+		biker1.SetForces(force1)
+		biker2.SetForces(force2)
+		mb.AddAgent(biker1)
+		mb.AddAgent(biker2)
+
+		mb.UpdateOrientation()
+
+		// Hardcoded expected orientation
+		expectedOrientation := 0.05
+
+		actualOrientation := mb.GetOrientation()
+		if actualOrientation != expectedOrientation {
+			t.Errorf("got %v, want %v", actualOrientation, expectedOrientation)
+		}
+	})
+}
+
 func TestGetSetGovernanceAndRuler(t *testing.T) {
 	mb := objects.GetMegaBike()
 	originalGovernance := mb.GetGovernance()
