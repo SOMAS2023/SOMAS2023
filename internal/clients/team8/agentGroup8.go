@@ -1,7 +1,7 @@
 package team8
 
 import (
-	"SOMAS2023/internal/common/objects"
+	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"math"
 
@@ -25,11 +25,11 @@ var GlobalParameters GP = GP{
 }
 
 type IBaselineAgent interface {
-	objects.IBaseBiker
+	obj.IBaseBiker
 }
 
 type Agent8 struct {
-	*objects.BaseBiker
+	*obj.BaseBiker
 	overallLootboxPreferences voting.LootboxVoteMap         //rank score for the lootbox
 	agentsActions             map[int]map[uuid.UUID]float64 //action score for each agent for the previous 10 loops (-1, 1)
 	loopScore                 map[int]map[uuid.UUID]float64 //loop score for each loop for our megabike (-1, 1)
@@ -181,7 +181,7 @@ func (bb *Agent8) ChangeBike() uuid.UUID {
 //===============================================================================================================================================================
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-func (bb *Agent8) DecideAction() objects.BikerAction {
+func (bb *Agent8) DecideAction() obj.BikerAction {
 	var selfBikeId = bb.GetBike()
 	var selfBikeScore = 0.0
 	var loopNum = 0.0
@@ -199,11 +199,11 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 
 	// check if we need to change bike
 	if selfBikeScore < GlobalParameters.ThresholdForChangingMegabike {
-		return objects.ChangeBike
+		return obj.ChangeBike
 	}
 
 	// Default action
-	return objects.Pedal
+	return obj.Pedal
 }
 
 // =========================================================================================================================================================
@@ -291,7 +291,7 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	forces.Brake = 0.0
 	forces.Pedal = 1.0
 	lootboxs := bb.GetGameState().GetLootBoxes()
-	var target objects.ILootBox
+	var target obj.ILootBox
 	for key, value := range lootboxs {
 		if key == direction {
 			target = value
@@ -367,8 +367,7 @@ func (bb *Agent8) UpdateReputation() {
 // =========================================================================================================================================================
 
 // this function is going to be called by the server to instantiate bikers in the MVP
-func GetIBaseBiker(totColours utils.Colour, bikeId uuid.UUID) objects.IBaseBiker {
-	baseBiker := objects.GetBaseBiker(totColours, bikeId)
+func GetBiker8(baseBiker *obj.BaseBiker) obj.IBaseBiker {
 	baseBiker.GroupID = 8
 	return &Agent8{
 		BaseBiker: baseBiker,

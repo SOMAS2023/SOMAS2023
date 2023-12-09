@@ -3,7 +3,6 @@ package agent
 import (
 	"SOMAS2023/internal/clients/team2/modules"
 	"SOMAS2023/internal/common/objects"
-	"SOMAS2023/internal/common/utils"
 
 	"github.com/google/uuid"
 )
@@ -25,8 +24,7 @@ type AgentTwo struct {
 	Modules            AgentModules
 }
 
-func NewBaseTeam2Biker(agentId uuid.UUID, colour utils.Colour) *AgentTwo {
-	baseBiker := objects.GetBaseBiker(colour, agentId)
+func NewBaseTeam2Biker(baseBiker *objects.BaseBiker) *AgentTwo {
 	baseBiker.GroupID = 2
 	return &AgentTwo{
 		BaseBiker: baseBiker,

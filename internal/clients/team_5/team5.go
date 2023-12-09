@@ -2,6 +2,7 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/objects"
+	obj "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
@@ -35,8 +36,7 @@ const (
 )
 
 // Creates an instance of Team 5 Biker
-func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
-	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
+func GetBiker5(baseBiker *obj.BaseBiker) obj.IBaseBiker {
 	baseBiker.GroupID = 5
 	// print
 	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)

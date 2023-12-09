@@ -21,7 +21,7 @@ type KeyValuePair struct {
 }
 
 type SmartAgent struct {
-	objects.BaseBiker
+	*objects.BaseBiker
 	targetLootBox objects.ILootBox
 	reputationMap map[uuid.UUID]reputation
 
@@ -34,8 +34,9 @@ type SmartAgent struct {
 	lastPedal                      float64
 }
 
-func BikerAgentGenerator() objects.IBaseBiker {
-	return &SmartAgent{BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())}
+func GetT3Agent(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+	baseBiker.GroupID = 3
+	return &SmartAgent{BaseBiker: baseBiker}
 }
 
 func (agent *SmartAgent) DecideGovernance() utils.Governance {
@@ -665,15 +666,4 @@ func measureOrder(input []float64) float64 {
 		}
 	}
 	return 1.0 - 2.0*inversionCnt/float64(size*(size-1))
-}
-
-// Creates an instance of Team 3 Biker
-func NewTeam3Agent(totColours utils.Colour, bikeId uuid.UUID) *SmartAgent {
-	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
-	baseBiker.GroupID = 3
-	// print
-	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
-	return &SmartAgent{
-		BaseBiker: *baseBiker,
-	}
 }

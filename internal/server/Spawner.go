@@ -1,70 +1,54 @@
 package server
 
 import (
-	team_1 "SOMAS2023/internal/clients/team1"
-	team_2 "SOMAS2023/internal/clients/team2/agent"
-	team_7 "SOMAS2023/internal/clients/team7/agents"
-	team_8 "SOMAS2023/internal/clients/team8"
-	team_3 "SOMAS2023/internal/clients/team_3"
-	team_4 "SOMAS2023/internal/clients/team_4"
-	team_5 "SOMAS2023/internal/clients/team_5"
+	"SOMAS2023/internal/clients/team1"
+	"SOMAS2023/internal/clients/team2"
 
+	// "SOMAS2023/internal/clients/team_3"
+	"SOMAS2023/internal/clients/team4"
+	"SOMAS2023/internal/clients/team8"
+	team5Agent "SOMAS2023/internal/clients/team_5"
+
+	// "SOMAS2023/internal/clients/team7/agents"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 
+	//team7agents "SOMAS2023/internal/clients/team7/agents"
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
 	"github.com/google/uuid"
 )
 
+type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
+
+var AgentInitFunctions = []AgentInitFunction{
+	//nil,                 // Base Biker
+	team1.GetBiker1, // Team 1
+	team2.GetBiker,  // Team 2
+	// team_3.GetT3Agent, // Team 3
+	team4.GetBiker4,      // Team 4
+	team5Agent.GetBiker5, // Team 5
+	// agents.GetBiker7,     // Team 7
+	team8.GetBiker8, // Team 8
+
+}
+
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
-	return []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker1AgentGenerator, BikerAgentCount), //crashes, get follow bikers
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker2AgentGenerator, BikerAgentCount), //works
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker3AgentGenerator, BikerAgentCount), //crashes, non existent lootbox vote
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker4AgentGenerator, BikerAgentCount), //works
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker5AgentGenerator, BikerAgentCount), //crashes
-		// baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker7AgentGenerator, BikerAgentCount), //crashes GetForces
-		baseserver.MakeAgentGeneratorCountPair[objects.IBaseBiker](Biker8AgentGenerator, BikerAgentCount), //works
-		/*
-			Biker 3, 7 fail completely
-			Biker 1 crashes when paired with another biker
-
-			Biker 2, 4, 5, 8 are not compatible with each other
-
-			Biker 2, 4, 8 are compatible with each other
-			Biker 2, 5, 8 are compatible with each other
-			Biker 2, 4, 5 are compatible with each other
-			Biker 4, 5, 8 are compatible with each other
-		*/
+	agentGenerators := make([]baseserver.AgentGeneratorCountPair[objects.IBaseBiker], 0, len(AgentInitFunctions))
+	for _, initFunction := range AgentInitFunctions {
+		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), BikerAgentCount/len(AgentInitFunctions)))
 	}
+	return agentGenerators
 }
 
-func Biker1AgentGenerator() objects.IBaseBiker {
-	return team_1.GetBiker1(utils.GenerateRandomColour(), uuid.New())
-}
-
-func Biker2AgentGenerator() objects.IBaseBiker {
-	return team_2.NewBaseTeam2Biker(uuid.New(), utils.GenerateRandomColour())
-}
-
-func Biker3AgentGenerator() objects.IBaseBiker {
-	return team_3.NewTeam3Agent(utils.GenerateRandomColour(), uuid.New())
-}
-
-func Biker4AgentGenerator() objects.IBaseBiker {
-	return team_4.BikerAgentGenerator(utils.GenerateRandomColour(), uuid.New())
-}
-
-func Biker5AgentGenerator() objects.IBaseBiker {
-	return team_5.NewTeam5Agent(utils.GenerateRandomColour(), uuid.New())
-}
-
-func Biker7AgentGenerator() objects.IBaseBiker {
-	return team_7.NewBaseTeamSevenBiker()
-}
-
-func Biker8AgentGenerator() objects.IBaseBiker {
-	return team_8.GetIBaseBiker(utils.GenerateRandomColour(), uuid.New())
+func BikerAgentGenerator(initFunc func(baseBiker *objects.BaseBiker) objects.IBaseBiker) func() objects.IBaseBiker {
+	return func() objects.IBaseBiker {
+		baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+		if initFunc == nil {
+			return baseBiker
+		} else {
+			return initFunc(baseBiker)
+		}
+	}
 }
 
 func (s *Server) spawnLootBox() {

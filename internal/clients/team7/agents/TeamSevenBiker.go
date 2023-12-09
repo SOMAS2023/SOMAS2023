@@ -2,7 +2,7 @@ package agents
 
 import (
 	"SOMAS2023/internal/clients/team7/frameworks"
-	objects "SOMAS2023/internal/common/objects"
+	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
@@ -10,11 +10,11 @@ import (
 )
 
 type ITeamSevenBiker interface {
-	objects.IBaseBiker
+	obj.IBaseBiker
 }
 
 type BaseTeamSevenBiker struct {
-	*objects.BaseBiker    // BaseBiker inherits functions from BaseAgent such as GetID(), GetAllMessages() and UpdateAgentInternalState()
+	*obj.BaseBiker        // BaseBiker inherits functions from BaseAgent such as GetID(), GetAllMessages() and UpdateAgentInternalState()
 	navigationFramework   *frameworks.NavigationDecisionFramework
 	bikeDecisionFramework *frameworks.BikeDecisionFramework
 	opinionFramework      *frameworks.OpinionFramework
@@ -35,8 +35,8 @@ type BaseTeamSevenBiker struct {
 }
 
 // Produce new BaseTeamSevenBiker
-func NewBaseTeamSevenBiker() *BaseTeamSevenBiker {
-	baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+func GetBiker7(baseBiker *obj.BaseBiker) obj.IBaseBiker {
+	baseBiker.GroupID = 7
 	agentId := baseBiker.GetID()
 	personality := frameworks.NewDefaultPersonality()
 	return &BaseTeamSevenBiker{
@@ -53,7 +53,7 @@ func NewBaseTeamSevenBiker() *BaseTeamSevenBiker {
 	}
 }
 
-func (biker *BaseTeamSevenBiker) UpdateGameState(gameState objects.IGameState) {
+func (biker *BaseTeamSevenBiker) UpdateGameState(gameState obj.IGameState) {
 	biker.BaseBiker.UpdateGameState(gameState)
 	biker.environmentHandler.UpdateGameState(gameState)
 }
@@ -168,7 +168,7 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 	}
 }
 
-func (biker *BaseTeamSevenBiker) DecideAction() objects.BikerAction {
+func (biker *BaseTeamSevenBiker) DecideAction() obj.BikerAction {
 	// Decide whether to pedal, brake or coast
 	decisionInputs := frameworks.BikeDecisionInputs{
 		CurrentLocation: biker.GetLocation(),
@@ -179,10 +179,10 @@ func (biker *BaseTeamSevenBiker) DecideAction() objects.BikerAction {
 	bikeOutput := biker.bikeDecisionFramework.GetDecision(decisionInputs)
 
 	if bikeOutput.LeaveBike {
-		return objects.ChangeBike
+		return obj.ChangeBike
 	}
 
-	return objects.Pedal
+	return obj.Pedal
 }
 
 // Vote on whether to accept new agent onto bike.
