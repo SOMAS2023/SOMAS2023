@@ -10,8 +10,16 @@ from visualiser.entities.Agents import Agent
 from visualiser.entities.Common import Drawable
 
 class Bike(Drawable):
-    def __init__(self, bikeid:str, jsonData:dict, colour:str, agentData:dict, nextPos:float, nextOrient:float, nextRound:dict) -> None:
+    def __init__(self, bikeid:str, jsonData:dict, agentData:dict, nextPos:float, nextOrient:float, nextRound:dict) -> None:
         super().__init__(bikeid, jsonData)
+        self.agentList = dict()
+        self.update_bike(jsonData, agentData, nextPos, nextOrient, nextRound)
+
+    def update_bike(self, jsonData:dict, agentData:dict, nextPos:float, nextOrient:float, nextRound:dict) -> None:
+        """
+        Update the bike's properties
+        """
+        super().update_entity(jsonData)
         self.agentList = dict()
         self.agentData = jsonData["agent_ids"]
         self.squareSide = 0
@@ -57,13 +65,11 @@ class Bike(Drawable):
             agentX = self.trueX + agentSize / 2 + (agentSize  * (col)) + (agentPadding * (col + 1))
             agentY = self.trueY + agentSize / 2 + (agentSize  * (row)) + (agentPadding * (row + 1))
             agent.draw(screen, agentX, agentY, zoom)
-        self.overlay = self.update_overlay(zoom)
 
     def set_agents(self, agentJson:dict, nextRound:dict) -> None:
         """
         Set the agents that are in the bike
         """
-        self.agentList = dict()
         averageEnergy = 0
         averagePedal = 0
         averageSteering = 0
@@ -77,7 +83,10 @@ class Bike(Drawable):
                 steeringForce = nextRound[agentid]["forces"]["turning"]["steering_force"]
             else:
                 steeringForce = 0
-            self.agentList[agentid] = Agent(self.x, self.y, agentid, agentJson[agentid]["colour"], agentJson[agentid]["group_id"], agentJson[agentid], self.orientation, steeringForce)
+            if agentid not in self.agentList:
+                self.agentList[agentid] = Agent(self.x, self.y, agentid, agentJson[agentid]["colour"], agentJson[agentid]["group_id"], agentJson[agentid], self.orientation, steeringForce)
+            else:
+                self.agentList[agentid].update_agent(self.x, self.y, agentid, agentJson[agentid]["colour"], agentJson[agentid]["group_id"], agentJson[agentid], self.orientation, steeringForce)
             # Calculate averages
             averageEnergy += agentJson[agentid]["energy_level"]
             averagePedal += agentJson[agentid]["forces"]["pedal"]

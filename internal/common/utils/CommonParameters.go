@@ -24,7 +24,7 @@ Physics Parameters
 */
 const MassBike float64 = 1.0
 const MassBiker float64 = 1.0
-const MassAudi float64 = 10.0
+const MassAudi float64 = 5.0
 
 const BikerMaxForce float64 = 1.0 // The max force a biker can pedal
 const AudiMaxForce float64 = 1.0  // The audi's force is equivalent to that of one biker agent going at maximum speed
@@ -47,7 +47,7 @@ const PointsFromSameColouredLootBox = 5.0
 Audi Behavior
 */
 const AudiTargetsEmptyMegaBike bool = false
-const AudiOnlyTargetsStationaryMegaBike bool = true // if false, targeting slowest
+const AudiOnlyTargetsStationaryMegaBike bool = false // if false, targeting slowest
 const AudiRemovesMegaBike bool = false
 
 /*

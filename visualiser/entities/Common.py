@@ -7,6 +7,19 @@ import pygame_gui
 from visualiser.util.Constants import OVERLAY, COORDINATESCALE, PRECISION, DIM, ARROWS, COLOURS
 class Drawable:
     def __init__(self, entityid:str, jsonData:dict, x=None, y=None) -> None:
+        self.clicked = False
+        self.id = entityid
+        self.overlay = pygame.Surface((0, 0))
+        self.properties = {
+            "ID" : self.id,
+        }
+        self.zoom = 1.0
+        self.update_entity(jsonData, x, y)
+
+    def update_entity(self, jsonData:dict, x=None, y=None) -> None:
+        """
+        Update the entity's properties.
+        """
         if x is None or y is None:
             self.x = jsonData["physical_state"]["position"]["x"]
             self.y = jsonData["physical_state"]["position"]["y"]
@@ -17,13 +30,7 @@ class Drawable:
         self.y = round(self.y, PRECISION)
         self.trueX = round(self.x*COORDINATESCALE, PRECISION)
         self.trueY = round(self.y*COORDINATESCALE, PRECISION)
-        self.clicked = False
-        self.id = entityid
-        self.properties = {
-            "ID" : self.id,
-            "Position" : f"{self.x}, {self.y}",
-        }
-        self.overlay = pygame.Surface((0, 0))
+        self.properties["Position"] = f"{self.x}, {self.y}"
 
     def click(self, mouseX:int, mouseY:int, zoom:float) -> bool:
         """
@@ -87,6 +94,7 @@ class Drawable:
         Overlay agent properties when clicked.
         """
         if self.clicked:
+            self.overlay = self.update_overlay(zoom)
             screen.blit(self.overlay, (self.trueX, self.trueY))
 
     def get_properties(self) -> dict:

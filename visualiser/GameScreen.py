@@ -2,13 +2,11 @@
 Logic for the game screen visualiser
 """
 # pylint: disable=no-member, import-error, no-name-in-module
-import random
-import colorsys
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED, ITERATIONLENGTH
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, FPSDISPLAYRATE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED, ITERATIONLENGTH
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
@@ -35,6 +33,9 @@ class GameScreen:
         self.playSpeed = 1
         self.isPlaying = False
         self.playEvent = pygame.USEREVENT + 100
+        self.mouseDraw = pygame.USEREVENT + 102
+        self.mouseSurface = None
+        pygame.time.set_timer(self.mouseDraw, int(1000/FPSDISPLAYRATE))
         self.mouseXCur = 0
         self.mouseYCur = 0
         self.consoleScreen = None
@@ -50,6 +51,7 @@ class GameScreen:
             "0" : 0,
         }
         self.maxDead = 0
+        self.draw_mouse_coords()
 
     def init_ui(self, manager:pygame_gui.UIManager, uiscreen:UIContainer, consoleContainer:UIContainer) -> dict:
         """
@@ -260,7 +262,7 @@ class GameScreen:
         for lootbox in self.lootboxes.values():
             lootbox.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         self.awdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
-        self.draw_mouse_coords(screen)
+        screen.blit(self.mouseSurface, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
         # Divider line
         lineWidth = 1
         pygame.draw.line(screen, "#555555", (DIM["GAME_SCREEN_WIDTH"]-lineWidth, 0), (DIM["GAME_SCREEN_WIDTH"]-lineWidth, DIM["SCREEN_HEIGHT"]), lineWidth)
@@ -328,9 +330,15 @@ class GameScreen:
                     self.change_round(event.value)
                 elif event.ui_element == self.elements["play_pause_speed_slider"]:
                     self.change_speed(event.value)
+            # Handle auto play
             case self.playEvent:
                 self.elements["round_slider"].set_current_value(self.round + 1)
                 self.change_round(self.round + 1)
+                if self.round == self.maxRound:
+                    self.toggle_play()
+            #Draw mouse coordinates
+            case self.mouseDraw:
+                self.draw_mouse_coords()
 
     def toggle_play(self) -> None:
         """
@@ -366,11 +374,38 @@ class GameScreen:
         self.elements["console"].html_text = ""
         self.stats["Void Agents"] = 0
         #Reload bikes
+        self.update_bikes()
+        self.update_lootboxes()
+        if self.awdi is None:
+            self.awdi = Awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
+        else:
+            self.awdi.update_awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
+        self.update_stats()
+        self.elements["stats"].rebuild()
+        self.elements["console"].rebuild()
+
+    def update_lootboxes(self) -> None:
+        """
+        Update the lootboxes
+        """
+        # Reload lootboxes
+        lootboxes = {}
+        for lootboxid, lootboxdata in self.jsonData[self.round]["loot_boxes"].items():
+            if lootboxid not in self.lootboxes:
+                lootboxObj = Lootbox(lootboxid, lootboxdata)
+            else:
+                lootboxObj = self.lootboxes[lootboxid]
+                lootboxObj.update_lootbox(lootboxdata)
+            lootboxes[lootboxid] = lootboxObj
+        self.compare_lootboxes(lootboxes)
+
+    def update_bikes(self) -> None:
+        """
+        Update the bikes
+        """
         bikes = {}
-        agents = {}
-        for bikeid, bike in self.jsonData[self.round]["bikes"].items():
-            if bikeid not in self.bikeColourMap:
-                self.bikeColourMap[bikeid] = self.allocate_colour()
+        bikeAgents = {}
+        for bikeid, bikedata in self.jsonData[self.round]["bikes"].items():
             #Determine next position for arrow drawing
             nextRound = self.jsonData[min(self.round+1, self.maxRound)]["bikes"]
             if bikeid in nextRound:
@@ -383,30 +418,16 @@ class GameScreen:
             #If bike is dead, draw arrow to empty
                 nextPos = 0, 0
                 nextOrient = 0
-            bikes[bikeid] = Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"], nextPos, nextOrient, self.jsonData[min(self.round+1, self.maxRound)]["agents"])
-            agents.update(bikes[bikeid].get_agents())
-        self.compare_agents(agents)
+            # If bike is new, create new bike
+            if bikeid not in self.bikes:
+                bikeObj = Bike(bikeid, bikedata, self.jsonData[self.round]["agents"], nextPos, nextOrient, self.jsonData[min(self.round+1, self.maxRound)]["agents"])
+            else:
+                bikeObj = self.bikes[bikeid]
+                bikeObj.update_bike(bikedata, self.jsonData[self.round]["agents"], nextPos, nextOrient, self.jsonData[min(self.round+1, self.maxRound)]["agents"])
+            bikes[bikeid] = bikeObj
+            bikeAgents.update(bikeObj.get_agents())
         self.compare_bikes(bikes)
-        # Reload lootboxes
-        lootboxes = {}
-        for lootboxid, lootbox in self.jsonData[self.round]["loot_boxes"].items():
-            lootboxes[lootboxid] = Lootbox(lootboxid, lootbox)
-        self.compare_lootboxes(lootboxes)
-        self.awdi = Awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
-        self.update_stats()
-        self.elements["stats"].rebuild()
-        self.elements["console"].rebuild()
-
-    def allocate_colour(self) -> str:
-        """
-        Allocate a colour to a bike
-        """
-        hue = random.randint(BIKE["COLOURS"]["MINHUE"], BIKE["COLOURS"]["MAXHUE"]) / 360
-        saturation = random.randint(BIKE["COLOURS"]["MINSAT"], BIKE["COLOURS"]["MAXSAT"]) / 100
-        value = random.randint(BIKE["COLOURS"]["MINVAL"], BIKE["COLOURS"]["MAXVAL"]) / 100
-        colour = colorsys.hsv_to_rgb(hue, saturation, value)
-        colour = (colour[0] * 255, colour[1] * 255, colour[2] * 255)
-        return colour
+        self.compare_agents(self.jsonData[self.round]["agents"], bikeAgents)
 
     def propagate_click(self, mousePos:tuple) -> None:
         """
@@ -447,15 +468,14 @@ class GameScreen:
         for y in range(-int(zoomedSpacing) + int(startY), height, int(zoomedSpacing)):
             pygame.draw.line(surface, BGCOLOURS["GRID"], (0, y), (width, y))
 
-    def draw_mouse_coords(self, surface:pygame.Surface) -> None:
+    def draw_mouse_coords(self) -> None:
         """
         Draw the mouse coordinates on the game screen
         """
         font = pygame.font.SysFont("Arial", 15)
         x = round((self.mouseXCur / self.zoom - self.offsetX / self.zoom) / COORDINATESCALE, PRECISION)
         y = round((self.mouseYCur / self.zoom - self.offsetY / self.zoom) / COORDINATESCALE, PRECISION)
-        text = font.render(f"({x}, {y})", True, (0, 0, 0))
-        surface.blit(text, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
+        self.mouseSurface = font.render(f"({x}, {y})", True, (0, 0, 0))
 
     def log(self, message:str, tag=None) -> None:
         """
@@ -468,9 +488,8 @@ class GameScreen:
         text = f'<p style="margin: 0; line-height: 100%;"><font color="{color}">{message}</font></p>'
         newText = self.elements["console"].html_text + text
         self.elements["console"].html_text = newText
-        self.elements["console"].rebuild()
 
-    def compare_agents(self, newAgents:dict) -> None:
+    def compare_agents(self, newAgents:dict, bikeAgents:dict) -> None:
         """
         Compare the agents to the previous round and update console and stats
         """
@@ -478,19 +497,19 @@ class GameScreen:
         for agentid, agent in self.agents.items():
             if agentid not in newAgents:
                 # Agent has died from exhaustion
-                groupID = agent["GroupID"]
-                if agent["Energy"] < ENERGYTHRESHOLD:
+                groupID = agent["group_id"]
+                if agent["energy_level"] < ENERGYTHRESHOLD:
                     self.log(f"Agent {agentid} ({groupID}) has run out of energy!", "ERROR")
                 # Agent has died from being run over
-                elif (pow(agent["X"]-self.awdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["Y"]-self.awdi.y, 2) < pow(EPSILON, 2)):
+                elif (pow(agent["location"]["x"]-self.awdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["location"]["y"]-self.awdi.y, 2) < pow(EPSILON, 2)):
                     self.log(f"Agent {agentid} ({groupID}) has been run over by the Owdi!", "ERROR")
                 # Agent has died for unknown reasons
                 else:
                     self.log(f"Agent {agentid} ({groupID}) has died for unknown reasons!", "ERROR")
                 dead += 1
             else:
-                #Check if agent has moved bikes
-                if agent["onBike"] is False:
+                #Check if agent has moved bikes - on bike parameter is not reliable
+                if agentid not in bikeAgents:
                     self.log(f"Agent {agentid} is in the void.", "INFO")
                     self.stats["Void Agents"] += 1
         self.stats["Alive Agents"] = len(newAgents.values())
@@ -522,9 +541,9 @@ class GameScreen:
         """
         Compare the lootboxes to the previous round and update console and stats
         """
-        for lootbox, _ in self.lootboxes.items():
-            if lootbox not in newLootboxes:
-                self.log(f"Lootbox {lootbox} has been collected!", "INFO")
+        for lootboxid, _ in self.lootboxes.items():
+            if lootboxid not in newLootboxes:
+                self.log(f"Lootbox {lootboxid} has been collected!", "INFO")
         self.stats["Active Lootboxes"] = len(newLootboxes.values())
         self.lootboxes = newLootboxes
 
@@ -536,7 +555,6 @@ class GameScreen:
         for stat, value in self.stats.items():
             text += f"<font face=verdana size=3 color=#FFFFFF><b>{stat}</b>: {value}</font><br>"
         self.elements["stats"].html_text = text
-        self.elements["stats"].rebuild()
 
     def set_json(self, data:dict) -> None:
         """
