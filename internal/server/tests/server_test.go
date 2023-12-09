@@ -29,7 +29,9 @@ func TestInitialize(t *testing.T) {
 		t.Error("audi not properly instantiated")
 	}
 
-	//s.RunGameLoop()
-	//s.Start()
 	fmt.Printf("\nInitialize passed \n")
+}
+
+func TestRunGame(t *testing.T) {
+	server.Initialize(1).Start()
 }
