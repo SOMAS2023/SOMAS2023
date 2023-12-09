@@ -12,8 +12,8 @@ import (
 	"github.com/google/uuid"
 )
 
-const LootBoxCount = BikerAgentCount * 2.5 // 2.5 available lootboxes per Agent
-const MegaBikeCount = BikerAgentCount / 8  // Megabikes should have 8 riders
+const LootBoxCount = BikerAgentCount * 3  // 3 lootboxes available per Agent
+const MegaBikeCount = BikerAgentCount / 8 // Megabikes should have 8 riders
 const BikerAgentCount = 56
 
 type IBaseBikerServer interface {
