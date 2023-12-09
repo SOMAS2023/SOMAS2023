@@ -1,4 +1,4 @@
-package team_3
+package team3
 
 import (
 	"SOMAS2023/internal/common/objects"
@@ -33,8 +33,8 @@ type SmartAgent struct {
 	lastPedal                      float64
 }
 
-func GetT3Agent() objects.IBaseBiker {
-	return &SmartAgent{BaseBiker: *objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())}
+func GetT3Agent(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+	return &SmartAgent{BaseBiker: *baseBiker}
 }
 
 func (agent *SmartAgent) DecideGovernance() utils.Governance {
@@ -180,10 +180,12 @@ func (agent *SmartAgent) ProposeDirection() uuid.UUID {
 }
 
 func (agent *SmartAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+	pps := make(map[uuid.UUID]objects.ILootBox)
 	boxesInMap := agent.GetGameState().GetLootBoxes()
-
-	rank := agent.rankTargetProposals(boxesInMap)
-	// need to be map[uuid.UUID]voting.LootboxVoteMap
+	for agentId, lootBoxId := range proposals {
+		pps[agentId] = boxesInMap[lootBoxId]
+	}
+	rank := agent.rankTargetProposals(pps)
 	return rank
 }
 
@@ -602,10 +604,6 @@ func (agent *SmartAgent) scoreAgentsForAllocation(agentsOnBike []objects.IBaseBi
 	}
 
 	return scores, nil
-}
-
-func (agent *SmartAgent) UpdateGameState(gameState objects.IGameState) {
-	agent.BaseBiker.UpdateGameState(gameState)
 }
 
 func (agent *SmartAgent) updateRepMap() {

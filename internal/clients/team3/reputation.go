@@ -1,4 +1,4 @@
-package team_3
+package team3
 
 import (
 	"SOMAS2023/internal/common/objects"
