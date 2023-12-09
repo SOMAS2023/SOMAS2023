@@ -252,11 +252,11 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	//gs.GetMegaBikes()[bikeId].GetAgents()
 
 	decision := make(map[uuid.UUID]bool)
-
 	averageBikeOpinion := 0.0
 	for _, agent := range bb.GetFellowBikers() {
 		averageBikeOpinion += bb.opinions[agent.GetID()].opinion
 	}
+	averageBikeOpinion /= float64(len(bb.GetFellowBikers()))
 
 	for _, agentId := range pendingAgents {
 		//TODO FIX
@@ -277,6 +277,7 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 			sameColourReward := 1.05
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
+			fmt.Printf("Agent %v is considering agent %v by opinion %v\n", bb.GetID(), agentId, averageBikeOpinion)
 			if bb.opinions[agentId].opinion >= averageBikeOpinion || agent_reputation > joinReputationThreshold {
 				// fmt.Printf("Agent %v is accepting agent %v by opinion\n", bb.GetID(), agentId)
 				decision[agentId] = true
