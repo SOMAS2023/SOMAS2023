@@ -17,7 +17,10 @@ class Agent(Drawable):
         self.bikeOrientation = bikeOrientation
         self.nextOrient = nextOrient
         self.steeringForce = round(jsonData["forces"]["turning"]["steering_force"], PRECISION)
-        self.groupID = str(groupID)
+        if groupID == 0:
+            self.groupID = "-"
+        else:
+            self.groupID = str(groupID)
         properties = {
             "Pedal" : jsonData["forces"]["pedal"],
             "Brake" : jsonData["forces"]["brake"],
