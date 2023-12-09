@@ -3,8 +3,8 @@ package utils
 /*
 Environment Parameters
 */
-const GridHeight float64 = 250.0
-const GridWidth float64 = 250.0
+const GridHeight float64 = 75.0
+const GridWidth float64 = 75.0
 const CollisionThreshold float64 = 7.0
 const Epsilon float64 = 0.01 // tolerance for FP rounding and checking if == 1.0
 const BikersOnBike = 8
