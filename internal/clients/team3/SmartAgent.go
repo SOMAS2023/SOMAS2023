@@ -396,9 +396,7 @@ func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker) voting.I
 		scores[id] = 0.7*scores1[id] + 0.3*scores2[id]
 	}
 
-	var votes voting.IdVoteMap = scores
-
-	return votes
+	return scores
 }
 
 func (agent *SmartAgent) find_same_colour_highest_loot_lootbox(proposedLootBox map[uuid.UUID]objects.ILootBox) uuid.UUID {
@@ -505,7 +503,7 @@ func (agent *SmartAgent) decideTargetLootBox(agentsOnBike []objects.IBaseBiker, 
 			is_color = 1.0
 		}
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
-		maxDistance := float64(math.Sqrt(utils.GridHeight*utils.GridHeight + utils.GridWidth*utils.GridWidth))
+		maxDistance := utils.GridHeight*utils.GridHeight + utils.GridWidth*utils.GridWidth
 		normalized_distance := (maxDistance - distance) / maxDistance
 		score := 0.2*loot + 0.2*is_color + 0.3*normalized_distance + utils.Epsilon
 
@@ -555,7 +553,7 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 		other_agents_score = rep.historyContribution + rep.recentContribution + rep.energyRemain
 
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
-		maxDistance := float64(math.Sqrt(utils.GridHeight*utils.GridHeight + utils.GridWidth*utils.GridWidth))
+		maxDistance := utils.GridHeight*utils.GridHeight + utils.GridWidth*utils.GridWidth
 		normalized_distance := (maxDistance - distance) / maxDistance
 		if math.IsNaN(normalized_distance) {
 			normalized_distance = 0.0
@@ -576,9 +574,7 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 		scores[id] = scores[id] / sum_score
 	}
 
-	var lootboxVotes voting.LootboxVoteMap = scores
-
-	return lootboxVotes
+	return scores
 }
 
 // scoreAgentsForAllocation if self energy level is low (below average cost for a lootBox), we follow 'Smallest First', else 'Ration'
