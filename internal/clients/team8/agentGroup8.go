@@ -368,6 +368,7 @@ func (bb *Agent8) UpdateReputation() {
 
 // this function is going to be called by the server to instantiate bikers in the MVP
 func GetIBaseBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+	baseBiker.GroupID = 8
 	return &Agent8{
 		BaseBiker: baseBiker,
 	}

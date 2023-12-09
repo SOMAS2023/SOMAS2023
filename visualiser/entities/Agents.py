@@ -15,7 +15,7 @@ class Agent(Drawable):
         self.radius = AGENT["SIZE"]
         self.onBike = jsonData["on_bike"]
         if groupID == 0:
-            self.groupID = "?"
+            self.groupID = "0"
         else:
             self.groupID = str(groupID)
         properties = {
