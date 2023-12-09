@@ -226,8 +226,7 @@ func (agent *SmartAgent) VoteDictator() voting.IdVoteMap {
 func (agent *SmartAgent) VoteLeader() voting.IdVoteMap {
 	// defaults to voting for first agent in the list
 	agentsOnBike := agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents()
-	lootboxes := agent.GetGameState().GetLootBoxes()
-	votes := agent.vote_leader(agentsOnBike, lootboxes)
+	votes := agent.vote_leader(agentsOnBike)
 	return votes
 }
 
@@ -350,7 +349,7 @@ func (agent *SmartAgent) which_governance_method(agentsOnBike []objects.IBaseBik
 	}
 }
 
-func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposedLootBox map[uuid.UUID]objects.ILootBox) voting.IdVoteMap {
+func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker) voting.IdVoteMap {
 	// two-round run-off
 
 	// the first round
@@ -363,7 +362,7 @@ func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposed
 		// Pareto principle: give more energy to those with more outcome
 		// Cognitive dimension: is same belief?
 		// necessity: must stay alive
-		score_1 := rep.historyContribution + rep.lootBoxGet + rep.isSameColor + rep.energyRemain
+		score_1 := rep.historyContribution + rep.lootBoxGet + rep.isSameColor + rep.energyRemain + utils.Epsilon
 
 		scores1[id] = score_1
 		total_score_1 += score_1
@@ -380,7 +379,7 @@ func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposed
 	for _, others := range agentsOnBike {
 		id := others.GetID()
 		rep := agent.reputationMap[id]
-		score_2 := rep.recentContribution // recent progress, Forgiveness if performed bad before
+		score_2 := rep.recentContribution + utils.Epsilon // recent progress, Forgiveness if performed bad before
 		scores2[id] = score_2
 		total_score_2 += score_2
 	}
