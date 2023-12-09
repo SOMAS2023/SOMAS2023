@@ -72,7 +72,7 @@ class GameScreen:
         #control information
         self.elements["controls"] = ui_text_box.UITextBox(
             relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], 220)),
-            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
+            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Iteration<br><b>Left</b> - Previous Iteration<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
             manager=manager,
             container=uiscreen,
             anchors={
@@ -256,10 +256,10 @@ class GameScreen:
             bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Draw overlays
         for bike in self.bikes.values():
-            bike.draw_overlay(screen)
+            bike.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         for lootbox in self.lootboxes.values():
-            lootbox.draw_overlay(screen)
-        self.awdi.draw_overlay(screen)
+            lootbox.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
+        self.awdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         self.draw_mouse_coords(screen)
         # Divider line
         lineWidth = 1
@@ -371,7 +371,19 @@ class GameScreen:
         for bikeid, bike in self.jsonData[self.round]["bikes"].items():
             if bikeid not in self.bikeColourMap:
                 self.bikeColourMap[bikeid] = self.allocate_colour()
-            bikes[bikeid] = Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"])
+            #Determine next position for arrow drawing
+            nextRound = self.jsonData[min(self.round+1, self.maxRound)]["bikes"]
+            if bikeid in nextRound:
+                nextPos = nextRound[bikeid]["physical_state"]["position"]["x"], nextRound[bikeid]["physical_state"]["position"]["y"]
+                if "orientation" in nextRound[bikeid]:
+                    nextOrient = nextRound[bikeid]["orientation"]
+                else:
+                    nextOrient = -2
+            else:
+            #If bike is dead, draw arrow to empty
+                nextPos = 0, 0
+                nextOrient = 0
+            bikes[bikeid] = Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"], nextPos, nextOrient, self.jsonData[min(self.round+1, self.maxRound)]["agents"])
             agents.update(bikes[bikeid].get_agents())
         self.compare_agents(agents)
         self.compare_bikes(bikes)
@@ -380,7 +392,7 @@ class GameScreen:
         for lootboxid, lootbox in self.jsonData[self.round]["loot_boxes"].items():
             lootboxes[lootboxid] = Lootbox(lootboxid, lootbox)
         self.compare_lootboxes(lootboxes)
-        self.awdi = Awdi(self.jsonData[self.round]["audi"])
+        self.awdi = Awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
         self.update_stats()
         self.elements["stats"].rebuild()
         self.elements["console"].rebuild()

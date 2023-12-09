@@ -1,7 +1,7 @@
 """
 Visualiser for SOMAS world
 """
-# pylint: disable=no-member, import-error, no-name-in-module
+# pylint: disable=no-member, import-error, no-name-in-module, pointless-string-statement
 import tkinter as tk
 from tkinter import filedialog
 import json
@@ -222,3 +222,12 @@ if __name__ == "__main__":
     visualiser = Visualiser()
     visualiser.test()
     # visualiser.run_loop()
+
+
+"""
+TODO:
+-Motivation
+-Design decisions
+    - Why i selected certain attributes
+        - 
+"""

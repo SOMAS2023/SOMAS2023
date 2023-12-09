@@ -13,6 +13,11 @@ THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
 MAXSPEED = 50
 ITERATIONLENGTH = 100
+ARROWS = {
+    "NUM_ARROWS": 5,
+    "ARROW_LENGTH": 15,
+    "ARROW_ANGLE": 30,
+}
 TEXT = {
     "FONT" : "Arial",
     "FONT_SIZE": 1,
@@ -107,4 +112,10 @@ COLOURS = {
     "brown": "#AC6223",
     "gray": "#666666",
     "white": "#FFFFFF"
+}
+GOVERNANCE = {
+    0: ("Democracy", COLOURS["blue"]),
+    1: ("Leadership", COLOURS["green"]),
+    2: ("Dictatorship", COLOURS["red"]),
+    3: ("Invalid", "#000000"),
 }

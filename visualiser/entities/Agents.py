@@ -9,20 +9,20 @@ from visualiser.util.Constants import AGENT, COLOURS, PRECISION
 from visualiser.entities.Common import Drawable
 
 class Agent(Drawable):
-    def __init__(self, x:int, y:int, agentid:str, colour:pygame.color, groupID, jsonData:dict) -> None:
+    def __init__(self, x:int, y:int, agentid:str, colour:pygame.color, groupID, jsonData:dict, bikeOrientation, nextOrient) -> None:
         super().__init__(agentid, jsonData, x, y)
         self.colour = COLOURS[colour]
         self.radius = AGENT["SIZE"]
         self.onBike = jsonData["on_bike"]
-        if groupID == 0:
-            self.groupID = "0"
-        else:
-            self.groupID = str(groupID)
+        self.bikeOrientation = bikeOrientation
+        self.nextOrient = nextOrient
+        self.steeringForce = round(jsonData["forces"]["turning"]["steering_force"], PRECISION)
+        self.groupID = str(groupID)
         properties = {
             "Pedal" : jsonData["forces"]["pedal"],
             "Brake" : jsonData["forces"]["brake"],
             "Colour" : colour.title(),
-            "Steering?" : f'{jsonData["forces"]["turning"]["steer_bike"] != 0}, {round(jsonData["forces"]["turning"]["steering_force"],PRECISION)}',
+            "Steering?" : f'{jsonData["forces"]["turning"]["steer_bike"] != 0}, {self.steeringForce}',
             "Energy" : round(jsonData["energy_level"], PRECISION),
             "Points" : jsonData["points"],
             "GroupID" : self.groupID,
@@ -66,3 +66,22 @@ class Agent(Drawable):
         properties =  super().get_properties()
         properties["onBike"] = self.onBike
         return properties
+
+    def set_bike_orientation(self, orientation:float) -> None:
+        """
+        Set the orientation of the bike.
+        """
+        self.bikeOrientation = orientation
+
+    def draw_overlay(self, screen: pygame_gui.core.UIContainer, offsetX: int, offsetY: int, zoom: float) -> None:
+        """
+        Overlay agent properties when clicked.
+        """
+        if self.clicked:
+            angle = self.bikeOrientation+self.nextOrient
+            if angle > 1:
+                angle -= 2
+            elif angle < -1:
+                angle += 2
+            # self.draw_arrow(screen, self.colour, (self.trueX, self.trueY), angle)
+        super().draw_overlay(screen, offsetX, offsetY, zoom)
