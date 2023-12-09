@@ -72,6 +72,7 @@ func TestHandleKickout(t *testing.T) {
 func TestProcessJoiningRequests(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
+	s.FoundingInstitutions()
 
 	// 1: get two bike ids
 	targetBikes := make([]uuid.UUID, 2)
@@ -92,11 +93,15 @@ func TestProcessJoiningRequests(t *testing.T) {
 	requests[targetBikes[1]] = make([]uuid.UUID, 2)
 	for _, agent := range s.GetAgentMap() {
 		if i == 0 {
-			agent.ToggleOnBike()
+			if agent.GetBikeStatus() {
+				agent.ToggleOnBike()
+			}
 			agent.SetBike(targetBikes[0])
 			requests[targetBikes[0]][0] = agent.GetID()
 		} else if i <= 2 {
-			agent.ToggleOnBike()
+			if agent.GetBikeStatus() {
+				agent.ToggleOnBike()
+			}
 			agent.SetBike(targetBikes[1])
 			requests[targetBikes[1]][i-1] = agent.GetID()
 		} else {
