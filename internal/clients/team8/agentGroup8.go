@@ -1,6 +1,7 @@
 package team8
 
 import (
+	"SOMAS2023/internal/common/objects"
 	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"math"
@@ -367,7 +368,7 @@ func (bb *Agent8) UpdateReputation() {
 // =========================================================================================================================================================
 
 // this function is going to be called by the server to instantiate bikers in the MVP
-func GetBiker8(baseBiker *obj.BaseBiker) obj.IBaseBiker {
+func GetIBaseBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 	baseBiker.GroupID = 8
 	return &Agent8{
 		BaseBiker: baseBiker,

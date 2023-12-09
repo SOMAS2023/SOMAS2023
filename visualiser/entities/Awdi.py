@@ -9,7 +9,16 @@ from visualiser.entities.Common import Drawable
 
 class Awdi(Drawable):
     def __init__(self, jsonData:dict, targetPosition:dict) -> None:
+        self.text = None
         super().__init__("owdi", jsonData)
+        self.update_awdi(jsonData, targetPosition)
+        self.update_text(1.0)
+
+    def update_awdi(self, jsonData:dict, targetPosition:dict) -> None:
+        """
+        Update the awdi's properties
+        """
+        super().update_entity(jsonData)
         if jsonData["target_bike"] in targetPosition:
             location = targetPosition[jsonData["target_bike"]]["physical_state"]["position"]
             self.targetPosition = (location["x"], location["y"])
@@ -24,6 +33,16 @@ class Awdi(Drawable):
         }
         self.properties.update(properties)
 
+    def update_text(self, zoom:float) -> None:
+        """
+        Update the text the agent displays on zoom change
+        """
+        if zoom == self.zoom and self.text is not None:
+            return
+        self.zoom = zoom
+        font = pygame.font.SysFont(OVERLAY["FONT"], int(AWDI["FONT_SIZE"] * zoom))
+        self.text = font.render("owdi", True, "White")
+
     def draw(self, screen:pygame_gui.core.UIContainer, offsetX:int, offsetY:int, zoom:float) -> None:
         """
         Draw the lootbox
@@ -36,19 +55,15 @@ class Awdi(Drawable):
         border.fill(AWDI["LINE_COLOUR"])
         overlay = pygame.Surface((AWDI["SIZE"]*zoom, AWDI["SIZE"]*zoom))
         overlay.fill(self.colour)
-        # Add awdi text
-        font = pygame.font.SysFont(OVERLAY["FONT"], int(AWDI["FONT_SIZE"] * zoom))
-        text = font.render("owdi", True, "White")
         # center the text
-        textX = (AWDI["SIZE"]*zoom - text.get_width()) / 2
-        textY = (AWDI["SIZE"]*zoom - text.get_height()) / 2
-        overlay.blit(text, (textX, textY))
+        self.update_text(zoom)
+        textX = (AWDI["SIZE"]*zoom - self.text.get_width()) / 2
+        textY = (AWDI["SIZE"]*zoom - self.text.get_height()) / 2
+        overlay.blit(self.text, (textX, textY))
         # add the overlay to the border
         border.blit(overlay, (AWDI["LINE_WIDTH"]*zoom, AWDI["LINE_WIDTH"]*zoom))
         # Center the awdi
         screen.blit(border, (self.trueX, self.trueY))
-        # update the overlay
-        self.overlay = self.update_overlay(zoom)
 
     def check_collision(self, mouseX: int, mouseY: int, zoom:float) -> bool:
         """

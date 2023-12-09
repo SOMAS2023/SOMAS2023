@@ -10,3 +10,4 @@ Test/
 venv
 **.txt
 *.txt
+profiles/
