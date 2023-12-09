@@ -3,7 +3,6 @@ package team3
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"fmt"
 	"math"
 )
 
@@ -29,16 +28,20 @@ type reputation struct {
 
 func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor utils.Colour) {
 	// update memory
-	rep.recentGetEnergy = biker.GetEnergyLevel() > rep._lastEnergyLevel
-	if biker.GetEnergyLevel() > rep._lastEnergyLevel {
-		rep._recentEnergyGain = biker.GetEnergyLevel() - rep._lastEnergyLevel
+	currentEnergy := biker.GetEnergyLevel()
+	if math.IsNaN(currentEnergy) {
+		currentEnergy = 0
+	}
+	rep.recentGetEnergy = currentEnergy > rep._lastEnergyLevel
+	if currentEnergy > rep._lastEnergyLevel {
+		rep._recentEnergyGain = currentEnergy - rep._lastEnergyLevel
 		rep._energyReceivedCnt += rep._recentEnergyGain
 		rep._lootBoxGetCnt += 1.0
 	} else {
-		rep._lastPedal = rep._lastEnergyLevel - biker.GetEnergyLevel()
+		rep._lastPedal = rep._lastEnergyLevel - currentEnergy
 		// if agent gain energy in this iter, assume it pedals with the same energy cost as last iter
 	}
-	rep._lastEnergyLevel = biker.GetEnergyLevel()
+	rep._lastEnergyLevel = currentEnergy
 	rep._pedalCnt += rep._lastPedal
 
 	// update score
@@ -52,10 +55,6 @@ func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor util
 	} else {
 		rep.isSameColor = 0
 	}
-	fmt.Printf("_lastPedal: {%.2f}\n", rep._lastPedal)
-	fmt.Printf("_lastPedal: {%.2f}\n", rep._pedalCnt)
-	fmt.Printf("_lastEnergyLevel: {%.2f}\n", rep._lastEnergyLevel)
-	fmt.Printf("_energyReceivedCnt: {%.2f}\n", rep._energyReceivedCnt)
 }
 
 func normalize(input float64) (output float64) {

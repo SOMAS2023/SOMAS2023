@@ -5,7 +5,6 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 	"github.com/google/uuid"
 	"math"
 	"sort"
@@ -22,7 +21,6 @@ type KeyValuePair struct {
 
 type SmartAgent struct {
 	objects.BaseBiker
-	targetLootBox objects.ILootBox
 	reputationMap map[uuid.UUID]reputation
 
 	lootBoxCnt                     float64
@@ -172,12 +170,8 @@ func (agent *SmartAgent) ChangeBike() (targetId uuid.UUID) {
 
 func (agent *SmartAgent) ProposeDirection() uuid.UUID {
 	// direction is targetLootBox
-	e := agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
-	// An agent has already proposed its proposal (BordaCount)
-	if e != nil {
-		panic("unexpected error!")
-	}
-	return agent.targetLootBox.GetID()
+	agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
+	return agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
 }
 
 func (agent *SmartAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
@@ -407,16 +401,17 @@ func (agent *SmartAgent) vote_leader(agentsOnBike []objects.IBaseBiker, proposed
 	return votes
 }
 
-func (agent *SmartAgent) find_same_colour_highest_loot_lootbox(proposedLootBox map[uuid.UUID]objects.ILootBox) error {
+func (agent *SmartAgent) find_same_colour_highest_loot_lootbox(proposedLootBox map[uuid.UUID]objects.ILootBox) uuid.UUID {
 	max_loot := 0.0
+	id := uuid.Nil
 	for _, lootbox := range proposedLootBox {
 		loot := lootbox.GetTotalResources()
 		if loot > max_loot {
 			max_loot = loot
-			agent.targetLootBox = lootbox
+			id = lootbox.GetID()
 		}
 	}
-	return nil
+	return id
 }
 
 func (agent *SmartAgent) other_agents_strong(agentsOnBike []objects.IBaseBiker, proposedLootBox map[uuid.UUID]objects.ILootBox) bool {
@@ -464,35 +459,38 @@ func (agent *SmartAgent) all_weak(agentsOnBike []objects.IBaseBiker, proposedLoo
 	return total_energy < nearest_same_colour_lootbox_energy
 }
 
-func (agent *SmartAgent) find_closest_lootbox(proposedLootBox map[uuid.UUID]objects.ILootBox) error {
+func (agent *SmartAgent) find_closest_lootbox(proposedLootBox map[uuid.UUID]objects.ILootBox) uuid.UUID {
 	min_distance := math.MaxFloat64
-
+	id := uuid.Nil
 	for _, lootbox := range proposedLootBox {
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
 		// no need to normalize
 		if distance < min_distance {
 			min_distance = distance
-			agent.targetLootBox = lootbox
+			id = lootbox.GetID()
 		}
 	}
-	return nil
+	return id
 }
 
-func (agent *SmartAgent) decideTargetLootBox(agentsOnBike []objects.IBaseBiker, proposedLootBox map[uuid.UUID]objects.ILootBox) error {
+func (agent *SmartAgent) decideTargetLootBox(agentsOnBike []objects.IBaseBiker, proposedLootBox map[uuid.UUID]objects.ILootBox) uuid.UUID {
 	//dynamic decison of choosing lootbox with the changes in environment
 	max_score := 0.0
 
 	// improve all agents' satisfication: while the energy was too low, all agents desire energy
 	if agent.all_weak(agentsOnBike, proposedLootBox) == true { //all weak
-		agent.find_closest_lootbox(proposedLootBox)
+		return agent.find_closest_lootbox(proposedLootBox)
 	}
 
 	// free rider - belief that there is a rule, assume other agents would follow the rule
 	if agent.other_agents_strong(agentsOnBike, proposedLootBox) == true { //is strong
-		agent.find_same_colour_highest_loot_lootbox(proposedLootBox)
+		return agent.find_same_colour_highest_loot_lootbox(proposedLootBox)
 	}
-
+	targetId := uuid.Nil
 	for _, lootbox := range proposedLootBox {
+		if targetId == uuid.Nil {
+			targetId = lootbox.GetID()
+		}
 		// agent
 		// consider the agent itself's satisfaction
 		loot := (lootbox.GetTotalResources() / 8.0) //normalize
@@ -528,10 +526,10 @@ func (agent *SmartAgent) decideTargetLootBox(agentsOnBike []objects.IBaseBiker, 
 
 		if score > max_score {
 			max_score = score
-			agent.targetLootBox = lootbox
+			targetId = lootbox.GetID()
 		}
 	}
-	return nil
+	return targetId
 }
 
 func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objects.ILootBox) map[uuid.UUID]float64 {
@@ -549,16 +547,13 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 		rep := agent.reputationMap[lootbox_agent_id]
 		other_agents_score = rep.historyContribution + rep.recentContribution + rep.energyRemain
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
-		normalized_distance := math.Sqrt(distance / utils.GridHeight)
-		score := 0.0
-		score += 0.2*loot + 0.4*is_color + 0.2*normalized_distance + 0.2*other_agents_score
-		fmt.Printf("historyContribution: {%.2f}\n", rep.historyContribution)
-		fmt.Printf("recentContribution: {%.2f}\n", rep.recentContribution)
-		fmt.Printf("energyRemain: {%.2f}\n", rep.energyRemain)
-		fmt.Printf("normalized_distance: {%.2f}\n", normalized_distance)
+		normalized_distance := math.Sqrt(distance) / utils.GridHeight
+		if math.IsNaN(normalized_distance) {
+			normalized_distance = 0
+		}
+		score := 0.2*loot + 0.4*is_color + 0.2*normalized_distance + 0.2*other_agents_score
 
 		scores[lootbox.GetID()] += score
-		fmt.Printf("score: {%.2f}\n", score)
 		//scores = append(scores, score)
 		sum_score += score
 	}
