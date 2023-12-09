@@ -54,6 +54,8 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 			//Append bikers current energy level to the biker's history
 			agent.energyHistory[fellowID] = append(agent.energyHistory[fellowID], currentEnergyLevel)
 		}
+	} else {
+		agent.currentBike = uuid.Nil
 	}
 	fmt.Println("Energy history for")
 	//call reputation and honesty matrix to calcuiate/update them

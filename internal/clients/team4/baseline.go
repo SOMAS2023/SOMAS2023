@@ -4,6 +4,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -56,7 +57,7 @@ type IBaselineAgent interface {
 
 // general weights
 const audiDistanceThreshold = 75
-const minEnergyThreshold = 0.2
+const minEnergyThreshold = 0.4
 
 const audiDistanceWeight = 8.0
 const distanceWeight = 7.0
@@ -100,24 +101,24 @@ type agentScore struct {
 }
 
 // DecideAction only pedal
-// func (agent *BaselineAgent) DecideAction() objects.BikerAction {
-// 	if agent.onBike {
-// 		fmt.Println("Gamw ton panathinaiko ", agent.currentBike)
-// 		if agent.evaluateBike(agent.currentBike) {
-// 			return objects.Pedal
-// 		} else {
-// 			fmt.Println("Gamw kai tin AEK ", agent.currentBike)
-// 			return objects.ChangeBike
-// 		}
-// 	} else {
-// 		return objects.Pedal
-// 	}
-
-// }
 func (agent *BaselineAgent) DecideAction() objects.BikerAction {
-	// fmt.Println("Team 4")
-	return objects.Pedal
+	if agent.currentBike != uuid.Nil && agent.GetEnergyLevel() > minEnergyThreshold {
+		fmt.Println("Gamw ton panathinaiko ", agent.currentBike)
+		if agent.evaluateBike(agent.currentBike) {
+			return objects.Pedal
+		} else {
+			fmt.Println("Gamw kai tin AEK ", agent.currentBike)
+			return objects.ChangeBike
+		}
+	} else {
+		return objects.Pedal
+	}
 }
+
+// func (agent *BaselineAgent) DecideAction() objects.BikerAction {
+// 	// fmt.Println("Team 4")
+// 	return objects.Pedal
+// }
 
 // called by the spawner/server to instantiate bikers in the MVP
 func GetBiker4(baseBiker *objects.BaseBiker) objects.IBaseBiker {

@@ -1,6 +1,7 @@
 package team4
 
 import (
+	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"fmt"
@@ -47,13 +48,19 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 	megaBikes := agent.GetGameState().GetMegaBikes()
 	optimalBike := agent.currentBike
 	weight := float64(-99)
+	biggestBike := uuid.Nil
+	length := 0
 	for _, bike := range megaBikes {
+		if len(bike.GetAgents()) > length {
+			biggestBike = bike.GetID()
+			length = len(bike.GetAgents())
+		}
 		if agent.evaluateBike(bike.GetID()) {
 			if bike.GetID() != agent.currentBike && bike.GetID() != uuid.Nil { //get all bikes apart from our agent's bike
 				bikeWeight := float64(0)
 
 				for _, biker := range bike.GetAgents() {
-					if biker.GetColour() == agent.GetColour() {
+					if biker.GetColour() == agent.GetColour() || agent.reputation[agent.GetID()] == agent.GetReputation()[agent.GetID()] {
 						bikeWeight += 1.8
 					} else {
 						bikeWeight += 1
@@ -66,14 +73,28 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 			}
 		}
 	}
-	agent.optimalBike = optimalBike
-	return optimalBike
+	if optimalBike != uuid.Nil {
+		agent.optimalBike = optimalBike
+		return optimalBike
+	} else {
+		fmt.Println("the optimal bike is: ", biggestBike)
+		agent.optimalBike = biggestBike
+		return biggestBike
+	}
+
 }
 
 func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evaluate the bike's reputation and honesty. If true, it means it's a good bike.
-
-	//fmt.Println("Gamw ton PAOK ", agent.GetGameState().GetMegaBikes()[evaluateBike])
+	if agent.GetGameState().GetMegaBikes()[evaluateBike] == nil {
+		return false
+	}
+	//fmt.Println("Gamw ton PAOK ", evaluateBike, " kai tin mana sou ", agent.GetGameState().GetMegaBikes()[evaluateBike])
 	bike := agent.GetGameState().GetMegaBikes()[evaluateBike]
+	if agent.currentBike != bike.GetID() && agent.currentBike != uuid.Nil {
+		if len(bike.GetAgents()) < 3 || physics.ComputeDistance(agent.GetGameState().GetMegaBikes()[agent.currentBike].GetPosition(), bike.GetPosition()) > 50 {
+			return false
+		}
+	}
 	badBikers := 0
 	goodBikers := 0
 	sumReputation := float64(0)
@@ -86,7 +107,7 @@ func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evalua
 			if biker.GetID() != agent.GetID() {
 				sumReputation += agent.reputation[biker.GetID()]
 				sumHonesty += agent.honestyMatrix[biker.GetID()]
-
+				length += 1
 				if agent.reputation[biker.GetID()] < agent.getReputationAverage() || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage() {
 					badBikers += 1
 				} else {
@@ -95,23 +116,24 @@ func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evalua
 			}
 
 		}
-	}
-	if length > 0 {
 		averageReputation = sumReputation / float64(length)
 		averageHonesty = sumHonesty / float64(length)
-	}
 
-	if badBikers > goodBikers {
-		return false
-	} else if goodBikers > badBikers {
-		return true
-	} else {
-		if averageReputation > agent.getReputationAverage() || averageHonesty > agent.getHonestyAverage() { //if the average reputation for the bike or the average honesty of the bike is above the average in the map, return true.
+		if badBikers > goodBikers {
+			return false
+		} else if goodBikers > badBikers {
 			return true
 		} else {
-			return false
+			if averageReputation > agent.getReputationAverage() || averageHonesty > agent.getHonestyAverage() { //if the average reputation for the bike or the average honesty of the bike is above the average in the map, return true.
+				return true
+			} else {
+				return false
+			}
 		}
+	} else {
+		return false
 	}
+
 }
 
 func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
