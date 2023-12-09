@@ -170,8 +170,8 @@ func (agent *SmartAgent) ChangeBike() (targetId uuid.UUID) {
 
 func (agent *SmartAgent) ProposeDirection() uuid.UUID {
 	// direction is targetLootBox
-	agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
-	return agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
+	id := agent.decideTargetLootBox(agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetAgents(), agent.GetGameState().GetLootBoxes())
+	return id
 }
 
 func (agent *SmartAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
@@ -539,7 +539,7 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 	sum_score := 0.0
 	for lootbox_agent_id, lootbox := range proposedLootBox {
 		other_agents_score := 0.0
-		loot := (lootbox.GetTotalResources() / 8.0)
+		loot := (lootbox.GetTotalResources() / 4.0)
 		is_color := 0.0
 		if lootbox.GetColour() == agent.GetColour() {
 			is_color = 1.0
@@ -549,7 +549,7 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
 		normalized_distance := math.Sqrt(distance) / utils.GridHeight
 		if math.IsNaN(normalized_distance) {
-			normalized_distance = 0
+			normalized_distance = 0.0
 		}
 		score := 0.2*loot + 0.4*is_color + 0.2*normalized_distance + 0.2*other_agents_score
 
