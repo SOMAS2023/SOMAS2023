@@ -49,9 +49,9 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 	optimalBike := agent.currentBike
 	weight := float64(-99)
 	biggestBike := uuid.Nil
-	length := 0
+	length := -10
 	for _, bike := range megaBikes {
-		if len(bike.GetAgents()) > length {
+		if len(bike.GetAgents()) > length && bike.GetID() != uuid.Nil {
 			biggestBike = bike.GetID()
 			length = len(bike.GetAgents())
 		}
@@ -77,7 +77,6 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 		agent.optimalBike = optimalBike
 		return optimalBike
 	} else {
-		fmt.Println("the optimal bike is: ", biggestBike)
 		agent.optimalBike = biggestBike
 		return biggestBike
 	}
@@ -88,7 +87,6 @@ func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evalua
 	if agent.GetGameState().GetMegaBikes()[evaluateBike] == nil {
 		return false
 	}
-	//fmt.Println("Gamw ton PAOK ", evaluateBike, " kai tin mana sou ", agent.GetGameState().GetMegaBikes()[evaluateBike])
 	bike := agent.GetGameState().GetMegaBikes()[evaluateBike]
 	if agent.currentBike != bike.GetID() && agent.currentBike != uuid.Nil {
 		if len(bike.GetAgents()) < 3 || physics.ComputeDistance(agent.GetGameState().GetMegaBikes()[agent.currentBike].GetPosition(), bike.GetPosition()) > 50 {
@@ -108,7 +106,7 @@ func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evalua
 				sumReputation += agent.reputation[biker.GetID()]
 				sumHonesty += agent.honestyMatrix[biker.GetID()]
 				length += 1
-				if agent.reputation[biker.GetID()] < agent.getReputationAverage() || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage() {
+				if agent.reputation[biker.GetID()] < agent.getReputationAverage()-0.05 || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage()-0.1 {
 					badBikers += 1
 				} else {
 					goodBikers += 1

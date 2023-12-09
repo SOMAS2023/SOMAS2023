@@ -9,27 +9,27 @@ import (
 )
 
 func (agent *BaselineAgent) InitializeDecisionData() {
-	fmt.Println("Initializing decision data ...")
+	//fmt.Println("Initializing decision data ...")
 	//Initialize mapping if not initialized yet (= nil)
 	if agent.energyHistory == nil {
 		agent.energyHistory = make(map[uuid.UUID][]float64)
 	}
-	fmt.Println("Energy history")
+	//fmt.Println("Energy history")
 	if len(agent.mylocationHistory) == 0 {
 		agent.mylocationHistory = make([]utils.Coordinates, 0)
 	}
-	fmt.Println("Location history")
+	//fmt.Println("Location history")
 	if agent.honestyMatrix == nil {
 		agent.honestyMatrix = make(map[uuid.UUID]float64)
 	}
-	fmt.Println("Honesty matrix")
+	//.Println("Honesty matrix")
 	if agent.reputation == nil {
 		agent.reputation = make(map[uuid.UUID]float64)
 	}
-	fmt.Println("Reputation matrix")
+	//fmt.Println("Reputation matrix")
 }
 func (agent *BaselineAgent) UpdateDecisionData() {
-	fmt.Println("Updating decision data ...")
+	//fmt.Println("Updating decision data ...")
 	agent.InitializeDecisionData()
 	agent.onBike = agent.GetBikeStatus()
 	if agent.onBike {
@@ -57,7 +57,7 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	} else {
 		agent.currentBike = uuid.Nil
 	}
-	fmt.Println("Energy history for")
+	//fmt.Println("Energy history for")
 	//call reputation and honesty matrix to calcuiate/update them
 	//save updated reputation and honesty matrix
 	agent.CalculateReputation()
@@ -139,7 +139,7 @@ func (agent *BaselineAgent) DisplayFellowsHonesty() {
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
 		fmt.Println("")
-		fmt.Println("Honesty Matrix for: ", fellowID)
+		//fmt.Println("Honesty Matrix for: ", fellowID)
 		fmt.Print(agent.honestyMatrix[fellowID])
 		fmt.Println("")
 	}
@@ -149,7 +149,7 @@ func (agent *BaselineAgent) DisplayFellowsReputation() {
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
 		fmt.Println("")
-		fmt.Println("Reputation Matrix for: ", fellowID)
+		//fmt.Println("Reputation Matrix for: ", fellowID)
 		fmt.Print(agent.reputation[fellowID])
 		fmt.Println("")
 	}
