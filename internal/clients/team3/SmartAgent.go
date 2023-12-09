@@ -5,6 +5,7 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"fmt"
 	"github.com/google/uuid"
 	"math"
 	"sort"
@@ -548,10 +549,16 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 		rep := agent.reputationMap[lootbox_agent_id]
 		other_agents_score = rep.historyContribution + rep.recentContribution + rep.energyRemain
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
-		normalized_distance := distance / ((utils.GridHeight) * (utils.GridWidth))
-		score := 0.2*loot + 0.4*is_color + 0.2*normalized_distance + 0.2*other_agents_score
+		normalized_distance := math.Sqrt(distance / utils.GridHeight)
+		score := 0.0
+		score += 0.2*loot + 0.4*is_color + 0.2*normalized_distance + 0.2*other_agents_score
+		fmt.Printf("historyContribution: {%.2f}\n", rep.historyContribution)
+		fmt.Printf("recentContribution: {%.2f}\n", rep.recentContribution)
+		fmt.Printf("energyRemain: {%.2f}\n", rep.energyRemain)
+		fmt.Printf("normalized_distance: {%.2f}\n", normalized_distance)
 
-		scores[lootbox.GetID()] = score
+		scores[lootbox.GetID()] += score
+		fmt.Printf("score: {%.2f}\n", score)
 		//scores = append(scores, score)
 		sum_score += score
 	}
@@ -561,8 +568,8 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 	// The following steps tend to achieve the rank of lootbox proposals according to their scores calculated. We will return the highest rank to pick the agent with it. (Another Borda score would consider reputation function)这个后面如果可以再考虑如果能得到的话
 
 	// normalize
-	for _, lootbox := range proposedLootBox {
-		scores[lootbox.GetID()] = scores[lootbox.GetID()] / sum_score
+	for id, _ := range scores {
+		scores[id] = scores[id] / sum_score
 	}
 
 	var lootboxVotes voting.LootboxVoteMap = scores

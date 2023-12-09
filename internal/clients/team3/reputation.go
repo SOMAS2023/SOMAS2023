@@ -3,6 +3,7 @@ package team3
 import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+	"fmt"
 	"math"
 )
 
@@ -42,7 +43,7 @@ func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor util
 
 	// update score
 	rep.recentContribution = normalize(rep._lastPedal)
-	rep.historyContribution = normalize(rep.historyContribution)
+	rep.historyContribution = normalize(rep._pedalCnt)
 	rep.energyRemain = normalize(rep._lastEnergyLevel)
 	rep.energyGain = normalize(rep._energyReceivedCnt)
 	rep.lootBoxGet = normalize(rep._lootBoxGetCnt)
@@ -51,6 +52,10 @@ func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor util
 	} else {
 		rep.isSameColor = 0
 	}
+	fmt.Printf("_lastPedal: {%.2f}\n", rep._lastPedal)
+	fmt.Printf("_lastPedal: {%.2f}\n", rep._pedalCnt)
+	fmt.Printf("_lastEnergyLevel: {%.2f}\n", rep._lastEnergyLevel)
+	fmt.Printf("_energyReceivedCnt: {%.2f}\n", rep._energyReceivedCnt)
 }
 
 func normalize(input float64) (output float64) {
