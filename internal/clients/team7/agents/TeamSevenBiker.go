@@ -224,10 +224,8 @@ func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uu
 }
 
 // Vote on Leader
-// TODO: Uncomment when infrastructure have merged the new voting methods.
-/*
 func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
-	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
+	agentIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
 		AgentCandidates: agentIds,
@@ -240,7 +238,7 @@ func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
 
 // Vote on Dictator
 func (biker *BaseTeamSevenBiker) VoteDictator() voting.IdVoteMap {
-	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
+	agentIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
 		AgentCandidates: agentIds,
@@ -250,4 +248,11 @@ func (biker *BaseTeamSevenBiker) VoteDictator() voting.IdVoteMap {
 
 	return voteOutput
 }
-*/
+
+// Vote on governance
+func (biker *BaseTeamSevenBiker) DecideGovernance() utils.Governance {
+	voteHandler := frameworks.NewVoteOnGovernanceHandler()
+	voteOutput := voteHandler.GetDecision()
+
+	return voteOutput
+}
