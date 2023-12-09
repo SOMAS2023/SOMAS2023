@@ -13,8 +13,8 @@ import (
 )
 
 const LootBoxCount = MegaBikeCount * 3    // 3 available lootboxes per megabike
-const MegaBikeCount = BikerAgentCount / 8 // Megabikes should have an average of 4 riders
-const BikerAgentCount = 56
+const MegaBikeCount = BikerAgentCount / 4 // Megabikes should have an average of 4 riders
+const BikerAgentCount = 12
 
 type IBaseBikerServer interface {
 	baseserver.IServer[objects.IBaseBiker]
