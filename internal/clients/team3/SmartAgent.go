@@ -53,7 +53,7 @@ func (agent *SmartAgent) DecideAction() objects.BikerAction {
 	} else {
 		agent.recalculateSatisfaction()
 		agent.badTeam = false
-		if agent.satisfactionOfRecentAllocation < 0.5 && agent.energySpent/agent.lootBoxCnt > agent.GetEnergyLevel() {
+		if agent.lootBoxCnt > 0 && agent.satisfactionOfRecentAllocation < 0.5 && agent.energySpent/(agent.lootBoxCnt+utils.Epsilon) > agent.GetEnergyLevel() {
 			// if not enough energy received and not fair allocation happened
 			agent.badTeam = true
 		}
@@ -81,7 +81,7 @@ func (agent *SmartAgent) DecideForce(direction uuid.UUID) {
 			// Cognitive dimension: is same belief?
 			// Pareto principle: give more energy to those with more outcome
 			// Forgiveness: forgive agents pedal harder recently
-			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution
+			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + utils.Epsilon
 			scores[others.GetID()] = score
 			totalScore += score
 		}
@@ -94,7 +94,7 @@ func (agent *SmartAgent) DecideForce(direction uuid.UUID) {
 		for id, weight := range scores {
 			energyCost += weight * agent.reputationMap[id]._lastPedal
 		}
-		pedalForce = agent.lastPedal * (energyCost / agent.lastEnergyCost)
+		pedalForce = agent.lastPedal * (energyCost / (agent.lastEnergyCost + utils.Epsilon))
 		pedalForce *= agent.satisfactionOfRecentAllocation
 	}
 	if pedalForce > utils.BikerMaxForce {
@@ -204,7 +204,7 @@ func (agent *SmartAgent) VoteForKickout() map[uuid.UUID]int {
 		// Contribution and Achievement
 		// Forgiveness: forgive agents pedal harder recently
 		// Potential
-		scores[idx] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+		scores[idx] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain + utils.Epsilon
 		threshold += scores[idx]
 	}
 	threshold = threshold / float64(len(currentBike.GetAgents())) / 2.0
@@ -248,7 +248,7 @@ func (agent *SmartAgent) DecideKickOut() []uuid.UUID {
 		// Contribution and Achievement
 		// Forgiveness: forgive agents pedal harder recently
 		// Potential
-		scores[idx] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+		scores[idx] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain + utils.Epsilon
 		threshold += scores[idx]
 	}
 	threshold = threshold / float64(len(currentBike.GetAgents())) / 2.0
@@ -285,7 +285,7 @@ func (agent *SmartAgent) DecideWeights(action utils.Action) map[uuid.UUID]float6
 		// Contribution and Achievement
 		// Forgiveness: forgive agents pedal harder recently
 		// Potential
-		weights[onBikeAgent.GetID()] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain
+		weights[onBikeAgent.GetID()] = rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution + rep.energyRemain + utils.Epsilon
 		totalW += weights[onBikeAgent.GetID()]
 	}
 	for id, w := range weights {
@@ -505,8 +505,9 @@ func (agent *SmartAgent) decideTargetLootBox(agentsOnBike []objects.IBaseBiker, 
 			is_color = 1.0
 		}
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
-		normalized_distance := distance / ((utils.GridHeight) * (utils.GridWidth))
-		score := 0.2*loot + 0.2*is_color + (-0.3)*normalized_distance
+		maxDistance := float64(math.Sqrt(utils.GridHeight*utils.GridHeight + utils.GridWidth*utils.GridWidth))
+		normalized_distance := (maxDistance - distance) / maxDistance
+		score := 0.2*loot + 0.2*is_color + 0.3*normalized_distance + utils.Epsilon
 
 		// environment
 		// social capital framework to decide which agents we should cooperate
@@ -527,7 +528,7 @@ func (agent *SmartAgent) decideTargetLootBox(agentsOnBike []objects.IBaseBiker, 
 			//opinion, trustness from direct experience
 			//forgiveness
 			//improve trustness by decreasing the risk of no efforts
-			score += 0.5*0.4*rep.historyContribution + 0.5*0.2*rep.recentContribution + 0.5*0.4*rep.energyRemain
+			score += 0.5*0.4*rep.historyContribution + 0.5*0.2*rep.recentContribution + 0.5*0.4*rep.energyRemain + utils.Epsilon
 		}
 
 		if score > max_score {
@@ -552,12 +553,14 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 		}
 		rep := agent.reputationMap[lootbox_agent_id]
 		other_agents_score = rep.historyContribution + rep.recentContribution + rep.energyRemain
+
 		distance := physics.ComputeDistance(lootbox.GetPosition(), agent.GetLocation())
-		normalized_distance := math.Sqrt(distance) / utils.GridHeight
+		maxDistance := float64(math.Sqrt(utils.GridHeight*utils.GridHeight + utils.GridWidth*utils.GridWidth))
+		normalized_distance := (maxDistance - distance) / maxDistance
 		if math.IsNaN(normalized_distance) {
 			normalized_distance = 0.0
 		}
-		score := 0.2*loot + 0.4*is_color + 0.2*normalized_distance + 0.2*other_agents_score
+		score := 0.2*loot + 0.4*is_color + 0.2*normalized_distance + 0.2*other_agents_score + utils.Epsilon
 
 		scores[lootbox.GetID()] += score
 		//scores = append(scores, score)
@@ -600,7 +603,7 @@ func (agent *SmartAgent) scoreAgentsForAllocation(agentsOnBike []objects.IBaseBi
 			// Forgiveness: forgive agents pedal harder recently
 			// Equality: Agents received more energy before should get less this time
 			// Need: Agents with lower energyLevel require more, try to meet their need
-			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution - rep.energyGain + rep.energyRemain
+			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution - rep.energyGain + rep.energyRemain + utils.Epsilon
 			scores[id] = score
 			totalScore += score
 		}
