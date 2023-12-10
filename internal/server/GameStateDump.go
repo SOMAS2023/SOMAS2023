@@ -4,11 +4,14 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"maps"
+	"reflect"
+	"strings"
 
 	"github.com/google/uuid"
 )
 
 type GameStateDump struct {
+	Iteration int                       `json:"iteration"`
 	Agents    map[uuid.UUID]AgentDump   `json:"agents"`
 	Bikes     map[uuid.UUID]BikeDump    `json:"bikes"`
 	LootBoxes map[uuid.UUID]LootBoxDump `json:"loot_boxes"`
@@ -32,6 +35,7 @@ type BikeDump struct {
 
 type AgentDump struct {
 	ID           uuid.UUID             `json:"-"`
+	Class        string                `json:"class"`
 	Forces       utils.Forces          `json:"forces"`
 	EnergyLevel  float64               `json:"energy_level"`
 	Points       int                   `json:"points"`
@@ -41,6 +45,7 @@ type AgentDump struct {
 	OnBike       bool                  `json:"on_bike"`
 	BikeID       uuid.UUID             `json:"bike_id"`
 	Reputation   map[uuid.UUID]float64 `json:"reputation"`
+	GroupID      int                   `json:"group_id"`
 }
 
 type LootBoxDump struct {
@@ -65,20 +70,28 @@ func newPhysicsObjectDump(physicsObject objects.IPhysicsObject) PhysicsObjectDum
 	}
 }
 
-func (s *Server) NewGameStateDump() GameStateDump {
+func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
+		var location utils.Coordinates
+		if s.megaBikes[agent.GetBike()] != nil {
+			location = s.megaBikes[agent.GetBike()].GetPosition()
+		} else {
+			location = utils.Coordinates{X: 0.0, Y: 0.0}
+		}
 		agents[id] = AgentDump{
 			ID:           agent.GetID(),
+			Class:        strings.TrimPrefix(reflect.TypeOf(agent).String(), "*"),
 			Forces:       agent.GetForces(),
 			EnergyLevel:  agent.GetEnergyLevel(),
 			Points:       agent.GetPoints(),
 			Colour:       agent.GetColour(),
 			ColourString: agent.GetColour().String(),
-			Location:     s.megaBikes[agent.GetBike()].GetPosition(),
+			Location:     location,
 			OnBike:       agent.GetBikeStatus(),
 			BikeID:       agent.GetBike(),
 			Reputation:   maps.Clone(agent.GetReputation()),
+			GroupID:      agent.GetGroupID(),
 		}
 	}
 
@@ -110,6 +123,7 @@ func (s *Server) NewGameStateDump() GameStateDump {
 	}
 
 	return GameStateDump{
+		Iteration: iteration,
 		Agents:    agents,
 		Bikes:     bikes,
 		LootBoxes: lootBoxes,
