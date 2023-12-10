@@ -192,8 +192,9 @@ func TestRunActionProcess(t *testing.T) {
 			case utils.Leadership:
 				lostEnergy += utils.LeadershipDemocracyPenalty
 			}
-			if agent.GetEnergyLevel() != (1.0 - lostEnergy) {
-				t.Error("agents energy hasn't been successfully depleted")
+			// FP precision error
+			if (agent.GetEnergyLevel() - (1.0 - lostEnergy)) > utils.Epsilon {
+				t.Error("agents energy hasn't been successfully depleted! expected lost energy: ", lostEnergy, "actual lost energy: ", 1.0-agent.GetEnergyLevel(), "difference: ", (1.0-agent.GetEnergyLevel())-lostEnergy)
 			}
 		}
 	}
