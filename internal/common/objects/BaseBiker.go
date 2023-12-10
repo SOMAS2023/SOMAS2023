@@ -316,7 +316,6 @@ func (bb *BaseBiker) QueryReputation(agentId uuid.UUID) float64 {
 	return bb.reputation[agentId]
 }
 
-
 func (bb *BaseBiker) SetReputation(agentId uuid.UUID, reputation float64) {
 	if bb.reputation == nil {
 		bb.reputation = make(map[uuid.UUID]float64)
