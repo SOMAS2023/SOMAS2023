@@ -3,7 +3,6 @@ package team5Agent
 import (
 	// Assuming this package contains the IMegaBike interface
 
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -63,7 +62,7 @@ func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep f
 		newRep = newRep + forgivenessRate
 	}
 	rValue := math.Min(math.Max(newRep, 0.0), 1.0)
-	fmt.Println("Reputation of agent: ", agentID, " is: ", rValue)
+	//fmt.Println("Reputation of agent: ", agentID, " is: ", rValue)
 	return rValue //capped at 0 and 1 (our internal reputation system is 0 to 1 not -1 to 1)
 
 }
