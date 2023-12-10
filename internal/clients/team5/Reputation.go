@@ -3,6 +3,7 @@ package team5Agent
 import (
 	// Assuming this package contains the IMegaBike interface
 
+	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -26,31 +27,45 @@ func (t5 *team5Agent) InitialiseReputation() {
 
 // Reputation calculation currently just based on energy and force
 func (t5 *team5Agent) calculateReputationOfAgent(agentID uuid.UUID, currentRep float64) float64 {
-	//fmt.Println("DONT BE nan: ", currentRep)
-	//averagePedalForce := t5.getAverageForceOfAgents()
-	averageEnergy := t5.getAverageEnergyOfAgents()
-	//fmt.Println("averagePedalForce: ", averagePedalForce, "averageEnergy: ", averageEnergy)
 	//Colour of agent
 	//check energy allocation -> change of energy in each agent
 	//if bike speed slow - lower everyone by small amount
 	//if direction wrong a lot - lower everyone by small amount
 	//Increase forgivenesss rate if in ultristic state
+	//Msging stuff - increase rep of people who msg
+	averageEnergy := t5.getAverageEnergyOfAgents()
 
-	//agentPedalForce := t5.getForceOfOneAgent(agentID)
+	forgivenessRate := 0.0005 //Reputation slowly goes back to average over time = forgiveness.
+	if t5.state == 3 {
+		forgivenessRate += 0.0003
+	}
+	colourRep := 0.0
+	//get all agent colours of all agents and check if they are the same as the agentID
+	//if agent exists on map and agent colour is the same as the agentID then add 0.01 to colourRep
+	if agent, ok := t5.GetGameState().GetAgents()[agentID]; ok {
+		if (t5.GetColour()) == agent.GetColour() {
+			colourRep = 0.01
+		}
+	}
+
 	agentEnergy := t5.getEnergyOfOneAgent(agentID)
-	//fmt.Print("agentPedalForce: ", agentPedalForce, "agentEnergy: ", agentEnergy)
-	//forceDeviation := agentPedalForce / averagePedalForce //fraction of agentMetric/averageMetric
-	energyDeviation := agentEnergy / averageEnergy
-	//fmt.Print("forceDeviation: ", forceDeviation, "energyDeviation: ", energyDeviation)
+	energyDeviation := agentEnergy - averageEnergy
+	//fmt.Println("anget energy: ", agentEnergy, " average energy: ", averageEnergy, " energy deviation: ", energyDeviation)
 	combinedDeviation := energyDeviation //(forceDeviation + energyDeviation) / 2 // keeps it in range [0,1]
 
 	// get current reputation of the agent
 
-	weight := 0.2 //maximum change per round
-	newRep := currentRep + (combinedDeviation-1)*weight
-	rValue := math.Min(math.Max(newRep, 0), 1)
+	weight := 0.2
+	newRep := currentRep + combinedDeviation*weight + colourRep
+	if newRep > 0.5 {
+		newRep = newRep - forgivenessRate
+	} else if newRep < 0.5 {
+		newRep = newRep + forgivenessRate
+	}
+	rValue := math.Min(math.Max(newRep, 0.0), 1.0)
+	fmt.Println("Reputation of agent: ", agentID, " is: ", rValue)
+	return rValue //capped at 0 and 1 (our internal reputation system is 0 to 1 not -1 to 1)
 
-	return rValue //capped at 0 and 1
 }
 
 func (t5 *team5Agent) updateReputationOfAllAgents() {
