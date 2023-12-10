@@ -14,8 +14,16 @@ import (
 // i think i found it divide the steering force by the amount of agents on the bike
 
 // so this bassically adjusts the force depending on the energy of the agent
+func (t5 *team5Agent) calcForce() float64 {
+	agentEnergy := t5.GetEnergyLevel()
+	if t5.state == 0 {
+		return utils.BikerMaxForce * agentEnergy
+	}
+	return utils.BikerMaxForce
+}
 
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
+
 	//fmt.Println("testing 1")
 
 	currLocation := t5.GetLocation()
@@ -52,10 +60,10 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 		}
 
 		steer := (angleToGoal - orientation)
-		if steer < -1 {
-			steer = steer + 2
-		} else if steer > 1 {
-			steer = steer - 2
+		if steer < -1.0 {
+			steer = steer + 2.0
+		} else if steer > 1.0 {
+			steer = steer - 2.0
 		}
 
 		turningDecision := utils.TurningDecision{
@@ -63,19 +71,14 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 			SteeringForce: steer,
 		}
 
-		ownEnergyLevel := t5.GetEnergyLevel()
-		Biker_pedal := utils.BikerMaxForce
-		if len(t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetAgents()) > 3 {
-			if t5.state == 0 {
-				Biker_pedal = ownEnergyLevel * utils.BikerMaxForce * 0.5
-			}
-		}
+		//ownEnergyLevel := t5.GetEnergyLevel()
+		biker_pedal := t5.calcForce()
 
-		Forces_movement := utils.Forces{
-			Pedal:   Biker_pedal,
+		forces_movement := utils.Forces{
+			Pedal:   biker_pedal,
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		t5.SetForces(Forces_movement)
+		t5.SetForces(forces_movement)
 	}
 }
