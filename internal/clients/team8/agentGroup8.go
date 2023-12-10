@@ -251,6 +251,7 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 		distanceBoxAudi := calculateDistance(bb.GetGameState().GetAudi().GetPosition(), lootBox.GetPosition())
 
 		// if the lootbox is near audi, igore this box
+		// TODO: find a better strategy
 		if distanceBoxAudi > 20 {
 			// check our energylevel and calculate the preference of lootbox
 			if energyWeighting > GlobalParameters.EnergyThreshold {
@@ -296,8 +297,10 @@ func (bb *Agent8) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 
 	// iterate all agents on our bike
 	agents := bb.GetFellowBikers()
+	// TODO: find a better strategy
 	for _, agent := range agents {
 		// give good agent a higher weighting
+
 		weights[agent.GetID()] = bb.QueryReputation(agent.GetID())
 
 		// give ourself a high weighting
@@ -317,6 +320,7 @@ func (bb *Agent8) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 	// rerank the all lootboxes in MVP
 	_ = bb.ProposeDirection()
 
+	// TODO: find a better strategy
 	// iterate the input lootboxList and give them preference based on our rankingMap
 	for _, lootboxid := range proposals {
 		preferenceScores[lootboxid] = bb.overallLootboxPreferences[lootboxid]
@@ -340,13 +344,18 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	// decide the brake and pedal depends on our energylevel and the speed of bike
 	forces.Brake = 0.0
 	if bb.GetBike() != uuid.Nil {
-		forces.Pedal = bb.GetEnergyLevel() * (1 - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetVelocity()) / 2
+		// TODO: find a better strategy
+		if bb.GetEnergyLevel() > GlobalParameters.EnergyThreshold {
+			forces.Pedal = bb.GetEnergyLevel() * (1 - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetVelocity()) / 2
+		} else {
+			forces.Pedal = 0.1 * (1 - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetVelocity())
+		}
 	} else {
-		forces.Pedal = 1
-
+		forces.Pedal = 1.0
 	}
 	lootboxs := bb.GetGameState().GetLootBoxes()
 
+	// --- decide the steering force ---
 	// Get the target lootbox object
 	var target objects.ILootBox
 	for key, value := range lootboxs {
@@ -418,6 +427,7 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 
 // Decide the resource allocation if our bike get a lootbox in current loop
 func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
+	// TODO: find a better strategy
 	// get all agents on our bike and initialise the allocationMap
 	fellowBikers := bb.GetFellowBikers()
 	allocationMap := make(voting.IdVoteMap)
@@ -474,7 +484,7 @@ func (bb *Agent8) updateLoopScoreMap() {
 	}
 	loopScore := 0.0
 	if bb.GetEnergyLevel() < bb.previousEnergy {
-		loopScore = (previousDistanceBikeBox - currentDistanceBikeBox) / previousDistanceBikeBox / (bb.previousEnergy - bb.GetEnergyLevel())
+		loopScore = (previousDistanceBikeBox - currentDistanceBikeBox) / previousDistanceBikeBox / math.Max(0.01, (bb.previousEnergy-bb.GetEnergyLevel()))
 	} else {
 		if bb.GetPoints() > bb.previousPoints {
 			loopScore = 1 * 5 * (bb.GetEnergyLevel() - bb.previousEnergy)
