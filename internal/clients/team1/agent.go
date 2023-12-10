@@ -243,6 +243,7 @@ func (bb *Biker1) ChangeBike() uuid.UUID {
 		fmt.Printf("Agent %v is in limbo for %v rounds\n", bb.GetID(), bb.timeInLimbo)
 		bb.pursuedBikes = append(bb.pursuedBikes, bb.desiredBike)
 	}
+	fmt.Printf("Agent %v is changing bike to %v\n", bb.GetID(), bb.desiredBike)
 	return bb.desiredBike
 }
 
