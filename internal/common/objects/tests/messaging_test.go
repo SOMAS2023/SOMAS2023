@@ -42,9 +42,7 @@ func (ebb *ExtendedBaseBiker) HandleForcesMessage(msg obj.ForcesMessage) {
 
 	if agentId == ebb.OtherBiker.GetID() {
 		ebb.OtherBikerForces = append(ebb.OtherBikerForces, agentForces)
-		// fmt.Println(len(ebb.OtherBikerForces), ebb.OtherBikerForces)
 	}
-
 }
 
 // Send messages to server which will be sent to the reciepients of the messages
@@ -112,9 +110,9 @@ func TestBaseBikerForcesMessaging(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		msgs1 := biker1.GetAllMessages(bikers)
 		msgs2 := biker2.GetAllMessages(bikers)
-		// fmt.Println("iteration ", i)
-		// fmt.Println("msg biker 1: ", msgs1)
-		// fmt.Println("msg biker 2: ", msgs2)
+		// //** fmt.Println("iteration ", i)
+		// //** fmt.Println("msg biker 1: ", msgs1)
+		// //** fmt.Println("msg biker 2: ", msgs2)
 		msgs1[0].InvokeMessageHandler(biker1)
 		msgs2[0].InvokeMessageHandler(biker2)
 

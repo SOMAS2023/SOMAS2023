@@ -167,6 +167,9 @@ func (agent *BaselineAgent) nearestLoot() uuid.UUID {
 }
 
 func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
+	if agent.GetEnergyLevel() < minEnergyThreshold+0.05 {
+		return agent.nearestLoot()
+	}
 	fmt.Println("Propose Direction")
 	agent.UpdateDecisionData()
 

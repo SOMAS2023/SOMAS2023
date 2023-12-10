@@ -3,7 +3,6 @@ package server_test
 import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/server"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -13,11 +12,12 @@ func TestRulerElectionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
+
 	// pass gamestate
 	var ruler uuid.UUID
 	for _, bike := range s.GetMegaBikes() {
@@ -31,7 +31,7 @@ func TestRulerElectionDictator(t *testing.T) {
 		}
 	}
 	// the actual logic of get winner from dist will be tested elsewhere
-	fmt.Printf("\nRuler election passed \n")
+	//** fmt.Printf("\nRuler election passed \n")
 
 }
 
@@ -39,11 +39,11 @@ func TestRulerElectionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 	// pass gamestate
 	var ruler uuid.UUID
 	for _, bike := range s.GetMegaBikes() {
@@ -57,7 +57,7 @@ func TestRulerElectionLeader(t *testing.T) {
 		}
 	}
 	// the actual logic of get winner from dist will be tested elsewhere
-	fmt.Printf("\nRuler election leader passed \n")
+	//** fmt.Printf("\nRuler election leader passed \n")
 
 }
 
@@ -65,11 +65,11 @@ func TestRunRulerActionDictator(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	for _, bike := range s.GetMegaBikes() {
 		agents := bike.GetAgents()
@@ -94,7 +94,7 @@ func TestRunRulerActionDictator(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nRuler action passed \n")
+	//** fmt.Printf("\nRuler action passed \n")
 
 }
 
@@ -102,11 +102,11 @@ func TestRunRulerActionLeader(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	for _, bike := range s.GetMegaBikes() {
 		agents := bike.GetAgents()
@@ -131,18 +131,18 @@ func TestRunRulerActionLeader(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nRuler action  leader passed \n")
+	//** fmt.Printf("\nRuler action  leader passed \n")
 }
 
 func TestRunDemocraticAction(t *testing.T) {
 	it := 3
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
-	s.FoundingInstitutions()
 	gs := s.NewGameStateDump(0)
 	for _, agent := range s.GetAgentMap() {
 		agent.UpdateGameState(gs)
 	}
+	s.FoundingInstitutions()
 
 	for _, bike := range s.GetMegaBikes() {
 		agents := bike.GetAgents()
@@ -161,5 +161,5 @@ func TestRunDemocraticAction(t *testing.T) {
 			}
 		}
 	}
-	fmt.Printf("\nDemocratic action passed \n")
+	//** fmt.Printf("\nDemocratic action passed \n")
 }

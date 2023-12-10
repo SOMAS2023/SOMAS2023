@@ -2,7 +2,6 @@ package server_test
 
 import (
 	"SOMAS2023/internal/server"
-	"fmt"
 	"testing"
 
 	"slices"
@@ -58,7 +57,7 @@ func TestGetJoiningRequests(t *testing.T) {
 			t.Error("bike requests processed incorrectly: wrong number of agents for given bike")
 		}
 	}
-	fmt.Printf("\nJoining request passed \n")
+	//** fmt.Printf("\nJoining request passed \n")
 }
 
 func TestGetJoiningRequestsWithLimbo(t *testing.T) {
@@ -113,7 +112,7 @@ func TestGetJoiningRequestsWithLimbo(t *testing.T) {
 		assert.False(t, slices.Contains(agentIds, limbo[0]), "bike requests processed incorrectly: agent in limbo is requesting a bike")
 	}
 
-	fmt.Printf("\nJoining request passed \n")
+	//** fmt.Printf("\nJoining request passed \n")
 }
 
 func TestGetRandomID(t *testing.T) {
@@ -124,7 +123,7 @@ func TestGetRandomID(t *testing.T) {
 	if !exists {
 		t.Error("returned bike is not in ")
 	}
-	fmt.Printf("\nGet random ID passed \n")
+	//** fmt.Printf("\nGet random ID passed \n")
 }
 
 func TestAddAgentToBike(t *testing.T) {
@@ -143,5 +142,5 @@ func TestAddAgentToBike(t *testing.T) {
 	if agentToCheck.GetBike() != bike {
 		t.Error("agent's bike is not as expected")
 	}
-	fmt.Printf("\nSet biker bike passed \n")
+	//** fmt.Printf("\nSet biker bike passed \n")
 }

@@ -3,7 +3,6 @@ package voting
 import (
 	"SOMAS2023/internal/common/utils"
 	"errors"
-	"math"
 	"sort"
 
 	"github.com/google/uuid"
@@ -58,7 +57,7 @@ func GetAcceptanceRanking(rankings map[uuid.UUID]map[uuid.UUID]bool, weights map
 	// sort according to ranking
 	unsortedAcceptedList := make([]uuid.UUID, len(passedUnsorted))
 	i := 0
-	for key, _ := range passedUnsorted {
+	for key := range passedUnsorted {
 		unsortedAcceptedList[i] = key
 		i += 1
 	}
@@ -79,7 +78,7 @@ func SumOfValues(voteMap IVoter) float64 {
 
 // Returns the normalized vote outcome (assumes all the maps contain a voting between 0-1
 // for each option, and that all the votings sum to 1)
-func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) (map[uuid.UUID]float64, error) {
+func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) map[uuid.UUID]float64 {
 	if len(voters) == 0 {
 		panic("no votes provided")
 	}
@@ -87,18 +86,16 @@ func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) 
 	aggregateVotes := make(map[uuid.UUID]float64)
 
 	// initialise votes to 0.0
-	for voter, _ := range voters {
+	for voter := range voters {
 		aggregateVotes[voter] = 0.0
 	}
 
-	for voter, IVoter := range voters {
-		if math.Abs(SumOfValues(IVoter)-1.0) > utils.Epsilon {
-			return nil, errors.New("distribution doesn't sum to 1")
-		}
-		weight := weights[voter]
-		votes := IVoter.GetVotes()
+	for agentID, voter := range voters {
+		voteSum := SumOfValues(voter)
+		votes := voter.GetVotes()
+		weight := weights[agentID]
 		for id, vote := range votes {
-			aggregateVotes[id] += weight * vote
+			aggregateVotes[id] += weight * vote / voteSum
 		}
 	}
 
@@ -106,11 +103,14 @@ func CumulativeDist(voters map[uuid.UUID]IVoter, weights map[uuid.UUID]float64) 
 	for _, vote := range aggregateVotes {
 		normalizeFactor += vote
 	}
+	if normalizeFactor == 0.0 {
+		panic("all votes summed to zero")
+	}
 	// normalising step for all voters involved
 	for agentId, vote := range aggregateVotes {
 		aggregateVotes[agentId] = vote / normalizeFactor
 	}
-	return aggregateVotes, nil
+	return aggregateVotes
 }
 
 // return the votesMap

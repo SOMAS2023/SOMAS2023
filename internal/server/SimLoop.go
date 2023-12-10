@@ -4,7 +4,6 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 	"sort"
 
 	"math"
@@ -33,6 +32,8 @@ func (s *Server) ResetGameState() {
 	for _, agent := range s.GetAgentMap() {
 		if agent.GetBike() != uuid.Nil {
 			s.RemoveAgentFromBike(agent)
+		} else if agent.GetBikeStatus() {
+			agent.ToggleOnBike()
 		}
 	}
 
@@ -58,6 +59,14 @@ func (s *Server) ResetGameState() {
 		for _, agent := range s.GetAgentMap() {
 			agent.ResetPoints()
 		}
+	}
+
+	for _, bike := range s.GetMegaBikes() {
+		bike.SetRuler(uuid.Nil)
+	}
+
+	for _, agent := range s.GetAgentMap() {
+		agent.SetBike(uuid.Nil)
 	}
 
 	s.replenishLootBoxes()
@@ -93,6 +102,9 @@ func (s *Server) FoundingInstitutions() {
 		// get bikes for this governance
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
+			if len(bikesUsed) == len(s.megaBikes) {
+				break
+			}
 			for !foundBike {
 				bike := s.GetRandomBikeId()
 				if !slices.Contains(bikesUsed, bike) {
@@ -144,18 +156,18 @@ func (s *Server) FoundingInstitutions() {
 }
 
 func (s *Server) Start() {
-	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
+	//** fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
 	gameStates := make([][]GameStateDump, 0, s.GetIterations())
 	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
-		fmt.Printf("Game Loop %d running... \n \n", i)
-		fmt.Printf("Main game loop running...\n\n")
+		//** fmt.Printf("Game Loop %d running... \n \n", i)
+		//** fmt.Printf("Main game loop running...\n\n")
 		gameStates = append(gameStates, s.RunSimLoop(utils.RoundIterations))
-		fmt.Printf("\nMain game loop finished.\n\n")
-		fmt.Printf("Messaging session started...\n\n")
+		//** fmt.Printf("\nMain game loop finished.\n\n")
+		//** fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
-		fmt.Printf("\nMessaging session completed\n\n")
-		fmt.Printf("Game Loop %d completed.\n", i)
+		//** fmt.Printf("\nMessaging session completed\n\n")
+		//** fmt.Printf("Game Loop %d completed.\n", i)
 	}
 	s.outputResults(gameStates)
 }
