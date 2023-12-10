@@ -139,12 +139,25 @@ func (agent *BaselineAgent) CalculateHonestyMatrix() {
 			agent.honestyMatrix[bikerID] = 1.0
 		}
 	}
+	//senderId, kickedOutAgentId := agent.HandleKickoutMessage(agent)
+}
+
+func (agent *BaselineAgent) DecreaseHonesty(agentID uuid.UUID, decreaseAmount float64) {
+	if currentHonesty, ok := agent.honestyMatrix[agentID]; ok {
+		newHonesty := currentHonesty - decreaseAmount
+		if newHonesty < 0 {
+			newHonesty = 0
+		}
+		agent.honestyMatrix[agentID] = newHonesty
+	}
 }
 
 func (agent *BaselineAgent) IncreaseHonesty(agentID uuid.UUID, increaseAmount float64) {
-	agent.honestyMatrix[agentID] += increaseAmount
-}
-
-func (agent *BaselineAgent) DecreaseHonestyHonesty(agentID uuid.UUID, decreaseAmount float64) {
-	agent.honestyMatrix[agentID] -= decreaseAmount
+	if currentHonesty, ok := agent.honestyMatrix[agentID]; ok {
+		newHonesty := currentHonesty + increaseAmount
+		if newHonesty > 1 {
+			newHonesty = 1
+		}
+		agent.honestyMatrix[agentID] = newHonesty
+	}
 }
