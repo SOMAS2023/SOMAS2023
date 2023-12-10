@@ -13,7 +13,7 @@ type Iteam5Agent interface {
 }
 
 type team5Agent struct {
-	objects.BaseBiker
+	*objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
 	state            int // 0 = normal, 1 = conservative
@@ -35,13 +35,12 @@ const (
 )
 
 // Creates an instance of Team 5 Biker
-func NewTeam5Agent(totColours utils.Colour, bikeId uuid.UUID) *team5Agent {
-	baseBiker := objects.GetBaseBiker(totColours, bikeId) // Use the constructor function
+func GetBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 	baseBiker.GroupID = 5
 	// print
 	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
-		BaseBiker:           *baseBiker,
+		BaseBiker:           baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
 		roundCount:          0,
