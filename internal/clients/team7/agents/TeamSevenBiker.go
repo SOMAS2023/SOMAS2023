@@ -215,7 +215,8 @@ func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
 // Vote on whether to kick agent off bike
 func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	voteInputs := frameworks.VoteOnAgentsInput{
-		AgentCandidates: pendingAgents,
+		AgentCandidates:      pendingAgents,
+		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
 	}
 	voteHandler := frameworks.NewVoteToKickAgentHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
@@ -228,7 +229,8 @@ func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
 	agentIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
-		AgentCandidates: agentIds,
+		AgentCandidates:      agentIds,
+		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
 	}
 	voteHandler := frameworks.NewVoteOnLeaderHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
@@ -241,7 +243,8 @@ func (biker *BaseTeamSevenBiker) VoteDictator() voting.IdVoteMap {
 	agentIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
-		AgentCandidates: agentIds,
+		AgentCandidates:      agentIds,
+		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
 	}
 	voteHandler := frameworks.NewVoteOnDictatorHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
