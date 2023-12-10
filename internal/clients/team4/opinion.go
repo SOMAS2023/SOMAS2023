@@ -14,6 +14,14 @@ func (agent *BaselineAgent) QueryReputation(agentId uuid.UUID) float64 {
 	return agent.reputation[agentId]
 }
 
+func (agent *BaselineAgent) QueryHonesty(agentId uuid.UUID) float64 {
+	return agent.honestyMatrix[agentId]
+}
+
+func (agent *BaselineAgent) GetHonestyMatrix() map[uuid.UUID]float64 {
+	return agent.reputation
+}
+
 // changed version
 func (agent *BaselineAgent) CalculateReputation() {
 	////////////////////////////
