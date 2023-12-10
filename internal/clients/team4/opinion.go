@@ -141,13 +141,19 @@ func (agent *BaselineAgent) CalculateReputation() {
 } */
 
 func (agent *BaselineAgent) CalculateHonestyMatrix() {
+	if agent.honestyMatrix == nil {
+		agent.honestyMatrix = make(map[uuid.UUID]float64)
+	}
+
 	for _, bike := range agent.GetGameState().GetMegaBikes() {
 		for _, biker := range bike.GetAgents() {
 			bikerID := biker.GetID()
-			agent.honestyMatrix[bikerID] = 1.0
+
+			if _, exists := agent.honestyMatrix[bikerID]; !exists {
+				agent.honestyMatrix[bikerID] = 1.0
+			}
 		}
 	}
-	//senderId, kickedOutAgentId := agent.HandleKickoutMessage(agent)
 }
 
 func (agent *BaselineAgent) DecreaseHonesty(agentID uuid.UUID, decreaseAmount float64) {

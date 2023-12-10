@@ -31,6 +31,34 @@ func (agent *BaselineAgent) InitializeDecisionData() {
 func (agent *BaselineAgent) UpdateDecisionData() {
 	//fmt.Println("Updating decision data ...")
 	agent.InitializeDecisionData()
+
+	messages := agent.GetAllMessages(agent.GetFellowBikers())
+	// Process messages
+	for _, msg := range messages {
+		switch msg := msg.(type) {
+		case objects.KickoutAgentMessage:
+			agent.HandleKickoutMessage(msg)
+		case objects.ReputationOfAgentMessage:
+			agent.HandleReputationMessage(msg)
+		case objects.JoiningAgentMessage:
+			agent.HandleJoiningMessage(msg)
+		case objects.ForcesMessage:
+			agent.HandleForcesMessage(msg)
+		case objects.GovernanceMessage:
+			agent.HandleGovernanceMessage(msg)
+		case objects.LootboxMessage:
+			agent.HandleLootboxMessage(msg)
+		case objects.VoteGoveranceMessage:
+			agent.HandleVoteGovernanceMessage(msg)
+		case objects.VoteKickoutMessage:
+			agent.HandleVoteKickoutMessage(msg)
+		case objects.VoteLootboxDirectionMessage:
+			agent.HandleVoteLootboxDirectionMessage(msg)
+		case objects.VoteRulerMessage:
+			agent.HandleVoteRulerMessage(msg)
+		}
+	}
+
 	agent.onBike = agent.GetBikeStatus()
 	if agent.onBike {
 		//update location history for the agent
@@ -63,7 +91,7 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	agent.CalculateReputation()
 	agent.CalculateHonestyMatrix()
 	//agent.DisplayFellowsEnergyHistory()
-	// agent.DisplayFellowsHonesty()
+	agent.DisplayFellowsHonesty()
 	// agent.DisplayFellowsReputation()
 }
 
