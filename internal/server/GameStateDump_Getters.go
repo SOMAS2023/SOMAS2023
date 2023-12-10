@@ -92,6 +92,10 @@ func (a AgentDump) GetReputation() map[uuid.UUID]float64 {
 	return maps.Clone(a.Reputation)
 }
 
+func (a AgentDump) GetGroupID() int {
+	return a.GroupID
+}
+
 func (b BikeDump) GetAgents() []objects.IBaseBiker {
 	result := make([]objects.IBaseBiker, 0, len(b.Agents))
 	for i := range b.Agents {

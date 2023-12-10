@@ -45,6 +45,7 @@ type AgentDump struct {
 	OnBike       bool                  `json:"on_bike"`
 	BikeID       uuid.UUID             `json:"bike_id"`
 	Reputation   map[uuid.UUID]float64 `json:"reputation"`
+	GroupID      int                   `json:"group_id"`
 }
 
 type LootBoxDump struct {
@@ -90,6 +91,7 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 			OnBike:       agent.GetBikeStatus(),
 			BikeID:       agent.GetBike(),
 			Reputation:   maps.Clone(agent.GetReputation()),
+			GroupID:      agent.GetGroupID(),
 		}
 	}
 

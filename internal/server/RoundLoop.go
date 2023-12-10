@@ -6,6 +6,7 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -118,8 +119,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			case utils.Leadership:
 				// get the map of weights from the leader
 				ruler := bike.GetRuler()
-				fmt.Printf("the ruler is %s \n", ruler)
-				leader := s.GetAgentMap()[bike.GetRuler()]
+				leader := s.GetAgentMap()[ruler]
 				weights := leader.DecideWeights(utils.Kickout)
 				// get which agents are getting kicked out
 				agentsVotes = bike.KickOutAgent(weights)
@@ -134,7 +134,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			leaderKickedOut := false
 			allKicked = append(allKicked, agentsVotes...)
 			for _, agentID := range agentsVotes {
-				fmt.Println("kicking out someone")
+				fmt.Printf("kicking out agent %s\n", agentID)
 				s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 				// if the leader was kicked out vote for a new one
 				if agentID == bike.GetRuler() {
@@ -172,11 +172,17 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 				// will only be finalised then
 				leavingAgents = append(leavingAgents, agentId)
 				s.RemoveAgentFromBike(agent)
+				fmt.Printf("Agent %s left the bike \n", agentId)
 			default:
 				panic("agent decided invalid action")
 			}
-		} else {
-
+		}
+	}
+	s.UpdateGameStates()
+	for _, bike := range s.GetMegaBikes() {
+		if slices.Contains(leavingAgents, bike.GetRuler()) && len(bike.GetAgents()) != 0 {
+			ruler := s.RulerElection(bike.GetAgents(), utils.Leadership)
+			bike.SetRuler(ruler)
 		}
 	}
 	return leavingAgents
@@ -364,7 +370,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 	looted := make(map[uuid.UUID]int)
 	for _, megabike := range s.GetMegaBikes() {
 		for lootid, lootbox := range s.GetLootBoxes() {
-			if megabike.CheckForCollision(lootbox) {
+			if megabike.CheckForCollision(lootbox) { // && len(megabike.GetAgents()) != 0
 				if value, ok := looted[lootid]; ok {
 					looted[lootid] = value + 1
 				} else {
@@ -382,7 +388,6 @@ func (s *Server) LootboxCheckAndDistributions() {
 				totAgents := len(agents)
 
 				if totAgents > 0 {
-					fmt.Printf("Total agents: %d \n", totAgents)
 					gov := s.GetMegaBikes()[bikeid].GetGovernance()
 					var winningAllocation voting.IdVoteMap
 					switch gov {
@@ -404,11 +409,20 @@ func (s *Server) LootboxCheckAndDistributions() {
 						for _, agent := range agents {
 							weights[agent.GetID()] = 1.0
 						}
-						winningAllocation, _ = voting.CumulativeDist(Iallocations, weights)
+						winningAllocation = voting.CumulativeDist(Iallocations, weights)
 					case utils.Leadership:
 						// get the map of weights from the leader
 						leader := s.GetAgentMap()[megabike.GetRuler()]
 						weights := leader.DecideWeights(utils.Allocation)
+					outer:
+						for id := range weights {
+							for _, agent := range agents {
+								if agent.GetID() == id {
+									continue outer
+								}
+							}
+							panic("leader gave weight to an agent that isn't on the bike")
+						}
 						// get allocation votes from each agent
 						allAllocations := make(map[uuid.UUID]voting.IdVoteMap)
 						for _, agent := range agents {
@@ -418,7 +432,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 						for i, v := range allAllocations {
 							Iallocations[i] = v
 						}
-						winningAllocation, _ = voting.CumulativeDist(Iallocations, weights)
+						winningAllocation = voting.CumulativeDist(Iallocations, weights)
 					case utils.Dictatorship:
 						// dictator decides the allocation
 						leader := s.GetAgentMap()[megabike.GetRuler()]

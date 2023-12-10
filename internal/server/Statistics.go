@@ -1,9 +1,10 @@
 package server
 
 import (
+	"math"
+
 	"github.com/google/uuid"
 	"github.com/tealeg/xlsx/v3"
-	"math"
 )
 
 type GameStatistics struct {
