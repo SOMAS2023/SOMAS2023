@@ -1,7 +1,7 @@
 """
 Visualiser for SOMAS world
 """
-# pylint: disable=no-member, import-error, no-name-in-module
+# pylint: disable=no-member, import-error, no-name-in-module, pointless-string-statement
 import tkinter as tk
 from tkinter import filedialog
 import json
@@ -12,7 +12,7 @@ import pygame_gui
 from pygame_gui import UIManager
 from pygame_gui.elements import UIButton, UIImage
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, ITERATIONLENGTH
+from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, ITERATIONLENGTH, FPSDISPLAYRATE
 from visualiser.util.HelperFunc import make_center
 from visualiser.GameScreen import GameScreen
 
@@ -22,7 +22,10 @@ class Visualiser:
         self.UIState = "main_menu"
         self.running = True
         self.jsondata = None
+        self.fps = None
         pygame.init()
+        self.drawInfo = pygame.USEREVENT + 101
+        pygame.time.set_timer(self.drawInfo, 1000 // FPSDISPLAYRATE)
         # Set screens, UI manager, caption, clock and timeDelta
         self.window = pygame.display.set_mode((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]))
         self.manager = UIManager((DIM["SCREEN_WIDTH"], DIM["SCREEN_HEIGHT"]), sys.argv[0] + "/../"+THEMEJSON)
@@ -73,6 +76,7 @@ class Visualiser:
                 "bottom": "top",
             }
         )
+        self.draw_fps()
 
     def switch_screen(self, newScreen:str) -> None:
         """
@@ -94,8 +98,8 @@ class Visualiser:
         self.switch_screen(screen)
         while self.running:
             timeDelta = self.clock.tick(FRAMERATE) / 1000.0
-            self.handle_events()
             # Update the display
+            self.handle_events()
             match self.screenState:
                 case "main_menu":
                     self.render_main_menu()
@@ -104,7 +108,8 @@ class Visualiser:
             self.manager.update(timeDelta)
             self.window.blit(self.gamescreen, (0, 0))
             self.manager.draw_ui(self.window)
-            self.draw_fps()
+            # Draw FPS counter
+            self.window.blit(self.fps, (DIM["GAME_SCREEN_WIDTH"]-self.fps.get_width()-OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
             pygame.display.flip()
         pygame.quit()
 
@@ -114,14 +119,20 @@ class Visualiser:
         """
         fps = self.clock.get_fps()
         font = pygame.font.SysFont("Arial Narrow", 20)
-        surface = font.render(f"FPS: {fps:.2f}", True, "#555555")
-        self.window.blit(surface, (DIM["GAME_SCREEN_WIDTH"]-surface.get_width()-OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
+        self.fps = font.render(f"FPS: {fps:.2f}", True, "#555555")
 
     def handle_events(self) -> None:
         """
         Handle events in the visualiser
         """
         for event in pygame.event.get():
+            # Handle UI events
+            match self.screenState:
+                case "main_menu":
+                    self.process_main_menu_events(event)
+                case "game_screen":
+                    self.process_game_screen_events(event)
+            self.manager.process_events(event)
             match event.type:
                 # Quit the game
                 case pygame.QUIT:
@@ -132,13 +143,8 @@ class Visualiser:
                         # Quit the game
                         case pygame.K_ESCAPE:
                             self.running = False
-            # Handle UI events
-            match self.screenState:
-                case "main_menu":
-                    self.process_main_menu_events(event)
-                case "game_screen":
-                    self.process_game_screen_events(event)
-            self.manager.process_events(event)
+                case self.drawInfo:
+                    self.draw_fps()
 
     def render_main_menu(self) -> None:
         """
@@ -184,6 +190,7 @@ class Visualiser:
         self.gameScreenManager.log(f"Max Iterations: {self.gameScreenManager.maxRound}", "INFO")
         self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound % ITERATIONLENGTH}", "INFO")
         self.gameScreenManager.log(f"There are {ITERATIONLENGTH} iterations per round.", "INFO")
+        self.gameScreenManager.elements["console"].rebuild()
         self.switch_screen("game_screen")
 
     def process_game_screen_events(self, event:pygame.event.Event) -> None:
@@ -207,9 +214,9 @@ class Visualiser:
         self.gameScreenManager.set_json(data)
         self.UIElements["game_screen"] = self.gameScreenManager.init_ui(self.manager, self.UIscreen, self.consoleContainer)
 
-    def test(self) -> None:
+    def start(self) -> None:
         """
-        Test function
+        Start function
         """
         filepath = sys.argv[0] + "/../" + JSONPATH
         if exists(filepath):
@@ -220,5 +227,23 @@ class Visualiser:
 
 if __name__ == "__main__":
     visualiser = Visualiser()
-    visualiser.test()
-    # visualiser.run_loop()
+    # Run profiler to check for optimisations
+    OPTIM = False
+    if OPTIM:
+        import cProfile
+        import subprocess
+        profiler = cProfile.Profile()
+        profiler.enable()
+        profiler.run("visualiser.start()")
+        profiler.dump_stats('visualiser/profiles/stats.prof')
+        subprocess.Popen("snakeviz visualiser/profiles/stats.prof", shell=True)
+    else:
+        visualiser.start()
+
+"""
+TODO:
+-Motivation
+-Design decisions
+    - Why i selected certain attributes
+        - 
+"""
