@@ -91,76 +91,82 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 	return ranking
 }
 
-// func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 
-// 	agentMap := t5.GetGameState().GetAgents()
-// 	result := make(map[uuid.UUID]bool)
-// 	pendingAgentUtility := make(map[uuid.UUID]float64)
-// 	threshold := 0.5
-// 	maxBikers := utils.BikersOnBike
-// 	currentBikers := maxBikers - len(t5.GetFellowBikers())
+	result := make(map[uuid.UUID]bool)
 
-// 	a := 1.0
-// 	b := 1.0
-// 	c := 1.0
-// 	// energyMax := 1.0
-// 	targetColor := t5.GetColour()
+	//make all bools true - temp fix
+	for _, agentID := range pendingAgents {
+		result[agentID] = true
+	}
+	// agentMap := t5.GetGameState().GetAgents()
 
-// 	scaleFactor := 1.0
+	// pendingAgentUtility := make(map[uuid.UUID]float64)
+	// threshold := 0.5
+	// maxBikers := utils.BikersOnBike
+	// currentBikers := maxBikers - len(t5.GetFellowBikers())
 
-// 	if t5.state == 0 {
-// 		scaleFactor = 0.2
-// 	} else if t5.state == 1 {
-// 		scaleFactor = 0.5
-// 	} else if t5.state == 2 {
-// 		scaleFactor = 0.6
-// 	} else if t5.state == 3 {
-// 		scaleFactor = 0.8
-// 	}
+	// a := 1.0
+	// b := 1.0
+	// c := 1.0
+	// // energyMax := 1.0
+	// targetColor := t5.GetColour()
 
-// 	for _, agentID := range pendingAgents {
-// 		//if agent in agentMap
-// 		if _, ok := agentMap[agentID]; !ok {
-// 			agentState := agentMap[agentID]
+	// scaleFactor := 1.0
 
-// 			key := agentState.GetID()
-// 			reputation := t5.QueryReputation(key)
-// 			energyLevel := agentState.GetEnergyLevel()
-// 			pendingAgentColor := agentState.GetColour()
+	// if t5.state == 0 {
+	// 	scaleFactor = 0.2
+	// } else if t5.state == 1 {
+	// 	scaleFactor = 0.5
+	// } else if t5.state == 2 {
+	// 	scaleFactor = 0.6
+	// } else if t5.state == 3 {
+	// 	scaleFactor = 0.8
+	// }
 
-// 			isColorSame := 0.0
+	// for _, agentID := range pendingAgents {
+	// 	//if agent in agentMap
+	// 	if _, ok := agentMap[agentID]; !ok {
+	// 		agentState := agentMap[agentID]
 
-// 			if targetColor == pendingAgentColor {
-// 				isColorSame = 1.0
-// 			}
+	// 		key := agentState.GetID()
+	// 		reputation := t5.QueryReputation(key)
+	// 		energyLevel := agentState.GetEnergyLevel()
+	// 		pendingAgentColor := agentState.GetColour()
 
-// 			// color has to be a 0/1 and replaced with
-// 			utility := (a * energyLevel) + (b * reputation) + (c * isColorSame)
-// 			utilityNorm := utility / 3.0
-// 			utilityNorm = utilityNorm * scaleFactor
+	// 		isColorSame := 0.0
 
-// 			pendingAgentUtility[agentID] = utilityNorm
-// 		}
+	// 		if targetColor == pendingAgentColor {
+	// 			isColorSame = 1.0
+	// 		}
 
-// 	}
+	// 		// color has to be a 0/1 and replaced with
+	// 		utility := (a * energyLevel) + (b * reputation) + (c * isColorSame)
+	// 		utilityNorm := utility / 3.0
+	// 		utilityNorm = utilityNorm * scaleFactor
 
-// 	type kv struct {
-// 		Key   uuid.UUID
-// 		Value float64
-// 	}
+	// 		pendingAgentUtility[agentID] = utilityNorm
+	// 	}
 
-// 	var ss []kv
-// 	for k, v := range pendingAgentUtility {
-// 		ss = append(ss, kv{k, v})
-// 	}
+	// }
 
-// 	sort.Slice(ss, func(i, j int) bool {
-// 		return ss[i].Value > ss[j].Value // Sorting in descending order
-// 	})
+	// type kv struct {
+	// 	Key   uuid.UUID
+	// 	Value float64
+	// }
 
-// 	for i, pair := range ss {
-// 		result[pair.Key] = i < currentBikers && pair.Value >= threshold
-// 	}
+	// var ss []kv
+	// for k, v := range pendingAgentUtility {
+	// 	ss = append(ss, kv{k, v})
+	// }
 
-// 	return result
-// }
+	// sort.Slice(ss, func(i, j int) bool {
+	// 	return ss[i].Value > ss[j].Value // Sorting in descending order
+	// })
+
+	// for i, pair := range ss {
+	// 	result[pair.Key] = i < currentBikers && pair.Value >= threshold
+	// }
+
+	return result
+}
