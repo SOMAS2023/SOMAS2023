@@ -3,7 +3,7 @@ package server
 import (
 
 	// "SOMAS2023/internal/clients/team_3"
-	"SOMAS2023/internal/clients/team1"
+
 	"SOMAS2023/internal/clients/team2"
 	"SOMAS2023/internal/clients/team4"
 	"SOMAS2023/internal/clients/team8"
@@ -22,8 +22,8 @@ type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
 
 var AgentInitFunctions = []AgentInitFunction{
 	//nil,                 // Base Biker
-	team1.GetBiker1, // Team 1 works
-	team2.GetBiker,  // Team 2 works
+	// team1.GetBiker1, // Team 1 works
+	team2.GetBiker, // Team 2 works
 	// team_3.GetT3Agent, // Team 3
 	team4.GetBiker4,      // Team 4
 	team5Agent.GetBiker5, // Team 5 works

@@ -4,6 +4,7 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -132,5 +133,6 @@ func GetBiker4(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 		BaseBiker: baseBiker,
 	}
 	team4Agent.BaseBiker.GroupID = 4
+	fmt.Println("Team 4 Agent Created", team4Agent.GetID())
 	return team4Agent
 }
