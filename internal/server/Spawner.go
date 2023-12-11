@@ -2,7 +2,9 @@ package server
 
 import (
 	"SOMAS2023/internal/clients/team1"
-	"SOMAS2023/internal/clients/team2"
+	"SOMAS2023/internal/clients/team3"
+	"SOMAS2023/internal/clients/team4"
+	team5Agent "SOMAS2023/internal/clients/team5"
 	"SOMAS2023/internal/clients/team8"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
@@ -14,16 +16,23 @@ import (
 type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
 
 var AgentInitFunctions = []AgentInitFunction{
-	nil,                 // Base Biker
-	team1.GetBiker1,     // Team 1
-	team2.GetBiker,      // Team 2
+	team1.GetBiker1, // Team 1
+	//team2.GetBiker,      // Team 2
+	team3.GetT3Agent,    // Team 3
+	team4.GetBiker4,     // Team 4
+	team5Agent.GetBiker, // Team 5
 	team8.GetIBaseBiker, // Team 8
 }
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
-	agentGenerators := make([]baseserver.AgentGeneratorCountPair[objects.IBaseBiker], 0, len(AgentInitFunctions))
+	bikersPerTeam := BikerAgentCount / (len(AgentInitFunctions) + 1)
+	extraBaseBikers := BikerAgentCount % (len(AgentInitFunctions) + 1)
+	agentGenerators := []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
+		// Spawn base bikers
+		baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(nil), bikersPerTeam+extraBaseBikers),
+	}
 	for _, initFunction := range AgentInitFunctions {
-		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), BikerAgentCount/len(AgentInitFunctions)))
+		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), bikersPerTeam))
 	}
 	return agentGenerators
 }

@@ -2,6 +2,7 @@ package objects
 
 import (
 	utils "SOMAS2023/internal/common/utils"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -90,29 +91,35 @@ func (mb *MegaBike) UpdateForce() {
 
 // Calculates the final orientation of the Megabike, between -1 and 1 (-180° to 180°), given the Biker's Turning forces
 func (mb *MegaBike) UpdateOrientation() {
-	totalTurning := 0.0
+	var xSum, ySum float64
 	numOfSteeringAgents := 0
+
 	for _, agent := range mb.agents {
-		// If agents do not want to steer, they must set their TurningDecision.SteerBike to false and their steering
-		// will not have an impact on the direction of the bike.
 		turningDecision := agent.GetForces().Turning
 		if turningDecision.SteerBike {
 			numOfSteeringAgents += 1
-			totalTurning += float64(turningDecision.SteeringForce)
+
+			// Ensure input is between -1 and 1 (wrap around if in excess)
+			steeringForce := math.Mod(turningDecision.SteeringForce+1.0, 2.0) - 1.0
+
+			// Convert steering force to cartesian coordinates and sum up
+			angle := math.Pi * float64(steeringForce)
+			xSum += math.Cos(angle) // X component of the vector
+			ySum += math.Sin(angle) // Y component of the vector
 		}
 	}
-	// Do not update orientation if no biker want to steer
-	if numOfSteeringAgents > 0 {
-		averageTurning := totalTurning / float64(numOfSteeringAgents)
-		mb.orientation += (averageTurning)
-	}
-	// ensure the orientation wraps around if it exceeds the range 1.0 or -1.0
 
-	if mb.orientation > 1.0 {
-		mb.orientation -= 2.0
-	} else if mb.orientation < -1.0 {
-		mb.orientation += 2.0
+	// Average x and y components and return polar form
+	if numOfSteeringAgents > 0 {
+		avgX := xSum / float64(numOfSteeringAgents)
+		avgY := ySum / float64(numOfSteeringAgents)
+		mb.orientation = math.Atan2(avgY, avgX) / math.Pi // Converts back to -1 to 1 range
 	}
+}
+
+// gets the orientation of the megabike
+func (mb *MegaBike) GetOrientation() float64 {
+	return mb.orientation
 }
 
 // get the count of kicked out agents

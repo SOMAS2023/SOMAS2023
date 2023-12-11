@@ -239,11 +239,3 @@ if __name__ == "__main__":
         subprocess.Popen("snakeviz visualiser/profiles/stats.prof", shell=True)
     else:
         visualiser.start()
-
-"""
-TODO:
--Motivation
--Design decisions
-    - Why i selected certain attributes
-        - 
-"""
