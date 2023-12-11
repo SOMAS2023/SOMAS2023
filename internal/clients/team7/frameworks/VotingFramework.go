@@ -32,11 +32,3 @@ func NormaliseVote(agentScoreMap voting.IdVoteMap, totalScore float64) voting.Id
 
 	return normalisedVoteMap
 }
-
-func GetAverageTrust(trustLevels []float64) float64 {
-	trustSum := 0.0
-	for _, trust := range trustLevels {
-		trustSum += trust
-	}
-	return trustSum / float64(len(trustLevels))
-}
