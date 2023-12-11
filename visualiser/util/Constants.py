@@ -12,7 +12,6 @@ ENERGYTHRESHOLD = 0.1
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
 MAXSPEED = 100
-ROUNDLENGTH = 100
 ARROWS = {
     "NUM_ARROWS": 5,
     "ARROW_LENGTH": 15,

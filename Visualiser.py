@@ -12,7 +12,7 @@ import pygame_gui
 from pygame_gui import UIManager
 from pygame_gui.elements import UIButton, UIImage
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, ROUNDLENGTH, FPSDISPLAYRATE
+from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, FPSDISPLAYRATE
 from visualiser.util.HelperFunc import make_center
 from visualiser.GameScreen import GameScreen
 
@@ -185,11 +185,11 @@ class Visualiser:
         Load the game from the JSON file
         """
         self.json_parser(filepath)
-        self.gameScreenManager.change_round(0)
+        self.gameScreenManager.change_iteration(0)
         self.gameScreenManager.log("Welcome to the visualiser!")
-        self.gameScreenManager.log(f"Max Iterations: {self.gameScreenManager.maxRound}", "INFO")
-        self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound % ROUNDLENGTH}", "INFO")
-        self.gameScreenManager.log(f"There are {ROUNDLENGTH} iterations per round.", "INFO")
+        self.gameScreenManager.log(f"Max Iterations: {(self.gameScreenManager.maxRound * self.gameScreenManager.roundLength)-1}", "INFO")
+        self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound}", "INFO")
+        self.gameScreenManager.log(f"There are {self.gameScreenManager.roundLength} iterations per round.", "INFO")
         self.gameScreenManager.elements["console"].rebuild()
         self.switch_screen("game_screen")
 

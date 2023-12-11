@@ -6,7 +6,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, FPSDISPLAYRATE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED, ROUNDLENGTH
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, FPSDISPLAYRATE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
@@ -15,7 +15,6 @@ from visualiser.entities.Owdi import Owdi
 class GameScreen:
     def __init__(self) -> None:
         self.UIElements = {}
-        self.round = 0
         self.offsetX = 0
         self.offsetY = 0
         self.dragging = False
@@ -24,10 +23,14 @@ class GameScreen:
         self.zoom = ZOOM
         self.bikes = {}
         self.lootboxes = {}
-        self.owdi = None
+        self.owdis = {}
         self.elements = {}
         self.jsonData = None
         self.maxRound = 0
+        self.roundLength = 0
+        self.currentRound = 0
+        self.currentIteration = 0
+        self.iterationIndex = 0
         self.bikeColourMap = {}
         self.manager = None
         self.playSpeed = 1
@@ -50,7 +53,7 @@ class GameScreen:
             "-1" : 0,
             "0" : 0,
         }
-        self.maxDead = 0
+        self.numAgents = 0
         self.draw_mouse_coords()
 
     def init_ui(self, manager:pygame_gui.UIManager, uiscreen:UIContainer, consoleContainer:UIContainer) -> dict:
@@ -102,8 +105,8 @@ class GameScreen:
         self.elements["round_slider"] = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*2), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]//2)),
             start_value=0,
-            value_range=(0, self.maxRound),
-            click_increment=ROUNDLENGTH,
+            value_range=(0, self.maxRound*self.roundLength),
+            click_increment=self.roundLength,
             manager=manager,
             container=uiscreen,
             anchors={
@@ -249,7 +252,8 @@ class GameScreen:
         screen.fill((255, 255, 255))
         self.draw_grid(screen)
         # Draw awdi
-        self.owdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
+        for owdi in self.owdis.values():
+            owdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # # Draw lootboxes
         for lootbox in self.lootboxes.values():
             lootbox.draw(screen, self.offsetX, self.offsetY, self.zoom)
@@ -261,7 +265,8 @@ class GameScreen:
             bike.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         for lootbox in self.lootboxes.values():
             lootbox.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
-        self.owdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
+        for owdi in self.owdis.values():
+            owdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         screen.blit(self.mouseSurface, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
         # Divider line
         lineWidth = 1
@@ -307,9 +312,9 @@ class GameScreen:
                         self.toggle_play()
                     # Arrow keys advance rounds
                     case pygame.K_RIGHT:
-                        self.change_round(self.round + 1)
+                        self.change_iteration(self.currentIteration + 1)
                     case pygame.K_LEFT:
-                        self.change_round(self.round - 1)
+                        self.change_iteration(self.currentIteration - 1)
                     # Up down increases speed
                     case pygame.K_UP:
                         self.change_speed(self.playSpeed + 1)
@@ -318,23 +323,24 @@ class GameScreen:
             # Handle UI buttons
             case pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.elements["increase_round"]:
-                    self.change_round(self.round + 1)
+                    self.change_iteration(self.currentIteration + 1)
                 elif event.ui_element == self.elements["decrease_round"]:
-                    self.change_round(self.round - 1)
+                    self.change_iteration(self.currentIteration - 1)
                 # Play pause
                 elif event.ui_element == self.elements["play_pause"]:
                     self.toggle_play()
             #Sliders
             case pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                 if event.ui_element == self.elements["round_slider"]:
-                    self.change_round(event.value)
+                    self.change_iteration(event.value)
                 elif event.ui_element == self.elements["play_pause_speed_slider"]:
                     self.change_speed(event.value)
             # Handle auto play
             case self.playEvent:
-                self.elements["round_slider"].set_current_value(self.round + 1)
-                self.change_round(self.round + 1)
-                if self.round == self.maxRound:
+                self.elements["round_slider"].set_current_value(self.currentIteration + 1)
+                self.change_iteration(self.currentIteration + 1)
+                if self.currentIteration == self.maxRound*self.roundLength-1:
+                    self.isPlaying = True
                     self.toggle_play()
             #Draw mouse coordinates
             case self.mouseDraw:
@@ -363,26 +369,47 @@ class GameScreen:
         if self.isPlaying:
             pygame.time.set_timer(self.playEvent, int(1000//self.playSpeed))
 
-    def change_round(self, newRound:int) -> None:
+    def change_iteration(self, newIteration:int) -> None:
         """
         Change the current round using the round controls and json data
         Determine statistics
         """
-        self.round = max(0, min(self.maxRound, newRound))
-        self.elements["round_count"].set_text(f"Iteration: {self.round}")
-        self.elements["iteration_count"].set_text(f"Round: {self.round // ROUNDLENGTH}")
+        decreasing = False
+        if newIteration < self.currentIteration:
+            decreasing = True
+        self.currentIteration = max(0, min(newIteration, (self.maxRound*self.roundLength)-1))
+        self.iterationIndex = self.currentIteration % self.roundLength
+        self.currentRound = self.currentIteration // self.roundLength
+        self.elements["round_count"].set_text(f"Iteration: {self.currentIteration}")
+        self.elements["iteration_count"].set_text(f"Round: {self.currentRound}")
         self.elements["console"].html_text = ""
         self.stats["Void Agents"] = 0
         #Reload bikes
         self.update_bikes()
         self.update_lootboxes()
-        if self.owdi is None:
-            self.owdi = Owdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
-        else:
-            self.owdi.update_owdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
+        self.update_owdis()
         self.update_stats()
-        self.elements["stats"].rebuild()
-        self.elements["console"].rebuild()
+        if self.iterationIndex == 0:
+            self.stats["Dead Agents"] = 0
+            self.log(f"Entering Founding Stage for Round {self.currentRound}.", "INFO")
+        if not decreasing:
+            self.elements["stats"].rebuild()
+            self.elements["console"].rebuild()
+
+    def update_owdis(self) -> None:
+        """
+        Update the owdis
+        """
+        owdi = {}
+        for owdidata in self.jsonData[self.currentRound][self.iterationIndex]["audis"]:
+            owdiid = owdidata["id"]
+            if owdiid not in self.owdis:
+                owdiObj = Owdi(owdidata, self.jsonData[self.currentRound][self.iterationIndex]["bikes"])
+            else:
+                owdiObj = self.owdis[owdiid]
+                owdiObj.update_owdi(owdidata, self.jsonData[self.currentRound][self.iterationIndex]["bikes"])
+            owdi[owdiid] = owdiObj
+        self.owdis = owdi
 
     def update_lootboxes(self) -> None:
         """
@@ -390,7 +417,7 @@ class GameScreen:
         """
         # Reload lootboxes
         lootboxes = {}
-        for lootboxid, lootboxdata in self.jsonData[self.round]["loot_boxes"].items():
+        for lootboxid, lootboxdata in self.jsonData[self.currentRound][self.iterationIndex]["loot_boxes"].items():
             if lootboxid not in self.lootboxes:
                 lootboxObj = Lootbox(lootboxid, lootboxdata)
             else:
@@ -405,9 +432,9 @@ class GameScreen:
         """
         bikes = {}
         bikeAgents = {}
-        for bikeid, bikedata in self.jsonData[self.round]["bikes"].items():
+        for bikeid, bikedata in self.jsonData[self.currentRound][self.iterationIndex]["bikes"].items():
             #Determine next position for arrow drawing
-            nextRound = self.jsonData[min(self.round+1, self.maxRound)]["bikes"]
+            nextRound = self.jsonData[self.currentRound][min(self.iterationIndex+1, self.roundLength-1)]["bikes"]
             if bikeid in nextRound:
                 nextPos = nextRound[bikeid]["physical_state"]["position"]["x"], nextRound[bikeid]["physical_state"]["position"]["y"]
                 if "orientation" in nextRound[bikeid]:
@@ -420,14 +447,14 @@ class GameScreen:
                 nextOrient = 0
             # If bike is new, create new bike
             if bikeid not in self.bikes:
-                bikeObj = Bike(bikeid, bikedata, self.jsonData[self.round]["agents"], nextPos, nextOrient, self.jsonData[min(self.round+1, self.maxRound)]["agents"])
+                bikeObj = Bike(bikeid, bikedata, self.jsonData[self.currentRound][self.iterationIndex]["agents"], nextPos, nextOrient, self.jsonData[self.currentRound][min(self.iterationIndex+1, self.roundLength-1)]["agents"])
             else:
                 bikeObj = self.bikes[bikeid]
-                bikeObj.update_bike(bikedata, self.jsonData[self.round]["agents"], nextPos, nextOrient, self.jsonData[min(self.round+1, self.maxRound)]["agents"])
+                bikeObj.update_bike(bikedata, self.jsonData[self.currentRound][self.iterationIndex]["agents"], nextPos, nextOrient, self.jsonData[self.currentRound][min(self.iterationIndex+1, self.roundLength-1)]["agents"])
             bikes[bikeid] = bikeObj
             bikeAgents.update(bikeObj.get_agents())
         self.compare_bikes(bikes)
-        self.compare_agents(self.jsonData[self.round]["agents"], bikeAgents)
+        self.compare_agents(self.jsonData[self.currentRound][self.iterationIndex]["agents"], bikeAgents)
 
     def propagate_click(self, mousePos:tuple) -> None:
         """
@@ -438,7 +465,8 @@ class GameScreen:
             bike.propagate_click(mouseX, mouseY, self.zoom)
         for lootbox in self.lootboxes.values():
             lootbox.propagate_click(mouseX, mouseY, self.zoom)
-        self.owdi.propagate_click(mouseX, mouseY, self.zoom)
+        for owdi in self.owdis.values():
+            owdi.propagate_click(mouseX, mouseY, self.zoom)
 
     def adjust_zoom(self, zoomFactor:float, mousePos:tuple) -> None:
         """
@@ -495,14 +523,20 @@ class GameScreen:
         """
         dead = 0
         for agentid, agent in self.agents.items():
+            groupID = agent["group_id"]
             if agentid not in newAgents:
+                # Agent has died from being run over'
+                runOver = False
+                for owdi in self.owdis.values():
+                    if (pow(agent["location"]["x"]-owdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["location"]["y"]-owdi.y, 2) < pow(EPSILON, 2)):
+                        self.log(f"Agent {agentid} ({agent['group_id']}) has been run over by the Owdi!", "ERROR")
+                        runOver = True
+                        break
+                if runOver:
+                    continue
                 # Agent has died from exhaustion
-                groupID = agent["group_id"]
                 if agent["energy_level"] < ENERGYTHRESHOLD:
                     self.log(f"Agent {agentid} ({groupID}) has run out of energy!", "ERROR")
-                # Agent has died from being run over
-                elif (pow(agent["location"]["x"]-self.owdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["location"]["y"]-self.owdi.y, 2) < pow(EPSILON, 2)):
-                    self.log(f"Agent {agentid} ({groupID}) has been run over by the Owdi!", "ERROR")
                 # Agent has died for unknown reasons
                 else:
                     self.log(f"Agent {agentid} ({groupID}) has died for unknown reasons!", "ERROR")
@@ -510,18 +544,10 @@ class GameScreen:
             else:
                 #Check if agent has moved bikes - on bike parameter is not reliable
                 if agentid not in bikeAgents:
-                    self.log(f"Agent {agentid} is in the void.", "INFO")
+                    self.log(f"Agent {agentid} ({groupID}) is in the void.", "INFO")
                     self.stats["Void Agents"] += 1
         self.stats["Alive Agents"] = len(newAgents.values())
-        if str(self.round) not in self.deadCount:
-            if str(self.round-1) in self.deadCount:
-                self.deadCount[str(self.round)] = self.deadCount[str(self.round-1)] + dead
-            else:
-                self.stats["Dead Agents"] = "N/A"
-            if self.round % ROUNDLENGTH == 0:
-                self.deadCount[str(self.round)] = 0
-        if str(self.round) in self.deadCount:
-            self.stats["Dead Agents"] = self.deadCount[str(self.round)]
+        self.stats["Dead Agents"] = self.numAgents - dead
         self.agents = newAgents
 
     def compare_bikes(self, newBikes:dict) -> None:
@@ -563,4 +589,5 @@ class GameScreen:
         if data is None:
             return
         self.jsonData = data
-        self.maxRound = len(data) - 1
+        self.roundLength = len(data[0])
+        self.maxRound = len(data)
