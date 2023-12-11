@@ -6,6 +6,8 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
+	"math/rand"
+
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
@@ -267,8 +269,8 @@ func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
 	return voteOutput
 }
 
+// Vote on kicking agent off bike.
 func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
-	voteResults := make(map[uuid.UUID]int)
 
 	fellowBikerIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
@@ -279,17 +281,9 @@ func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
 	voteHandler := frameworks.NewVoteToKickAgentHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
 
-	for _, agent := range fellowBikerIds {
-		if voteOutput[agent] {
-			voteResults[agent] = 1
-		} else {
-			voteResults[agent] = 0
-		}
-	}
+	biker.voteKickingMap = voteOutput
 
-	biker.voteKickingMap = voteResults
-
-	return voteResults
+	return voteOutput
 }
 
 // Vote on Leader
@@ -361,6 +355,9 @@ func (biker *BaseTeamSevenBiker) GetAllMessages([]objects.IBaseBiker) []messagin
 	voteDirectionMessage := biker.CreateVoteLootboxDirectionMessage()
 	messages = append(messages, voteDirectionMessage)
 
+	forcesMessage := biker.CreateForcesMessage()
+	messages = append(messages, forcesMessage)
+
 	return messages
 }
 
@@ -413,11 +410,22 @@ func (biker *BaseTeamSevenBiker) CreateVoteLootboxDirectionMessage() objects.Vot
 }
 
 func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutMessage {
-	// Currently this returns a default/meaningless message
-	// For team's agent, add your own logic to communicate with other agents
+	// Low conscientiousness => Unethical => More likely to lie about voting to kick off agent.
+	// Low conscientiousness => Dependable => Less likely to lie about voting to kick off agent.
+	voteKickingMapMessage := biker.voteKickingMap
+	randNum := rand.Float64()
+	if biker.personality.Conscientiousness < randNum {
+		for agentId, vote := range biker.voteKickingMap {
+			if vote == 1 {
+				voteKickingMapMessage[agentId] = 0
+			}
+		}
+
+	}
+
 	return objects.VoteKickoutMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-		VoteMap:     biker.voteKickingMap,
+		VoteMap:     voteKickingMapMessage,
 	}
 }
 
