@@ -4,11 +4,41 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
+
+// handle kick out message
+const ifKickOutMsgValue = 0.2
+
+// handle reputation
+const reputationThreshold = 0.3
+const ifReputationIsLow = 0.05
+
+// handle loot box message
+const likeLootBox = 0.1
+const dislikeLootBox = 0.05
+
+// handle governance
+const sameColorDemorcracy = 0.05
+const sameColorLeader = 0.02
+const sameColorDictator = 0.02
+
+const differentColorDemorcracy = 0.05
+const differntColorLeader = 0.02
+const differentColorDictatorship = 0.02
+
+// hanle force message
+const ifForcesTooLow = 0.2
+
+// voteRulerMsg
+const ifRulerSameColor = 0.05
+const ifRulerDifferentColor = 0.05
+const ifWeAreRuler = 0.1
+
+// handle kickout message
+const ifKickOutIUs = 0.15
 
 func (agent *BaselineAgent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
 	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
@@ -250,9 +280,9 @@ func (agent *BaselineAgent) HandleKickoutMessage(msg objects.KickoutAgentMessage
 	agentId := msg.AgentId
 	kickout := msg.Kickout
 	if agentId == agent.GetID() && kickout == true {
-		agent.DecreaseHonesty(sender, 0.2)
+		agent.DecreaseHonesty(sender, ifKickOutMsgValue)
 	}
-	fmt.Println("message kickout")
+	//fmt.Println("message kickout")
 }
 
 func (agent *BaselineAgent) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
@@ -262,10 +292,10 @@ func (agent *BaselineAgent) HandleReputationMessage(msg objects.ReputationOfAgen
 	agentId := msg.AgentId
 	reputation := msg.Reputation
 
-	if agentId == agent.GetID() && reputation < 0.3 {
-		agent.DecreaseHonesty(sender, 0.05)
+	if agentId == agent.GetID() && reputation < reputationThreshold {
+		agent.DecreaseHonesty(sender, ifReputationIsLow)
 	}
-	fmt.Println("message reputaion")
+	//fmt.Println("message reputaion")
 
 }
 
@@ -281,12 +311,12 @@ func (agent *BaselineAgent) HandleLootboxMessage(msg objects.LootboxMessage) {
 	lootboxId := msg.LootboxId
 
 	if sender.GetColour() == agent.GetColour() && lootboxId != agent.targetLoot {
-		agent.DecreaseHonesty(senderID, 0.05)
+		agent.DecreaseHonesty(senderID, dislikeLootBox)
 	}
 	if lootboxId == agent.targetLoot {
-		agent.IncreaseHonesty(senderID, 0.1)
+		agent.IncreaseHonesty(senderID, likeLootBox)
 	}
-	fmt.Println("message lootbox")
+	//fmt.Println("message lootbox")
 }
 
 func (agent *BaselineAgent) HandleGovernanceMessage(msg objects.GovernanceMessage) {
@@ -298,26 +328,26 @@ func (agent *BaselineAgent) HandleGovernanceMessage(msg objects.GovernanceMessag
 	governanceId := msg.GovernanceId
 	if agent.GetColour() == sender.GetColour() {
 		if governanceId == 0 {
-			agent.IncreaseHonesty(senderID, 0.05)
+			agent.IncreaseHonesty(senderID, sameColorDictator)
 		}
 		if governanceId == 1 {
-			agent.IncreaseHonesty(senderID, 0.02)
+			agent.IncreaseHonesty(senderID, sameColorLeader)
 		}
 		if governanceId == 2 {
-			agent.DecreaseHonesty(senderID, 0.02)
+			agent.DecreaseHonesty(senderID, sameColorDictator)
 		}
 	} else {
 		if governanceId == 0 {
-			agent.IncreaseHonesty(senderID, 0.05)
+			agent.IncreaseHonesty(senderID, differentColorDemorcracy)
 		}
 		if governanceId == 1 {
-			agent.DecreaseHonesty(senderID, 0.02)
+			agent.DecreaseHonesty(senderID, differntColorLeader)
 		}
 		if governanceId == 2 {
-			agent.DecreaseHonesty(senderID, 0.05)
+			agent.DecreaseHonesty(senderID, differentColorDictatorship)
 		}
 	}
-	fmt.Println("message governance")
+	//fmt.Println("message governance")
 }
 
 func (agent *BaselineAgent) HandleForcesMessage(msg objects.ForcesMessage) {
@@ -328,8 +358,8 @@ func (agent *BaselineAgent) HandleForcesMessage(msg objects.ForcesMessage) {
 	agentForces := msg.AgentForces
 
 	if sender.GetColour() == agent.lootBoxColour && agentForces.Pedal < 0.4 {
-		agent.DecreaseHonesty(agentId, 0.2)
-		fmt.Println("message forces")
+		agent.DecreaseHonesty(agentId, ifForcesTooLow)
+		//fmt.Println("message forces")
 	}
 
 }
@@ -366,16 +396,16 @@ func (agent *BaselineAgent) HandleVoteRulerMessage(msg objects.VoteRulerMessage)
 			rulerAgentID = agentID
 		}
 	}
-	fmt.Println("message vote ruler")
+	//fmt.Println("message vote ruler")
 
 	if rulerAgentID != agent.GetID() {
 		if senderColor == agent.GetColour() {
-			agent.IncreaseHonesty(senderID, 0.05)
+			agent.IncreaseHonesty(senderID, ifRulerSameColor)
 		} else {
-			agent.DecreaseHonesty(senderID, 0.05)
+			agent.DecreaseHonesty(senderID, ifRulerDifferentColor)
 		}
 	} else {
-		agent.IncreaseHonesty(senderID, 0.1)
+		agent.IncreaseHonesty(senderID, ifWeAreRuler)
 	}
 }
 
@@ -387,7 +417,7 @@ func (agent *BaselineAgent) HandleVoteKickoutMessage(msg objects.VoteKickoutMess
 	voteMap := msg.VoteMap
 
 	if voteMap[agent.GetID()] > 0 {
-		agent.DecreaseHonesty(senderID, 0.15)
-		fmt.Println("message kickout")
+		agent.DecreaseHonesty(senderID, ifKickOutIUs)
+		//fmt.Println("message kickout")
 	}
 }

@@ -91,8 +91,8 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	agent.CalculateReputation()
 	agent.CalculateHonestyMatrix()
 	//agent.DisplayFellowsEnergyHistory()
-	agent.DisplayFellowsHonesty()
-	// agent.DisplayFellowsReputation()
+	//agent.DisplayFellowsHonesty()
+	//agent.DisplayFellowsReputation()
 }
 
 func (agent *BaselineAgent) rankFellowsReputation(agentsOnBike []objects.IBaseBiker) (map[uuid.UUID]float64, error) {
@@ -167,7 +167,7 @@ func (agent *BaselineAgent) DisplayFellowsHonesty() {
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
 		fmt.Println("")
-		//fmt.Println("Honesty Matrix for: ", fellowID)
+		fmt.Println("Honesty Matrix for: ", fellowID)
 		fmt.Print(agent.honestyMatrix[fellowID])
 		fmt.Println("")
 	}
