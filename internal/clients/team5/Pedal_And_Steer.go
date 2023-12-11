@@ -10,7 +10,11 @@ import (
 func (t5 *team5Agent) calcForce() float64 {
 	agentEnergy := t5.GetEnergyLevel()
 	if t5.state == 0 {
-		return utils.BikerMaxForce * agentEnergy
+		return agentEnergy * utils.BikerMaxForce * 0.5
+	} else if t5.state == 1 {
+		return agentEnergy * utils.BikerMaxForce
+	} else if t5.state == 2 {
+		return agentEnergy * utils.BikerMaxForce
 	}
 	return utils.BikerMaxForce
 }
