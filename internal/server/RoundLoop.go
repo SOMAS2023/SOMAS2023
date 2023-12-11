@@ -74,7 +74,7 @@ func (s *Server) RunRoundLoop() {
 		s.replenishMegaBikes()
 	}
 
-	s.RunMessagingSession()
+	// s.RunMessagingSession()
 }
 
 func (s *Server) RunBikeSwitch(gameState GameStateDump) {

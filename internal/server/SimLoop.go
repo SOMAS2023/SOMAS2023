@@ -159,7 +159,7 @@ func (s *Server) Start() {
 		gameStates = append(gameStates, s.RunSimLoop(utils.RoundIterations))
 		fmt.Printf("\nMain game loop finished.\n\n")
 		fmt.Printf("Messaging session started...\n\n")
-		s.RunMessagingSession()
+		// s.RunMessagingSession()
 		fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
 	}
