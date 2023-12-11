@@ -92,7 +92,7 @@ func (agent *SmartAgent) DecideForce(direction uuid.UUID) {
 
 		energyCost := 0.0
 		for id, weight := range scores {
-			energyCost += weight * agent.reputationMap[id]._lastPedal
+			energyCost += weight * agent.reputationMap[id]._lastEnergyCost
 		}
 		pedalForce = agent.lastPedal * (energyCost / (agent.lastEnergyCost + utils.Epsilon))
 		pedalForce *= agent.satisfactionOfRecentAllocation
