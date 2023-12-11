@@ -42,7 +42,6 @@ func (ebb *ExtendedBaseBiker) HandleForcesMessage(msg obj.ForcesMessage) {
 
 	if agentId == ebb.OtherBiker.GetID() {
 		ebb.OtherBikerForces = append(ebb.OtherBikerForces, agentForces)
-		// fmt.Println(len(ebb.OtherBikerForces), ebb.OtherBikerForces)
 	}
 
 }

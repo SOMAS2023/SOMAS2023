@@ -33,6 +33,8 @@ func (s *Server) ResetGameState() {
 	for _, agent := range s.GetAgentMap() {
 		if agent.GetBike() != uuid.Nil {
 			s.RemoveAgentFromBike(agent)
+		} else if agent.GetBikeStatus() {
+			agent.ToggleOnBike()
 		}
 	}
 
@@ -58,6 +60,14 @@ func (s *Server) ResetGameState() {
 		for _, agent := range s.GetAgentMap() {
 			agent.ResetPoints()
 		}
+	}
+
+	for _, bike := range s.GetMegaBikes() {
+		bike.SetRuler(uuid.Nil)
+	}
+
+	for _, agent := range s.GetAgentMap() {
+		agent.SetBike(uuid.Nil)
 	}
 
 	s.replenishLootBoxes()
@@ -93,6 +103,9 @@ func (s *Server) FoundingInstitutions() {
 		// get bikes for this governance
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
+			if len(bikesUsed) == len(s.megaBikes) {
+				break
+			}
 			for !foundBike {
 				bike := s.GetRandomBikeId()
 				if !slices.Contains(bikesUsed, bike) {

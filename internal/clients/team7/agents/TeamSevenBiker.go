@@ -6,6 +6,7 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
+	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
 
@@ -32,11 +33,25 @@ type BaseTeamSevenBiker struct {
 	time                  int
 
 	votedForResources bool
+	voteAllocationMap voting.IdVoteMap
+	voteDirectionMap  voting.LootboxVoteMap
+	voteKickingMap    map[uuid.UUID]int
+	voteJoiningMap    map[uuid.UUID]bool
+
+	reputationMessages           []objects.ReputationOfAgentMessage
+	kickoutMessages              []objects.KickoutAgentMessage
+	lootboxMessages              []objects.LootboxMessage
+	joiningMessages              []objects.JoiningAgentMessage
+	governanceMessages           []objects.GovernanceMessage
+	forcesMessages               []objects.ForcesMessage
+	voteGovernanceMessages       []objects.VoteGoveranceMessage
+	voteLootboxDirectionMessages []objects.VoteLootboxDirectionMessage
+	voteRulerMessages            []objects.VoteRulerMessage
+	voteKickoutMessgaes          []objects.VoteKickoutMessage
 }
 
 // Produce new BaseTeamSevenBiker
-func NewBaseTeamSevenBiker() *BaseTeamSevenBiker {
-	baseBiker := objects.GetBaseBiker(utils.GenerateRandomColour(), uuid.New())
+func NewBaseTeamSevenBiker(baseBiker *objects.BaseBiker) *BaseTeamSevenBiker {
 	agentId := baseBiker.GetID()
 	personality := frameworks.NewDefaultPersonality()
 	return &BaseTeamSevenBiker{
@@ -47,10 +62,26 @@ func NewBaseTeamSevenBiker() *BaseTeamSevenBiker {
 		socialNetwork:         frameworks.NewSocialNetwork(agentId, personality),
 		personality:           personality,
 		environmentHandler:    frameworks.NewEnvironmentHandler(baseBiker.GetGameState(), baseBiker.GetBike(), agentId),
-		memoryLength:          10,
-		time:                  -1,
-		proposedDirections:    []float64{0, 0},
+
+		memoryLength:       10,
+		time:               -1,
+		proposedDirections: []float64{0, 0},
+
+		reputationMessages:           make([]objects.ReputationOfAgentMessage, 0),
+		kickoutMessages:              make([]objects.KickoutAgentMessage, 0),
+		lootboxMessages:              make([]objects.LootboxMessage, 0),
+		joiningMessages:              make([]objects.JoiningAgentMessage, 0),
+		governanceMessages:           make([]objects.GovernanceMessage, 0),
+		forcesMessages:               make([]objects.ForcesMessage, 0),
+		voteGovernanceMessages:       make([]objects.VoteGoveranceMessage, 0),
+		voteLootboxDirectionMessages: make([]objects.VoteLootboxDirectionMessage, 0),
+		voteRulerMessages:            make([]objects.VoteRulerMessage, 0),
+		voteKickoutMessgaes:          make([]objects.VoteKickoutMessage, 0),
 	}
+}
+
+func GetTeamSevenBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+	return NewBaseTeamSevenBiker(baseBiker)
 }
 
 func (biker *BaseTeamSevenBiker) UpdateGameState(gameState objects.IGameState) {
@@ -73,7 +104,7 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	for i, fellowBiker := range fellowBikers {
 		agentId := fellowBiker.GetID()
 		agentIds[i] = agentId
-		agentForces[agentId] = fellowBiker.GetForces()
+		// agentForces[agentId] = fellowBiker.GetForces()
 		agentColours[agentId] = fellowBiker.GetColour()
 		agentEnergyLevels[agentId] = fellowBiker.GetEnergyLevel()
 		// TODO: Implement once we can message biker to ask for allocation
@@ -102,17 +133,8 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 }
 
 func (biker *BaseTeamSevenBiker) ProposeDirection() uuid.UUID {
-	if biker.GetEnergyLevel() < 0.25 {
-		return biker.environmentHandler.GetNearestLootBox().GetID()
-	}
 
-	myProposedLootboxObject := biker.environmentHandler.GetNearestLootBoxByColour(biker.GetColour())
-	var myProposedLootbox uuid.UUID
-	if myProposedLootboxObject == nil {
-		myProposedLootbox = biker.environmentHandler.GetNearestLootBox().GetID()
-	} else {
-		myProposedLootbox = myProposedLootboxObject.GetID()
-	}
+	myProposedLootbox := biker.getDesiredLootboxId()
 
 	// Update Memory
 	if len(biker.myProposedLootboxes) < biker.memoryLength {
@@ -122,6 +144,33 @@ func (biker *BaseTeamSevenBiker) ProposeDirection() uuid.UUID {
 	}
 
 	return myProposedLootbox
+}
+
+func (biker *BaseTeamSevenBiker) getDesiredLootboxId() uuid.UUID {
+	myProposedLootboxObject := biker.environmentHandler.GetNearestLootBoxByColour(biker.GetColour())
+
+	if biker.GetEnergyLevel() < 0.25 || myProposedLootboxObject == nil {
+		return biker.environmentHandler.GetNearestLootBox().GetID()
+	}
+
+	return myProposedLootboxObject.GetID()
+}
+
+// TODO: Implement a strategy for choosing the final vote
+func (biker *BaseTeamSevenBiker) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
+	votes := make(voting.LootboxVoteMap)
+	totOptions := len(proposals)
+	normalDist := 1.0 / float64(totOptions)
+	for _, proposal := range proposals {
+		if val, ok := votes[proposal]; ok {
+			votes[proposal] = val + normalDist
+		} else {
+			votes[proposal] = normalDist
+		}
+	}
+
+	biker.voteDirectionMap = votes
+	return votes
 }
 
 // Override base biker functions
@@ -193,6 +242,8 @@ func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uu
 	voteHandler := frameworks.NewVoteToAcceptAgentHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
 
+	biker.voteJoiningMap = voteOutput
+
 	return voteOutput
 }
 
@@ -209,11 +260,26 @@ func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
 	voteOutput := voteHandler.GetDecision(voteInputs)
 
 	biker.votedForResources = true
+	biker.voteAllocationMap = voteOutput
 	return voteOutput
 }
 
 // Vote on whether to kick agent off bike
-func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+// func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
+// 	voteInputs := frameworks.VoteOnAgentsInput{
+// 		AgentCandidates: pendingAgents,
+// 	}
+// 	voteHandler := frameworks.NewVoteToKickAgentHandler()
+// 	voteOutput := voteHandler.GetDecision(voteInputs)
+
+// 	return voteOutput
+// }
+
+func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
+	voteResults := make(map[uuid.UUID]int)
+
+	fellowBikerIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
+
 	voteInputs := frameworks.VoteOnAgentsInput{
 		AgentCandidates:      pendingAgents,
 		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
@@ -221,7 +287,17 @@ func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uu
 	voteHandler := frameworks.NewVoteToKickAgentHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
 
-	return voteOutput
+	for _, agent := range fellowBikerIds {
+		if voteOutput[agent] {
+			voteResults[agent] = 1
+		} else {
+			voteResults[agent] = 0
+		}
+	}
+
+	biker.voteKickingMap = voteResults
+
+	return voteResults
 }
 
 // Vote on Leader
@@ -258,4 +334,137 @@ func (biker *BaseTeamSevenBiker) DecideGovernance() utils.Governance {
 	voteOutput := voteHandler.GetDecision()
 
 	return voteOutput
+}
+
+func (biker *BaseTeamSevenBiker) GetReputation() map[uuid.UUID]float64 {
+	return biker.socialNetwork.GetCurrentTrustLevels()
+}
+
+func (biker *BaseTeamSevenBiker) QueryReputation(agentId uuid.UUID) float64 {
+	trustLevels := biker.socialNetwork.GetCurrentTrustLevels()
+	return trustLevels[agentId]
+}
+
+// This function updates all the messages for that agent i.e. both sending and receiving.
+// And returns the new messages from other agents to your agent
+func (biker *BaseTeamSevenBiker) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
+	messages := make([]messaging.IMessage[objects.IBaseBiker], 0)
+
+	// Get all the trust levels of the agents on the bike
+	trustLevels := biker.socialNetwork.GetCurrentTrustLevels()
+	for agentId, trustLevel := range trustLevels {
+		reputationMessage := biker.CreateReputationMessage(agentId, trustLevel)
+		messages = append(messages, reputationMessage)
+
+		kickoutMessage := biker.CreatekickoutMessage(agentId, false)
+		if trustLevel < 0.2 {
+			kickoutMessage = biker.CreatekickoutMessage(agentId, true)
+		}
+		messages = append(messages, kickoutMessage)
+	}
+
+	voteKickoutMessage := biker.CreateVotekickoutMessage()
+	messages = append(messages, voteKickoutMessage)
+
+	voteDirectionMessage := biker.CreateVoteLootboxDirectionMessage()
+	messages = append(messages, voteDirectionMessage)
+
+	return messages
+}
+
+func (biker *BaseTeamSevenBiker) CreatekickoutMessage(agentId uuid.UUID, kickout bool) objects.KickoutAgentMessage {
+	return objects.KickoutAgentMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		AgentId:     agentId,
+		Kickout:     kickout,
+	}
+}
+
+func (biker *BaseTeamSevenBiker) CreateReputationMessage(agentId uuid.UUID, reputation float64) objects.ReputationOfAgentMessage {
+	return objects.ReputationOfAgentMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		AgentId:     agentId,
+		Reputation:  reputation,
+	}
+}
+
+func (biker *BaseTeamSevenBiker) CreateLootboxMessage() objects.LootboxMessage {
+	return objects.LootboxMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		LootboxId:   biker.getDesiredLootboxId(),
+	}
+}
+
+func (biker *BaseTeamSevenBiker) CreateGoverenceMessage() objects.GovernanceMessage {
+	return objects.GovernanceMessage{
+		BaseMessage:  messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		BikeId:       biker.GetBike(),
+		GovernanceId: 0, // Always propose democracy (for now)
+	}
+}
+
+func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
+	return objects.ForcesMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		AgentId:     biker.GetID(),
+		AgentForces: biker.GetForces(),
+	}
+}
+
+// func (biker *BaseTeamSevenBiker) CreateVoteLootboxDirectionMessage() objects.VoteLootboxDirectionMessage {
+// 	// Currently this returns a default/meaningless message
+// 	// For team's agent, add your own logic to communicate with other agents
+// 	return objects.VoteLootboxDirectionMessage{
+// 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+// 		VoteMap:     biker.voteDirectionMap,
+// 	}
+// }
+
+func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutMessage {
+	// Currently this returns a default/meaningless message
+	// For team's agent, add your own logic to communicate with other agents
+	return objects.VoteKickoutMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		VoteMap:     biker.voteKickingMap,
+	}
+}
+
+func (biker *BaseTeamSevenBiker) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
+	biker.kickoutMessages = append(biker.kickoutMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
+	biker.reputationMessages = append(biker.reputationMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
+	biker.joiningMessages = append(biker.joiningMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleLootboxMessage(msg objects.LootboxMessage) {
+	biker.lootboxMessages = append(biker.lootboxMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleGovernanceMessage(msg objects.GovernanceMessage) {
+	biker.governanceMessages = append(biker.governanceMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleForcesMessage(msg objects.ForcesMessage) {
+	biker.forcesMessages = append(biker.forcesMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
+	biker.voteGovernanceMessages = append(biker.voteGovernanceMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxDirectionMessage) {
+	biker.voteLootboxDirectionMessages = append(biker.voteLootboxDirectionMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleVoteRulerMessage(msg objects.VoteRulerMessage) {
+	biker.voteRulerMessages = append(biker.voteRulerMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
+	biker.voteKickoutMessgaes = append(biker.voteKickoutMessgaes, msg)
 }

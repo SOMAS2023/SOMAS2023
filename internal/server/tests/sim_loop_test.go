@@ -75,7 +75,19 @@ func createMockBikers(s server.IBaseBikerServer, count int) []*MockBiker {
 func TestResetGameState(t *testing.T) {
 	it := 2
 	s := server.Initialize(it)
+	s.FoundingInstitutions()
 
+	// remove 4 agents from the map
+	i := 0
+	for _, agent := range s.GetAgentMap() {
+		s.RemoveAgent(agent)
+		if i == 3 {
+			break
+		}
+		i++
+	}
+
+	// spawn 4 mock bikers and delete 4 normal bikers, as there might be some issues with the number of megabikes
 	mockBikers := make([]*MockBiker, 4)
 	for i := range mockBikers {
 		mockBiker := NewMockBiker()
@@ -121,8 +133,20 @@ func TestResetGameState(t *testing.T) {
 }
 
 func TestFoundingInstitutions(t *testing.T) {
+	OnlySpawnBaseBikers(t)
+
 	it := 2
 	s := server.Initialize(it)
+
+	// remove 4 agents from the map
+	i := 0
+	for _, agent := range s.GetAgentMap() {
+		s.RemoveAgent(agent)
+		if i == 3 {
+			break
+		}
+		i++
+	}
 
 	mockBikers := make([]*MockBiker, 4)
 	for i := range mockBikers {
@@ -135,7 +159,10 @@ func TestFoundingInstitutions(t *testing.T) {
 		s.AddAgent(mockBiker)
 		mockBikers[i] = mockBiker
 	}
-
+	gs := s.NewGameStateDump(0)
+	for _, agent := range s.GetAgentMap() {
+		agent.UpdateGameState(gs)
+	}
 	s.FoundingInstitutions()
 
 	/* 	for _, agent := range s.GetAgentMap() {
