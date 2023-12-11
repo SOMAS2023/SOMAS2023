@@ -286,7 +286,7 @@ func TestUpdateOrientation(t *testing.T) {
 		expectedOrientation2 := -1.0
 
 		actualOrientation := mb.GetOrientation()
-		if actualOrientation != expectedOrientation1 && actualOrientation != expectedOrientation2{
+		if actualOrientation != expectedOrientation1 && actualOrientation != expectedOrientation2 {
 			t.Errorf("got %v, want %v or %v", actualOrientation, expectedOrientation1, expectedOrientation2)
 		}
 	})
