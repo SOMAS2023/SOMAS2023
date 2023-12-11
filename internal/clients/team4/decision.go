@@ -69,6 +69,7 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 
 				if bikeWeight > weight {
 					optimalBike = bike.GetID()
+					weight = bikeWeight
 				}
 			}
 		}
