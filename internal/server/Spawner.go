@@ -15,7 +15,7 @@ import (
 type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
 
 var AgentInitFunctions = []AgentInitFunction{
-	// nil,                 // Base Biker
+	nil,                 // Base Biker
 	team1.GetBiker1,     // Team 1
 	team2.GetBiker,      // Team 2
 	team5Agent.GetBiker, // Team 5
