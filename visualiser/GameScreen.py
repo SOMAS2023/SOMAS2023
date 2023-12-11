@@ -49,10 +49,6 @@ class GameScreen:
             "Dead Agents" : 0,
         }
         self.agents = {}
-        self.deadCount = {
-            "-1" : 0,
-            "0" : 0,
-        }
         self.numAgents = 0
         self.draw_mouse_coords()
 
