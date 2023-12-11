@@ -42,6 +42,7 @@ class GameScreen:
         self.mouseXCur = 0
         self.mouseYCur = 0
         self.consoleScreen = None
+        self.aliveAgents = 0
         self.stats = {
             "Active Bikes" : 0,
             "Active Lootboxes" : 0,
