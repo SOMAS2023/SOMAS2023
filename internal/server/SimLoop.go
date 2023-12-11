@@ -4,8 +4,8 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"sort"
-
+	"cmp"
+	"fmt"
 	"math"
 	"slices"
 
@@ -98,7 +98,7 @@ func (s *Server) FoundingInstitutions() {
 	bikesUsed := make([]uuid.UUID, 0)
 	for governanceMethod, numBikers := range foundingTotals {
 		megaBikesNeeded := int(math.Ceil(float64(numBikers) / float64(utils.BikersOnBike)))
-		govBikes[governanceMethod] = make([]uuid.UUID, megaBikesNeeded)
+		govBikes[governanceMethod] = make([]uuid.UUID, 0, megaBikesNeeded)
 		// get bikes for this governance
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
@@ -110,7 +110,7 @@ func (s *Server) FoundingInstitutions() {
 				if !slices.Contains(bikesUsed, bike) {
 					foundBike = true
 					bikesUsed = append(bikesUsed, bike)
-					govBikes[governanceMethod][i] = bike
+					govBikes[governanceMethod] = append(govBikes[governanceMethod], bike)
 
 					// set the governance
 					bikeObj := s.GetMegaBikes()[bike]
@@ -127,9 +127,13 @@ func (s *Server) FoundingInstitutions() {
 
 		// select a bike with this governance method which has been assigned the lowest amount of bikers
 		bikesAvailable := govBikes[governance]
-		sort.Slice(bikesAvailable, func(i, j int) bool {
-			// in the order from large to small
-			return len(s.GetMegaBikes()[bikesAvailable[i]].GetAgents()) < len(s.GetMegaBikes()[bikesAvailable[j]].GetAgents())
+		if len(bikesAvailable) == 0 {
+			panic("not enough bikes to accommodate governance choices")
+		}
+
+		// Sort bikes from least to most full
+		slices.SortFunc(bikesAvailable, func(a, b uuid.UUID) int {
+			return cmp.Compare(len(s.megaBikes[a].GetAgents()), len(s.megaBikes[b].GetAgents()))
 		})
 
 		// get the first one of the sorted bikes
@@ -156,18 +160,18 @@ func (s *Server) FoundingInstitutions() {
 }
 
 func (s *Server) Start() {
-	//** fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
+	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
 	gameStates := make([][]GameStateDump, 0, s.GetIterations())
 	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
-		//** fmt.Printf("Game Loop %d running... \n \n", i)
-		//** fmt.Printf("Main game loop running...\n\n")
+		fmt.Printf("Game Loop %d running... \n \n", i)
+		fmt.Printf("Main game loop running...\n\n")
 		gameStates = append(gameStates, s.RunSimLoop(utils.RoundIterations))
-		//** fmt.Printf("\nMain game loop finished.\n\n")
-		//** fmt.Printf("Messaging session started...\n\n")
+		fmt.Printf("\nMain game loop finished.\n\n")
+		fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
-		//** fmt.Printf("\nMessaging session completed\n\n")
-		//** fmt.Printf("Game Loop %d completed.\n", i)
+		fmt.Printf("\nMessaging session completed\n\n")
+		fmt.Printf("Game Loop %d completed.\n", i)
 	}
 	s.outputResults(gameStates)
 }

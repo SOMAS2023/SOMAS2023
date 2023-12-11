@@ -2,7 +2,6 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/objects"
-	obj "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
@@ -14,15 +13,14 @@ type Iteam5Agent interface {
 }
 
 type team5Agent struct {
-	objects.BaseBiker
+	*objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
-	//set state default to 0
-	state            int // 0 = normal, 1 = conservative
-	prevEnergy       map[uuid.UUID]float64
-	roundCount       int
-	otherBikerForces map[uuid.UUID]utils.Forces
-	otherBikerRep    map[uuid.UUID]float64
-	finalPreferences map[uuid.UUID]float64
+	state               int
+	prevEnergy          map[uuid.UUID]float64
+	roundCount          int
+	otherBikerForces    map[uuid.UUID]utils.Forces
+	otherBikerRep       map[uuid.UUID]float64
+	finalPreferences    map[uuid.UUID]float64
 }
 
 type ResourceAllocationMethod int
@@ -36,14 +34,13 @@ const (
 )
 
 // Creates an instance of Team 5 Biker
-func GetBiker5(baseBiker *obj.BaseBiker) obj.IBaseBiker {
+func GetBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 	baseBiker.GroupID = 5
-	// print
-	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
-		BaseBiker:           *baseBiker,
+		BaseBiker:           baseBiker,
 		resourceAllocMethod: Equal,
-		state:               0,
+		state:               1, //observer state
 		roundCount:          0,
 		otherBikerForces:    make(map[uuid.UUID]utils.Forces),
 		otherBikerRep:       make(map[uuid.UUID]float64),
@@ -57,21 +54,14 @@ func (t5 *team5Agent) UpdateAgentInternalState() {
 	t5.roundCount = (t5.roundCount + 1) % utils.RoundIterations
 }
 
-// needs fixing always democracy
 func (t5 *team5Agent) DecideGovernance() utils.Governance {
 	return utils.Democracy
 }
 
-//Functions can be called in any scenario
-
-// needs fixing never gets off bike
 func (t5 *team5Agent) DecideAction() objects.BikerAction {
 	return objects.Pedal
 }
 
-// needs fixing doesn't pick a bike to join
-// Decides which bike to join based on reputation and space available
-// Todo: create a formula that combines reputation, space available, people with same colour, governance system (rn only uses rep)
 func (t5 *team5Agent) ChangeBike() uuid.UUID {
 	//get reputation of all bikes
 	bikeReps := t5.getReputationOfAllBikes()
@@ -99,22 +89,10 @@ func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voti
 }
 
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
-	////** fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
+	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
 	method := t5.resourceAllocMethod
 	return t5.calculateResourceAllocation(method)
 }
-
-// needs fixing currently never votes off
-// func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
-// 	voteResults := make(map[uuid.UUID]int)
-// 	for _, agent := range t5.GetFellowBikers() {
-// 		agentID := agent.GetID()
-// 		if agentID != t5.GetID() {
-// 			voteResults[agentID] = 0
-// 		}
-// 	}
-// 	return voteResults
-// }
 
 func (t5 *team5Agent) VoteDictator() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)

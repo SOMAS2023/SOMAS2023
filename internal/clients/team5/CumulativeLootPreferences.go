@@ -32,11 +32,6 @@ func (t5 *team5Agent) CalculateLootBoxPreferences(gameState objects.IGameState, 
 			finalPreferences[lootBoxID] = 0
 		}
 
-		// cumulativePreference := cumulativePreferences[id]
-
-		// combine preferences (weights: 0.4 for distance, 0.3 for color, 0.2 for energy, 0.1 for cumulative)
-		// ensure that if cant get first preference, get second preference and so on
-
 	}
 
 	return finalPreferences
@@ -61,8 +56,6 @@ func SortPreferences(prefs map[uuid.UUID]float64) map[uuid.UUID]float64 {
 	return finalVotes
 
 }
-
-// ensure that if cant get first preference, get second preference and so on
 
 // calculates the Euclidean distance between two points
 func calculateDistanceToObject(a, t5 utils.Coordinates) float64 {

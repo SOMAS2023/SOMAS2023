@@ -2,6 +2,7 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/objects"
+	"SOMAS2023/internal/common/utils"
 	"math"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
@@ -12,7 +13,7 @@ func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[
 
 	// send message to all other agents on the bike containing our reputation value on them, expecting them to send back their reputation value on us
 	for _, agent := range t5.GetFellowBikers() {
-		if agent.GetID() != t5.GetID() && t5.QueryReputation(agent.GetID()) >= 0.6 {
+		if agent.GetID() != t5.GetID() && t5.QueryReputation(agent.GetID()) >= 0.0 {
 			repMsg := t5.CreateReputationMessage(agent)
 			messages = append(messages, repMsg)
 		}
@@ -30,10 +31,19 @@ func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[
 
 func (t5 *team5Agent) CreateForcesMessage() objects.ForcesMessage {
 	// Send our own forces
+	ourForce := utils.Forces{
+		Pedal: 1.0, //lie about pedalling
+		Brake: 0,
+		Turning: utils.TurningDecision{
+			SteerBike:     true,
+			SteeringForce: 1.0,
+		},
+	}
+
 	return objects.ForcesMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](t5, t5.GetFellowBikers()),
 		AgentId:     t5.GetID(),
-		AgentForces: t5.GetForces(),
+		AgentForces: ourForce,
 	}
 }
 
@@ -68,12 +78,14 @@ func (t5 *team5Agent) HandleForcesMessage(msg objects.ForcesMessage) {
 
 	// If the sender gives his own forces and is on our bike, store the forces
 	for _, agent := range t5.GetFellowBikers() {
-		if senderID == agentId && agent.GetID() == senderID {
-			t5.otherBikerForces[senderID] = forces
+		if agent.GetID() != t5.GetID() {
+			if senderID == agentId && agent.GetID() == senderID {
+				t5.otherBikerForces[senderID] = forces
 
-			// If the sender is slacking, lower the reputation value
-			if forces.Pedal < 0.3 {
-				t5.SetReputation(senderID, math.Max(t5.QueryReputation(senderID)-c, -1))
+				// If the sender is slacking, lower the reputation value
+				if forces.Pedal < 0.3 {
+					t5.SetReputation(senderID, math.Max(t5.QueryReputation(senderID)-c, -1))
+				}
 			}
 		}
 	}

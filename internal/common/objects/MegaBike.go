@@ -99,15 +99,11 @@ func (mb *MegaBike) UpdateOrientation() {
 		if turningDecision.SteerBike {
 			numOfSteeringAgents += 1
 
-			// Ensure input is between -1 and 1
-			if turningDecision.SteeringForce > 1.0 {
-				turningDecision.SteeringForce = 1.0
-			} else if turningDecision.SteeringForce < -1.0 {
-				turningDecision.SteeringForce = -1.0
-			}
+			// Ensure input is between -1 and 1 (wrap around if in excess)
+			steeringForce := math.Mod(turningDecision.SteeringForce+1.0, 2.0) - 1.0
 
 			// Convert steering force to cartesian coordinates and sum up
-			angle := math.Pi * float64(turningDecision.SteeringForce)
+			angle := math.Pi * float64(steeringForce)
 			xSum += math.Cos(angle) // X component of the vector
 			ySum += math.Sin(angle) // Y component of the vector
 		}
