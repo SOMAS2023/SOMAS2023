@@ -10,8 +10,6 @@ import (
 func (t5 *team5Agent) calculateResourceAllocation(method ResourceAllocationMethod) map[uuid.UUID]float64 {
 	allocations := make(map[uuid.UUID]float64)
 
-	//how to get id of my megabike?
-
 	agentsOnBike := t5.GetFellowBikers()
 
 	for _, agent := range agentsOnBike {
@@ -45,8 +43,6 @@ func (t5 *team5Agent) generateAllocation(agent objects.IBaseBiker, method Resour
 		//default to equal
 		value = 1
 	}
-
-	//add more interesting allocation methods
 
 	return value
 

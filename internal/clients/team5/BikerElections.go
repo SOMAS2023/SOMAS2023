@@ -7,16 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// if t5.prev == nul{
-// 	make map
-// 	make diff map
-// 	t5.prevEnergy = currMap
-// }
-// else{
-// 	current - agent.prev > 0
-// 	then update prev
-// }
-
 func (t5 *team5Agent) CalculateEnergyChange(BikeId uuid.UUID) map[uuid.UUID]float64 {
 	if t5.prevEnergy == nil {
 		t5.prevEnergy = make(map[uuid.UUID]float64)
