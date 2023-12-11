@@ -27,6 +27,7 @@ type SocialNetworkUpdateInput struct {
 
 type ISocialNetwork[T any] interface {
 	GetSocialNetwork() map[uuid.UUID]SocialConnection
+	GetCurrentTrustLevels() map[uuid.UUID]float64
 	UpdateSocialNetwork(agentIds []uuid.UUID, inputs T)
 	UpdateActiveConnections(agentIds []uuid.UUID)
 	DeactivateConnections(agentIds []uuid.UUID)
@@ -45,6 +46,14 @@ func NewSocialNetwork(myId uuid.UUID, personality *Personality) *SocialNetwork {
 		myId:          myId,
 		personality:   personality,
 	}
+}
+
+func (sn *SocialNetwork) GetCurrentTrustLevels() map[uuid.UUID]float64 {
+	trustLevels := make(map[uuid.UUID]float64)
+	for agentId, connection := range sn.socialNetwork {
+		trustLevels[agentId] = connection.trustLevels[len(connection.trustLevels)-1]
+	}
+	return trustLevels
 }
 
 func (sn *SocialNetwork) GetSocialNetwork() map[uuid.UUID]*SocialConnection {
