@@ -34,7 +34,7 @@ type BaseTeamSevenBiker struct {
 
 	votedForResources bool
 	voteAllocationMap voting.IdVoteMap
-	voteDirectionMap  voting.IdVoteMap
+	voteDirectionMap  voting.LootboxVoteMap
 	voteKickingMap    map[uuid.UUID]int
 	voteJoiningMap    map[uuid.UUID]bool
 
@@ -159,20 +159,17 @@ func (biker *BaseTeamSevenBiker) getDesiredLootboxId() uuid.UUID {
 // TODO: Implement a strategy for choosing the final vote
 func (biker *BaseTeamSevenBiker) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	votes := make(voting.LootboxVoteMap)
-	votes_ := make(voting.IdVoteMap)
 	totOptions := len(proposals)
 	normalDist := 1.0 / float64(totOptions)
 	for _, proposal := range proposals {
 		if val, ok := votes[proposal]; ok {
 			votes[proposal] = val + normalDist
-			votes_[proposal] = val + normalDist
 		} else {
 			votes[proposal] = normalDist
-			votes_[proposal] = normalDist
 		}
 	}
 
-	biker.voteDirectionMap = votes_
+	biker.voteDirectionMap = votes
 	return votes
 }
 
@@ -408,7 +405,7 @@ func (biker *BaseTeamSevenBiker) CreateVoteLootboxDirectionMessage() objects.Vot
 	// For team's agent, add your own logic to communicate with other agents
 	return objects.VoteLootboxDirectionMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-		VoteMap:     biker.voteDirectionMap,
+		VoteMap:     biker.voteDirectionMap.GetVotes(),
 	}
 }
 
