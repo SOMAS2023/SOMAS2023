@@ -87,6 +87,7 @@ func GetTeamSevenBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 func (biker *BaseTeamSevenBiker) UpdateGameState(gameState objects.IGameState) {
 	biker.BaseBiker.UpdateGameState(gameState)
 	biker.environmentHandler.UpdateGameState(gameState)
+	biker.environmentHandler.UpdateCurrentBikeId(biker.GetBike())
 }
 
 // Override UpdateAgentInternalState
