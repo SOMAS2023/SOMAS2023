@@ -585,7 +585,7 @@ func (agent *SmartAgent) scoreAgentsForAllocation(agentsOnBike []objects.IBaseBi
 		// go 'Smallest First' strategy, only take energyRemain into consideration
 		for _, others := range agentsOnBike {
 			id := others.GetID()
-			score := agent.reputationMap[id].energyRemain
+			score := 1 - agent.reputationMap[id].energyRemain
 			scores[others.GetID()] = score
 			totalScore += score
 		}
@@ -599,7 +599,7 @@ func (agent *SmartAgent) scoreAgentsForAllocation(agentsOnBike []objects.IBaseBi
 			// Forgiveness: forgive agents pedal harder recently
 			// Equality: Agents received more energy before should get less this time
 			// Need: Agents with lower energyLevel require more, try to meet their need
-			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution - rep.energyGain + rep.energyRemain + utils.Epsilon
+			score := rep.isSameColor + rep.historyContribution + rep.lootBoxGet + rep.recentContribution - rep.energyGain + (1 - rep.energyRemain) + utils.Epsilon
 			scores[id] = score
 			totalScore += score
 		}
