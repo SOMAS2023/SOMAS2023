@@ -12,7 +12,7 @@ import pygame_gui
 from pygame_gui import UIManager
 from pygame_gui.elements import UIButton, UIImage
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, ITERATIONLENGTH, FPSDISPLAYRATE
+from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, ROUNDLENGTH, FPSDISPLAYRATE
 from visualiser.util.HelperFunc import make_center
 from visualiser.GameScreen import GameScreen
 
@@ -188,8 +188,8 @@ class Visualiser:
         self.gameScreenManager.change_round(0)
         self.gameScreenManager.log("Welcome to the visualiser!")
         self.gameScreenManager.log(f"Max Iterations: {self.gameScreenManager.maxRound}", "INFO")
-        self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound % ITERATIONLENGTH}", "INFO")
-        self.gameScreenManager.log(f"There are {ITERATIONLENGTH} iterations per round.", "INFO")
+        self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound % ROUNDLENGTH}", "INFO")
+        self.gameScreenManager.log(f"There are {ROUNDLENGTH} iterations per round.", "INFO")
         self.gameScreenManager.elements["console"].rebuild()
         self.switch_screen("game_screen")
 

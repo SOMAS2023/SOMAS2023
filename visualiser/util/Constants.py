@@ -3,7 +3,7 @@ Constants used for the visualiser.
 """
 # Screen constants
 WINDOW_TITLE = "SOMAS Visualiser"
-FRAMERATE, FPSDISPLAYRATE = 60, 10
+FRAMERATE, FPSDISPLAYRATE = 75, 12
 MINZOOM, MAXZOOM, ZOOM = 0.2, 2.5, 0.3
 COORDINATESCALE = 20
 PRECISION = 2
@@ -11,25 +11,12 @@ EPSILON = 12
 ENERGYTHRESHOLD = 0.1
 THEMEJSON = "visualiser/theme.json"
 JSONPATH = "game_dump.json"
-MAXSPEED = 50
-ITERATIONLENGTH = 100
+MAXSPEED = 100
+ROUNDLENGTH = 100
 ARROWS = {
     "NUM_ARROWS": 5,
     "ARROW_LENGTH": 15,
     "ARROW_ANGLE": 30,
-}
-TEXT = {
-    "FONT" : "Arial",
-    "FONT_SIZE": 1,
-    "PADDING": 2,
-    "DEFAULT_COLOUR" : "#FFFFFF",
-    "LINE_SPACING": 2,
-    "BACKGROUND_COLOUR": "#699ff5",
-    "TEXT_COLOUR": "#FFFFFF",
-    "LINE_COLOUR": "#d8e0ed",
-    "LINE_WIDTH": 2,
-    "BORDER_WIDTH": 2,
-    "BORDER_COLOUR": "#000000",
 }
 CONSOLE = {
     "DEFAULT" : "#FFFFFF",
@@ -53,17 +40,9 @@ OVERLAY = {
 BIKE = {
     "LINE_WIDTH": 1,
     "LINE_COLOUR": "#000000",
-    "COLOURS": {
-        "MINHUE" : 300,
-        "MAXHUE" : 300,
-        "MINSAT" : 0,
-        "MAXSAT" : 0,
-        "MINVAL" : 60,
-        "MAXVAL" : 80,
-    },
     "TRANSPARENCY": 150,
 }
-AWDI = {
+OWDI = {
     "COLOUR" : "#0F0F0F",
     "LINE_WIDTH": 2,
     "LINE_COLOUR": "#000000",

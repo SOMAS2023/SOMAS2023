@@ -6,11 +6,11 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, FPSDISPLAYRATE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED, ITERATIONLENGTH
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, FPSDISPLAYRATE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED, ROUNDLENGTH
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
-from visualiser.entities.Awdi import Awdi
+from visualiser.entities.Owdi import Owdi
 
 class GameScreen:
     def __init__(self) -> None:
@@ -24,7 +24,7 @@ class GameScreen:
         self.zoom = ZOOM
         self.bikes = {}
         self.lootboxes = {}
-        self.awdi = None
+        self.owdi = None
         self.elements = {}
         self.jsonData = None
         self.maxRound = 0
@@ -103,7 +103,7 @@ class GameScreen:
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*2), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]//2)),
             start_value=0,
             value_range=(0, self.maxRound),
-            click_increment=ITERATIONLENGTH,
+            click_increment=ROUNDLENGTH,
             manager=manager,
             container=uiscreen,
             anchors={
@@ -249,7 +249,7 @@ class GameScreen:
         screen.fill((255, 255, 255))
         self.draw_grid(screen)
         # Draw awdi
-        self.awdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
+        self.owdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # # Draw lootboxes
         for lootbox in self.lootboxes.values():
             lootbox.draw(screen, self.offsetX, self.offsetY, self.zoom)
@@ -261,7 +261,7 @@ class GameScreen:
             bike.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         for lootbox in self.lootboxes.values():
             lootbox.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
-        self.awdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
+        self.owdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         screen.blit(self.mouseSurface, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
         # Divider line
         lineWidth = 1
@@ -370,16 +370,16 @@ class GameScreen:
         """
         self.round = max(0, min(self.maxRound, newRound))
         self.elements["round_count"].set_text(f"Iteration: {self.round}")
-        self.elements["iteration_count"].set_text(f"Round: {self.round // ITERATIONLENGTH}")
+        self.elements["iteration_count"].set_text(f"Round: {self.round // ROUNDLENGTH}")
         self.elements["console"].html_text = ""
         self.stats["Void Agents"] = 0
         #Reload bikes
         self.update_bikes()
         self.update_lootboxes()
-        if self.awdi is None:
-            self.awdi = Awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
+        if self.owdi is None:
+            self.owdi = Owdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
         else:
-            self.awdi.update_awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
+            self.owdi.update_owdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
         self.update_stats()
         self.elements["stats"].rebuild()
         self.elements["console"].rebuild()
@@ -438,7 +438,7 @@ class GameScreen:
             bike.propagate_click(mouseX, mouseY, self.zoom)
         for lootbox in self.lootboxes.values():
             lootbox.propagate_click(mouseX, mouseY, self.zoom)
-        self.awdi.propagate_click(mouseX, mouseY, self.zoom)
+        self.owdi.propagate_click(mouseX, mouseY, self.zoom)
 
     def adjust_zoom(self, zoomFactor:float, mousePos:tuple) -> None:
         """
@@ -501,7 +501,7 @@ class GameScreen:
                 if agent["energy_level"] < ENERGYTHRESHOLD:
                     self.log(f"Agent {agentid} ({groupID}) has run out of energy!", "ERROR")
                 # Agent has died from being run over
-                elif (pow(agent["location"]["x"]-self.awdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["location"]["y"]-self.awdi.y, 2) < pow(EPSILON, 2)):
+                elif (pow(agent["location"]["x"]-self.owdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["location"]["y"]-self.owdi.y, 2) < pow(EPSILON, 2)):
                     self.log(f"Agent {agentid} ({groupID}) has been run over by the Owdi!", "ERROR")
                 # Agent has died for unknown reasons
                 else:
@@ -518,7 +518,7 @@ class GameScreen:
                 self.deadCount[str(self.round)] = self.deadCount[str(self.round-1)] + dead
             else:
                 self.stats["Dead Agents"] = "N/A"
-            if self.round % ITERATIONLENGTH == 0:
+            if self.round % ROUNDLENGTH == 0:
                 self.deadCount[str(self.round)] = 0
         if str(self.round) in self.deadCount:
             self.stats["Dead Agents"] = self.deadCount[str(self.round)]
