@@ -19,11 +19,11 @@ type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
 var AgentInitFunctions = []AgentInitFunction{
 	team1.GetBiker1, // Team 1
 	//team2.GetBiker,      // Team 2
-	team3.GetT3Agent,    // Team 3
-	team4.GetBiker4,     // Team 4
-	team5Agent.GetBiker, // Team 5
+	team3.GetT3Agent,       // Team 3
+	team4.GetBiker4,        // Team 4
+	team5Agent.GetBiker,    // Team 5
 	team6.InitialiseBiker6, // Team 6
-	team8.GetIBaseBiker, // Team 8
+	team8.GetIBaseBiker,    // Team 8
 }
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {

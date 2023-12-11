@@ -570,7 +570,7 @@ func (agent *SmartAgent) rankTargetProposals(proposedLootBox map[uuid.UUID]objec
 	// The following steps tend to achieve the rank of lootbox proposals according to their scores calculated. We will return the highest rank to pick the agent with it. (Another Borda score would consider reputation function)这个后面如果可以再考虑如果能得到的话
 
 	// normalize
-	for id, _ := range scores {
+	for id := range scores {
 		scores[id] = scores[id] / sum_score
 	}
 
