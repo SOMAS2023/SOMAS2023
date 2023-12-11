@@ -281,7 +281,8 @@ func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
 	fellowBikerIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
-		AgentCandidates: fellowBikerIds,
+		AgentCandidates:      fellowBikerIds,
+		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
 	}
 	voteHandler := frameworks.NewVoteToKickAgentHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
@@ -300,13 +301,12 @@ func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
 }
 
 // Vote on Leader
-// TODO: Uncomment when infrastructure have merged the new voting methods.
-/*
 func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
-	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
+	agentIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
-		AgentCandidates: agentIds,
+		AgentCandidates:      agentIds,
+		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
 	}
 	voteHandler := frameworks.NewVoteOnLeaderHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
@@ -316,17 +316,25 @@ func (biker *BaseTeamSevenBiker) VoteLeader() voting.IdVoteMap {
 
 // Vote on Dictator
 func (biker *BaseTeamSevenBiker) VoteDictator() voting.IdVoteMap {
-	agentIds := biker.environmentHandler.GetAgentsOnCurrentBikeId()
+	agentIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
-		AgentCandidates: agentIds,
+		AgentCandidates:      agentIds,
+		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
 	}
 	voteHandler := frameworks.NewVoteOnDictatorHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
 
 	return voteOutput
 }
-*/
+
+// Vote on governance
+func (biker *BaseTeamSevenBiker) DecideGovernance() utils.Governance {
+	voteHandler := frameworks.NewVoteOnGovernanceHandler()
+	voteOutput := voteHandler.GetDecision()
+
+	return voteOutput
+}
 
 func (biker *BaseTeamSevenBiker) GetReputation() map[uuid.UUID]float64 {
 	return biker.socialNetwork.GetCurrentTrustLevels()

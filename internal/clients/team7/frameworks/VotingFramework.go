@@ -17,7 +17,8 @@ type MapIdBool map[uuid.UUID]bool
 type ScoreType float64
 
 type VoteOnAgentsInput struct {
-	AgentCandidates []uuid.UUID
+	AgentCandidates      []uuid.UUID
+	CurrentSocialNetwork map[uuid.UUID]*SocialConnection
 }
 
 // Expected to return votes which sum to 1 for some voting types.
@@ -30,4 +31,12 @@ func NormaliseVote(agentScoreMap voting.IdVoteMap, totalScore float64) voting.Id
 	}
 
 	return normalisedVoteMap
+}
+
+func GetAverageTrust(trustLevels []float64) float64 {
+	trustSum := 0.0
+	for _, trust := range trustLevels {
+		trustSum += trust
+	}
+	return trustSum / float64(len(trustLevels))
 }
