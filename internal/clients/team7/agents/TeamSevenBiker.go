@@ -281,7 +281,7 @@ func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
 	fellowBikerIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
 	voteInputs := frameworks.VoteOnAgentsInput{
-		AgentCandidates:      pendingAgents,
+		AgentCandidates:      fellowBikerIds,
 		CurrentSocialNetwork: biker.socialNetwork.GetSocialNetwork(),
 	}
 	voteHandler := frameworks.NewVoteToKickAgentHandler()
