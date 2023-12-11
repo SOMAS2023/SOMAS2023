@@ -19,8 +19,13 @@ func (voteHandler *VoteOnLeaderHandler) GetDecision(inputs VoteOnAgentsInput) vo
 	totalScore := 0.0
 
 	for _, agent_id := range inputs.AgentCandidates {
-		trustLevels := inputs.CurrentSocialNetwork[agent_id].trustLevels
-		agentScore := GetAverageTrust(trustLevels)
+		agentConnection, exists := inputs.CurrentSocialNetwork[agent_id]
+		var agentScore float64
+		if !exists {
+			agentScore = 0.5
+		} else {
+			agentScore = agentConnection.GetAverageTrustLevels()
+		}
 		totalScore += agentScore
 		agentScoreMap[agent_id] = agentScore
 	}

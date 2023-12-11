@@ -14,9 +14,14 @@ func (voteHandler *VoteToAcceptAgentHandler) GetDecision(inputs VoteOnAgentsInpu
 
 	for _, agent_id := range inputs.AgentCandidates {
 		// Agent score depends on our average trust level of the agent.
-		trustLevels := inputs.CurrentSocialNetwork[agent_id].trustLevels
-		agentScore := ScoreType(GetAverageTrust(trustLevels))
-		vote[agent_id] = agentScore < threshold
+		agentConnection, exists := inputs.CurrentSocialNetwork[agent_id]
+		var agentScore float64
+		if !exists {
+			agentScore = 0.5
+		} else {
+			agentScore = agentConnection.GetAverageTrustLevels()
+		}
+		vote[agent_id] = ScoreType(agentScore) < threshold
 	}
 
 	return vote
