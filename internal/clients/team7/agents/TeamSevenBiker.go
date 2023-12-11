@@ -400,7 +400,7 @@ func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
 			AgentForces: utils.Forces{
 				Pedal:   1.0,
 				Brake:   0.0,
-				Turning: biker.GetForces().Turning,
+				Turning: biker.GetForces().Turning, // Currently we always turn towards lootbox others voted for anyway. So no need to lie.
 			},
 		}
 	} else {
