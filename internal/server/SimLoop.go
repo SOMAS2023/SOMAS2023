@@ -5,10 +5,9 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"fmt"
-	"sort"
-
 	"math"
 	"slices"
+	"sort"
 
 	"github.com/google/uuid"
 )
@@ -99,7 +98,7 @@ func (s *Server) FoundingInstitutions() {
 	bikesUsed := make([]uuid.UUID, 0)
 	for governanceMethod, numBikers := range foundingTotals {
 		megaBikesNeeded := int(math.Ceil(float64(numBikers) / float64(utils.BikersOnBike)))
-		govBikes[governanceMethod] = make([]uuid.UUID, megaBikesNeeded)
+		govBikes[governanceMethod] = make([]uuid.UUID, 0, megaBikesNeeded)
 		// get bikes for this governance
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
@@ -111,7 +110,7 @@ func (s *Server) FoundingInstitutions() {
 				if !slices.Contains(bikesUsed, bike) {
 					foundBike = true
 					bikesUsed = append(bikesUsed, bike)
-					govBikes[governanceMethod][i] = bike
+					govBikes[governanceMethod] = append(govBikes[governanceMethod], bike)
 
 					// set the governance
 					bikeObj := s.GetMegaBikes()[bike]
