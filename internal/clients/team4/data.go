@@ -91,7 +91,7 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 	agent.CalculateReputation()
 	agent.CalculateHonestyMatrix()
 	//agent.DisplayFellowsEnergyHistory()
-	//agent.DisplayFellowsHonesty()
+	agent.DisplayFellowsHonesty()
 	//agent.DisplayFellowsReputation()
 }
 

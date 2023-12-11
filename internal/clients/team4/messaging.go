@@ -13,32 +13,32 @@ import (
 const ifKickOutMsgValue = 0.2
 
 // handle reputation
-const reputationThreshold = 0.3
-const ifReputationIsLow = 0.05
+const reputationThreshold = 0.65
+const ifReputationIsLow = 0.1
 
 // handle loot box message
-const likeLootBox = 0.1
+const likeLootBox = 0.2
 const dislikeLootBox = 0.05
 
 // handle governance
-const sameColorDemorcracy = 0.05
-const sameColorLeader = 0.02
-const sameColorDictator = 0.02
+const sameColorDemorcracy = 0.1
+const sameColorLeader = 0.05
+const sameColorDictator = 0.05
 
-const differentColorDemorcracy = 0.05
-const differntColorLeader = 0.02
-const differentColorDictatorship = 0.02
+const differentColorDemorcracy = 0.1
+const differntColorLeader = 0.05
+const differentColorDictatorship = 0.05
 
 // hanle force message
-const ifForcesTooLow = 0.2
+const ifForcesTooLow = 0.4
 
 // voteRulerMsg
-const ifRulerSameColor = 0.05
-const ifRulerDifferentColor = 0.05
-const ifWeAreRuler = 0.1
+const ifRulerSameColor = 0.1
+const ifRulerDifferentColor = 0.1
+const ifWeAreRuler = 0.2
 
 // handle kickout message
-const ifKickOutIUs = 0.15
+const ifKickOutUs = 0.5
 
 func (agent *BaselineAgent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
 	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
@@ -201,7 +201,6 @@ func (agent *BaselineAgent) CreateVoteLootboxDirectionMessage() objects.VoteLoot
 func (agent *BaselineAgent) CreateVoteRulerMessage() objects.VoteRulerMessage {
 	reputationMap := agent.GetReputation()
 	honestyMap := agent.GetHonestyMatrix()
-	reputationThreshold := 0.8
 	honestyThreshold := 0.8
 
 	var rulerCandidate uuid.UUID
@@ -417,7 +416,7 @@ func (agent *BaselineAgent) HandleVoteKickoutMessage(msg objects.VoteKickoutMess
 	voteMap := msg.VoteMap
 
 	if voteMap[agent.GetID()] > 0 {
-		agent.DecreaseHonesty(senderID, ifKickOutIUs)
+		agent.DecreaseHonesty(senderID, ifKickOutUs)
 		//fmt.Println("message kickout")
 	}
 }
