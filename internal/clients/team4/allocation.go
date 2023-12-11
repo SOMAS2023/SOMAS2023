@@ -2,11 +2,10 @@ package team4
 
 import (
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 )
 
 func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
-	fmt.Println("Decide Allocation")
+	//fmt.Println("Decide Allocation")
 	agent.UpdateDecisionData()
 	distribution := make(voting.IdVoteMap) //make(map[uuid.UUID]float64)
 	fellowBikers := agent.GetFellowBikers()
@@ -47,7 +46,7 @@ func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
 /////////////////////////////////// DICATOR FUNCTIONS /////////////////////////////////////
 
 func (agent *BaselineAgent) DecideDictatorAllocation() voting.IdVoteMap {
-	fmt.Println("Dictate Allocation")
+	//fmt.Println("Dictate Allocation")
 	agent.UpdateDecisionData()
 	distribution := make(voting.IdVoteMap)
 	fellowBikers := agent.GetFellowBikers()

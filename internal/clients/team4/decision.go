@@ -4,7 +4,6 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 	"sort"
 
 	"github.com/google/uuid"
@@ -137,7 +136,7 @@ func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evalua
 
 func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 	agent.UpdateDecisionData()
-	fmt.Println("Vote for Kickout")
+	//fmt.Println("Vote for Kickout")
 	voteResults := make(map[uuid.UUID]int)
 
 	fellowBikers := agent.GetFellowBikers()
@@ -185,7 +184,7 @@ func (agent *BaselineAgent) VoteForKickout() map[uuid.UUID]int {
 		}
 	}
 	voteResults[agent.GetID()] = 0
-	println("the voting results are:", voteResults)
+	//println("the voting results are:", voteResults)
 	return voteResults
 }
 
@@ -274,7 +273,7 @@ func (agent *BaselineAgent) VoteDictator() voting.IdVoteMap {
 }
 
 func (agent *BaselineAgent) DecideKickOut() []uuid.UUID {
-	fmt.Println("Decide Kickout")
+	//mt.Println("Decide Kickout")
 	kickoutResults := make([]uuid.UUID, 0)
 	agent.UpdateDecisionData()
 
