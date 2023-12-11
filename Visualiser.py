@@ -178,7 +178,11 @@ class Visualiser:
                 )
                 root.destroy()
                 if filepath != "":
-                    self.load_game(filepath)
+                    try:
+                        self.load_game(filepath)
+                    except: # pylint: disable=bare-except
+                        print("Attempted to load incompatible/outdated JSON file.")
+                        self.switch_screen("main_menu")
 
     def load_game(self, filepath:str) -> None:
         """
@@ -220,8 +224,13 @@ class Visualiser:
         """
         filepath = sys.argv[0] + "/../" + JSONPATH
         if exists(filepath):
-            self.load_game(filepath)
-            self.run_loop("game_screen")
+            # Load game from JSON file
+            try:
+                self.load_game(filepath)
+                self.run_loop("game_screen")
+            except: # pylint: disable=bare-except
+                print("Attempted to load incompatible/outdated JSON file.")
+                self.run_loop()
         else:
             self.run_loop()
 
