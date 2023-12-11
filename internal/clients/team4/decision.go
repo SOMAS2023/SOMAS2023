@@ -55,7 +55,7 @@ func (agent *BaselineAgent) ChangeBike() uuid.UUID {
 			length = len(bike.GetAgents())
 		}
 		if agent.evaluateBike(bike.GetID()) {
-			if bike.GetID() != agent.currentBike && bike.GetID() != uuid.Nil { //get all bikes apart from our agent's bike
+			if bike.GetID() != uuid.Nil { //get all bikes apart from our agent's bike
 				bikeWeight := float64(0)
 
 				for _, biker := range bike.GetAgents() {
@@ -106,7 +106,7 @@ func (agent *BaselineAgent) evaluateBike(evaluateBike uuid.UUID) bool { //evalua
 				sumReputation += agent.reputation[biker.GetID()]
 				sumHonesty += agent.honestyMatrix[biker.GetID()]
 				length += 1
-				if agent.reputation[biker.GetID()] < agent.getReputationAverage()-0.05 || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage()-0.1 {
+				if agent.reputation[biker.GetID()] < agent.getReputationAverage()-0.25 || agent.honestyMatrix[biker.GetID()] < agent.getHonestyAverage()-0.25 {
 					badBikers += 1
 				} else {
 					goodBikers += 1
