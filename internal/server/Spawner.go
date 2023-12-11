@@ -3,12 +3,15 @@ package server
 import (
 	"SOMAS2023/internal/clients/team1"
 	"SOMAS2023/internal/clients/team2"
+	"SOMAS2023/internal/clients/team6"
+
 	// "SOMAS2023/internal/clients/team_3"
 	"SOMAS2023/internal/clients/team8"
 	// "SOMAS2023/internal/clients/team7"
 	"SOMAS2023/internal/clients/team4"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
+
 	//team7agents "SOMAS2023/internal/clients/team7/agents"
 
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
@@ -25,6 +28,7 @@ var AgentInitFunctions = []AgentInitFunction{
 	team4.GetBiker4, // Team 4
 	//team7agents.NewBaseTeamSevenBiker, // Team 7
 	team8.GetIBaseBiker, // Team 8
+	team6.InitialiseBiker6,
 	
  }
 
