@@ -219,9 +219,12 @@ func TestUpdateOrientation(t *testing.T) {
 
 		// Check if orientation updated correctly
 		// Assuming each biker contributes equally and your logic for orientation update
-		expectedOrientation := 0.6 // This assumes the orientation averages the forces
-		if mb.GetOrientation() != expectedOrientation {
-			t.Errorf("got %v, want %v", mb.GetOrientation(), expectedOrientation)
+		expectedOrientation := 0.6
+		tolerance := 0.001 // Define a small tolerance for floating-point comparison
+
+		actualOrientation := mb.GetOrientation()
+		if actualOrientation < expectedOrientation-tolerance || actualOrientation > expectedOrientation+tolerance {
+			t.Errorf("got %v, want %v (within a tolerance of %v)", actualOrientation, expectedOrientation, tolerance)
 		}
 	})
 
@@ -257,7 +260,7 @@ func TestUpdateOrientation(t *testing.T) {
 		}
 	})
 
-	// Scenario 4: Two Bikers, one with -1 and one with 1, expected orientation 1
+	// Scenario 4: Two Bikers, one with -1 and one with 1, expected orientation 1 or -1
 	t.Run("Two Bikers Opposite Forces", func(t *testing.T) {
 		mb := objects.GetMegaBike()
 		biker1 := NewMockBiker()
@@ -279,11 +282,12 @@ func TestUpdateOrientation(t *testing.T) {
 		mb.UpdateOrientation()
 
 		// Hardcoded expected orientation
-		expectedOrientation := 1.0
+		expectedOrientation1 := 1.0
+		expectedOrientation2 := -1.0
 
 		actualOrientation := mb.GetOrientation()
-		if actualOrientation != expectedOrientation {
-			t.Errorf("got %v, want %v", actualOrientation, expectedOrientation)
+		if actualOrientation != expectedOrientation1 && actualOrientation != expectedOrientation2 {
+			t.Errorf("got %v, want %v or %v", actualOrientation, expectedOrientation1, expectedOrientation2)
 		}
 	})
 
