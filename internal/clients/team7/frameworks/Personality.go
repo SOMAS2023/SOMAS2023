@@ -21,6 +21,13 @@ type Personality struct {
 	Selfish     float64
 	Judgemental float64
 	Utilitarian float64
+
+	// Five Factor (OCEAN) model
+	Openness          float64
+	Conscientiousness float64
+	Extraversion      float64
+	Agreeableness     float64
+	Neuroticism       float64
 }
 
 func NewDefaultPersonality() *Personality {
@@ -30,6 +37,11 @@ func NewDefaultPersonality() *Personality {
 		PositiveTrustStep: 0.1,
 		NegativeTrustStep: 0.1,
 		Trustworthiness:   1,
+		Openness:          0.5,
+		Conscientiousness: 1, // Dependable by default
+		Extraversion:      0.5,
+		Agreeableness:     0.5,
+		Neuroticism:       0.5,
 	}
 	randomizeTraits(p)
 	return p

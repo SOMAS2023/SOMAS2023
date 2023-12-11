@@ -6,6 +6,8 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
+	"math/rand"
+
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
 )
@@ -264,19 +266,8 @@ func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
 	return voteOutput
 }
 
-// Vote on whether to kick agent off bike
-// func (biker *BaseTeamSevenBiker) DecideKicking(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
-// 	voteInputs := frameworks.VoteOnAgentsInput{
-// 		AgentCandidates: pendingAgents,
-// 	}
-// 	voteHandler := frameworks.NewVoteToKickAgentHandler()
-// 	voteOutput := voteHandler.GetDecision(voteInputs)
-
-// 	return voteOutput
-// }
-
+// Vote on kicking agent off bike.
 func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
-	voteResults := make(map[uuid.UUID]int)
 
 	fellowBikerIds := biker.environmentHandler.GetAgentIdsOnCurrentBike()
 
@@ -287,17 +278,9 @@ func (biker *BaseTeamSevenBiker) VoteForKickout() map[uuid.UUID]int {
 	voteHandler := frameworks.NewVoteToKickAgentHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
 
-	for _, agent := range fellowBikerIds {
-		if voteOutput[agent] {
-			voteResults[agent] = 1
-		} else {
-			voteResults[agent] = 0
-		}
-	}
+	biker.voteKickingMap = voteOutput
 
-	biker.voteKickingMap = voteResults
-
-	return voteResults
+	return voteOutput
 }
 
 // Vote on Leader
@@ -369,6 +352,9 @@ func (biker *BaseTeamSevenBiker) GetAllMessages([]objects.IBaseBiker) []messagin
 	voteDirectionMessage := biker.CreateVoteLootboxDirectionMessage()
 	messages = append(messages, voteDirectionMessage)
 
+	forcesMessage := biker.CreateForcesMessage()
+	messages = append(messages, forcesMessage)
+
 	return messages
 }
 
@@ -404,10 +390,25 @@ func (biker *BaseTeamSevenBiker) CreateGoverenceMessage() objects.GovernanceMess
 }
 
 func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
-	return objects.ForcesMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-		AgentId:     biker.GetID(),
-		AgentForces: biker.GetForces(),
+	// Low conscientiousness => Unethical => More likely to lie about forces.
+	// Low conscientiousness => Dependable => Less likely to lie about forces.
+	randNum := rand.Float64()
+	if biker.personality.Conscientiousness < randNum {
+		return objects.ForcesMessage{
+			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+			AgentId:     biker.GetID(),
+			AgentForces: utils.Forces{
+				Pedal:   1.0,
+				Brake:   0.0,
+				Turning: biker.GetForces().Turning,
+			},
+		}
+	} else {
+		return objects.ForcesMessage{
+			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+			AgentId:     biker.GetID(),
+			AgentForces: biker.GetForces(),
+		}
 	}
 }
 
@@ -421,11 +422,20 @@ func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
 // }
 
 func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutMessage {
-	// Currently this returns a default/meaningless message
-	// For team's agent, add your own logic to communicate with other agents
+	// Low conscientiousness => Unethical => More likely to lie about voting to kick off agent.
+	// Low conscientiousness => Dependable => Less likely to lie about voting to kick off agent.
+	voteKickingMapMessage := biker.voteKickingMap
+	for agentId, vote := range biker.voteKickingMap {
+		if vote == 1 {
+			randNum := rand.Float64()
+			if biker.personality.Conscientiousness < randNum {
+				voteKickingMapMessage[agentId] = 0
+			}
+		}
+	}
 	return objects.VoteKickoutMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-		VoteMap:     biker.voteKickingMap,
+		VoteMap:     voteKickingMapMessage,
 	}
 }
 
