@@ -390,25 +390,10 @@ func (biker *BaseTeamSevenBiker) CreateGoverenceMessage() objects.GovernanceMess
 }
 
 func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
-	// Low conscientiousness => Unethical => More likely to lie about forces.
-	// Low conscientiousness => Dependable => Less likely to lie about forces.
-	randNum := rand.Float64()
-	if biker.personality.Conscientiousness < randNum {
-		return objects.ForcesMessage{
-			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-			AgentId:     biker.GetID(),
-			AgentForces: utils.Forces{
-				Pedal:   1.0,
-				Brake:   0.0,
-				Turning: biker.GetForces().Turning, // Currently we always turn towards lootbox others voted for anyway. So no need to lie.
-			},
-		}
-	} else {
-		return objects.ForcesMessage{
-			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-			AgentId:     biker.GetID(),
-			AgentForces: biker.GetForces(),
-		}
+	return objects.ForcesMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		AgentId:     biker.GetID(),
+		AgentForces: biker.GetForces(),
 	}
 }
 
@@ -425,14 +410,16 @@ func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutM
 	// Low conscientiousness => Unethical => More likely to lie about voting to kick off agent.
 	// Low conscientiousness => Dependable => Less likely to lie about voting to kick off agent.
 	voteKickingMapMessage := biker.voteKickingMap
-	for agentId, vote := range biker.voteKickingMap {
-		if vote == 1 {
-			randNum := rand.Float64()
-			if biker.personality.Conscientiousness < randNum {
+	randNum := rand.Float64()
+	if biker.personality.Conscientiousness < randNum {
+		for agentId, vote := range biker.voteKickingMap {
+			if vote == 1 {
 				voteKickingMapMessage[agentId] = 0
 			}
 		}
+
 	}
+
 	return objects.VoteKickoutMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
 		VoteMap:     voteKickingMapMessage,
