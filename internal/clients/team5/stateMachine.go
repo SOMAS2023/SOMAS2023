@@ -1,6 +1,6 @@
 package team5Agent
 
-// 0 = conservative, 1 = observer, 2 = esteem, 3 = altristic
+// 0 = conservative, 1 = observer, 2 = esteem, 3 = altruistic
 
 func (t5 *team5Agent) updateState() {
 	currentEnergy := t5.GetEnergyLevel()
@@ -16,17 +16,3 @@ func (t5 *team5Agent) updateState() {
 	}
 	// fmt.Println("Energy Level: ", currentEnergy, "State: ", t5.state, "Round: ", t5.roundCount)
 }
-
-// func (t5 *team5Agent) DecideAction() objects.BikerAction {
-// 	switch t5.currentState {
-// 	case Conservative:
-// 		// Define conservative action
-// 		return objects.ConserveEnergy
-// 	case Aggressive:
-// 		// Define aggressive action
-// 		return objects.PedalHard
-// 	default:
-// 		// Normal action
-// 		return objects.Pedal
-// 	}
-//}

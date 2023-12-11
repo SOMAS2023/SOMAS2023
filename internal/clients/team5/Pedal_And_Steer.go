@@ -7,13 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-//for testing use any box in targetLootBoxID
-
-//i added a comment for the printstatement in get colour remember to remove and in the original decideforce fn in base biker remember to remove those
-
-// i think i found it divide the steering force by the amount of agents on the bike
-
-// so this bassically adjusts the force depending on the energy of the agent
 func (t5 *team5Agent) calcForce() float64 {
 	agentEnergy := t5.GetEnergyLevel()
 	if t5.state == 0 {
@@ -23,8 +16,6 @@ func (t5 *team5Agent) calcForce() float64 {
 }
 
 func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
-
-	//fmt.Println("testing 1")
 
 	currLocation := t5.GetLocation()
 	orientation := t5.GetGameState().GetMegaBikes()[t5.GetBike()].GetOrientation()
