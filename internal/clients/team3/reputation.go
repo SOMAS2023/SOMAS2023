@@ -10,12 +10,12 @@ type reputation struct {
 	// score, 0~1
 	recentContribution  float64
 	historyContribution float64
-	//decisionSimilarity  float64
-	isSameColor     float64
-	lootBoxGet      float64
-	energyGain      float64
-	energyRemain    float64
-	recentGetEnergy bool
+	opinionSimilarity   float64
+	isSameColor         float64
+	lootBoxGet          float64
+	energyGain          float64
+	energyRemain        float64
+	recentGetEnergy     bool
 
 	// memory or counter
 	_lastEnergyCost    float64
@@ -24,6 +24,7 @@ type reputation struct {
 	_recentEnergyGain  float64
 	_energyReceivedCnt float64
 	_lootBoxGetCnt     float64
+	_sameOpinionCnt    float64
 }
 
 func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor utils.Colour) {
@@ -55,6 +56,11 @@ func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor util
 	} else {
 		rep.isSameColor = 0
 	}
+}
+
+func (rep *reputation) findSameOpinion() {
+	rep._sameOpinionCnt += 1
+	rep.opinionSimilarity = normalize(rep._sameOpinionCnt)
 }
 
 func normalize(input float64) (output float64) {
