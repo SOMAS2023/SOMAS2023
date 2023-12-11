@@ -412,14 +412,14 @@ func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
 	}
 }
 
-// func (biker *BaseTeamSevenBiker) CreateVoteLootboxDirectionMessage() objects.VoteLootboxDirectionMessage {
-// 	// Currently this returns a default/meaningless message
-// 	// For team's agent, add your own logic to communicate with other agents
-// 	return objects.VoteLootboxDirectionMessage{
-// 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-// 		VoteMap:     biker.voteDirectionMap,
-// 	}
-// }
+func (biker *BaseTeamSevenBiker) CreateVoteLootboxDirectionMessage() objects.VoteLootboxDirectionMessage {
+	// Currently this returns a default/meaningless message
+	// For team's agent, add your own logic to communicate with other agents
+	return objects.VoteLootboxDirectionMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		VoteMap:     biker.voteDirectionMap.GetVotes(),
+	}
+}
 
 func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutMessage {
 	// Low conscientiousness => Unethical => More likely to lie about voting to kick off agent.
