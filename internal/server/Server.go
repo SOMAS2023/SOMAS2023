@@ -12,9 +12,9 @@ import (
 	"github.com/google/uuid"
 )
 
-const LootBoxCount = BikerAgentCount * 2.5  // 2.5 lootboxes available per Agent
-const MegaBikeCount = BikerAgentCount/8 + 2 // Megabikes should have 8 riders
-const BikerAgentCount = 56                  // 56 agents in total
+const LootBoxCount = BikerAgentCount * 2.5 // 2.5 lootboxes available per Agent
+const MegaBikeCount = BikerAgentCount / 5  // Megabikes should have 8 riders
+const BikerAgentCount = 56                 // 56 agents in total
 
 type IBaseBikerServer interface {
 	baseserver.IServer[objects.IBaseBiker]
