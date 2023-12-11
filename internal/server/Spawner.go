@@ -5,6 +5,7 @@ import (
 	"SOMAS2023/internal/clients/team3"
 	"SOMAS2023/internal/clients/team4"
 	team5Agent "SOMAS2023/internal/clients/team5"
+	"SOMAS2023/internal/clients/team6"
 	"SOMAS2023/internal/clients/team8"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
@@ -21,6 +22,7 @@ var AgentInitFunctions = []AgentInitFunction{
 	team3.GetT3Agent,    // Team 3
 	team4.GetBiker4,     // Team 4
 	team5Agent.GetBiker, // Team 5
+	team6.InitialiseBiker6, // Team 6
 	team8.GetIBaseBiker, // Team 8
 }
 
