@@ -210,11 +210,13 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 		biker.proposedDirections = append(biker.proposedDirections[1:], proposedDirection)
 	}
 
-	distanceFromMyProposal := biker.environmentHandler.GetDistanceBetweenLootboxes(direction, biker.myProposedLootboxes[len(biker.myProposedLootboxes)-1])
-	if len(biker.myProposedLootboxes) < biker.memoryLength {
-		biker.distanceFromMyLootbox = append(biker.distanceFromMyLootbox, distanceFromMyProposal)
-	} else {
-		biker.distanceFromMyLootbox = append(biker.distanceFromMyLootbox[1:], distanceFromMyProposal)
+	if len(biker.myProposedLootboxes) > 0 {
+		distanceFromMyProposal := biker.environmentHandler.GetDistanceBetweenLootboxes(direction, biker.myProposedLootboxes[len(biker.myProposedLootboxes)-1])
+		if len(biker.distanceFromMyLootbox) < biker.memoryLength {
+			biker.distanceFromMyLootbox = append(biker.distanceFromMyLootbox, distanceFromMyProposal)
+		} else {
+			biker.distanceFromMyLootbox = append(biker.distanceFromMyLootbox[1:], distanceFromMyProposal)
+		}
 	}
 }
 
