@@ -19,8 +19,9 @@ ARROWS = {
 }
 CONSOLE = {
     "DEFAULT" : "#FFFFFF",
-    "ERROR" : "#FF0000",
+    "IMPORTANT" : "#FF0000",
     "INFO" : "#FFFF00",
+    "VOID" : "#89CFF0",
 }
 OVERLAY = {
     "FONT" : "Arial",

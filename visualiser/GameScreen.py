@@ -392,9 +392,10 @@ class GameScreen:
         if self.iterationIndex == 0:
             self.stats["Dead Agents"] = 0
             self.log(f"Entering Founding Stage for Round {self.currentRound}.", "INFO")
-        if not decreasing:
-            self.elements["stats"].rebuild()
-            self.elements["console"].rebuild()
+        if decreasing:
+            self.elements["console"].html_text = ""
+        self.elements["stats"].rebuild()
+        self.elements["console"].rebuild()
 
     def update_owdis(self) -> None:
         """
@@ -521,7 +522,6 @@ class GameScreen:
         """
         Compare the agents to the previous round and update console and stats
         """
-        dead = 0
         for agentid, agent in self.agents.items():
             groupID = agent["group_id"]
             if agentid not in newAgents:
@@ -529,25 +529,26 @@ class GameScreen:
                 runOver = False
                 for owdi in self.owdis.values():
                     if (pow(agent["location"]["x"]-owdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["location"]["y"]-owdi.y, 2) < pow(EPSILON, 2)):
-                        self.log(f"Agent {agentid} ({agent['group_id']}) has been run over by the Owdi!", "ERROR")
+                        self.log(f"Agent {agentid} ({agent['group_id']}) has been run over by the Owdi!", "IMPORTANT")
                         runOver = True
                         break
                 if runOver:
                     continue
                 # Agent has died from exhaustion
                 if agent["energy_level"] < ENERGYTHRESHOLD:
-                    self.log(f"Agent {agentid} ({groupID}) has run out of energy!", "ERROR")
+                    self.log(f"Agent {agentid} ({groupID}) has run out of energy!", "IMPORTANT")
                 # Agent has died for unknown reasons
                 else:
-                    self.log(f"Agent {agentid} ({groupID}) has died for unknown reasons!", "ERROR")
-                dead += 1
+                    self.log(f"Agent {agentid} ({groupID}) has died for unknown reasons!", "IMPORTANT")
             else:
                 #Check if agent has moved bikes - on bike parameter is not reliable
                 if agentid not in bikeAgents:
-                    self.log(f"Agent {agentid} ({groupID}) is in the void.", "INFO")
+                    self.log(f"Agent {agentid} ({groupID}) is in the void.", "VOID")
                     self.stats["Void Agents"] += 1
+        if self.currentIteration == 0:
+            self.numAgents = len(newAgents.values())
         self.stats["Alive Agents"] = len(newAgents.values())
-        self.stats["Dead Agents"] = self.numAgents - dead
+        self.stats["Dead Agents"] = self.numAgents - len(newAgents.values())
         self.agents = newAgents
 
     def compare_bikes(self, newBikes:dict) -> None:
