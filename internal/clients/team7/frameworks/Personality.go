@@ -38,9 +38,9 @@ func NewDefaultPersonality() *Personality {
 		NegativeTrustStep: 0.1,
 		Trustworthiness:   1,
 		Openness:          0.5,
-		Conscientiousness: 1, // Dependable by default
+		Conscientiousness: 0.8, // Hard-working by default
 		Extraversion:      0.5,
-		Agreeableness:     0.5,
+		Agreeableness:     1, // Cooperative by default
 		Neuroticism:       0.5,
 	}
 	randomizeTraits(p)
