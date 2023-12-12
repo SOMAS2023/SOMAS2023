@@ -315,6 +315,7 @@ func (biker *BaseTeamSevenBiker) FinalDirectionVote(proposals map[uuid.UUID]uuid
 		LootBoxCandidates: proposals,
 		MyPersonality:     biker.personality,
 		MyDesired:         myDesired,
+		MyOpinion:         biker.currentOpinionsOfLootboxes,
 	}
 	voteHandler := frameworks.NewVoteOnProposalsHandler()
 	voteOutput := voteHandler.GetDecision(voteInputs)
