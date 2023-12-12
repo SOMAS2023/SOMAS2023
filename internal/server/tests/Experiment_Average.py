@@ -26,7 +26,7 @@ def combine_sheets(file_list, output_file='combined_excel.xlsx'):
             dataframe.to_excel(writer, sheet_name=sheet_name, index=False)
 
 # Path to the directory containing the GoLang script and statistics.xlsx
-golang_script_directory = r"C:\Users\lauri\OneDrive\Documents (1)\Imperial University\Semester 1\ELEC70071 Self-Organising Multi-Agent Systems\CW Code\SOMAS2023"
+golang_script_directory = r"C:\Users\rohan\OneDrive - Imperial College London\Imperial Year 4\SOMAS\experiments\SOMAS2023"
 
 number_of_iterations = 5  # Specify the number of iterations
 excel_files = []
