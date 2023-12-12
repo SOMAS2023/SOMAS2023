@@ -15,7 +15,7 @@ type GameStateDump struct {
 	Agents    map[uuid.UUID]AgentDump   `json:"agents"`
 	Bikes     map[uuid.UUID]BikeDump    `json:"bikes"`
 	LootBoxes map[uuid.UUID]LootBoxDump `json:"loot_boxes"`
-	Audi      AudiDump                  `json:"audi"`
+	Audis     []AudiDump                `json:"audis"`
 }
 
 type PhysicsObjectDump struct {
@@ -127,10 +127,10 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 		Agents:    agents,
 		Bikes:     bikes,
 		LootBoxes: lootBoxes,
-		Audi: AudiDump{
+		Audis: []AudiDump{{
 			PhysicsObjectDump: newPhysicsObjectDump(s.audi),
 			ID:                s.audi.GetID(),
 			TargetBike:        s.audi.GetTargetID(),
-		},
+		}},
 	}
 }
