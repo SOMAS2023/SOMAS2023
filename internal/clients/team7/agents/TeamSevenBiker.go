@@ -404,6 +404,7 @@ func (biker *BaseTeamSevenBiker) DecideAllocation() voting.IdVoteMap {
 
 	voteInputs := frameworks.VoteOnAllocationInput{
 		AgentCandidates: agentIds,
+		MyPersonality:   biker.personality,
 		MyId:            biker.GetID(),
 	}
 
