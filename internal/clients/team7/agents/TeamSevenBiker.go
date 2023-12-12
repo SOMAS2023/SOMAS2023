@@ -60,6 +60,7 @@ type BaseTeamSevenBiker struct {
 func NewBaseTeamSevenBiker(baseBiker *objects.BaseBiker) *BaseTeamSevenBiker {
 	agentId := baseBiker.GetID()
 	personality := frameworks.NewDefaultPersonality()
+	baseBiker.GroupID = 7
 	return &BaseTeamSevenBiker{
 		BaseBiker:             baseBiker,
 		navigationFramework:   frameworks.NewNavigationDecisionFramework(),
@@ -112,11 +113,6 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		agentIds[i] = agentId
 		agentColours[agentId] = fellowBiker.GetColour()
 		agentEnergyLevels[agentId] = fellowBiker.GetEnergyLevel()
-		// TODO: Implement once we can message biker to ask for allocation
-		// if biker.votedForResources {
-		// 	agentResourceVotes[agentId] = fellowBiker.DecideAllocation()
-		// 	biker.votedForResources = false
-		// }
 	}
 
 	// Formulate data based on messages and communication
