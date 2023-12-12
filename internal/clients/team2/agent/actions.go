@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// We vote for ourselves and the agent with the highest social capital.
+// We vote for ourselves and the agent with the highest social capital..
 func (a *AgentTwo) VoteDictator() voting.IdVoteMap {
 	votes := make(voting.IdVoteMap)
 	agentId, _ := a.Modules.Environment.GetBikerWithMaxSocialCapital(a.Modules.SocialCapital)
