@@ -309,19 +309,16 @@ func (biker *BaseTeamSevenBiker) getDesiredLootboxId() uuid.UUID {
 
 // TODO: Implement a strategy for choosing the final vote
 func (biker *BaseTeamSevenBiker) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
-	votes := make(voting.LootboxVoteMap)
-	totOptions := len(proposals)
-	normalDist := 1.0 / float64(totOptions)
-	for _, proposal := range proposals {
-		if val, ok := votes[proposal]; ok {
-			votes[proposal] = val + normalDist
-		} else {
-			votes[proposal] = normalDist
-		}
-	}
+	myDesired := biker.getDesiredLootboxId()
 
-	biker.voteDirectionMap = votes
-	return votes
+	voteInputs := frameworks.VoteOnLootBoxesInput{
+		LootBoxCandidates: proposals,
+		MyPersonality:     biker.personality,
+		MyDesired:         myDesired,
+	}
+	voteHandler := frameworks.NewVoteOnProposalsHandler()
+	voteOutput := voteHandler.GetDecision(voteInputs)
+	return voteOutput
 }
 
 // Override base biker functions
