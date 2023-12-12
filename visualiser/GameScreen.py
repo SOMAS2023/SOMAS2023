@@ -2,22 +2,19 @@
 Logic for the game screen visualiser
 """
 # pylint: disable=no-member, import-error, no-name-in-module
-import random
-import colorsys
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, ui_text_box
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, BIKE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED, ITERATIONLENGTH
+from visualiser.util.Constants import DIM, BGCOLOURS, MAXZOOM, MINZOOM, ZOOM, FPSDISPLAYRATE, OVERLAY, PRECISION, CONSOLE, EPSILON, COORDINATESCALE, ENERGYTHRESHOLD, MAXSPEED
 from visualiser.util.HelperFunc import make_center
 from visualiser.entities.Bikes import Bike
 from visualiser.entities.Lootboxes import Lootbox
-from visualiser.entities.Awdi import Awdi
+from visualiser.entities.Owdi import Owdi
 
 class GameScreen:
     def __init__(self) -> None:
         self.UIElements = {}
-        self.round = 0
         self.offsetX = 0
         self.offsetY = 0
         self.dragging = False
@@ -26,18 +23,26 @@ class GameScreen:
         self.zoom = ZOOM
         self.bikes = {}
         self.lootboxes = {}
-        self.awdi = None
+        self.owdis = {}
         self.elements = {}
         self.jsonData = None
         self.maxRound = 0
+        self.roundLength = 0
+        self.currentRound = 0
+        self.currentIteration = 0
+        self.iterationIndex = 0
         self.bikeColourMap = {}
         self.manager = None
         self.playSpeed = 1
         self.isPlaying = False
         self.playEvent = pygame.USEREVENT + 100
+        self.mouseDraw = pygame.USEREVENT + 102
+        self.mouseSurface = None
+        pygame.time.set_timer(self.mouseDraw, int(1000/FPSDISPLAYRATE))
         self.mouseXCur = 0
         self.mouseYCur = 0
         self.consoleScreen = None
+        self.aliveAgents = 0
         self.stats = {
             "Active Bikes" : 0,
             "Active Lootboxes" : 0,
@@ -45,11 +50,8 @@ class GameScreen:
             "Dead Agents" : 0,
         }
         self.agents = {}
-        self.deadCount = {
-            "-1" : 0,
-            "0" : 0,
-        }
-        self.maxDead = 0
+        self.numAgents = 0
+        self.draw_mouse_coords()
 
     def init_ui(self, manager:pygame_gui.UIManager, uiscreen:UIContainer, consoleContainer:UIContainer) -> dict:
         """
@@ -72,7 +74,7 @@ class GameScreen:
         #control information
         self.elements["controls"] = ui_text_box.UITextBox(
             relative_rect=pygame.Rect((x, 10+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], 220)),
-            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Round<br><b>Left</b> - Previous Round<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
+            html_text="<font face=verdana size=3 color=#FFFFFF><b>Controls</b></font><br><font face=verdana size=3 color=#FFFFFF><b>Space</b> - Play/Pause<br><b>Right</b> - Next Iteration<br><b>Left</b> - Previous Iteration<br><b>Up</b> - Increase Speed<br><b>Down</b> - Decrease Speed<br><b>Scroll</b> - Zoom<br><b>Click</b> - Select Entity</font>", # pylint: disable=line-too-long
             manager=manager,
             container=uiscreen,
             anchors={
@@ -87,7 +89,7 @@ class GameScreen:
         # Round count
         self.elements["round_count"] = UILabel(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"])),
-            text="Round: 0",
+            text="Iteration: 0",
             manager=manager,
             container=uiscreen,
             anchors={
@@ -100,8 +102,8 @@ class GameScreen:
         self.elements["round_slider"] = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*2), (DIM["BUTTON_WIDTH"], DIM["BUTTON_HEIGHT"]//2)),
             start_value=0,
-            value_range=(0, self.maxRound),
-            click_increment=ITERATIONLENGTH,
+            value_range=(0, self.maxRound*self.roundLength),
+            click_increment=self.roundLength,
             manager=manager,
             container=uiscreen,
             anchors={
@@ -116,7 +118,7 @@ class GameScreen:
         x, _ = make_center((DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]), (DIM["UI_WIDTH"], DIM["SCREEN_HEIGHT"]))
         self.elements["increase_round"] = UIButton(
             relative_rect=pygame.Rect((x, topmargin), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
-            text="Increase Round",
+            text="Increase Iteration",
             manager=manager,
             container=uiscreen,
             anchors={
@@ -129,7 +131,7 @@ class GameScreen:
         # Iteration count
         self.elements["iteration_count"] = UILabel(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*2.5), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]/2)),
-            text="Iteration: 0",
+            text="Round: 0",
             manager=manager,
             container=uiscreen,
             anchors={
@@ -141,7 +143,7 @@ class GameScreen:
         )
         self.elements["decrease_round"] = UIButton(
             relative_rect=pygame.Rect((x, topmargin+3*DIM["BUTTON_HEIGHT"]), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"])),
-            text="Decrease Round",
+            text="Decrease Iteration",
             manager=manager,
             container=uiscreen,
             anchors={
@@ -168,7 +170,7 @@ class GameScreen:
         # play pause speed
         self.elements["play_pause_speed"] = UILabel(
             relative_rect=pygame.Rect((x, topmargin+DIM["BUTTON_HEIGHT"]*4.5), (DIM["BUTTON_WIDTH"]*factor, DIM["BUTTON_HEIGHT"]//2)),
-            text="1 Round/Sec",
+            text="1 Iteration/Sec",
             manager=manager,
             container=uiscreen,
             anchors={
@@ -235,6 +237,7 @@ class GameScreen:
             "Active Lootboxes" : 0,
             "Alive Agents" : 0,
             "Dead Agents" : 0,
+            "Void Agents" : 0
         }
         self.agents = {}
         return self.elements
@@ -246,7 +249,8 @@ class GameScreen:
         screen.fill((255, 255, 255))
         self.draw_grid(screen)
         # Draw awdi
-        self.awdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
+        for owdi in self.owdis.values():
+            owdi.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # # Draw lootboxes
         for lootbox in self.lootboxes.values():
             lootbox.draw(screen, self.offsetX, self.offsetY, self.zoom)
@@ -255,11 +259,12 @@ class GameScreen:
             bike.draw(screen, self.offsetX, self.offsetY, self.zoom)
         # Draw overlays
         for bike in self.bikes.values():
-            bike.draw_overlay(screen)
+            bike.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
         for lootbox in self.lootboxes.values():
-            lootbox.draw_overlay(screen)
-        self.awdi.draw_overlay(screen)
-        self.draw_mouse_coords(screen)
+            lootbox.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
+        for owdi in self.owdis.values():
+            owdi.draw_overlay(screen, self.offsetX, self.offsetY, self.zoom)
+        screen.blit(self.mouseSurface, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
         # Divider line
         lineWidth = 1
         pygame.draw.line(screen, "#555555", (DIM["GAME_SCREEN_WIDTH"]-lineWidth, 0), (DIM["GAME_SCREEN_WIDTH"]-lineWidth, DIM["SCREEN_HEIGHT"]), lineWidth)
@@ -304,9 +309,9 @@ class GameScreen:
                         self.toggle_play()
                     # Arrow keys advance rounds
                     case pygame.K_RIGHT:
-                        self.change_round(self.round + 1)
+                        self.change_iteration(self.currentIteration + 1)
                     case pygame.K_LEFT:
-                        self.change_round(self.round - 1)
+                        self.change_iteration(self.currentIteration - 1)
                     # Up down increases speed
                     case pygame.K_UP:
                         self.change_speed(self.playSpeed + 1)
@@ -315,21 +320,28 @@ class GameScreen:
             # Handle UI buttons
             case pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.elements["increase_round"]:
-                    self.change_round(self.round + 1)
+                    self.change_iteration(self.currentIteration + 1)
                 elif event.ui_element == self.elements["decrease_round"]:
-                    self.change_round(self.round - 1)
+                    self.change_iteration(self.currentIteration - 1)
                 # Play pause
                 elif event.ui_element == self.elements["play_pause"]:
                     self.toggle_play()
             #Sliders
             case pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                 if event.ui_element == self.elements["round_slider"]:
-                    self.change_round(event.value)
+                    self.change_iteration(event.value)
                 elif event.ui_element == self.elements["play_pause_speed_slider"]:
                     self.change_speed(event.value)
+            # Handle auto play
             case self.playEvent:
-                self.elements["round_slider"].set_current_value(self.round + 1)
-                self.change_round(self.round + 1)
+                self.elements["round_slider"].set_current_value(self.currentIteration + 1)
+                self.change_iteration(self.currentIteration + 1)
+                if self.currentIteration == self.maxRound*self.roundLength-1:
+                    self.isPlaying = True
+                    self.toggle_play()
+            #Draw mouse coordinates
+            case self.mouseDraw:
+                self.draw_mouse_coords()
 
     def toggle_play(self) -> None:
         """
@@ -350,48 +362,97 @@ class GameScreen:
         """
         self.playSpeed = min(MAXSPEED, max(1, newSpeed))
         self.elements["play_pause_speed_slider"].set_current_value(self.playSpeed)
-        self.elements["play_pause_speed"].set_text(f"{self.playSpeed} Round/Sec")
+        self.elements["play_pause_speed"].set_text(f"{self.playSpeed} Iteration/Sec")
         if self.isPlaying:
             pygame.time.set_timer(self.playEvent, int(1000//self.playSpeed))
 
-    def change_round(self, newRound:int) -> None:
+    def change_iteration(self, newIteration:int) -> None:
         """
         Change the current round using the round controls and json data
         Determine statistics
         """
-        self.round = max(0, min(self.maxRound, newRound))
-        self.elements["round_count"].set_text(f"Round: {self.round}")
-        self.elements["iteration_count"].set_text(f"Iteration: {self.round // ITERATIONLENGTH}")
+        decreasing = False
+        if newIteration < self.currentIteration:
+            decreasing = True
+        self.currentIteration = max(0, min(newIteration, (self.maxRound*self.roundLength)-1))
+        self.iterationIndex = self.currentIteration % self.roundLength
+        self.currentRound = self.currentIteration // self.roundLength
+        self.elements["round_count"].set_text(f"Iteration: {self.currentIteration}")
+        self.elements["iteration_count"].set_text(f"Round: {self.currentRound}")
         self.elements["console"].html_text = ""
-        self.elements["console"].rebuild()
+        self.stats["Void Agents"] = 0
         #Reload bikes
-        bikes = {}
-        agents = {}
-        for bikeid, bike in self.jsonData[self.round]["bikes"].items():
-            if bikeid not in self.bikeColourMap:
-                self.bikeColourMap[bikeid] = self.allocate_colour()
-            bikes[bikeid] = Bike(bikeid, bike, self.bikeColourMap[bikeid], self.jsonData[self.round]["agents"])
-            agents.update(bikes[bikeid].get_agents())
-        self.compare_agents(agents)
-        self.compare_bikes(bikes)
+        self.update_bikes()
+        self.update_lootboxes()
+        self.update_owdis()
+        self.update_stats()
+        if self.iterationIndex == 0:
+            self.stats["Dead Agents"] = 0
+            self.log(f"Entering Founding Stage for Round {self.currentRound}.", "INFO")
+        if decreasing:
+            self.elements["console"].html_text = ""
+        self.elements["stats"].rebuild()
+        self.elements["console"].rebuild()
+
+    def update_owdis(self) -> None:
+        """
+        Update the owdis
+        """
+        owdi = {}
+        for owdidata in self.jsonData[self.currentRound][self.iterationIndex]["audis"]:
+            owdiid = owdidata["id"]
+            if owdiid not in self.owdis:
+                owdiObj = Owdi(owdidata, self.jsonData[self.currentRound][self.iterationIndex]["bikes"])
+            else:
+                owdiObj = self.owdis[owdiid]
+                owdiObj.update_owdi(owdidata, self.jsonData[self.currentRound][self.iterationIndex]["bikes"])
+            owdi[owdiid] = owdiObj
+        self.owdis = owdi
+
+    def update_lootboxes(self) -> None:
+        """
+        Update the lootboxes
+        """
         # Reload lootboxes
         lootboxes = {}
-        for lootboxid, lootbox in self.jsonData[self.round]["loot_boxes"].items():
-            lootboxes[lootboxid] = Lootbox(lootboxid, lootbox)
+        for lootboxid, lootboxdata in self.jsonData[self.currentRound][self.iterationIndex]["loot_boxes"].items():
+            if lootboxid not in self.lootboxes:
+                lootboxObj = Lootbox(lootboxid, lootboxdata)
+            else:
+                lootboxObj = self.lootboxes[lootboxid]
+                lootboxObj.update_lootbox(lootboxdata)
+            lootboxes[lootboxid] = lootboxObj
         self.compare_lootboxes(lootboxes)
-        self.awdi = Awdi(self.jsonData[self.round]["audi"])
-        self.update_stats()
 
-    def allocate_colour(self) -> str:
+    def update_bikes(self) -> None:
         """
-        Allocate a colour to a bike
+        Update the bikes
         """
-        hue = random.randint(BIKE["COLOURS"]["MINHUE"], BIKE["COLOURS"]["MAXHUE"]) / 360
-        saturation = random.randint(BIKE["COLOURS"]["MINSAT"], BIKE["COLOURS"]["MAXSAT"]) / 100
-        value = random.randint(BIKE["COLOURS"]["MINVAL"], BIKE["COLOURS"]["MAXVAL"]) / 100
-        colour = colorsys.hsv_to_rgb(hue, saturation, value)
-        colour = (colour[0] * 255, colour[1] * 255, colour[2] * 255)
-        return colour
+        bikes = {}
+        bikeAgents = {}
+        for bikeid, bikedata in self.jsonData[self.currentRound][self.iterationIndex]["bikes"].items():
+            #Determine next position for arrow drawing
+            nextRound = self.jsonData[self.currentRound][min(self.iterationIndex+1, self.roundLength-1)]["bikes"]
+            if bikeid in nextRound:
+                nextPos = nextRound[bikeid]["physical_state"]["position"]["x"], nextRound[bikeid]["physical_state"]["position"]["y"]
+                if "orientation" in nextRound[bikeid]:
+                    nextOrient = nextRound[bikeid]["orientation"]
+                else:
+                    nextOrient = -2
+            else:
+            #If bike is dead, draw arrow to empty
+                nextPos = 0, 0
+                nextOrient = 0
+            # If bike is new, create new bike
+            if bikeid not in self.bikes:
+                bikeObj = Bike(bikeid, bikedata, self.jsonData[self.currentRound][self.iterationIndex]["agents"], nextPos, nextOrient, self.jsonData[self.currentRound][min(self.iterationIndex+1, self.roundLength-1)]["agents"])
+            else:
+                bikeObj = self.bikes[bikeid]
+                bikeObj.update_bike(bikedata, self.jsonData[self.currentRound][self.iterationIndex]["agents"], nextPos, nextOrient, self.jsonData[self.currentRound][min(self.iterationIndex+1, self.roundLength-1)]["agents"])
+            bikes[bikeid] = bikeObj
+            bikeAgents.update(bikeObj.get_agents())
+        self.compare_bikes(bikes)
+        self.compare_agents(self.jsonData[self.currentRound][self.iterationIndex]["agents"], bikeAgents)
 
     def propagate_click(self, mousePos:tuple) -> None:
         """
@@ -402,7 +463,8 @@ class GameScreen:
             bike.propagate_click(mouseX, mouseY, self.zoom)
         for lootbox in self.lootboxes.values():
             lootbox.propagate_click(mouseX, mouseY, self.zoom)
-        self.awdi.propagate_click(mouseX, mouseY, self.zoom)
+        for owdi in self.owdis.values():
+            owdi.propagate_click(mouseX, mouseY, self.zoom)
 
     def adjust_zoom(self, zoomFactor:float, mousePos:tuple) -> None:
         """
@@ -432,15 +494,14 @@ class GameScreen:
         for y in range(-int(zoomedSpacing) + int(startY), height, int(zoomedSpacing)):
             pygame.draw.line(surface, BGCOLOURS["GRID"], (0, y), (width, y))
 
-    def draw_mouse_coords(self, surface:pygame.Surface) -> None:
+    def draw_mouse_coords(self) -> None:
         """
         Draw the mouse coordinates on the game screen
         """
         font = pygame.font.SysFont("Arial", 15)
         x = round((self.mouseXCur / self.zoom - self.offsetX / self.zoom) / COORDINATESCALE, PRECISION)
         y = round((self.mouseYCur / self.zoom - self.offsetY / self.zoom) / COORDINATESCALE, PRECISION)
-        text = font.render(f"({x}, {y})", True, (0, 0, 0))
-        surface.blit(text, (OVERLAY["FPS_PAD"], OVERLAY["FPS_PAD"]))
+        self.mouseSurface = font.render(f"({x}, {y})", True, (0, 0, 0))
 
     def log(self, message:str, tag=None) -> None:
         """
@@ -453,30 +514,38 @@ class GameScreen:
         text = f'<p style="margin: 0; line-height: 100%;"><font color="{color}">{message}</font></p>'
         newText = self.elements["console"].html_text + text
         self.elements["console"].html_text = newText
-        self.elements["console"].rebuild()
 
-    def compare_agents(self, newAgents:dict) -> None:
+    def compare_agents(self, newAgents:dict, bikeAgents:dict) -> None:
         """
         Compare the agents to the previous round and update console and stats
         """
-        dead = 0
         for agentid, agent in self.agents.items():
+            groupID = agent["group_id"]
             if agentid not in newAgents:
-                if agent["Energy"] < ENERGYTHRESHOLD:
-                    self.log(f"Agent {agentid} has run out of energy!", "ERROR")
-                elif (pow(agent["X"]-self.awdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["Y"]-self.awdi.y, 2) < pow(EPSILON, 2)):
-                    self.log(f"Agent {agentid} has been run over by the Owdi!", "ERROR")
+                # Agent has died from being run over'
+                runOver = False
+                for owdi in self.owdis.values():
+                    if (pow(agent["location"]["x"]-owdi.x, 2) < pow(EPSILON, 2)) and (pow(agent["location"]["y"]-owdi.y, 2) < pow(EPSILON, 2)):
+                        self.log(f"Agent {agentid} ({agent['group_id']}) has been run over by the Owdi!", "IMPORTANT")
+                        runOver = True
+                        break
+                if runOver:
+                    continue
+                # Agent has died from exhaustion
+                if agent["energy_level"] < ENERGYTHRESHOLD:
+                    self.log(f"Agent {agentid} ({groupID}) has run out of energy!", "IMPORTANT")
+                # Agent has died for unknown reasons
                 else:
-                    self.log(f"Agent {agentid} has died for unknown reasons!", "ERROR")
-                dead += 1
-        self.stats["Alive Agents"] = len(newAgents.values())
-        if str(self.round) not in self.deadCount:
-            if str(self.round-1) in self.deadCount:
-                self.deadCount[str(self.round)] = self.deadCount[str(self.round-1)] + dead
+                    self.log(f"Agent {agentid} ({groupID}) has died for unknown reasons!", "IMPORTANT")
             else:
-                self.stats["Dead Agents"] = "N/A"
-        if str(self.round) in self.deadCount:
-            self.stats["Dead Agents"] = self.deadCount[str(self.round)]
+                #Check if agent has moved bikes - on bike parameter is not reliable
+                if agentid not in bikeAgents:
+                    self.log(f"Agent {agentid} ({groupID}) is in the void.", "VOID")
+                    self.stats["Void Agents"] += 1
+        if self.currentIteration == 0:
+            self.numAgents = len(newAgents.values())
+        self.stats["Alive Agents"] = len(newAgents.values())
+        self.stats["Dead Agents"] = self.numAgents - len(newAgents.values())
         self.agents = newAgents
 
     def compare_bikes(self, newBikes:dict) -> None:
@@ -487,7 +556,7 @@ class GameScreen:
         for bikeid, _ in self.bikes.items():
             if bikeid not in newBikes:
                 self.log(f"Bike {bikeid} has died!", "ERROR")
-            if len(newBikes[bikeid].get_agents()) > 0:
+            elif len(newBikes[bikeid].get_agents()) > 0:
                 activeBikes += 1
         self.stats["Active Bikes"] = activeBikes
         self.bikes = newBikes
@@ -496,9 +565,9 @@ class GameScreen:
         """
         Compare the lootboxes to the previous round and update console and stats
         """
-        for lootbox, _ in self.lootboxes.items():
-            if lootbox not in newLootboxes:
-                self.log(f"Lootbox {lootbox} has been collected!", "INFO")
+        for lootboxid, _ in self.lootboxes.items():
+            if lootboxid not in newLootboxes:
+                self.log(f"Lootbox {lootboxid} has been collected!", "INFO")
         self.stats["Active Lootboxes"] = len(newLootboxes.values())
         self.lootboxes = newLootboxes
 
@@ -510,7 +579,6 @@ class GameScreen:
         for stat, value in self.stats.items():
             text += f"<font face=verdana size=3 color=#FFFFFF><b>{stat}</b>: {value}</font><br>"
         self.elements["stats"].html_text = text
-        self.elements["stats"].rebuild()
 
     def set_json(self, data:dict) -> None:
         """
@@ -519,4 +587,5 @@ class GameScreen:
         if data is None:
             return
         self.jsonData = data
-        self.maxRound = len(data) - 1
+        self.roundLength = len(data[0])
+        self.maxRound = len(data)

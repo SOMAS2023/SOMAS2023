@@ -3,6 +3,7 @@ package agent
 import (
 	"SOMAS2023/internal/clients/team2/modules"
 	"SOMAS2023/internal/common/objects"
+
 	"github.com/google/uuid"
 )
 
@@ -24,6 +25,7 @@ type AgentTwo struct {
 }
 
 func NewBaseTeam2Biker(baseBiker *objects.BaseBiker) *AgentTwo {
+	baseBiker.GroupID = 2
 	return &AgentTwo{
 		BaseBiker: baseBiker,
 		Modules: AgentModules{
