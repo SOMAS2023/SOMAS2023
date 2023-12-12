@@ -23,6 +23,8 @@ class Visualiser:
         self.running = True
         self.jsondata = None
         self.fps = None
+        self.fpsHistory = []
+        self.trackingFps = False
         pygame.init()
         self.drawInfo = pygame.USEREVENT + 101
         pygame.time.set_timer(self.drawInfo, 1000 // FPSDISPLAYRATE)
@@ -120,6 +122,9 @@ class Visualiser:
         fps = self.clock.get_fps()
         font = pygame.font.SysFont("Arial Narrow", 20)
         self.fps = font.render(f"FPS: {fps:.2f}", True, "#555555")
+        if self.trackingFps and fps != 0:
+            # Append timestamp and FPS to history
+            self.fpsHistory.append((pygame.time.get_ticks(), fps))
 
     def handle_events(self) -> None:
         """
@@ -237,14 +242,19 @@ class Visualiser:
 if __name__ == "__main__":
     visualiser = Visualiser()
     # Run profiler to check for optimisations
-    OPTIM = False
+    OPTIM = True
     if OPTIM:
         import cProfile
         import subprocess
+        import csv
+        visualiser.trackingFps = True
         profiler = cProfile.Profile()
         profiler.enable()
         profiler.run("visualiser.start()")
         profiler.dump_stats('visualiser/profiles/stats.prof')
+        with open("visualiser/profiles/fps.csv", "w", encoding="utf-8", newline='') as c:
+            writer = csv.writer(c)
+            writer.writerows(visualiser.fpsHistory)
         subprocess.Popen("snakeviz visualiser/profiles/stats.prof", shell=True)
     else:
         visualiser.start()

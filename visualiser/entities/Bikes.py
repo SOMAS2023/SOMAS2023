@@ -104,6 +104,7 @@ class Bike(Drawable):
             averagePedal = round(averagePedal / len(self.agentData), PRECISION)
             averageBrake = round(averageBrake / len(self.agentData), PRECISION)
             averagePoints = round(averagePoints / len(self.agentData), PRECISION)
+            averageSteering = round(averageSteering / len(self.agentData), PRECISION)
         avgs = {
             "Average Energy" : averageEnergy,
             "Average Pedal" : averagePedal,

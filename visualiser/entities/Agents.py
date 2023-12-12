@@ -100,7 +100,7 @@ class Agent(Drawable):
         Overlay agent properties when clicked.
         """
         if self.clicked:
-            angle = self.bikeOrientation+self.nextOrient
+            angle = self.bikeOrientation+self.steeringForce
             if angle > 1:
                 angle -= 2
             elif angle < -1:
