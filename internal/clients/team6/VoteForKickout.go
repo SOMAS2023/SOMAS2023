@@ -12,7 +12,7 @@ func (bb *Team6Biker) VoteForKickout() map[uuid.UUID]int {
 	for _, agent := range fellowBikers {
 		agentID := agent.GetID()
 		if agentID != bb.GetID() {
-			voteResults[agentID] = 1
+			voteResults[agentID] = 0
 			if agent.GetColour() == bb.GetColour() || (agent.GetReputation()[agentID] > reputationThreshold) {
 				voteResults[agentID] = 0
 			}
