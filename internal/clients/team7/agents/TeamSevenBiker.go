@@ -49,7 +49,11 @@ type BaseTeamSevenBiker struct {
 	voteGovernanceMessages       []objects.VoteGoveranceMessage
 	voteLootboxDirectionMessages []objects.VoteLootboxDirectionMessage
 	voteRulerMessages            []objects.VoteRulerMessage
-	voteKickoutMessgaes          []objects.VoteKickoutMessage
+	voteKickoutMessages          []objects.VoteKickoutMessage
+	voteAllocationMessages       []objects.VoteAllocationMessage
+
+	currentOpinionsOfAgents    map[uuid.UUID]float64
+	currentOpinionsOfLootboxes map[uuid.UUID]float64
 }
 
 // Produce new BaseTeamSevenBiker
@@ -78,7 +82,10 @@ func NewBaseTeamSevenBiker(baseBiker *objects.BaseBiker) *BaseTeamSevenBiker {
 		voteGovernanceMessages:       make([]objects.VoteGoveranceMessage, 0),
 		voteLootboxDirectionMessages: make([]objects.VoteLootboxDirectionMessage, 0),
 		voteRulerMessages:            make([]objects.VoteRulerMessage, 0),
-		voteKickoutMessgaes:          make([]objects.VoteKickoutMessage, 0),
+		voteKickoutMessages:          make([]objects.VoteKickoutMessage, 0),
+
+		currentOpinionsOfAgents:    make(map[uuid.UUID]float64),
+		currentOpinionsOfLootboxes: make(map[uuid.UUID]float64),
 	}
 }
 
@@ -94,16 +101,15 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	biker.environmentHandler.UpdateCurrentBikeId(biker.GetBike())
 
 	fellowBikers := biker.environmentHandler.GetAgentsOnCurrentBike()
-	agentForces := make(map[uuid.UUID]utils.Forces)
+
+	// First formulate the data that we have access to directly
 	agentColours := make(map[uuid.UUID]utils.Colour)
 	agentEnergyLevels := make(map[uuid.UUID]float64)
-	agentResourceVotes := make(map[uuid.UUID]voting.IdVoteMap)
 
 	agentIds := make([]uuid.UUID, len(fellowBikers))
 	for i, fellowBiker := range fellowBikers {
 		agentId := fellowBiker.GetID()
 		agentIds[i] = agentId
-		// agentForces[agentId] = fellowBiker.GetForces()
 		agentColours[agentId] = fellowBiker.GetColour()
 		agentEnergyLevels[agentId] = fellowBiker.GetEnergyLevel()
 		// TODO: Implement once we can message biker to ask for allocation
@@ -111,6 +117,33 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		// 	agentResourceVotes[agentId] = fellowBiker.DecideAllocation()
 		// 	biker.votedForResources = false
 		// }
+	}
+
+	// Formulate data based on messages and communication
+	allAgentForceInformation := make(map[uuid.UUID](map[uuid.UUID]utils.Forces))
+	for _, msg := range biker.forcesMessages {
+		agentId := msg.AgentId
+		allAgentForceInformation[agentId] = make(map[uuid.UUID]utils.Forces)
+		allAgentForceInformation[agentId][msg.GetSender().GetID()] = msg.AgentForces
+	}
+
+	agentForces := make(map[uuid.UUID]utils.Forces)
+	// Use the agent force from the agent with the highest trust level
+	trustLevels := biker.socialNetwork.GetAverageTrustLevels()
+	for agentId, agentForceInformation := range allAgentForceInformation {
+		mostTrustedAgentId := uuid.Nil
+		for senderId := range agentForceInformation {
+			if mostTrustedAgentId == uuid.Nil || trustLevels[senderId] > trustLevels[mostTrustedAgentId] {
+				mostTrustedAgentId = senderId
+			}
+		}
+		agentForces[agentId] = agentForceInformation[mostTrustedAgentId]
+	}
+
+	// Get the agents' votes on allocation. At this point we are just trusting what they say to be true for now.
+	agentResourceVotes := make(map[uuid.UUID]voting.IdVoteMap)
+	for _, msg := range biker.voteAllocationMessages {
+		agentResourceVotes[msg.GetSender().GetID()] = msg.VoteMap
 	}
 
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{
@@ -123,12 +156,131 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 
 	biker.socialNetwork.UpdateSocialNetwork(agentIds, socialNetworkInput)
 
+	// Next, update opinions
+	// Update opinion on agents
+	biker.updateOpinionsOnAgents(agentIds)
+	// Update opinion on lootboxes
+	biker.updateOpinionsOnLootboxes(agentIds)
+
 	// Update memory
 	if len(biker.locations) < biker.memoryLength {
 		biker.locations = append(biker.locations, biker.GetLocation())
 	} else {
 		biker.locations = append(biker.locations[1:], biker.GetLocation())
 	}
+
+	// Clear messages which were used in this round
+	biker.reputationMessages = make([]objects.ReputationOfAgentMessage, 0)
+	biker.lootboxMessages = make([]objects.LootboxMessage, 0)
+	biker.forcesMessages = make([]objects.ForcesMessage, 0)
+	biker.voteAllocationMessages = make([]objects.VoteAllocationMessage, 0)
+	// These were not used but clear them just for good practice
+	biker.voteLootboxDirectionMessages = make([]objects.VoteLootboxDirectionMessage, 0)
+	biker.voteKickoutMessages = make([]objects.VoteKickoutMessage, 0)
+	biker.voteGovernanceMessages = make([]objects.VoteGoveranceMessage, 0)
+	biker.voteRulerMessages = make([]objects.VoteRulerMessage, 0)
+	biker.kickoutMessages = make([]objects.KickoutAgentMessage, 0)
+	biker.joiningMessages = make([]objects.JoiningAgentMessage, 0)
+	biker.governanceMessages = make([]objects.GovernanceMessage, 0)
+}
+
+func (biker *BaseTeamSevenBiker) get2DReputationMap() map[uuid.UUID](map[uuid.UUID]float64) {
+	// Get reputation of each agent from each message
+	// This is a map of agentId to a map of agentId to reputation
+	// {
+	// 	agentA: {
+	// 		agentB: 1,
+	// 		agentC: 0.5,
+	// 	},
+	// 	agentB: {
+	// 		agentA: 0.5,
+	// 		agentC: 0.2,
+	// 	},
+	// 	...
+	// }
+	//
+	reputation2DMap := make(map[uuid.UUID](map[uuid.UUID]float64))
+	for _, msg := range biker.reputationMessages {
+		if _, ok := reputation2DMap[msg.AgentId]; !ok {
+			reputation2DMap[msg.AgentId] = make(map[uuid.UUID]float64)
+		}
+		reputation2DMap[msg.AgentId][msg.GetSender().GetID()] = msg.Reputation
+	}
+
+	return reputation2DMap
+}
+
+func (biker *BaseTeamSevenBiker) updateOpinionsOnAgents(agentIds []uuid.UUID) {
+	// Update opinions
+	// Calculate overall opinion of each agent
+	for _, agentId := range agentIds {
+		_, hasOpinion := biker.currentOpinionsOfAgents[agentId]
+		if !hasOpinion {
+			biker.currentOpinionsOfAgents[agentId] = biker.socialNetwork.GetAverageTrustLevels()[agentId]
+		}
+	}
+
+	// Opinion of agents
+	reputation2DMap := biker.get2DReputationMap()
+	for _, agentId := range agentIds {
+		bikerOpinionsOfAgents, hasData := reputation2DMap[agentId]
+		if hasData {
+			opinionFrameworkInputs := frameworks.OpinionFrameworkInputs{
+				AgentOpinion: bikerOpinionsOfAgents,
+				Mindset:      biker.currentOpinionsOfAgents[agentId],
+				OpinionType:  frameworks.AgentOpinions,
+			}
+
+			opinion := biker.opinionFramework.GetOpinion(opinionFrameworkInputs)
+			biker.currentOpinionsOfAgents[agentId] = opinion
+		}
+	}
+}
+
+func (biker *BaseTeamSevenBiker) updateOpinionsOnLootboxes(agentIds []uuid.UUID) {
+	// Opinion of lootboxes
+	biker.currentOpinionsOfLootboxes = make(map[uuid.UUID]float64, 0)
+
+	lootboxInterest := biker.getLootboxInterest()
+	myProposedLootbox := biker.getDesiredLootboxId()
+	if _, ok := lootboxInterest[myProposedLootbox]; !ok {
+		lootboxInterest[myProposedLootbox] = make([]uuid.UUID, 0)
+	}
+	lootboxInterest[myProposedLootbox] = append(lootboxInterest[myProposedLootbox], biker.GetID())
+	for lootboxId, agentIdsInterested := range lootboxInterest {
+		opinionsOnLootbox := make(map[uuid.UUID]float64)
+		for _, agentId := range agentIdsInterested {
+			opinionsOnLootbox[agentId] = 1
+		}
+		for _, agentId := range agentIds {
+			if _, ok := opinionsOnLootbox[agentId]; !ok {
+				opinionsOnLootbox[agentId] = 0
+			}
+		}
+		opinionFrameworkInputs := frameworks.OpinionFrameworkInputs{
+			AgentOpinion: opinionsOnLootbox,
+			Mindset:      biker.currentOpinionsOfLootboxes[lootboxId],
+			OpinionType:  frameworks.LootboxOpinions,
+		}
+
+		opinion := biker.opinionFramework.GetOpinion(opinionFrameworkInputs)
+		biker.currentOpinionsOfLootboxes[lootboxId] = opinion
+	}
+}
+
+func (biker *BaseTeamSevenBiker) getLootboxInterest() map[uuid.UUID]([]uuid.UUID) {
+	lootboxMap := make(map[uuid.UUID]([]uuid.UUID))
+	// Get lootbox interest of each agent from each message
+	for _, msg := range biker.lootboxMessages {
+		sender := msg.GetSender().GetID()
+		lootboxId := msg.LootboxId
+		if _, ok := lootboxMap[lootboxId]; !ok {
+			lootboxMap[lootboxId] = make([]uuid.UUID, 0)
+		}
+		lootboxMap[lootboxId] = append(lootboxMap[lootboxId], sender)
+	}
+
+	return lootboxMap
 }
 
 func (biker *BaseTeamSevenBiker) ProposeDirection() uuid.UUID {
@@ -355,6 +507,9 @@ func (biker *BaseTeamSevenBiker) GetAllMessages([]objects.IBaseBiker) []messagin
 	forcesMessage := biker.CreateForcesMessage()
 	messages = append(messages, forcesMessage)
 
+	voteAllocationMessage := biker.CreateVoteAllocationMessage()
+	messages = append(messages, voteAllocationMessage)
+
 	return messages
 }
 
@@ -417,12 +572,20 @@ func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutM
 				voteKickingMapMessage[agentId] = 0
 			}
 		}
-
 	}
 
 	return objects.VoteKickoutMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
 		VoteMap:     voteKickingMapMessage,
+	}
+}
+
+func (biker *BaseTeamSevenBiker) CreateVoteAllocationMessage() objects.VoteAllocationMessage {
+	// Currently this returns a default/meaningless message
+	// For team's agent, add your own logic to communicate with other agents
+	return objects.VoteAllocationMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		VoteMap:     biker.voteAllocationMap,
 	}
 }
 
@@ -463,5 +626,9 @@ func (biker *BaseTeamSevenBiker) HandleVoteRulerMessage(msg objects.VoteRulerMes
 }
 
 func (biker *BaseTeamSevenBiker) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
-	biker.voteKickoutMessgaes = append(biker.voteKickoutMessgaes, msg)
+	biker.voteKickoutMessages = append(biker.voteKickoutMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleVoteAllocationMessage(msg objects.VoteAllocationMessage) {
+	biker.voteAllocationMessages = append(biker.voteAllocationMessages, msg)
 }
