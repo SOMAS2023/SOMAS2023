@@ -9,53 +9,90 @@ import (
 type OpinionFrameworkInputs struct {
 	AgentOpinion map[uuid.UUID]float64
 	Mindset      float64
+	OpinionType  OpinionType
 }
 
+type OpinionType int
+
+const (
+	AgentOpinions OpinionType = iota
+	LootboxOpinions
+)
+
 type OpinionFramework struct {
-	Inputs *OpinionFrameworkInputs
+	OpinionAgentWeights map[OpinionType]map[uuid.UUID]float64
 }
 
 func NewOpinionFramework(of OpinionFrameworkInputs) *OpinionFramework {
-	return &OpinionFramework{Inputs: &of}
+	return &OpinionFramework{
+		OpinionAgentWeights: make(map[OpinionType]map[uuid.UUID]float64),
+	}
 }
 
-func (of *OpinionFramework) GetOpinion() float64 {
+func (of *OpinionFramework) GetOpinion(inputs OpinionFrameworkInputs) float64 {
+	numOpinions := len(inputs.AgentOpinion)
 
-	i := len(of.Inputs.AgentOpinion)
-	μ := of.Inputs.Mindset
-
-	O := make([]float64, i)
-	for idx := range O {
-		O[idx] = of.Inputs.AgentOpinion[uuid.UUID]
+	agentIds := make([]uuid.UUID, numOpinions)
+	for agentId := range inputs.AgentOpinion {
+		agentIds = append(agentIds, agentId)
 	}
 
-	W := make([]float64, i)
-	for idx := range W {
-		W[idx] = 1
+	weights := make([]float64, numOpinions)
+	currentWeights, hasWeights := of.OpinionAgentWeights[inputs.OpinionType]
+	if !hasWeights {
+		// No weights on the matter, initialise all to 1
+		initWeights := make(map[uuid.UUID]float64)
+		for idx, agentId := range agentIds {
+			initWeights[agentId] = 1
+			weights[idx] = 1
+		}
+		of.OpinionAgentWeights[inputs.OpinionType] = initWeights
+	} else {
+		// Weights exist but not necessarily for all of the agents so get the weights but set to 1 if doesn't exist
+		for idx, agentId := range agentIds {
+			agentWeight, agentHasWeight := currentWeights[agentId]
+			if !agentHasWeight {
+				of.OpinionAgentWeights[inputs.OpinionType][agentId] = 1
+				agentWeight = 1
+			}
+			weights[idx] = agentWeight
+		}
 	}
 
-	A := make([]float64, i)
-	for idx := range A {
-		A[idx] = 1.0 - math.Abs(O[idx]-μ)/math.Max(μ, 1.0-μ)
+	currentMindset := inputs.Mindset
+
+	opinions := make([]float64, numOpinions)
+	for idx, agentId := range agentIds {
+		opinions[idx] = inputs.AgentOpinion[agentId]
 	}
 
-	for idx := range W {
-		W[idx] = W[idx] + W[idx]*A[idx]
+	affinities := make([]float64, numOpinions)
+	for idx := range affinities {
+		affinities[idx] = 1.0 - math.Abs(opinions[idx]-currentMindset)/math.Max(currentMindset, 1.0-currentMindset)
 	}
 
 	rowSum := 0.0
-	for _, val := range W {
+	for _, val := range weights {
 		rowSum += val
 	}
 
-	for idx := range W {
-		W[idx] /= rowSum
+	for idx := range weights {
+		weights[idx] = weights[idx] + weights[idx]*affinities[idx]
 	}
 
-	o := 0.0
-	for idx := range W {
-		o += W[idx] * O[idx]
+	for idx := range weights {
+		weights[idx] /= rowSum
 	}
 
-	return o
+	currentOpinion := 0.0
+	for idx := range weights {
+		currentOpinion += weights[idx] * opinions[idx]
+	}
+
+	// Update the weights we have stored
+	for idx, agentId := range agentIds {
+		of.OpinionAgentWeights[inputs.OpinionType][agentId] = weights[idx]
+	}
+
+	return currentOpinion
 }
