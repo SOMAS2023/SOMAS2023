@@ -82,10 +82,6 @@ func NewBaseTeamSevenBiker(baseBiker *objects.BaseBiker) *BaseTeamSevenBiker {
 	}
 }
 
-func GetTeamSevenBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
-	return NewBaseTeamSevenBiker(baseBiker)
-}
-
 func (biker *BaseTeamSevenBiker) UpdateGameState(gameState objects.IGameState) {
 	biker.BaseBiker.UpdateGameState(gameState)
 	biker.environmentHandler.UpdateGameState(gameState)

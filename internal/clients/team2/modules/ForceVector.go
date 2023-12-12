@@ -19,6 +19,9 @@ func (fv *ForceVector) Magnitude() float64 {
 }
 
 func (fv *ForceVector) CosineSimilarity(vec ForceVector) float64 {
+	if fv.Dot(vec) == 0 {
+		return 0.0
+	}
 	return fv.Dot(vec) / (fv.Magnitude() * vec.Magnitude())
 }
 

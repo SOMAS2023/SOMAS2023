@@ -2,10 +2,12 @@ package server
 
 import (
 	"SOMAS2023/internal/clients/team1"
+	"SOMAS2023/internal/clients/team2"
 	"SOMAS2023/internal/clients/team3"
 	"SOMAS2023/internal/clients/team4"
 	team5Agent "SOMAS2023/internal/clients/team5"
-	team7 "SOMAS2023/internal/clients/team7/agents"
+	"SOMAS2023/internal/clients/team6"
+	"SOMAS2023/internal/clients/team7"
 	"SOMAS2023/internal/clients/team8"
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
@@ -17,13 +19,14 @@ import (
 type AgentInitFunction func(baseBiker *objects.BaseBiker) objects.IBaseBiker
 
 var AgentInitFunctions = []AgentInitFunction{
-	team1.GetBiker1, // Team 1
-	//team2.GetBiker,      // Team 2
-	team3.GetT3Agent,    // Team 3
-	team4.GetBiker4,     // Team 4
-	team5Agent.GetBiker, // Team 5
-	team7.GetTeamSevenBiker,
-	team8.GetIBaseBiker, // Team 8
+	team1.GetBiker1,         // Team 1
+	team2.GetBiker,          // Team 2
+	team3.GetT3Agent,        // Team 3
+	team4.GetBiker4,         // Team 4
+	team5Agent.GetBiker,     // Team 5
+	team6.InitialiseBiker6,  // Team 6
+	team7.GetTeamSevenBiker, // Team 7
+	team8.GetIBaseBiker,     // Team 8
 }
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {

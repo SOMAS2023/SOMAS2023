@@ -6,7 +6,6 @@ import (
 	obj "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -15,23 +14,23 @@ import (
 // agent specific parameters
 const deviateNegative = 0.1          // trust loss on deviation
 const deviatePositive = 0.15         // trust gain on non deviation
-const effortScaling = 0.1            // scaling factor for effort, highr it is the more effort chages each round
+const effortScaling = 0.2            // scaling factor for effort, highr it is the more effort chages each round
 const fairnessScaling = 0.1          // scaling factor for fairness, higher it is the more fairness changes each round
 const relativeSuccessScaling = 0.1   // scaling factor for relative success, higher it is the more relative success changes each round
 const votingAlignmentThreshold = 0.6 // threshold for voting alignment
-const leaveThreshold = 0.0           // threshold for leaving
-const kickThreshold = 0.0            // threshold for kicking
-const trustThreshold = 0.7           // threshold for trusting (need to tune)
-const fairnessConstant = 0.5         // weight of fairness in opinion
-const joinThreshold = -0.2           // opinion threshold for joining if not same colour
+const leaveThreshold = 0.1           // threshold for leaving
+const kickThreshold = 0.1            // threshold for kicking
+const trustThreshold = 0.7           // threshold for trusting (need to tune) MINIMUM AMOUNT OF TRUST TO ACCEPT A MESSAGE
+const fairnessConstant = 1           // weight of fairness in opinion
+const joinReputationThreshold = 0.3  // opinion threshold for joining if not same colour
 const leaderThreshold = 0.95         // opinion threshold for becoming leader
 const trustconstant = 1              // weight of trust in opinion
 const effortConstant = 1             // weight of effort in opinion
 const fairnessDifference = 0.5       // modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
 const lowEnergyLevel = 0.3           // energy level below which the agent will try to get a lootbox of the desired colour
-const leavingThreshold = 0.3         // how low the agent's vote must be to leave bike
 const colorOpinionConstant = 0.2     // how much any agent likes any other of the same colour in the objective function
 const audiDistanceThreshold = 75     // how close the agent must be to the audi to run away
+const reputationScaling = 0.1        //scaling factor for effort, the higher it is the more other agents' opinion influences ours
 
 // Governance decision constants
 const democracyOpinonThreshold = 0.5
@@ -78,7 +77,6 @@ func (bb *Biker1) GetLocation() utils.Coordinates {
 	megaBikes := gs.GetMegaBikes()
 	position := megaBikes[bikeId].GetPosition()
 	if math.IsNaN(position.X) {
-		fmt.Printf("agent %v has no position\n", bb.GetID())
 	}
 	return position
 }
@@ -119,10 +117,16 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 		}
 	}
 	if len(scoreMap) == 0 {
-		return bb.mostRecentBike
+		//if tried all bikes, reset
+		bb.pursuedBikes = make([]uuid.UUID, 0)
+		for _, bike := range allBikes {
+			if len(bike.GetAgents()) < utils.BikersOnBike || bike.GetID() == bb.mostRecentBike {
+				scoreMap[bike.GetID()] = bb.ScoreBike(bike)
+			}
+		}
 	}
-	bestBike := bb.GetBike()
-	bestScore := scoreMap[bestBike]
+	bestBike := uuid.Nil
+	bestScore := 0.0
 	for id, score := range scoreMap {
 		if score > bestScore {
 			bestBike = id
@@ -143,12 +147,16 @@ func (bb *Biker1) updatePrevEnergy() {
 func (bb *Biker1) DecideAction() obj.BikerAction {
 	bb.mostRecentBike = bb.GetBike()
 	fellowBikers := bb.GetFellowBikers()
-
 	// Update opinion metrics
-	if bb.recentDecided != uuid.Nil {
+	bb.DetermineOurAverageReputation()
+	if bb.recentDecided != uuid.Nil && fellowBikers != nil {
 		bb.UpdateAllAgentsTrust(fellowBikers)
-		// bb.UpdateAllAgentsEffort()
 		bb.UpdateAllAgentsOpinions(fellowBikers)
+		// bb.UpdateAllAgentsRelativeSuccess(fellowBikers)
+
+		if bb.getPedalForce() > 0 && bb.GetEnergyLevel() < bb.prevEnergy[bb.GetID()] {
+			bb.UpdateAllAgentsEffort()
+		}
 	}
 
 	// update only after receiving a lootbox
@@ -171,6 +179,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 			bb.dislikeVote = false
 			newBike := bb.PickBestBike()
 			if newBike != bb.GetBike() {
+				bb.desiredBike = newBike
 				// refresh prevEnergy Map
 				bb.desiredBike = newBike
 				bb.prevEnergy = make(map[uuid.UUID]float64)
@@ -185,6 +194,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 		}
 
 	} else {
+		bb.updatePrevEnergy()
 		return 0
 	}
 }
@@ -237,9 +247,21 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 
 	decision := make(map[uuid.UUID]bool)
 
+	averageBikeOpinion := 0.0
+	for _, agent := range bb.GetFellowBikers() {
+		averageBikeOpinion += bb.opinions[agent.GetID()].opinion
+	}
+
 	for _, agentId := range pendingAgents {
 		//TODO FIX
 		agent := bb.GetAgentFromId(agentId)
+		reputation, ok := bb.GetReputation()[agentId]
+		var agent_reputation float64
+		if !ok {
+			agent_reputation = 0
+		} else {
+			agent_reputation = reputation
+		}
 
 		bbColour := bb.GetColour()
 		agentColour := agent.GetColour()
@@ -248,7 +270,7 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 			sameColourReward := 1.05
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
-			if bb.opinions[agentId].opinion > joinThreshold {
+			if bb.opinions[agentId].opinion >= averageBikeOpinion || agent_reputation > joinReputationThreshold {
 				decision[agentId] = true
 				// penalise for accepting them without same colour
 				penalty := 0.9
@@ -257,7 +279,6 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 				decision[agentId] = false
 			}
 		}
-		bb.UpdateRelativeSuccess(agentId)
 
 	}
 
@@ -308,7 +329,6 @@ func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 
 // -------------------INSTANTIATION FUNCTIONS----------------------------
 func GetBiker1(baseBiker *obj.BaseBiker) obj.IBaseBiker {
-	fmt.Printf("Creating Biker1 with id %v\n", baseBiker.GetID())
 	baseBiker.GroupID = 1
 	return &Biker1{
 		BaseBiker:      baseBiker,

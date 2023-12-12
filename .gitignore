@@ -1,6 +1,7 @@
 .vscode
 *.exe
 __pycache__
+*.xlsx
 game_dump*.json
 statistics.xlsx
 .DS_store
