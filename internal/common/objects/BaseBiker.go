@@ -67,6 +67,7 @@ type IBaseBiker interface {
 	HandleVoteLootboxDirectionMessage(msg VoteLootboxDirectionMessage)
 	HandleVoteRulerMessage(msg VoteRulerMessage)
 	HandleVoteKickoutMessage(msg VoteKickoutMessage)
+	HandleVoteAllocationMessage(msg VoteAllocationMessage)
 
 	GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBiker]
 }
@@ -450,7 +451,8 @@ func (bb *BaseBiker) GetAllMessages([]IBaseBiker) []messaging.IMessage[IBaseBike
 		voteLootboxDirectionMessage := bb.CreateVoteLootboxDirectionMessage()
 		voteRulerMessage := bb.CreateVoteRulerMessage()
 		voteKickoutMessage := bb.CreateVotekickoutMessage()
-		return []messaging.IMessage[IBaseBiker]{reputationMsg, kickoutMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg, voteGoveranceMessage, voteLootboxDirectionMessage, voteRulerMessage, voteKickoutMessage}
+		voteAllocationMessage := bb.CreateVoteAllocationMessage()
+		return []messaging.IMessage[IBaseBiker]{reputationMsg, kickoutMsg, lootboxMsg, joiningMsg, governceMsg, forcesMsg, voteGoveranceMessage, voteLootboxDirectionMessage, voteRulerMessage, voteKickoutMessage, voteAllocationMessage}
 	}
 	return []messaging.IMessage[IBaseBiker]{}
 }
@@ -556,6 +558,15 @@ func (bb *BaseBiker) CreateVotekickoutMessage() VoteKickoutMessage {
 	}
 }
 
+func (bb *BaseBiker) CreateVoteAllocationMessage() VoteAllocationMessage {
+	// Currently this returns a default/meaningless message
+	// For team's agent, add your own logic to communicate with other agents
+	return VoteAllocationMessage{
+		BaseMessage: messaging.CreateMessage[IBaseBiker](bb, bb.GetFellowBikers()),
+		VoteMap:     make(voting.IdVoteMap),
+	}
+}
+
 func (bb *BaseBiker) HandleKickoutMessage(msg KickoutAgentMessage) {
 	// Team's agent should implement logic for handling other biker messages that were sent to them.
 
@@ -601,7 +612,6 @@ func (bb *BaseBiker) HandleForcesMessage(msg ForcesMessage) {
 	// sender := msg.BaseMessage.GetSender()
 	// agentId := msg.AgentId
 	// agentForces := msg.AgentForces
-
 }
 
 func (bb *BaseBiker) HandleVoteGovernanceMessage(msg VoteGoveranceMessage) {
@@ -626,6 +636,13 @@ func (bb *BaseBiker) HandleVoteRulerMessage(msg VoteRulerMessage) {
 }
 
 func (bb *BaseBiker) HandleVoteKickoutMessage(msg VoteKickoutMessage) {
+	// Team's agent should implement logic for handling other biker messages that were sent to them.
+
+	// sender := msg.BaseMessage.GetSender()
+	// voteMap := msg.VoteMap
+}
+
+func (bb *BaseBiker) HandleVoteAllocationMessage(msg VoteAllocationMessage) {
 	// Team's agent should implement logic for handling other biker messages that were sent to them.
 
 	// sender := msg.BaseMessage.GetSender()
