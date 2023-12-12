@@ -259,7 +259,7 @@ func (bb *Team6Biker) FindBiker(agentID uuid.UUID) objects.IBaseBiker {
 	return bb.BaseBiker
 }
 func InitialiseBiker6(bb *objects.BaseBiker) objects.IBaseBiker {
-	fmt.Printf("Generating Biker for Team 6")
+	// fmt.Printf("Generating Biker for Team 6")
 	bb.GroupID = 6
 	//bb.soughtColour = utils.Red
 	return &Team6Biker{

@@ -5,7 +5,6 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"cmp"
-	"fmt"
 	"math"
 	"slices"
 
@@ -160,18 +159,18 @@ func (s *Server) FoundingInstitutions() {
 }
 
 func (s *Server) Start() {
-	fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
+	// fmt.Printf("Server initialised with %d agents \n\n", len(s.GetAgentMap()))
 	gameStates := make([][]GameStateDump, 0, s.GetIterations())
 	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
-		fmt.Printf("Game Loop %d running... \n \n", i)
-		fmt.Printf("Main game loop running...\n\n")
+		// fmt.Printf("Game Loop %d running... \n \n", i)
+		// fmt.Printf("Main game loop running...\n\n")
 		gameStates = append(gameStates, s.RunSimLoop(utils.RoundIterations))
-		fmt.Printf("\nMain game loop finished.\n\n")
-		fmt.Printf("Messaging session started...\n\n")
+		// fmt.Printf("\nMain game loop finished.\n\n")
+		// fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
-		fmt.Printf("\nMessaging session completed\n\n")
-		fmt.Printf("Game Loop %d completed.\n", i)
+		// fmt.Printf("\nMessaging session completed\n\n")
+		// fmt.Printf("Game Loop %d completed.\n", i)
 	}
 	s.outputResults(gameStates)
 }

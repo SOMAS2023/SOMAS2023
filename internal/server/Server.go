@@ -5,7 +5,6 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"encoding/json"
-	"fmt"
 	"os"
 
 	baseserver "github.com/MattSScott/basePlatformSOMAS/BaseServer"
@@ -114,11 +113,11 @@ func (s *Server) GetDeadAgents() map[uuid.UUID]objects.IBaseBiker {
 func (s *Server) outputResults(gameStates [][]GameStateDump) {
 	statistics := CalculateStatistics(gameStates)
 
-	statisticsJson, err := json.MarshalIndent(statistics.Average, "", "    ")
+	_, err := json.MarshalIndent(statistics.Average, "", "    ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Average Statistics:\n" + string(statisticsJson))
+	// fmt.Println("Average Statistics:\n" + string(statisticsJson))
 
 	file, err := os.Create("statistics.xlsx")
 	if err != nil {
