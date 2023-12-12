@@ -6,11 +6,11 @@ import (
 )
 
 type NavigationInputs struct {
-	IsDestination           bool
-	Destination             utils.Coordinates
-	CurrentLocation         utils.Coordinates
-	CurrentEnergy           float64
-	ConscientioussnessLevel float64
+	IsDestination          bool
+	Destination            utils.Coordinates
+	CurrentLocation        utils.Coordinates
+	CurrentEnergy          float64
+	ConscientiousnessLevel float64
 }
 
 /*
@@ -40,7 +40,6 @@ func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) uti
 
 	// Pedaling force is the current energy multiplied by a constant ratio
 	pedallingForce := inputs.CurrentEnergy * forceToEnergyRatio
-
 
 	// Braking force is set to zero, assuming no need to brake in this context
 	brakingForce := float64(0)
