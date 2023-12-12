@@ -41,7 +41,7 @@ class Bike(Drawable):
         """
         noAgents = len(self.agentList.values())
         # Determine the grid size
-        gridSize = min(3, max(1, int(math.ceil(math.sqrt(noAgents)))))
+        gridSize = max(1, int(math.ceil(math.sqrt(noAgents))))
         agentPadding = AGENT["PADDING"] * zoom  # Padding around agents
         agentSize = (AGENT["SIZE"] + AGENT["LINE_WIDTH"]) * 2 * zoom
         self.squareSide = gridSize * agentSize + ((gridSize+1) * agentPadding)
