@@ -50,6 +50,9 @@ type BaseTeamSevenBiker struct {
 	voteLootboxDirectionMessages []objects.VoteLootboxDirectionMessage
 	voteRulerMessages            []objects.VoteRulerMessage
 	voteKickoutMessgaes          []objects.VoteKickoutMessage
+
+	currentOpinionsOfAgents    map[uuid.UUID]float64
+	currentOpinionsOfLootboxes map[uuid.UUID]float64
 }
 
 // Produce new BaseTeamSevenBiker
@@ -113,6 +116,81 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		// }
 	}
 
+	// Update opinions
+	// Calculate overall opinion of each agent
+	for _, agentId := range agentIds {
+		_, hasOpinion := biker.currentOpinionsOfAgents[agentId]
+		if !hasOpinion {
+			biker.currentOpinionsOfAgents[agentId] = biker.socialNetwork.GetAverageTrustLevels()[agentId]
+		}
+	}
+
+	// Opinion of agents
+	reputation2DMap := biker.get2DReputationMap()
+	for _, agentId := range agentIds {
+		bikerOpinionsOfAgents, hasData := reputation2DMap[agentId]
+		if hasData {
+			opinionFrameworkInputs := frameworks.OpinionFrameworkInputs{
+				AgentOpinion: bikerOpinionsOfAgents,
+				Mindset:      biker.currentOpinionsOfAgents[agentId],
+				OpinionType:  frameworks.AgentOpinions,
+			}
+
+			opinion := biker.opinionFramework.GetOpinion(opinionFrameworkInputs)
+			biker.currentOpinionsOfAgents[agentId] = opinion
+		}
+	}
+
+	// Opinion of lootboxes
+	biker.currentOpinionsOfLootboxes = make(map[uuid.UUID]float64, 0)
+
+	lootboxInterest := biker.getLootboxInterest()
+	myProposedLootbox := biker.getDesiredLootboxId()
+	if _, ok := lootboxInterest[myProposedLootbox]; !ok {
+		lootboxInterest[myProposedLootbox] = make([]uuid.UUID, 0)
+	}
+	lootboxInterest[myProposedLootbox] = append(lootboxInterest[myProposedLootbox], biker.GetID())
+	for lootboxId, agentIdsInterested := range lootboxInterest {
+		opinionsOnLootbox := make(map[uuid.UUID]float64)
+		for _, agentId := range agentIdsInterested {
+			opinionsOnLootbox[agentId] = 1
+		}
+		for _, agentId := range agentIds {
+			if _, ok := opinionsOnLootbox[agentId]; !ok {
+				opinionsOnLootbox[agentId] = 0
+			}
+		}
+		opinionFrameworkInputs := frameworks.OpinionFrameworkInputs{
+			AgentOpinion: opinionsOnLootbox,
+			Mindset:      biker.currentOpinionsOfLootboxes[lootboxId],
+			OpinionType:  frameworks.LootboxOpinions,
+		}
+
+		opinion := biker.opinionFramework.GetOpinion(opinionFrameworkInputs)
+		biker.currentOpinionsOfLootboxes[lootboxId] = opinion
+	}
+
+	if biker.time == 0 {
+		biker.currentOpinionsOfAgents = make(map[uuid.UUID]float64)
+		// Start with best intentions?
+		// Maybe use personality to weight values and get an initial value
+		for _, agentId := range agentIds {
+			biker.currentOpinionsOfAgents[agentId] = 1
+		}
+	} else {
+		for _, msg := range biker.reputationMessages {
+			biker.currentOpinionsOfAgents[msg.AgentId] = biker.currentOpinionsOfAgents[msg.AgentId]*0.8 + msg.Reputation*0.2
+		}
+	}
+
+	// Get agent forces from messages
+	for _, msg := range biker.forcesMessages {
+		// Use it if it is from the same agent
+		if msg.AgentId == msg.GetSender().GetID() {
+			agentForces[msg.AgentId] = msg.AgentForces
+		}
+	}
+
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{
 		AgentDecisions:     agentForces,
 		AgentResourceVotes: agentResourceVotes,
@@ -129,6 +207,47 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	} else {
 		biker.locations = append(biker.locations[1:], biker.GetLocation())
 	}
+}
+
+func (biker *BaseTeamSevenBiker) get2DReputationMap() map[uuid.UUID](map[uuid.UUID]float64) {
+	// Get reputation of each agent from each message
+	// This is a map of agentId to a map of agentId to reputation
+	// {
+	// 	agentA: {
+	// 		agentB: 1,
+	// 		agentC: 0.5,
+	// 	},
+	// 	agentB: {
+	// 		agentA: 0.5,
+	// 		agentC: 0.2,
+	// 	},
+	// 	...
+	// }
+	//
+	reputation2DMap := make(map[uuid.UUID](map[uuid.UUID]float64))
+	for _, msg := range biker.reputationMessages {
+		if _, ok := reputation2DMap[msg.AgentId]; !ok {
+			reputation2DMap[msg.AgentId] = make(map[uuid.UUID]float64)
+		}
+		reputation2DMap[msg.AgentId][msg.GetSender().GetID()] = msg.Reputation
+	}
+
+	return reputation2DMap
+}
+
+func (biker *BaseTeamSevenBiker) getLootboxInterest() map[uuid.UUID]([]uuid.UUID) {
+	lootboxMap := make(map[uuid.UUID]([]uuid.UUID))
+	// Get lootbox interest of each agent from each message
+	for _, msg := range biker.lootboxMessages {
+		sender := msg.GetSender().GetID()
+		lootboxId := msg.LootboxId
+		if _, ok := lootboxMap[lootboxId]; !ok {
+			lootboxMap[lootboxId] = make([]uuid.UUID, 0)
+		}
+		lootboxMap[lootboxId] = append(lootboxMap[lootboxId], sender)
+	}
+
+	return lootboxMap
 }
 
 func (biker *BaseTeamSevenBiker) ProposeDirection() uuid.UUID {
