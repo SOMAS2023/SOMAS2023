@@ -13,7 +13,7 @@ def combine_sheets(file_list, output_file='combined_excel.xlsx'):
         for sheet_name in xls.sheet_names:
             df = pd.read_excel(xls, sheet_name)
             df['Source'] = f'File_{file_index + 1}'  # Add a column to indicate the source file
-
+            df = pd.concat([df.iloc[:, :1], df.iloc[:, 1:].reindex(sorted(df.columns[1:]), axis=1)], axis=1)
             # Append data to the respective sheet's dataframe in the dictionary
             if sheet_name not in sheets_dict:
                 sheets_dict[sheet_name] = df
