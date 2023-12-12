@@ -21,7 +21,7 @@ func (bb *Biker1) GetFellowBikers() []obj.IBaseBiker {
 	result, ok := gs.GetMegaBikes()[bikeId]
 	if ok {
 		return result.GetAgents()
-	}else{
+	} else {
 		return []obj.IBaseBiker{}
 	}
 }
