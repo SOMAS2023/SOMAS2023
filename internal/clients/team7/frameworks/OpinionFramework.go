@@ -32,7 +32,7 @@ func NewOpinionFramework(of OpinionFrameworkInputs) *OpinionFramework {
 func (of *OpinionFramework) GetOpinion(inputs OpinionFrameworkInputs) float64 {
 	numOpinions := len(inputs.AgentOpinion)
 
-	agentIds := make([]uuid.UUID, numOpinions)
+	agentIds := make([]uuid.UUID, 0)
 	for agentId := range inputs.AgentOpinion {
 		agentIds = append(agentIds, agentId)
 	}

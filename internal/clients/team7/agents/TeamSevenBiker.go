@@ -49,7 +49,8 @@ type BaseTeamSevenBiker struct {
 	voteGovernanceMessages       []objects.VoteGoveranceMessage
 	voteLootboxDirectionMessages []objects.VoteLootboxDirectionMessage
 	voteRulerMessages            []objects.VoteRulerMessage
-	voteKickoutMessgaes          []objects.VoteKickoutMessage
+	voteKickoutMessages          []objects.VoteKickoutMessage
+	voteAllocationMessages       []objects.VoteAllocationMessage
 
 	currentOpinionsOfAgents    map[uuid.UUID]float64
 	currentOpinionsOfLootboxes map[uuid.UUID]float64
@@ -81,7 +82,7 @@ func NewBaseTeamSevenBiker(baseBiker *objects.BaseBiker) *BaseTeamSevenBiker {
 		voteGovernanceMessages:       make([]objects.VoteGoveranceMessage, 0),
 		voteLootboxDirectionMessages: make([]objects.VoteLootboxDirectionMessage, 0),
 		voteRulerMessages:            make([]objects.VoteRulerMessage, 0),
-		voteKickoutMessgaes:          make([]objects.VoteKickoutMessage, 0),
+		voteKickoutMessages:          make([]objects.VoteKickoutMessage, 0),
 
 		currentOpinionsOfAgents:    make(map[uuid.UUID]float64),
 		currentOpinionsOfLootboxes: make(map[uuid.UUID]float64),
@@ -104,7 +105,6 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	// First formulate the data that we have access to directly
 	agentColours := make(map[uuid.UUID]utils.Colour)
 	agentEnergyLevels := make(map[uuid.UUID]float64)
-	agentResourceVotes := make(map[uuid.UUID]voting.IdVoteMap)
 
 	agentIds := make([]uuid.UUID, len(fellowBikers))
 	for i, fellowBiker := range fellowBikers {
@@ -140,6 +140,12 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		agentForces[agentId] = agentForceInformation[mostTrustedAgentId]
 	}
 
+	// Get the agents' votes on allocation. At this point we are just trusting what they say to be true for now.
+	agentResourceVotes := make(map[uuid.UUID]voting.IdVoteMap)
+	for _, msg := range biker.voteAllocationMessages {
+		agentResourceVotes[msg.GetSender().GetID()] = msg.VoteMap
+	}
+
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{
 		AgentDecisions:     agentForces,
 		AgentResourceVotes: agentResourceVotes,
@@ -162,6 +168,20 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	} else {
 		biker.locations = append(biker.locations[1:], biker.GetLocation())
 	}
+
+	// Clear messages which were used in this round
+	biker.reputationMessages = make([]objects.ReputationOfAgentMessage, 0)
+	biker.lootboxMessages = make([]objects.LootboxMessage, 0)
+	biker.forcesMessages = make([]objects.ForcesMessage, 0)
+	biker.voteAllocationMessages = make([]objects.VoteAllocationMessage, 0)
+	// These were not used but clear them just for good practice
+	biker.voteLootboxDirectionMessages = make([]objects.VoteLootboxDirectionMessage, 0)
+	biker.voteKickoutMessages = make([]objects.VoteKickoutMessage, 0)
+	biker.voteGovernanceMessages = make([]objects.VoteGoveranceMessage, 0)
+	biker.voteRulerMessages = make([]objects.VoteRulerMessage, 0)
+	biker.kickoutMessages = make([]objects.KickoutAgentMessage, 0)
+	biker.joiningMessages = make([]objects.JoiningAgentMessage, 0)
+	biker.governanceMessages = make([]objects.GovernanceMessage, 0)
 }
 
 func (biker *BaseTeamSevenBiker) get2DReputationMap() map[uuid.UUID](map[uuid.UUID]float64) {
@@ -487,6 +507,9 @@ func (biker *BaseTeamSevenBiker) GetAllMessages([]objects.IBaseBiker) []messagin
 	forcesMessage := biker.CreateForcesMessage()
 	messages = append(messages, forcesMessage)
 
+	voteAllocationMessage := biker.CreateVoteAllocationMessage()
+	messages = append(messages, voteAllocationMessage)
+
 	return messages
 }
 
@@ -549,12 +572,20 @@ func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutM
 				voteKickingMapMessage[agentId] = 0
 			}
 		}
-
 	}
 
 	return objects.VoteKickoutMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
 		VoteMap:     voteKickingMapMessage,
+	}
+}
+
+func (biker *BaseTeamSevenBiker) CreateVoteAllocationMessage() objects.VoteAllocationMessage {
+	// Currently this returns a default/meaningless message
+	// For team's agent, add your own logic to communicate with other agents
+	return objects.VoteAllocationMessage{
+		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+		VoteMap:     biker.voteAllocationMap,
 	}
 }
 
@@ -595,5 +626,9 @@ func (biker *BaseTeamSevenBiker) HandleVoteRulerMessage(msg objects.VoteRulerMes
 }
 
 func (biker *BaseTeamSevenBiker) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
-	biker.voteKickoutMessgaes = append(biker.voteKickoutMessgaes, msg)
+	biker.voteKickoutMessages = append(biker.voteKickoutMessages, msg)
+}
+
+func (biker *BaseTeamSevenBiker) HandleVoteAllocationMessage(msg objects.VoteAllocationMessage) {
+	biker.voteAllocationMessages = append(biker.voteAllocationMessages, msg)
 }
