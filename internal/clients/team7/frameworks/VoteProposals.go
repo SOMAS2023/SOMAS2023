@@ -25,12 +25,10 @@ func (voteHandler *VoteOnProposalsHandler) GetDecision(inputs VoteOnLootBoxesInp
 		bikerOpinionOfLootBox, hasData := inputs.MyOpinion[loot_id]
 		if loot_id == inputs.MyDesired {
 			share[loot_id] = true
-		} else if hasData {
-			if bikerOpinionOfLootBox > 0.5 {
-				share[loot_id] = false
-			}
-		} else {
+		} else if hasData && bikerOpinionOfLootBox > 0.5 {
 			share[loot_id] = true
+		} else {
+			share[loot_id] = false
 		}
 	}
 
