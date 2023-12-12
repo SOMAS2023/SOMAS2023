@@ -11,10 +11,6 @@ type Trust struct {
 	trust           float64
 }
 
-//func (bb *Team6Biker) GetReputations(agentID uuid.UUID) Trust {
-//	return bb.Trust[agentID]
-//}
-
 func (bb *Team6Biker) UpdateAgentgoal(agentID uuid.UUID) {
 
 	newTrust := Trust{

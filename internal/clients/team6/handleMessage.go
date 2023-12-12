@@ -40,14 +40,12 @@ func (bb *Team6Biker) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 	if agentid == bb.GetID() && kickout == true {
 		bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.3, 0))
 	}
-
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------HandleKickoutMessage", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }
-
-// func (bb *Team6Biker) HandleReputationMessage(msg objects.ReputationOfAgentMessage) {
-// 	sender := msg.BaseMessage.GetSender()
-// 	voteMap := msg.VoteMap
-
-// }
 
 func (bb *Team6Biker) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
 	sender := msg.BaseMessage.GetSender()
@@ -56,7 +54,11 @@ func (bb *Team6Biker) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
 	if senderReputation < TrustThreshold {
 		bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.05, 1))
 	}
-
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------HandleJoiningMessage", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }
 
 func (bb *Team6Biker) HandleLootboxMessage(msg objects.LootboxMessage) {
@@ -65,6 +67,11 @@ func (bb *Team6Biker) HandleLootboxMessage(msg objects.LootboxMessage) {
 	if senderColour == bb.GetColour() {
 		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.1, 1))
 	}
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------HandleLootboxMessage", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }
 
 func (bb *Team6Biker) HandleGovernanceMessage(msg objects.GovernanceMessage) {
@@ -73,6 +80,11 @@ func (bb *Team6Biker) HandleGovernanceMessage(msg objects.GovernanceMessage) {
 	if senderGovernance == int(bb.DecideGovernance()) {
 		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.1, 1))
 	}
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("-------HandleGovernanceMessage", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }
 
 func (bb *Team6Biker) HandleForcesMessage(msg objects.ForcesMessage) {
@@ -84,6 +96,11 @@ func (bb *Team6Biker) HandleForcesMessage(msg objects.ForcesMessage) {
 	if senderForces.Pedal > 0 {
 		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+senderForces.Pedal/2, 1))
 	}
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("-----------HandleForcesMessage", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }
 
 func (bb *Team6Biker) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
@@ -98,7 +115,11 @@ func (bb *Team6Biker) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessa
 			fmt.Print(agent, sender)
 		}
 	}
-
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("-----------HandleVoteGovernanceMessage", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }
 
 func (bb *Team6Biker) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxDirectionMessage) {
@@ -112,6 +133,11 @@ func (bb *Team6Biker) HandleVoteLootboxDirectionMessage(msg objects.VoteLootboxD
 			bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.35, 1))
 		}
 	}
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("-----------HandleVoteLootboxDirectionMessageFromAgent", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }
 
 func (bb *Team6Biker) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
@@ -122,4 +148,9 @@ func (bb *Team6Biker) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
 			bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.3, 0))
 		}
 	}
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
+	fmt.Println("-----------HandleVoteKickoutMessage", sender.GetID())
+	fmt.Println("---------------------------------------")
+	fmt.Println("---------------------------------------")
 }

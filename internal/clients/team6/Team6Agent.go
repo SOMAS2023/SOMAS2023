@@ -17,14 +17,20 @@ const (
 	ChangeBike
 	energyThreshold       = 0.35 // energy level which mind us we need to change bike
 	reputationThreshold   = 0.5
-	distAudiThreshold     = 75
-	energyChangeThreshold = 0.8 // energy level which allows us to change bike
+	distAudiThreshold     = 10
+	energyChangeThreshold = 0.9 // energy level which allows us to change bike
+
 )
 
 type Team6Biker struct {
 	*objects.BaseBiker
-	Changeflag bool
-	Trust      map[uuid.UUID]Trust
+	Changeflag        bool
+	Trust             map[uuid.UUID]Trust
+	Goal              bool
+	MegabikeTrustList map[uuid.UUID]float64
+	CheckPointsget    int
+	Getlootboxterm    int
+	itercount         int
 }
 
 type ITeam6Biker interface {
@@ -71,39 +77,40 @@ func (bb *Team6Biker) DecideAllocation() voting.IdVoteMap {
 // in future implementations this function will be overridden by the agent's specific strategy
 // which will be used to determine whether to pedalor try to change bike
 func (bb *Team6Biker) DecideAction() objects.BikerAction {
-
-	currColour := bb.GetColour()
-	nearestLootColour := bb.GetGameState().GetLootBoxes()[bb.nearestLoot()].GetColour()
-
-	var t bool = true
-	if bb.nearestSameColourLoot() == uuid.Nil {
-		t = false
+	bb.itercount += 1
+	if _, exists := bb.MegabikeTrustList[bb.GetBike()]; exists {
+		if bb.GetEnergyLevel() >= 0.995 {
+			//bb.Getlootboxterm = bb.Getlootboxterm + 1
+			bb.MegabikeTrustList[bb.GetBike()] -= 0.1
+		}
+	} else {
+		bb.MegabikeTrustList[bb.GetBike()] = 1.0
+		//bb.Getlootboxterm = 0
+		bb.CheckPointsget = bb.GetPoints()
+		fmt.Println(bb.CheckPointsget)
 	}
 
-	if t == true {
-		nearestLootColour = bb.GetGameState().GetLootBoxes()[bb.nearestSameColourLoot()].GetColour()
+	if bb.GetPoints() > bb.CheckPointsget {
+		bb.CheckPointsget = bb.GetPoints()
+		bb.MegabikeTrustList[bb.GetBike()] += 0.7
 	}
-
-	if bb.GetEnergyLevel() > energyChangeThreshold {
+	if bb.MegabikeTrustList[bb.GetBike()] < 0.21 {
+		fmt.Println(bb.CheckPointsget)
+		fmt.Println(bb.GetPoints())
+		fmt.Println(bb.MegabikeTrustList[bb.GetBike()])
+		fmt.Println(bb.itercount)
 		bb.Changeflag = true
 	}
+	//return objects.Pedal
 
-	if (bb.GetEnergyLevel() < energyThreshold) && (bb.Changeflag == true) {
+	if bb.ChangeBike() == bb.GetBike() {
 		bb.Changeflag = false
-		return objects.ChangeBike
 	}
-
-	if nearestLootColour == currColour {
-		// keep pedaling if current colour = goal
-
-		return objects.Pedal
+	if bb.Changeflag {
+		return objects.ChangeBike
 	} else {
-
-		return objects.ChangeBike
-
+		return objects.Pedal
 	}
-
-	//return objects.ChangeBike
 }
 
 func GetMostCommonColor(agents []objects.IBaseBiker) (utils.Colour, int, int) {
@@ -169,7 +176,7 @@ func (bb *Team6Biker) bikeToSameColorNearestLoot(bike objects.IMegaBike, lootBox
 // Return the nearest BikeID to the goal color
 func (bb *Team6Biker) GetNearLootBoxBikeID() uuid.UUID {
 
-	var nearestBike1 uuid.UUID
+	var nearestBike1 = uuid.Nil
 	var currDist float64
 	shortest := math.MaxFloat64
 
@@ -178,20 +185,24 @@ func (bb *Team6Biker) GetNearLootBoxBikeID() uuid.UUID {
 		currDist = bb.bikeToNearestLoot(megabike)
 
 		//currLocation := megabike.GetPosition()
-
-		if currDist < shortest {
-
+		_, exists := bb.MegabikeTrustList[megabike.GetID()]
+		if currDist < shortest && (bb.MegabikeTrustList[megabike.GetID()] > 0.21 || !exists) && bb.CheckBikeFull(megabike) > 0 {
 			nearestBike1 = megabike.GetID()
 			shortest = currDist
 		}
 	}
-	return nearestBike1
+	if nearestBike1 != uuid.Nil {
+		return nearestBike1
+	} else {
+		return bb.GetBike()
+	}
+
 }
 
 // Return the nearest BikeID to the goal color
 func (bb *Team6Biker) GetNearSameColourBikeID() uuid.UUID {
 
-	var nearestBike uuid.UUID
+	var nearestBike = uuid.Nil
 	var currDist float64
 	shortest := math.MaxFloat64
 
@@ -203,21 +214,25 @@ func (bb *Team6Biker) GetNearSameColourBikeID() uuid.UUID {
 	}
 
 	if len(sameColourLootList) == 0 {
-		return bb.GetBike()
+
+		return bb.GetNearLootBoxBikeID()
 	}
 
 	for _, megabike := range bb.GetGameState().GetMegaBikes() {
 		currDist = bb.bikeToSameColorNearestLoot(megabike, sameColourLootList)
 
 		//currLocation := megabike.GetPosition()
-
-		if currDist < shortest {
-
+		_, exists := bb.MegabikeTrustList[megabike.GetID()]
+		if currDist < shortest && (bb.MegabikeTrustList[megabike.GetID()] > 0.21 || !exists) && bb.CheckBikeFull(megabike) > 0 {
 			nearestBike = megabike.GetID()
 			shortest = currDist
 		}
 	}
-	return nearestBike
+	if nearestBike != uuid.Nil {
+		return nearestBike
+	} else {
+		return bb.GetBike()
+	}
 }
 
 func (bb *Team6Biker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
@@ -238,14 +253,12 @@ func (bb *Team6Biker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 
 // decide which bike to go to.
 func (bb *Team6Biker) ChangeBike() uuid.UUID {
-	bikeID := bb.GetNearSameColourBikeID()
-	//bikeID := bb.GetNearLootBoxBikeID()
-	if bb.GetEnergyLevel() < energyThreshold {
-		bikeID = bb.GetNearLootBoxBikeID()
+	bikeID := bb.GetNearLootBoxBikeID()
+	if !bb.Goal {
+		return bikeID
+	} else {
+		return bb.GetNearSameColourBikeID()
 	}
-	//fmt.Print(bikeID)
-	return bikeID
-
 }
 
 func (bb *Team6Biker) FindBiker(agentID uuid.UUID) objects.IBaseBiker {
@@ -258,13 +271,23 @@ func (bb *Team6Biker) FindBiker(agentID uuid.UUID) objects.IBaseBiker {
 	fmt.Print("Do not find such agent")
 	return bb.BaseBiker
 }
+
 func InitialiseBiker6(bb *objects.BaseBiker) objects.IBaseBiker {
 	fmt.Printf("Generating Biker for Team 6")
 	bb.GroupID = 6
 	//bb.soughtColour = utils.Red
 	return &Team6Biker{
-		BaseBiker:  bb,
-		Changeflag: true,
-		Trust:      make(map[uuid.UUID]Trust),
+		BaseBiker:         bb,
+		Changeflag:        false,
+		Trust:             make(map[uuid.UUID]Trust),
+		Goal:              true, // decide same color or nearest loot, true = nearest color, false = nearest loot
+		MegabikeTrustList: make(map[uuid.UUID]float64),
+		CheckPointsget:    0,
+		Getlootboxterm:    0,
+		itercount:         0,
 	}
+}
+
+func (bb *Team6Biker) CheckBikeFull(bike objects.IMegaBike) int {
+	return 9 - len(bike.GetAgents())
 }
