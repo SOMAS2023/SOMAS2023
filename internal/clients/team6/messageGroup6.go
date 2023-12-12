@@ -52,7 +52,7 @@ func (bb *Team6Biker) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 func (bb *Team6Biker) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
 	sender := msg.BaseMessage.GetSender()
 	senderReputation := bb.QueryReputation(sender.GetID())
-	fmt.Print("HandleJoiningMessage part is fine")
+	// // fmt.Print("HandleJoiningMessage part is fine")
 	if senderReputation < TrustThreshold {
 		bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.05, 1))
 	}

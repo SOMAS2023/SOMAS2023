@@ -30,7 +30,7 @@ func (a *AgentTwo) CreateKickOffMessage() obj.KickoutAgentMessage {
 }
 
 func (a *AgentTwo) HandleKickOffMessage(msg obj.KickoutAgentMessage) {
-	//** fmt.Printf("[HandleKickOffMessage] Received message from Agent %v\n", msg.AgentId)
+	// fmt.Printf("[HandleKickOffMessage] Received message from Agent %v\n", msg.AgentId)
 
 	agentId := msg.AgentId
 	if agentId == uuid.Nil {
@@ -47,7 +47,7 @@ func (a *AgentTwo) HandleForcesMessage(msg obj.ForcesMessage) {
 		return
 	}
 
-	//** fmt.Printf("[HandleForcesMessage] Received message from Agent %v\n", agentId)
+	// fmt.Printf("[HandleForcesMessage] Received message from Agent %v\n", agentId)
 
 	agentPosition := a.GetLocation()
 	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentId, a.GetColour())
@@ -55,14 +55,14 @@ func (a *AgentTwo) HandleForcesMessage(msg obj.ForcesMessage) {
 	optimalForces := a.Modules.Utils.GetForcesToTarget(agentPosition, lootboxPosition)
 	eventValue := a.Modules.Utils.ProjectForce(optimalForces, msg.AgentForces)
 
-	//** fmt.Printf("Agent Social Network Before: %v\n", a.Modules.SocialCapital.SocialNetwork)
+	// fmt.Printf("Agent Social Network Before: %v\n", a.Modules.SocialCapital.SocialNetwork)
 	a.Modules.SocialCapital.UpdateSocialNetwork(agentId, SocialEventValue_AgentSentMsg, SocialEventWeight_AgentSentMsg)
 	a.Modules.SocialCapital.UpdateInstitution(agentId, InstitutionEventWeight_Adhereance, eventValue)
-	//** fmt.Printf("Agent Social Network After: %v\n", a.Modules.SocialCapital.SocialNetwork)
+	// fmt.Printf("Agent Social Network After: %v\n", a.Modules.SocialCapital.SocialNetwork)
 }
 
 func (a *AgentTwo) HandleJoiningMessage(msg obj.JoiningAgentMessage) {
-	//** fmt.Printf("[HandleJoiningMessage] Received message from Agent %v\n", msg.AgentId)
+	// fmt.Printf("[HandleJoiningMessage] Received message from Agent %v\n", msg.AgentId)
 
 	agentId := msg.AgentId
 	if agentId == uuid.Nil {
@@ -79,7 +79,7 @@ func (a *AgentTwo) GetAllMessages([]obj.IBaseBiker) []messaging.IMessage[obj.IBa
 	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
 	wantToSendMsg := true
 	if wantToSendMsg {
-		//** fmt.Printf("Agent %v is getting all messages\n", a.GetID())
+		// fmt.Printf("Agent %v is getting all messages\n", a.GetID())
 		reputationMsg := a.CreateReputationMessage()
 		kickoutMsg := a.CreatekickoutMessage()
 		lootboxMsg := a.CreateLootboxMessage()

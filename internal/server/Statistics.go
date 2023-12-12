@@ -58,6 +58,7 @@ func CalculateStatistics(gameStates [][]GameStateDump) GameStatistics {
 	for _, roundStates := range gameStates {
 		for _, gameState := range roundStates {
 			for id, agent := range gameState.Agents {
+				// fmt.Printf("Agent group id %v and agent %v", agent.GroupID, agent)
 				agentIDToGroupID[id] = agent.GroupID
 			}
 		}

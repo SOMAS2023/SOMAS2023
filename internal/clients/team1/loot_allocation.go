@@ -2,7 +2,6 @@ package team1
 
 import (
 	voting "SOMAS2023/internal/common/voting"
-	"math"
 
 	"github.com/google/uuid"
 )
@@ -69,9 +68,9 @@ func (bb *Biker1) DecideAllocation() voting.IdVoteMap {
 	for agentId := range distribution {
 		distribution[agentId] = distribution[agentId] / runningDistribution // Normalise!
 	}
-	if math.IsNaN(distribution[bb.GetID()]) {
-		//** fmt.Println("Distribution is NaN")
-	}
+	// if math.IsNaN(distribution[bb.GetID()]) {
+	// 	fmt.Println("Distribution is NaN")
+	// }
 	return distribution
 }
 

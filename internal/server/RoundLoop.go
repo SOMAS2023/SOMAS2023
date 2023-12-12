@@ -5,7 +5,6 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 	"slices"
 
 	"github.com/google/uuid"
@@ -134,7 +133,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			leaderKickedOut := false
 			allKicked = append(allKicked, agentsVotes...)
 			for _, agentID := range agentsVotes {
-				fmt.Printf("kicking out agent %s\n", agentID)
+				// fmt.Printf("kicking out agent %s\n", agentID)
 				s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
 				// if the leader was kicked out vote for a new one
 				if agentID == bike.GetRuler() {
@@ -172,7 +171,7 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 				// will only be finalised then
 				leavingAgents = append(leavingAgents, agentId)
 				s.RemoveAgentFromBike(agent)
-				//** fmt.Printf("Agent %s left the bike \n", agentId)
+				// fmt.Printf("Agent %s left the bike \n", agentId)
 			default:
 				panic("agent decided invalid action")
 			}
@@ -195,12 +194,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 	bikeRequests := s.GetJoiningRequests(inLimbo)
 	// 2. pass to agents on each of the desired bikes a list of all agents trying to join
 	for bikeID, pendingAgents := range bikeRequests {
-		bikes, ok := s.megaBikes[bikeID]
-		if !ok {
-			fmt.Printf("bike %s not found \n", bikeID)
-			panic("bike not found")
-		}
-		agents := bikes.GetAgents()
+		agents := s.megaBikes[bikeID].GetAgents()
 		if len(agents) == 0 {
 			for i, pendingAgent := range pendingAgents {
 				if i <= utils.BikersOnBike {
@@ -353,16 +347,16 @@ func (s *Server) GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVote
 
 func (s *Server) AudiCollisionCheck() {
 	// Check collision for audi with any megaBike
-	for bikeid, megabike := range s.GetMegaBikes() {
+	for _, megabike := range s.GetMegaBikes() {
 		if s.audi.CheckForCollision(megabike) {
 			// Collision detected
-			fmt.Printf("Collision detected between Audi and MegaBike %s \n", bikeid)
+			// fmt.Printf("Collision detected between Audi and MegaBike %s \n", bikeid)
 			for _, agentToDelete := range megabike.GetAgents() {
-				fmt.Printf("Agent %s killed by Audi \n", agentToDelete.GetID())
+				// fmt.Printf("Agent %s killed by Audi \n", agentToDelete.GetID())
 				s.RemoveAgent(agentToDelete)
 			}
 			if utils.AudiRemovesMegaBike {
-				fmt.Printf("Megabike %s removed by Audi \n", megabike.GetID())
+				// fmt.Printf("Megabike %s removed by Audi \n", megabike.GetID())
 				delete(s.megaBikes, megabike.GetID())
 			}
 		}
@@ -388,7 +382,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 		for lootid, lootbox := range s.GetLootBoxes() {
 			if megabike.CheckForCollision(lootbox) {
 				// Collision detected
-				//** fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
+				// fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
@@ -447,11 +441,11 @@ func (s *Server) LootboxCheckAndDistributions() {
 					bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
 					for agentID, allocation := range winningAllocation {
-						//** fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
+						// fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
 						lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
 						agent := s.GetAgentMap()[agentID]
 						// Allocate loot based on the calculated utility share
-						//** fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
+						// fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 						agent.UpdateEnergyLevel(lootShare)
 						// Allocate points if the box is of the right colour
 						if agent.GetColour() == lootbox.GetColour() {
@@ -480,10 +474,9 @@ func (s *Server) SetDestinationBikes() {
 }
 
 func (s *Server) unaliveAgents() {
-	for id, agent := range s.GetAgentMap() {
+	for _, agent := range s.GetAgentMap() {
 		if agent.GetEnergyLevel() < 0 {
-			fmt.Printf("Agent %s got game ended\n", id)
-			//s.deadAgents[agent.GetID()] = agent
+			// fmt.Printf("Agent %s got game ended\n", id)
 			s.RemoveAgent(agent)
 		}
 	}

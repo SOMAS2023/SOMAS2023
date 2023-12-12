@@ -30,12 +30,13 @@ var AgentInitFunctions = []AgentInitFunction{
 }
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
-	bikersPerTeam := BikerAgentCount / (len(AgentInitFunctions) + 1)
-	extraBaseBikers := BikerAgentCount % (len(AgentInitFunctions) + 1)
-	agentGenerators := []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-		// Spawn base bikers
-		baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(nil), bikersPerTeam+extraBaseBikers),
-	}
+	bikersPerTeam := BikerAgentCount / (len(AgentInitFunctions))
+	// extraBaseBikers := BikerAgentCount % (len(AgentInitFunctions) + 1)
+	// agentGenerators := []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
+	// 	// Spawn base bikers
+	// 	baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(nil), bikersPerTeam+extraBaseBikers),
+	// }
+	var agentGenerators []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]
 	for _, initFunction := range AgentInitFunctions {
 		agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), bikersPerTeam))
 	}
