@@ -147,6 +147,7 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	}
 
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{
+		AgentIds:           agentIds,
 		AgentDecisions:     agentForces,
 		AgentResourceVotes: agentResourceVotes,
 		AgentEnergyLevels:  agentEnergyLevels,
