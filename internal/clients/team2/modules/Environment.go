@@ -3,7 +3,6 @@ package modules
 import (
 	objects "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"fmt"
 	"math"
 	"math/rand"
 
@@ -67,7 +66,6 @@ func (e *EnvironmentModule) GetNearestLootbox(agentId uuid.UUID) uuid.UUID {
 	minDist := math.MaxFloat64
 	for _, lootbox := range e.GetLootBoxes() {
 		if e.IsLootboxNearAudi(lootbox.GetID()) {
-			fmt.Printf("[GetNearestLootbox] Lootbox %v is near audi\n", lootbox.GetID())
 			continue
 		}
 		dist := e.GetDistanceToLootbox(lootbox.GetID())
@@ -89,7 +87,6 @@ func (e *EnvironmentModule) GetNearestLootboxByColor(agentId uuid.UUID, color ut
 	minDist := math.MaxFloat64
 	for _, lootbox := range e.GetLootBoxesByColor(color) {
 		if e.IsLootboxNearAudi(lootbox.GetID()) {
-			fmt.Printf("[GetNearestLootboxByColor] Lootbox %v is near audi\n", lootbox.GetID())
 			continue
 		}
 		dist := e.GetDistanceToLootbox(lootbox.GetID())
@@ -118,7 +115,6 @@ func (e *EnvironmentModule) GetHighestGainLootbox() uuid.UUID {
 	bestLoot := uuid.Nil
 	for _, lootboxId := range e.GetLootBoxes() {
 		if e.IsLootboxNearAudi(lootboxId.GetID()) {
-			fmt.Printf("[GetHighestGainLootbox] Lootbox %v is near audi\n", lootboxId.GetID())
 			continue
 		}
 		gain := lootboxId.GetTotalResources() / e.GetDistanceToLootbox(lootboxId.GetID())
@@ -283,15 +279,10 @@ func (e *EnvironmentModule) IsLootboxNearAudi(lootboxId uuid.UUID) bool {
 
 func (e *EnvironmentModule) GetDistanceToAudi() float64 {
 	bikePos, audiPos := e.GetBikeById(e.BikeId).GetPosition(), e.GetAudi().GetPosition()
-
-	fmt.Printf("[GetDistanceToAudi] Pos of bike: %f\n", bikePos)
-	fmt.Printf("[GetDistanceToAudi] Pos of Audi: %f\n", audiPos)
-
 	return e.GetDistance(bikePos, audiPos)
 }
 
 func (e *EnvironmentModule) IsAudiNear() bool {
-	fmt.Printf("[IsAudiNear] Distance to audi: %f\n", e.GetDistanceToAudi())
 	return e.GetDistanceToAudi() <= AudiRange
 }
 

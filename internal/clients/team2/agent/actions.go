@@ -6,7 +6,6 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 	"maps"
 	"math"
 	"math/rand"
@@ -65,7 +64,6 @@ func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	agents := a.GetFellowBikers()
 	for _, agent := range agents {
 		if agent.GetEnergyLevel() <= 0 || !agent.GetBikeStatus() {
-			fmt.Println("Agent is dead or is not on a bike")
 			continue
 		}
 		// if agent Id is not in the a.Modules.SocialCapital.SocialCapital map, set the weight to 0.5 (neither trust or distrust)
@@ -74,7 +72,6 @@ func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 			a.Modules.SocialCapital.SocialCapital[agent.GetID()] = 0.5
 		}
 		weights[agent.GetID()] = a.Modules.SocialCapital.SocialCapital[agent.GetID()]
-		fmt.Printf("[DecideWeights G2] Agent %s has weight %f\n", agent.GetID(), weights[agent.GetID()])
 	}
 	return weights
 }
@@ -219,18 +216,12 @@ func (a *AgentTwo) ProposeDirection() uuid.UUID {
 	optimalLootbox := a.Modules.Environment.GetNearestLootboxByColor(agentID, agentColour)
 	nearestLootbox := a.Modules.Environment.GetNearestLootbox(agentID)
 	if agentEnergy < modules.EnergyToOptimalLootboxThreshold || optimalLootbox == uuid.Nil {
-		fmt.Printf("[PProposeDirection Team2] Agent %s proposed nearest lootbox %s\n", agentID, nearestLootbox)
 		return nearestLootbox
 	}
-	fmt.Printf("[PProposeDirection Team2] Agent %s proposed optimal lootbox %s\n", agentID, optimalLootbox)
 	return optimalLootbox
-
 }
 
 func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
-	fmt.Printf("[FFinalDirectionVote] Agent %s got proposals %v\n", a.GetID(), proposals)
-	fmt.Printf("[FFinalDirectionVote] Agent %s has Social Capitals %v\n", a.GetID(), a.Modules.SocialCapital.SocialCapital)
-
 	votes := make(voting.LootboxVoteMap)
 
 	// Assume we set our own social capital to 1.0, thus need to account for it
@@ -253,16 +244,13 @@ func (a *AgentTwo) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.
 			votes[proposal] += scWeight
 		}
 	}
-	fmt.Printf("[FFinalDirectionVote] Agent %s voted %v\n", a.GetID(), votes)
 	return votes
 }
 
 func (a *AgentTwo) ChangeBike() uuid.UUID {
 	decisionInputs := modules.DecisionInputs{SocialCapital: a.Modules.SocialCapital, Enviornment: a.Modules.Environment, AgentID: a.GetID()}
 	isChangeBike, bikeId := a.Modules.Decision.MakeBikeChangeDecision(decisionInputs)
-	fmt.Printf("[ChangeBike] Agent %s decided to change bike: %v\n", a.GetID(), isChangeBike)
 	if isChangeBike {
-		fmt.Printf("[ChangeBike] Agent %s decided to change bike to: %v\n", a.GetID(), bikeId)
 		return bikeId
 	} else {
 		return a.Modules.Environment.BikeId
@@ -270,7 +258,6 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 }
 
 func (a *AgentTwo) DecideAction() objects.BikerAction {
-	fmt.Printf("[DecideAction] Agent %s has Social Capitals %v\n", a.GetID(), a.Modules.SocialCapital.SocialCapital)
 	a.Modules.SocialCapital.UpdateSocialCapital()
 
 	avgSocialCapital := a.Modules.SocialCapital.GetAverage(a.Modules.SocialCapital.SocialCapital)
@@ -295,7 +282,6 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 	a.Modules.VotedDirection = direction
 
 	if a.Modules.Environment.IsAudiNear() {
-		fmt.Printf("[DecideForce] Agent %s is near Audi\n", a.GetID())
 		// Move in opposite direction to Audi in full force
 		bikePos, audiPos := a.Modules.Environment.GetBike().GetPosition(), a.Modules.Environment.GetAudi().GetPosition()
 		force := a.Modules.Utils.GetForcesToTargetWithDirectionOffset(utils.BikerMaxForce, 1.0-a.Modules.Environment.GetBikeOrientation(), bikePos, audiPos)
@@ -318,7 +304,6 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 func (a *AgentTwo) DictateDirection() uuid.UUID {
 	// Move in opposite direction to Audi in full force
 	if a.Modules.Environment.IsAudiNear() {
-		// fmt.Printf("[DictateDirection] Agent %s is near Audi\n", a.GetID())
 		return a.Modules.Environment.GetNearestLootboxAwayFromAudi()
 	}
 	// Otherwise, move towards the lootbox with the highest gain
