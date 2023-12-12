@@ -99,8 +99,13 @@ func (s *Server) RemoveAgentFromBike(agent objects.IBaseBiker) {
 	bike := s.megaBikes[agent.GetBike()]
 	bike.RemoveAgent(agent.GetID())
 	agent.ToggleOnBike()
+
 	// get new destination for agent
-	agent.SetBike(agent.ChangeBike())
+	targetBike := agent.ChangeBike()
+	if _, ok := s.megaBikes[targetBike]; !ok {
+		panic("agent requested a bike that doesn't exist")
+	}
+	agent.SetBike(targetBike)
 
 	if _, ok := s.megaBikeRiders[agent.GetID()]; ok {
 		delete(s.megaBikeRiders, agent.GetID())

@@ -469,7 +469,11 @@ func (s *Server) LootboxCheckAndDistributions() {
 func (s *Server) SetDestinationBikes() {
 	for _, agent := range s.GetAgentMap() {
 		if !agent.GetBikeStatus() {
-			agent.SetBike(agent.ChangeBike())
+			targetBike := agent.ChangeBike()
+			if _, ok := s.megaBikes[targetBike]; !ok {
+				panic("agent requested a bike that doesn't exist")
+			}
+			agent.SetBike(targetBike)
 		}
 	}
 }
