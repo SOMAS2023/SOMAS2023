@@ -3,7 +3,6 @@ package team1
 import (
 	obj "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
-	"fmt"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 	"github.com/google/uuid"
@@ -191,10 +190,8 @@ func (bb *Biker1) CreateJoiningMessage() obj.JoiningAgentMessage {
 	// Tell the truth (for now)
 	// receipients = fellowBikers
 	biketoJoin := bb.PickBestBike()
-	fmt.Printf(biketoJoin.String())
 	gs := bb.GetGameState()
 	joiningBike := gs.GetMegaBikes()[biketoJoin]
-	fmt.Printf("Joining bike: %v", joiningBike)
 	return obj.JoiningAgentMessage{
 		BaseMessage: messaging.CreateMessage[obj.IBaseBiker](bb, joiningBike.GetAgents()),
 		AgentId:     bb.GetID(),
@@ -242,11 +239,10 @@ func (bb *Biker1) GetAllMessages([]obj.IBaseBiker) []messaging.IMessage[obj.IBas
 	sendGovernanceMessage = false
 
 	// TODO: add logic to decide which messages to send and when
-	if bb.GetBike() == uuid.Nil && !bb.GetBikeStatus(){
+	if bb.GetBike() == uuid.Nil && bb.GetBikeStatus() == false {
 		sendGovernanceMessage = true
 		sendJoiningMessage = false
 	} else if bb.GetBike() == uuid.Nil {
-		fmt.Printf("Bike is nil\n")
 		sendJoiningMessage = true
 	} else {
 		for _, agent := range bb.GetFellowBikers() {

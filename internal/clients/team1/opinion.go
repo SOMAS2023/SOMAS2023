@@ -88,46 +88,6 @@ func (bb *Biker1) UpdateFairness(agentID uuid.UUID) {
 	bb.opinions[agentID] = newOpinion
 }
 
-// func (bb *Biker1) UpdateRelativeSuccess(agentID uuid.UUID, agentsInContext []obj.IBaseBiker) {
-// 	// get relative success compared to us
-
-// 	relativeSuccess := bb.GetRelativeSuccess(bb.GetID(), agentID, agentsInContext)
-// 	// fmt.Printf("Current relative success opinion: %v\n", bb.opinions[agentID].relativeSuccess)
-// 	// fmt.Printf("Current relative success: %v\n", relativeSuccess)
-// 	finalRelativeSuccess := bb.opinions[agentID].relativeSuccess + (relativeSuccess-bb.opinions[agentID].relativeSuccess)*relativeSuccessScaling
-// 	// fmt.Printf("Final relative success: %v\n", finalRelativeSuccess)
-// 	if finalRelativeSuccess > 1 {
-// 		finalRelativeSuccess = 1
-// 	}
-// 	if finalRelativeSuccess < 0 {
-// 		finalRelativeSuccess = 0
-// 	}
-
-// 	// incase an agent opinion is not initialised
-// 	_, ok := bb.opinions[agentID]
-
-// 	if !ok {
-// 		//if we have no data on an agent, initialise to neutral
-// 		newOpinion := Opinion{
-// 			effort:          0.5,
-// 			trust:           0.5,
-// 			fairness:        0.5,
-// 			relativeSuccess: 0.5,
-// 			opinion:         0.5,
-// 		}
-// 		bb.opinions[agentID] = newOpinion
-// 	}
-
-// 	newOpinion := Opinion{
-// 		effort:          bb.opinions[agentID].effort,
-// 		fairness:        bb.opinions[agentID].fairness,
-// 		trust:           bb.opinions[agentID].trust,
-// 		relativeSuccess: finalRelativeSuccess,
-// 		opinion:         bb.opinions[agentID].opinion,
-// 	}
-// 	bb.opinions[agentID] = newOpinion
-// }
-
 // how well does agent 1 like agent 2 according to objective metrics
 func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID, all_agents []obj.IBaseBiker) float64 {
 	agent1 := bb.GetAgentFromId(id1)
@@ -225,10 +185,7 @@ func (bb *Biker1) DetermineOurAverageReputation() float64 {
 		// fmt.Printf("Agent %v relative success: %v\n", agent.GetID(), bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext))
 		reputation = reputation + bb.GetRelativeSuccess(bb.GetID(), agent.GetID(), agentsInContext)
 	}
-	// fmt.Printf("Agents in context: %v\n", numberOnBike)
-	// fmt.Printf("Our total reputation : %v\n", reputation)
 	reputation = reputation / numberOnBike
-	// fmt.Printf("Our average Reputation: %v\n", reputation)
 	return reputation
 }
 
@@ -257,7 +214,6 @@ func (bb *Biker1) UpdateAllAgentsOpinions(agents_to_update []obj.IBaseBiker) {
 
 func (bb *Biker1) UpdateAllAgentsEffort() {
 	fellowBikers := bb.GetFellowBikers()
-	// fmt.Printf("Fellow bikers: %v\n", len(fellowBikers))
 
 	// totalPedalForce := total_force + drag_force
 
@@ -265,13 +221,10 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 	totalExpendedEnergy := 0.0
 	for _, agent := range fellowBikers {
 		AgentExpendedEnergy := (bb.prevEnergy[agent.GetID()] - agent.GetEnergyLevel())
-		// fmt.Printf("Expended energy: %v\n", AgentExpendedEnergy)
 		fellowBikersExpendedEnergy[agent.GetID()] = AgentExpendedEnergy
 		totalExpendedEnergy += AgentExpendedEnergy
 	}
 	OurExpendedEnergy := bb.prevEnergy[bb.GetID()] - bb.GetEnergyLevel()
-	// fmt.Printf("Our expended energy: %v\n", OurExpendedEnergy)
-	// fmt.Printf("Total energy expended: %v\n", totalExpendedEnergy)
 
 	effortProbability := make(map[uuid.UUID]float64) //probability that they are exc
 	totalEffort := 0.0
@@ -311,13 +264,6 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 		effortProbability[agentId] /= totalEffort
 		effortProbability[agentId] *= totalExpendedEnergy
 		agent := bb.GetAgentFromId(agentId)
-
-		//effort expectation is scaled by their energy and compare to our effort
-		// fmt.Printf("Total effort probability: %v\n", totalEffort)
-		// fmt.Printf("Agent's effort probability: %v\n", effortProbability[agentId])
-		// fmt.Printf("Old agent's effort probability: %v\n", bb.opinions[agentId].effort)
-		// fmt.Printf("Energy difference %v\n", fellowBikersExpendedEnergy[agentId]-OurExpendedEnergy)
-
 		// Effort = Current effort + trust * effort probability * (fellow biker's expended energy - our expended energy)
 		finalEffort := bb.opinions[agentId].effort + bb.opinions[agentId].trust*effortProbability[agentId]*(fellowBikersExpendedEnergy[agentId]-OurExpendedEnergy)*effortScaling
 		// fmt.Printf("Final effort: %v\n", finalEffort)
@@ -392,28 +338,5 @@ func (bb *Biker1) UpdateAllAgentsFairness(agents_to_update []obj.IBaseBiker) {
 		}
 	}
 }
-
-// func (bb *Biker1) UpdateAllAgentsRelativeSuccess(agents_to_update []obj.IBaseBiker) {
-// 	bb.setOpinions()
-// 	for _, agent := range agents_to_update {
-// 		id := agent.GetID()
-// 		_, ok := bb.opinions[id]
-
-// 		if !ok {
-// 			agentId := agent.GetID()
-// 			//if we have no data on an agent, initialise to neutral
-// 			newOpinion := Opinion{
-// 				effort:   0.5,
-// 				trust:    0.5,
-// 				fairness: 0.5,
-// 				// relativeSuccess: 0.5,
-// 				opinion: 0.5,
-// 			}
-// 			bb.opinions[agentId] = newOpinion
-// 		}
-// 		bb.UpdateRelativeSuccess(id, bb.GetFellowBikers())
-// 		// fmt.Printf("Agent %v relative success: %v\n", id, bb.opinions[id].relativeSuccess)
-// 	}
-// }
 
 // ----------------END OF OPINION FUNCTIONS--------------
