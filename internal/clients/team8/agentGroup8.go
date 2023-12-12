@@ -24,13 +24,34 @@ type Agent8 struct {
 	previousEnergy            float64                       // record the energy level of last loop
 	previousPoints            int                           // record the point of last loop
 	messageReputation         map[uuid.UUID]float64         // record the extra reputation from Message System
+	//-----------------New parameters for recording social connection-----------------
+	previousOwnColour    utils.Colour // record the colour of our bike of last loop
+	previousTargetColour utils.Colour // record the colour of target lootbox of last loop
+	utility              float64      // New parameters for recording utility
+	fairness             float64      // New parameters for recording gini index
+	satisfaction         float64      // New parameters for recording satisfaction(0,1)
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DecideGovernance <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // Decide which Governance to use
+// New strategy: if the number of agents on our bike is more than 6 or the number of bad agents is more than half of the agents on our bike, we use Leadership
 func (bb *Agent8) DecideGovernance() utils.Governance {
-	return utils.Democracy
+	fellowBikers := bb.GetFellowBikers()
+	numberOfFellowBikers := len(fellowBikers)
+	numberOfBadAgents := 0
+	for _, fellowBiker := range fellowBikers {
+		// logic of voting weight decision
+		if bb.QueryReputation(fellowBiker.GetID()) < 0.0 {
+			numberOfBadAgents++
+		}
+	}
+
+	if numberOfFellowBikers > 6 || numberOfBadAgents > numberOfFellowBikers/2 {
+		return utils.Leadership
+	} else {
+		return utils.Democracy
+	}
 }
 
 // Decide the voting weight for each agent on the bike for dictator
@@ -116,12 +137,17 @@ func (bb *Agent8) DecideKickOut() []uuid.UUID {
 }
 
 // Decision for accept/reject the agent who want to join our bike
+// New strategy: We choose the best n score agents to join our bike, where n is the number of vacancies
 func (bb *Agent8) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	// initialise the Map
 	threshold := GlobalParameters.ThresholdForJoiningDecision
 	decision := make(map[uuid.UUID]bool)
 	agentMap := bb.UuidToAgentMap(pendingAgents)
-
+	// ------ calulate the vacancies and construct the scoremap ------
+	numberOfFellowBikers := len(bb.GetFellowBikers())
+	vacanicies := utils.BikersOnBike - numberOfFellowBikers
+	scoreMap := make(map[uuid.UUID]float64)
+	//----------------
 	// iterate the agents who want to join
 	for uuid, agent := range agentMap {
 		// calculate the Score for each agent for dicision
@@ -133,12 +159,27 @@ func (bb *Agent8) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 			score = 0.5*(agent.GetEnergyLevel()-bb.CalculateAverageEnergy(bb.GetBike()))/bb.CalculateAverageEnergy(bb.GetBike()) +
 				bb.QueryReputation(agent.GetID())
 		}
+		//store the score in the map
+		scoreMap[uuid] = score
 
-		// make dicision based on the threshold
 		if score >= threshold {
 			decision[uuid] = true
 		} else {
 			decision[uuid] = false
+		}
+
+	}
+	if len(scoreMap) == 0 {
+		return decision
+	}
+	// sort the scoreMap
+	rankedScoreMap := rankByPreference(scoreMap)
+	// Rank the agents based on the score, and choose the best n agents to join our bike, where n is the vanancies of the bike
+	for i := 0; i < vacanicies; i++ {
+		if scoreMap[rankedScoreMap[i]] >= threshold {
+			decision[rankedScoreMap[i]] = true
+		} else {
+			decision[rankedScoreMap[i]] = false
 		}
 
 	}
@@ -199,6 +240,7 @@ func (bb *Agent8) ChangeBike() uuid.UUID {
 // Decide if we need to jump to other bike
 func (bb *Agent8) DecideAction() objects.BikerAction {
 	// initialise the parameters
+
 	var selfBikeId = bb.GetBike()
 	var selfBikeScore = 0.0
 	var loopNum = 0.0
@@ -230,17 +272,29 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 3 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // Dicide which lootbox to vote for round 1
+// New strategy: we propose two consider the angle between our bike and the lootbox and also the audi
 func (bb *Agent8) ProposeDirection() uuid.UUID {
 	// Get all lootboxes and initialise the preferences map
 	lootBoxes := bb.GetGameState().GetLootBoxes()
 	preferences := make(map[uuid.UUID]float64)
-
+	//TODO:find a correct safe angle
+	safeAngle := 20.0
+	safe := false
 	// Iterate the lootboxes and calculate preferences for each
 	for boxId, lootBox := range lootBoxes {
 		distance := 0.0
+		angleBetweenBikeAndBox := 0.0
+		angleBetweenBikeAndAudi := 0.0
+		//calcuate the angle between our bike and the lootbox
+		//TODO: Not sure if this is correct
 		// check if we are onbike
 		if bb.GetBike() != uuid.Nil {
 			// get distance between our bike and the lootbox
+			angleBetweenBikeAndBox = math.Atan2(lootBox.GetPosition().Y-bb.GetLocation().Y, lootBox.GetPosition().X-bb.GetLocation().X)/math.Pi -
+				bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
+				//calculate the angle between our bike and the audi
+			angleBetweenBikeAndAudi = math.Atan2(bb.GetGameState().GetAudi().GetPosition().Y-bb.GetLocation().Y, bb.GetGameState().GetAudi().GetPosition().X-bb.GetLocation().X)/math.Pi -
+				bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
 			distance = calculateDistance(bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetPosition(), lootBox.GetPosition())
 		}
 		// check if the color of box is our target and get energylevel
@@ -250,9 +304,22 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 		// The higher energy, the higher weight for target color
 		distanceBoxAudi := calculateDistance(bb.GetGameState().GetAudi().GetPosition(), lootBox.GetPosition())
 
+		// check the angle
+		if bb.GetBike() != uuid.Nil {
+			if (angleBetweenBikeAndBox > 0 && angleBetweenBikeAndAudi > 0) || (angleBetweenBikeAndBox < 0 && angleBetweenBikeAndAudi < 0) {
+				if math.Abs(angleBetweenBikeAndBox-angleBetweenBikeAndAudi) > safeAngle {
+					safe = true
+				}
+			} else {
+				if (angleBetweenBikeAndBox + angleBetweenBikeAndAudi) > 0 {
+					safe = true
+				}
+			}
+
+		}
 		// if the lootbox is near audi, igore this box
-		// TODO: find a better strategy
-		if distanceBoxAudi > 20 {
+		if distanceBoxAudi > 20 && safe {
+			// if distanceBoxAudi > 20 {
 			// check our energylevel and calculate the preference of lootbox
 			if energyWeighting > GlobalParameters.EnergyThreshold {
 				// colorPreference + distancePreference
@@ -411,12 +478,15 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	bb.updateAgentActionMap()
 	bb.updateLoopScoreMap()
 	bb.UpdateReputation()
+	// bb.UpdateUtility()
 
 	// store the target and location of current loop for self-reflection parameter calculation
 	bb.previousTargetLocation = bb.GetGameState().GetLootBoxes()[direction].GetPosition()
 	if bb.GetBike() != uuid.Nil {
 		bb.previousLocation = bb.GetLocation()
 	}
+	bb.previousTargetColour = bb.GetGameState().GetLootBoxes()[direction].GetColour()
+	bb.previousOwnColour = bb.GetColour()
 	bb.previousEnergy = bb.GetEnergyLevel()
 	bb.previousPoints = bb.GetPoints()
 }
@@ -435,9 +505,11 @@ func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
 	// iterate the agents on our bike and update the allocationMap
 	for _, agent := range fellowBikers {
 		if agent.GetID() == bb.GetID() {
-			allocationMap[agent.GetID()] = math.Exp(5 - 5*bb.GetEnergyLevel())
+			//allocationMap[agent.GetID()] = math.Exp(5 - 5*bb.GetEnergyLevel())
+			allocationMap[agent.GetID()] = 1
 		} else {
-			allocationMap[agent.GetID()] = bb.QueryReputation(agent.GetID())*0.5 + 0.5
+			//allocationMap[agent.GetID()] = bb.QueryReputation(agent.GetID())*0.5 + 0.5
+			allocationMap[agent.GetID()] = 0
 		}
 	}
 
@@ -524,6 +596,25 @@ func (bb *Agent8) UpdateReputation() {
 	}
 }
 
+func (bb *Agent8) UpdateSatisfaction() {
+	alpha := 0.8
+	beta := 0.5
+	distance_prev := calculateDistance(bb.previousLocation, bb.previousTargetLocation)
+	distance_curr := calculateDistance(bb.GetLocation(), bb.previousTargetLocation)
+	distance_diff := distance_prev - distance_curr
+	energy_diff := bb.previousEnergy - bb.GetEnergyLevel()
+	if energy_diff < 0 && distance_diff > 0 {
+		bb.satisfaction = bb.satisfaction + alpha*(1-bb.satisfaction)
+		if bb.previousOwnColour == bb.previousTargetColour {
+			bb.satisfaction = 1.1 * bb.satisfaction
+		}
+	} else {
+		bb.satisfaction = bb.satisfaction - beta*bb.satisfaction
+
+	}
+
+}
+
 // =========================================================================================================================================================
 
 // this function is going to be called by the server to instantiate bikers in the MVP
@@ -532,5 +623,6 @@ func GetIBaseBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 		BaseBiker: baseBiker,
 	}
 	pointer.GroupID = 8
+	pointer.satisfaction = 0.5 // initialise the satisfaction
 	return pointer
 }
