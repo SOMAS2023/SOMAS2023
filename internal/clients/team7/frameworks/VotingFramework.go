@@ -22,8 +22,9 @@ type VoteOnAgentsInput struct {
 }
 
 type VoteOnLootBoxesInput struct {
-	LootBoxCandidates []uuid.UUID
+	LootBoxCandidates map[uuid.UUID]uuid.UUID
 	MyPersonality     *Personality
+	MyDesired         uuid.UUID
 }
 
 // Expected to return votes which sum to 1 for some voting types.
