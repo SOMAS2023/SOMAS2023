@@ -129,11 +129,6 @@ func (s *Server) outputResults(gameStates [][]GameStateDump) {
 		panic(err)
 	}
 
-	var flattenedGameStates []GameStateDump
-	for i := range gameStates {
-		flattenedGameStates = append(flattenedGameStates, gameStates[i]...)
-	}
-
 	file, err = os.Create("game_dump.json")
 	if err != nil {
 		panic(err)
@@ -141,7 +136,7 @@ func (s *Server) outputResults(gameStates [][]GameStateDump) {
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "    ")
-	if err := encoder.Encode(flattenedGameStates); err != nil {
+	if err := encoder.Encode(gameStates); err != nil {
 		panic(err)
 	}
 }

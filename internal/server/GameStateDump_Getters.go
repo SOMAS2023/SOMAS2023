@@ -33,7 +33,7 @@ func (gs GameStateDump) GetAgents() map[uuid.UUID]objects.IBaseBiker {
 }
 
 func (gs GameStateDump) GetAudi() objects.IAudi {
-	return gs.Audi
+	return gs.Audis[0]
 }
 
 func (o PhysicsObjectDump) GetID() uuid.UUID {

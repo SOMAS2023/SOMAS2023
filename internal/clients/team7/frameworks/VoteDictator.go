@@ -19,7 +19,13 @@ func (voteHandler *VoteOnDictatorHandler) GetDecision(inputs VoteOnAgentsInput) 
 	totalScore := 0.0
 
 	for _, agent_id := range inputs.AgentCandidates {
-		agentScore := voteHandler.voteOnDictatorScore(agent_id)
+		agentConnection, exists := inputs.CurrentSocialNetwork[agent_id]
+		var agentScore float64
+		if !exists {
+			agentScore = 0.5
+		} else {
+			agentScore = agentConnection.GetAverageTrustLevels()
+		}
 		totalScore += agentScore
 		agentScoreMap[agent_id] = agentScore
 	}
@@ -29,8 +35,10 @@ func (voteHandler *VoteOnDictatorHandler) GetDecision(inputs VoteOnAgentsInput) 
 	return vote
 }
 
+/*
 // Assign a score to express approval/disapproval of an agent becoming Dictator.
 func (voteHandler *VoteOnDictatorHandler) voteOnDictatorScore(agent_id interface{}) float64 {
 	score := 0.8 //TODO: Simple implementation for now. Will depend on factors such as opinion of agent and our agent's personality.
 	return score
 }
+*/
