@@ -74,6 +74,12 @@ type VoteKickoutMessage struct {
 	VoteMap map[uuid.UUID]int // the vote map that you voted for (if you are telling the truth)
 }
 
+// "I voted for this resource allocation in this iteration"
+type VoteAllocationMessage struct {
+	messaging.BaseMessage[IBaseBiker]
+	VoteMap voting.IdVoteMap // the vote map that you voted for (if you are telling the truth)
+}
+
 func (msg ReputationOfAgentMessage) InvokeMessageHandler(agent IBaseBiker) {
 	agent.HandleReputationMessage(msg)
 }
@@ -112,4 +118,8 @@ func (msg VoteRulerMessage) InvokeMessageHandler(agent IBaseBiker) {
 
 func (msg VoteKickoutMessage) InvokeMessageHandler(agent IBaseBiker) {
 	agent.HandleVoteKickoutMessage(msg)
+}
+
+func (msg VoteAllocationMessage) InvokeMessageHandler(agent IBaseBiker) {
+	agent.HandleVoteAllocationMessage(msg)
 }
