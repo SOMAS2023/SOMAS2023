@@ -26,9 +26,9 @@ func (agent *BaselineAgent) DecideAllocation() voting.IdVoteMap {
 		distribution[fellow.GetID()] = float64((reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (energySpentWeight * energySpent) + (energyLevelWeight * fellow.GetEnergyLevel()))
 		// In the case where the I am the same colour as the lootbox
 		if fellowID == agent.GetID() {
-			distribution[fellow.GetID()] = float64((reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (energySpentWeight * energySpent * 1.5) + (energyLevelWeight * fellow.GetEnergyLevel()))
+			distribution[fellow.GetID()] = float64((reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (energySpentWeight * energySpent * 1.15) + (energyLevelWeight * fellow.GetEnergyLevel() * 1.15))
 			if agent.lootBoxColour == agent.GetColour() {
-				distribution[fellow.GetID()] = float64((reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (energySpentWeight * energySpent * 1.5) + (energyLevelWeight * fellow.GetEnergyLevel() * 1.5))
+				distribution[fellow.GetID()] = float64((reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (energySpentWeight * energySpent * 1.15) + (energyLevelWeight * fellow.GetEnergyLevel() * 1.15))
 			}
 		}
 		totalAllocation += distribution[fellow.GetID()]

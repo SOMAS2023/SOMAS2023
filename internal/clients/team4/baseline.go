@@ -70,7 +70,7 @@ type IBaselineAgent interface {
 
 // general weights
 const audiDistanceThreshold = 75
-const minEnergyThreshold = 0.4
+const minEnergyThreshold = 0.2
 
 const audiDistanceWeight = 8.0
 const distanceWeight = 7.0
@@ -117,6 +117,7 @@ type agentScore struct {
 func (agent *BaselineAgent) DecideAction() objects.BikerAction {
 
 	if agent.evaluateBike(agent.currentBike) {
+
 		return objects.Pedal
 	} else if agent.GetEnergyLevel() <= 0.65 || agent.ChangeBike() == agent.currentBike {
 		return objects.Pedal
