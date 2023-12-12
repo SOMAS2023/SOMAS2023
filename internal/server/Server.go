@@ -12,7 +12,7 @@ import (
 )
 
 const LootBoxCount = BikerAgentCount * 2.5 // 2.5 lootboxes available per Agent
-const MegaBikeCount = 1                    // Megabikes should have 8 riders
+const MegaBikeCount = 7                    // Megabikes should have 8 riders
 const BikerAgentCount = 56                 // 56 agents in total
 
 type IBaseBikerServer interface {
