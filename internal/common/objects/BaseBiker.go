@@ -335,7 +335,7 @@ func (bb *BaseBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool
 
 func (bb *BaseBiker) DecideGovernance() utils.Governance {
 	// Change behaviour here to return different governance
-	return utils.Leadership
+	return utils.Democracy
 }
 
 func (bb *BaseBiker) ResetPoints() {
