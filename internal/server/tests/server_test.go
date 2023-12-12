@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"SOMAS2023/internal/server"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -28,7 +29,7 @@ func TestInitialize(t *testing.T) {
 		t.Error("audi not properly instantiated")
 	}
 
-	// fmt.Printf("\nInitialize passed \n")
+	fmt.Printf("\nInitialize passed \n")
 }
 
 func TestRunGame(t *testing.T) {

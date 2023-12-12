@@ -13,7 +13,7 @@ def combine_sheets(file_list, output_file='combined_excel.xlsx'):
         for sheet_name in xls.sheet_names:
             df = pd.read_excel(xls, sheet_name)
             df['Source'] = f'File_{file_index + 1}'  # Add a column to indicate the source file
-            df = pd.concat([df.iloc[:, :1], df.iloc[:, 1:].reindex(sorted(df.columns[1:]), axis=1)], axis=1)
+
             # Append data to the respective sheet's dataframe in the dictionary
             if sheet_name not in sheets_dict:
                 sheets_dict[sheet_name] = df
@@ -26,13 +26,13 @@ def combine_sheets(file_list, output_file='combined_excel.xlsx'):
             dataframe.to_excel(writer, sheet_name=sheet_name, index=False)
 
 # Path to the directory containing the GoLang script and statistics.xlsx
-golang_script_directory = r"C:\Users\rohan\OneDrive - Imperial College London\Imperial Year 4\SOMAS\experiments\SOMAS2023"
+golang_script_directory = r"C:\Users\lauri\OneDrive\Documents (1)\Imperial University\Semester 1\ELEC70071 Self-Organising Multi-Agent Systems\CW Code\SOMAS2023"
 
-games = 10  # Specify the number of iterations
+number_of_iterations = 5  # Specify the number of iterations
 excel_files = []
 original_file_name = 'statistics.xlsx'
 
-for i in range(games):
+for i in range(number_of_iterations):
     # Run the GoLang script that generates statistics.xlsx
     subprocess.run(['go', 'run', 'main.go'], cwd=golang_script_directory)
 

@@ -2,6 +2,7 @@ package team3
 
 import (
 	obj "SOMAS2023/internal/common/objects"
+	"fmt"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
 )
@@ -20,7 +21,7 @@ func (a *SmartAgent) GetAllMessages([]obj.IBaseBiker) []messaging.IMessage[obj.I
 	// For team's agent add your own logic on chosing when your biker should send messages and which ones to send (return)
 	wantToSendMsg := true
 	if wantToSendMsg {
-		// fmt.Printf("Agent %v is getting all messages\n", a.GetID())
+		fmt.Printf("Agent %v is getting all messages\n", a.GetID())
 		reputationMsg := a.CreateReputationMessage()
 		kickoutMsg := a.CreatekickoutMessage()
 		lootboxMsg := a.CreateLootboxMessage()

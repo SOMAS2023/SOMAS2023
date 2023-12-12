@@ -5,10 +5,9 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
+	"github.com/google/uuid"
 	"math"
 	"sort"
-
-	"github.com/google/uuid"
 )
 
 type ISmartAgent interface {
@@ -34,7 +33,6 @@ type SmartAgent struct {
 }
 
 func GetT3Agent(baseBiker *objects.BaseBiker) objects.IBaseBiker {
-	baseBiker.GroupID = 3
 	return &SmartAgent{BaseBiker: *baseBiker}
 }
 

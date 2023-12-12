@@ -6,6 +6,5 @@ import (
 )
 
 func GetTeamSevenBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
-	baseBiker.GroupID = 7
 	return agents.NewBaseTeamSevenBiker(baseBiker)
 }

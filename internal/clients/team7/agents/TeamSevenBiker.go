@@ -54,7 +54,6 @@ type BaseTeamSevenBiker struct {
 func NewBaseTeamSevenBiker(baseBiker *objects.BaseBiker) *BaseTeamSevenBiker {
 	agentId := baseBiker.GetID()
 	personality := frameworks.NewDefaultPersonality()
-	baseBiker.GroupID = 7
 	return &BaseTeamSevenBiker{
 		BaseBiker:             baseBiker,
 		navigationFramework:   frameworks.NewNavigationDecisionFramework(),

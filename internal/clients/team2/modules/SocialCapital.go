@@ -92,7 +92,7 @@ func (sc *SocialCapital) UpdateSocialNetwork(agentId uuid.UUID, eventValue float
 
 // Must be called once every round.
 func (sc *SocialCapital) UpdateSocialCapital() {
-	// fmt.Printf("[UpdateSocialCapital] Social Capital Before: %v\n", sc.SocialCapital)
+	//** fmt.Printf("[UpdateSocialCapital] Social Capital Before: %v\n", sc.SocialCapital)
 
 	for id := range sc.SocialNetwork { // Assumes all maps have the same keys.
 		// Add to Forgiveness Counters.
@@ -115,7 +115,7 @@ func (sc *SocialCapital) UpdateSocialCapital() {
 			sc.SocialCapital[id] = newSocialCapital
 		}
 	}
-	// fmt.Printf("[UpdateSocialCapital] Social Capital After: %v\n", sc.SocialCapital)
+	//** fmt.Printf("[UpdateSocialCapital] Social Capital After: %v\n", sc.SocialCapital)
 }
 
 func NewSocialCapital() *SocialCapital {
