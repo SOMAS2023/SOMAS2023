@@ -52,11 +52,25 @@ type IBaselineAgent interface {
 	DisplayFellowsEnergyHistory()
 	DisplayFellowsHonesty()
 	DisplayFellowsReputation()
+
+	////////////////// messaging.go ///////////////////////
+	// HandleKickoutMessage(msg KickoutAgentMessage) (uuid.UUID, uuid.UUID)
+	// HandleReputationMessage(msg ReputationOfAgentMessage) (uuid.UUID, float64)
+	// HandleJoiningMessage(msg JoiningAgentMessage) (uuid.UUID, uuid.UUID)
+	// HandleLootboxMessage(msg LootboxMessage) (uuid.UUID, uuid.UUID)
+	// HandleGovernanceMessage(msg GovernanceMessage) (uuid.UUID, int)
+	// HandleForcesMessage(msg ForcesMessage) (uuid.UUID, utils.Forces)
+	// HandleVoteGovernanceMessage(msg VoteGoveranceMessage) (uuid.UUID, voting.IdVoteMap)
+	// HandleVoteLootboxDirectionMessage(msg VoteLootboxDirectionMessage) (uuid.UUID, voting.IdVoteMap)
+	// HandleVoteRulerMessage(msg VoteRulerMessage) (uuid.UUID, voting.IdVoteMap)
+	// HandleVoteKickoutMessage(msg VoteKickoutMessage) (uuid.UUID, voting.IdVoteMap)
+
+	// GetAllMessages([]IBaselineAgent) []messaging.IMessage[IBaselineAgent]
 }
 
 // general weights
 const audiDistanceThreshold = 75
-const minEnergyThreshold = 0.2
+const minEnergyThreshold = 0.4
 
 const audiDistanceWeight = 8.0
 const distanceWeight = 7.0
@@ -100,23 +114,16 @@ type agentScore struct {
 }
 
 // DecideAction only pedal
-// func (agent *BaselineAgent) DecideAction() objects.BikerAction {
-// 	if agent.onBike {
-// 		fmt.Println("Gamw ton panathinaiko ", agent.currentBike)
-// 		if agent.evaluateBike(agent.currentBike) {
-// 			return objects.Pedal
-// 		} else {
-// 			fmt.Println("Gamw kai tin AEK ", agent.currentBike)
-// 			return objects.ChangeBike
-// 		}
-// 	} else {
-// 		return objects.Pedal
-// 	}
-
-// }
 func (agent *BaselineAgent) DecideAction() objects.BikerAction {
-	// fmt.Println("Team 4")
-	return objects.Pedal
+
+	if agent.evaluateBike(agent.currentBike) {
+		return objects.Pedal
+	} else if agent.GetEnergyLevel() <= 0.65 || agent.ChangeBike() == agent.currentBike {
+		return objects.Pedal
+	} else {
+		return objects.ChangeBike
+	}
+
 }
 
 // called by the spawner/server to instantiate bikers in the MVP
@@ -124,5 +131,7 @@ func GetBiker4(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 	team4Agent := &BaselineAgent{
 		BaseBiker: baseBiker,
 	}
+	team4Agent.BaseBiker.GroupID = 4
+	//fmt.Println("Team 4 Agent Created", team4Agent.GetID())
 	return team4Agent
 }

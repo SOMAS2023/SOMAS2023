@@ -340,6 +340,7 @@ func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 // -------------------INSTANTIATION FUNCTIONS----------------------------
 func GetBiker1(baseBiker *obj.BaseBiker) obj.IBaseBiker {
 	fmt.Printf("Creating Biker1 with id %v\n", baseBiker.GetID())
+	baseBiker.GroupID = 1
 	return &Biker1{
 		BaseBiker:      baseBiker,
 		opinions:       make(map[uuid.UUID]Opinion),

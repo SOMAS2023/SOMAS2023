@@ -234,10 +234,6 @@ func (a *AgentTwo) ChangeBike() uuid.UUID {
 	}
 }
 
-func (bb *AgentTwo) GetGroupID() int {
-	return 5
-}
-
 func (a *AgentTwo) DecideAction() objects.BikerAction {
 	avgSocialCapital := a.Modules.SocialCapital.GetAverage(a.Modules.SocialCapital.SocialCapital)
 

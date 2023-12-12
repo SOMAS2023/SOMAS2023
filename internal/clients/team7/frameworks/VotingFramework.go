@@ -17,7 +17,8 @@ type MapIdBool map[uuid.UUID]bool
 type ScoreType float64
 
 type VoteOnAgentsInput struct {
-	AgentCandidates []uuid.UUID
+	AgentCandidates      []uuid.UUID
+	CurrentSocialNetwork map[uuid.UUID]*SocialConnection
 }
 
 // Expected to return votes which sum to 1 for some voting types.

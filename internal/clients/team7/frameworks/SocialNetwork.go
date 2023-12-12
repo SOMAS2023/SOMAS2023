@@ -27,6 +27,7 @@ type SocialNetworkUpdateInput struct {
 
 type ISocialNetwork[T any] interface {
 	GetSocialNetwork() map[uuid.UUID]SocialConnection
+	GetCurrentTrustLevels() map[uuid.UUID]float64
 	UpdateSocialNetwork(agentIds []uuid.UUID, inputs T)
 	UpdateActiveConnections(agentIds []uuid.UUID)
 	DeactivateConnections(agentIds []uuid.UUID)
@@ -45,6 +46,38 @@ func NewSocialNetwork(myId uuid.UUID, personality *Personality) *SocialNetwork {
 		myId:          myId,
 		personality:   personality,
 	}
+}
+
+func (sc *SocialConnection) GetCurrentTrustLevels() float64 {
+	return sc.trustLevels[len(sc.trustLevels)-1]
+}
+
+func (sc *SocialConnection) GetAverageTrustLevels() float64 {
+	totalTrust := 0.0
+	for _, trustLevel := range sc.trustLevels {
+		totalTrust += trustLevel
+	}
+	return totalTrust / float64(len(sc.trustLevels))
+}
+
+func (sn *SocialNetwork) GetCurrentTrustLevels() map[uuid.UUID]float64 {
+	trustLevels := make(map[uuid.UUID]float64)
+	for agentId, connection := range sn.socialNetwork {
+		trustLevels[agentId] = connection.trustLevels[len(connection.trustLevels)-1]
+	}
+	return trustLevels
+}
+
+func (sn *SocialNetwork) GetAverageTrustLevels() map[uuid.UUID]float64 {
+	averageTrustLevels := make(map[uuid.UUID]float64)
+	for agentId, connection := range sn.socialNetwork {
+		totalTrust := 0.0
+		for _, trustLevel := range connection.trustLevels {
+			totalTrust += trustLevel
+		}
+		averageTrustLevels[agentId] = totalTrust / float64(len(connection.trustLevels))
+	}
+	return averageTrustLevels
 }
 
 func (sn *SocialNetwork) GetSocialNetwork() map[uuid.UUID]*SocialConnection {

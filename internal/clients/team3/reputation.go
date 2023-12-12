@@ -1,4 +1,4 @@
-package team_3
+package team3
 
 import (
 	"SOMAS2023/internal/common/objects"
@@ -28,21 +28,25 @@ type reputation struct {
 
 func (rep *reputation) updateScore(biker objects.IBaseBiker, preferredColor utils.Colour) {
 	// update memory
-	rep.recentGetEnergy = biker.GetEnergyLevel() > rep._lastEnergyLevel
-	if biker.GetEnergyLevel() > rep._lastEnergyLevel {
-		rep._recentEnergyGain = biker.GetEnergyLevel() - rep._lastEnergyLevel
+	currentEnergy := biker.GetEnergyLevel()
+	if math.IsNaN(currentEnergy) {
+		currentEnergy = 0
+	}
+	rep.recentGetEnergy = currentEnergy > rep._lastEnergyLevel
+	if currentEnergy > rep._lastEnergyLevel {
+		rep._recentEnergyGain = currentEnergy - rep._lastEnergyLevel
 		rep._energyReceivedCnt += rep._recentEnergyGain
 		rep._lootBoxGetCnt += 1.0
 	} else {
-		rep._lastPedal = rep._lastEnergyLevel - biker.GetEnergyLevel()
+		rep._lastPedal = rep._lastEnergyLevel - currentEnergy
 		// if agent gain energy in this iter, assume it pedals with the same energy cost as last iter
 	}
-	rep._lastEnergyLevel = biker.GetEnergyLevel()
+	rep._lastEnergyLevel = currentEnergy
 	rep._pedalCnt += rep._lastPedal
 
 	// update score
 	rep.recentContribution = normalize(rep._lastPedal)
-	rep.historyContribution = normalize(rep.historyContribution)
+	rep.historyContribution = normalize(rep._pedalCnt)
 	rep.energyRemain = normalize(rep._lastEnergyLevel)
 	rep.energyGain = normalize(rep._energyReceivedCnt)
 	rep.lootBoxGet = normalize(rep._lootBoxGetCnt)

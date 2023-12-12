@@ -9,28 +9,56 @@ import (
 )
 
 func (agent *BaselineAgent) InitializeDecisionData() {
-	fmt.Println("Initializing decision data ...")
+	//fmt.Println("Initializing decision data ...")
 	//Initialize mapping if not initialized yet (= nil)
 	if agent.energyHistory == nil {
 		agent.energyHistory = make(map[uuid.UUID][]float64)
 	}
-	fmt.Println("Energy history")
+	//fmt.Println("Energy history")
 	if len(agent.mylocationHistory) == 0 {
 		agent.mylocationHistory = make([]utils.Coordinates, 0)
 	}
-	fmt.Println("Location history")
+	//fmt.Println("Location history")
 	if agent.honestyMatrix == nil {
 		agent.honestyMatrix = make(map[uuid.UUID]float64)
 	}
-	fmt.Println("Honesty matrix")
+	//.Println("Honesty matrix")
 	if agent.reputation == nil {
 		agent.reputation = make(map[uuid.UUID]float64)
 	}
-	fmt.Println("Reputation matrix")
+	//fmt.Println("Reputation matrix")
 }
 func (agent *BaselineAgent) UpdateDecisionData() {
-	fmt.Println("Updating decision data ...")
+	//fmt.Println("Updating decision data ...")
 	agent.InitializeDecisionData()
+
+	messages := agent.GetAllMessages(agent.GetFellowBikers())
+	// Process messages
+	for _, msg := range messages {
+		switch msg := msg.(type) {
+		case objects.KickoutAgentMessage:
+			agent.HandleKickoutMessage(msg)
+		case objects.ReputationOfAgentMessage:
+			agent.HandleReputationMessage(msg)
+		case objects.JoiningAgentMessage:
+			agent.HandleJoiningMessage(msg)
+		case objects.ForcesMessage:
+			agent.HandleForcesMessage(msg)
+		case objects.GovernanceMessage:
+			agent.HandleGovernanceMessage(msg)
+		case objects.LootboxMessage:
+			agent.HandleLootboxMessage(msg)
+		case objects.VoteGoveranceMessage:
+			agent.HandleVoteGovernanceMessage(msg)
+		case objects.VoteKickoutMessage:
+			agent.HandleVoteKickoutMessage(msg)
+		case objects.VoteLootboxDirectionMessage:
+			agent.HandleVoteLootboxDirectionMessage(msg)
+		case objects.VoteRulerMessage:
+			agent.HandleVoteRulerMessage(msg)
+		}
+	}
+
 	agent.onBike = agent.GetBikeStatus()
 	if agent.onBike {
 		//update location history for the agent
@@ -54,15 +82,17 @@ func (agent *BaselineAgent) UpdateDecisionData() {
 			//Append bikers current energy level to the biker's history
 			agent.energyHistory[fellowID] = append(agent.energyHistory[fellowID], currentEnergyLevel)
 		}
+	} else {
+		agent.currentBike = uuid.Nil
 	}
-	fmt.Println("Energy history for")
+	//fmt.Println("Energy history for")
 	//call reputation and honesty matrix to calcuiate/update them
 	//save updated reputation and honesty matrix
 	agent.CalculateReputation()
 	agent.CalculateHonestyMatrix()
 	//agent.DisplayFellowsEnergyHistory()
-	// agent.DisplayFellowsHonesty()
-	// agent.DisplayFellowsReputation()
+	//agent.DisplayFellowsHonesty()
+	//agent.DisplayFellowsReputation()
 }
 
 func (agent *BaselineAgent) rankFellowsReputation(agentsOnBike []objects.IBaseBiker) (map[uuid.UUID]float64, error) {
@@ -147,7 +177,7 @@ func (agent *BaselineAgent) DisplayFellowsReputation() {
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
 		fmt.Println("")
-		fmt.Println("Reputation Matrix for: ", fellowID)
+		//fmt.Println("Reputation Matrix for: ", fellowID)
 		fmt.Print(agent.reputation[fellowID])
 		fmt.Println("")
 	}

@@ -5,7 +5,6 @@ import (
 	"SOMAS2023/internal/common/physics"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"fmt"
 	"math"
 	"sort"
 
@@ -73,7 +72,7 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 }
 
 func (agent *BaselineAgent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
-	fmt.Println("Final Direction Vote")
+	//fmt.Println("Final Direction Vote")
 	agent.UpdateDecisionData()
 	//We need to fix this ASAP
 	boxesInMap := agent.GetGameState().GetLootBoxes()
@@ -167,7 +166,10 @@ func (agent *BaselineAgent) nearestLoot() uuid.UUID {
 }
 
 func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
-	fmt.Println("Propose Direction")
+	if agent.GetEnergyLevel() < minEnergyThreshold+0.05 {
+		return agent.nearestLoot()
+	}
+	//fmt.Println("Propose Direction")
 	agent.UpdateDecisionData()
 
 	var lootBoxesWithinThreshold []objects.ILootBox
@@ -198,7 +200,7 @@ func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 /////////////////////////////////// DICATOR FUNCTIONS /////////////////////////////////////
 
 func (agent *BaselineAgent) DictateDirection() uuid.UUID {
-	fmt.Println("Dictate Direction")
+	//fmt.Println("Dictate Direction")
 	agent.UpdateDecisionData()
 
 	var lootBoxesWithinThreshold []objects.ILootBox
