@@ -3,8 +3,9 @@ package team1
 import (
 	voting "SOMAS2023/internal/common/voting"
 	"fmt"
-	"github.com/google/uuid"
 	"math"
+
+	"github.com/google/uuid"
 )
 
 // ---------------LOOT ALLOCATION FUNCTIONS------------------
