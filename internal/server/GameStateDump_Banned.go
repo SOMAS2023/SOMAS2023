@@ -165,6 +165,10 @@ func (a AgentDump) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
 	panic(bannedFunctionErrorMessage)
 }
 
+func (a AgentDump) HandleVoteAllocationMessage(msg objects.VoteAllocationMessage) {
+	panic(bannedFunctionErrorMessage)
+}
+
 func (a AgentDump) DecideDictatorAllocation() voting.IdVoteMap {
 	panic(bannedFunctionErrorMessage)
 }

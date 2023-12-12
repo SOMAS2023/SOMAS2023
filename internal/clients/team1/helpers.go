@@ -18,7 +18,12 @@ func (bb *Biker1) ComputeDistance(a utils.Coordinates, b utils.Coordinates) floa
 func (bb *Biker1) GetFellowBikers() []obj.IBaseBiker {
 	gs := bb.GetGameState()
 	bikeId := bb.GetBike()
-	return gs.GetMegaBikes()[bikeId].GetAgents()
+	result, ok := gs.GetMegaBikes()[bikeId]
+	if ok {
+		return result.GetAgents()
+	} else {
+		return []obj.IBaseBiker{}
+	}
 }
 
 func (bb *Biker1) GetBikeInstance() obj.IMegaBike {
@@ -74,8 +79,8 @@ func (bb *Biker1) GetAverageOpinionOfBike(megabike obj.IMegaBike) float64 {
 
 // -------------------END OF SETTERS AND GETTERS----------------------
 
-func (bb *Biker1) DistanceFromAudi(obj.IMegaBike) float64 {
-	return bb.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+func (bb *Biker1) DistanceFromAudi(bike obj.IMegaBike) float64 {
+	return bb.ComputeDistance(bike.GetPosition(), bb.GetGameState().GetAudi().GetPosition())
 }
 
 // Find an agent from their id
@@ -165,7 +170,6 @@ func (bb *Biker1) GetNearBikeObjects(bike obj.IMegaBike) (int64, int64, int64) {
 	bikeCount := 0
 	for _, lootbox := range bb.GetGameState().GetLootBoxes() {
 		distance := bb.ComputeDistance(lootbox.GetPosition(), bike.GetPosition())
-		//fmt.Printf("distance from bike %v to lootox %v is %v\n", bike.GetID(), lootbox.GetID(), distance)
 		if distance <= reachableDistance {
 			lootBoxCount += 1
 			if lootbox.GetColour() == bb.GetColour() {
