@@ -227,7 +227,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 				}
 
 				// get approval votes from each agent
-				responses := make(map[uuid.UUID](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				responses := make(map[uuid.UUID]map[uuid.UUID]bool, len(agents)) // list containing all the agents' ranking
 				for _, agent := range agents {
 					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}

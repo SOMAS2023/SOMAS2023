@@ -172,6 +172,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 			newBike := bb.PickBestBike()
 			if newBike != bb.GetBike() {
 				// refresh prevEnergy Map
+				bb.desiredBike = newBike
 				bb.prevEnergy = make(map[uuid.UUID]float64)
 				return 1
 			} else {
@@ -211,9 +212,7 @@ func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 // decide which bike to go to
 func (bb *Biker1) ChangeBike() uuid.UUID {
 	// if recently left bike
-	if bb.desiredBike == uuid.Nil {
-		bb.desiredBike = bb.PickBestBike()
-	}
+	bb.desiredBike = bb.PickBestBike()
 	if bb.prevOnBike && !bb.GetBikeStatus() {
 		bb.prevOnBike = false
 		bb.numberOfLeaves++
@@ -310,7 +309,7 @@ func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 // -------------------INSTANTIATION FUNCTIONS----------------------------
 func GetBiker1(baseBiker *obj.BaseBiker) obj.IBaseBiker {
 	fmt.Printf("Creating Biker1 with id %v\n", baseBiker.GetID())
-	baseBiker.GroupID = 10
+	baseBiker.GroupID = 1
 	return &Biker1{
 		BaseBiker:      baseBiker,
 		opinions:       make(map[uuid.UUID]Opinion),
