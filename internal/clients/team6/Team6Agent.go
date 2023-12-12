@@ -79,7 +79,7 @@ func (bb *Team6Biker) DecideAllocation() voting.IdVoteMap {
 func (bb *Team6Biker) DecideAction() objects.BikerAction {
 	bb.itercount += 1
 	if _, exists := bb.MegabikeTrustList[bb.GetBike()]; exists {
-		if bb.GetEnergyLevel() >= 0.98 {
+		if bb.GetEnergyLevel() >= 0.995 {
 			//bb.Getlootboxterm = bb.Getlootboxterm + 1
 			bb.MegabikeTrustList[bb.GetBike()] -= 0.1
 		}
