@@ -191,6 +191,7 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 		IsDestination:   proposedLootbox != nil,
 		Destination:     proposedLocation,
 		CurrentLocation: biker.GetLocation(),
+		CurrentEnergy:   biker.GetEnergyLevel(),
 	}
 
 	proposedDirection := biker.navigationFramework.GetTurnAngle(navInputs)
