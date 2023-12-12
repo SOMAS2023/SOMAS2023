@@ -6,7 +6,6 @@ import (
 	obj "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -78,7 +77,6 @@ func (bb *Biker1) GetLocation() utils.Coordinates {
 	megaBikes := gs.GetMegaBikes()
 	position := megaBikes[bikeId].GetPosition()
 	if math.IsNaN(position.X) {
-		// fmt.Printf("agent %v has no position\n", bb.GetID())
 	}
 	return position
 }
@@ -179,21 +177,18 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 		// if we think we can survive
 		if bb.GetEnergyLevel() > bb.leavingRisk*-utils.LimboEnergyPenalty {
 			bb.dislikeVote = false
-			// fmt.Printf("Agent %v is considering leaving bike %v\n", bb.GetID(), bb.GetBike())
 			newBike := bb.PickBestBike()
 			if newBike != bb.GetBike() {
 				bb.desiredBike = newBike
 				// refresh prevEnergy Map
 				bb.desiredBike = newBike
 				bb.prevEnergy = make(map[uuid.UUID]float64)
-				// fmt.Printf("Agent %v is leaving bike %v for bike %v\n", bb.GetID(), bb.GetBike(), newBike)
 				return 1
 			} else {
 				bb.updatePrevEnergy()
 				return 0
 			}
 		} else {
-			// fmt.Printf("Agent %v is staying on bike %v despite low opinion\n", bb.GetID(), bb.GetBike())
 			bb.updatePrevEnergy()
 			return 0
 		}
@@ -240,7 +235,6 @@ func (bb *Biker1) ChangeBike() uuid.UUID {
 	}
 	if !bb.prevOnBike {
 		bb.timeInLimbo++
-		fmt.Printf("Agent %v is in limbo for %v rounds\n", bb.GetID(), bb.timeInLimbo)
 		bb.pursuedBikes = append(bb.pursuedBikes, bb.desiredBike)
 	}
 	return bb.desiredBike
@@ -257,7 +251,6 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	for _, agent := range bb.GetFellowBikers() {
 		averageBikeOpinion += bb.opinions[agent.GetID()].opinion
 	}
-	averageBikeOpinion /= float64(len(bb.GetFellowBikers()))
 
 	for _, agentId := range pendingAgents {
 		//TODO FIX
@@ -273,19 +266,16 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 		bbColour := bb.GetColour()
 		agentColour := agent.GetColour()
 		if agentColour == bbColour {
-			// fmt.Printf("Agent %v is accepting agent %v by colour\n", bb.GetID(), agentId)
 			decision[agentId] = true
 			sameColourReward := 1.05
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
 			if bb.opinions[agentId].opinion >= averageBikeOpinion || agent_reputation > joinReputationThreshold {
-				// fmt.Printf("Agent %v is accepting agent %v by opinion\n", bb.GetID(), agentId)
 				decision[agentId] = true
 				// penalise for accepting them without same colour
 				penalty := 0.9
 				bb.UpdateOpinion(agentId, penalty)
 			} else {
-				// fmt.Printf("Agent %v is rejecting agent %v, because opinion = %v\n", bb.GetID(), agentId, bb.opinions[agentId].opinion)
 				decision[agentId] = false
 			}
 		}
@@ -339,7 +329,6 @@ func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 
 // -------------------INSTANTIATION FUNCTIONS----------------------------
 func GetBiker1(baseBiker *obj.BaseBiker) obj.IBaseBiker {
-	fmt.Printf("Creating Biker1 with id %v\n", baseBiker.GetID())
 	baseBiker.GroupID = 1
 	return &Biker1{
 		BaseBiker:      baseBiker,
