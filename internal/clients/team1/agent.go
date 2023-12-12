@@ -257,6 +257,7 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	for _, agent := range bb.GetFellowBikers() {
 		averageBikeOpinion += bb.opinions[agent.GetID()].opinion
 	}
+	averageBikeOpinion /= float64(len(bb.GetFellowBikers()))
 
 	for _, agentId := range pendingAgents {
 		//TODO FIX
