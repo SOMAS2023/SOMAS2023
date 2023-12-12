@@ -556,10 +556,25 @@ func (biker *BaseTeamSevenBiker) CreateGoverenceMessage() objects.GovernanceMess
 }
 
 func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
-	return objects.ForcesMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
-		AgentId:     biker.GetID(),
-		AgentForces: biker.GetForces(),
+	// Low agreeableness => Uncooperative => More likely to lie about forces.
+	// High agreeableness => Cooperative => Less likely to lie about forces.
+	randNum := rand.Float64()
+	if biker.personality.Agreeableness < randNum {
+		return objects.ForcesMessage{
+			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+			AgentId:     biker.GetID(),
+			AgentForces: utils.Forces{
+				Pedal:   1.0,
+				Brake:   0.0,
+				Turning: biker.GetForces().Turning,
+			},
+		}
+	} else {
+		return objects.ForcesMessage{
+			BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
+			AgentId:     biker.GetID(),
+			AgentForces: biker.GetForces(),
+		}
 	}
 }
 
