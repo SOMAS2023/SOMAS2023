@@ -6,12 +6,9 @@ import (
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 	"SOMAS2023/internal/server"
-	server2 "SOMAS2023/internal/server/tests"
-	"cmp"
 	"fmt"
 	"math"
 	"math/rand"
-	"slices"
 	"testing"
 
 	"github.com/google/uuid"
@@ -74,23 +71,24 @@ func TestHandleKickout(t *testing.T) {
 }
 
 func TestProcessJoiningRequests(t *testing.T) {
-	server2.OnlySpawnBaseBikers(t)
 	it := 3
 	s := server.Initialize(it)
 	s.FoundingInstitutions()
 
-	// 1: get two bike ids (choose the 2 most empty bikes)
-	bikes := make([]objects.IMegaBike, 0, len(s.GetMegaBikes()))
-	for _, b := range s.GetMegaBikes() {
-		bikes = append(bikes, b)
+	// 1: get two bike ids
+	targetBikes := make([]uuid.UUID, 2)
+
+	i := 0
+	for bikeId := range s.GetMegaBikes() {
+		if i == 2 {
+			break
+		}
+		targetBikes[i] = bikeId
+		i += 1
 	}
-	slices.SortFunc(bikes, func(a, b objects.IMegaBike) int {
-		return cmp.Compare(len(a.GetAgents()), len(b.GetAgents()))
-	})
-	targetBikes := []uuid.UUID{bikes[0].GetID(), bikes[1].GetID()}
 
 	// 2: set one agent requesting the first bike and two other requesting the second one
-	i := 0
+	i = 0
 	requests := make(map[uuid.UUID][]uuid.UUID)
 	requests[targetBikes[0]] = make([]uuid.UUID, 1)
 	requests[targetBikes[1]] = make([]uuid.UUID, 2)
@@ -194,9 +192,8 @@ func TestRunActionProcess(t *testing.T) {
 			case utils.Leadership:
 				lostEnergy += utils.LeadershipDemocracyPenalty
 			}
-			// FP precision error
-			if (agent.GetEnergyLevel() - (1.0 - lostEnergy)) > utils.Epsilon {
-				t.Error("agents energy hasn't been successfully depleted! expected lost energy: ", lostEnergy, "actual lost energy: ", 1.0-agent.GetEnergyLevel(), "difference: ", (1.0-agent.GetEnergyLevel())-lostEnergy)
+			if agent.GetEnergyLevel() != (1.0 - lostEnergy) {
+				t.Error("agents energy hasn't been successfully depleted")
 			}
 		}
 	}

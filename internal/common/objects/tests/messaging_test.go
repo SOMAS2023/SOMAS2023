@@ -43,6 +43,7 @@ func (ebb *ExtendedBaseBiker) HandleForcesMessage(msg obj.ForcesMessage) {
 	if agentId == ebb.OtherBiker.GetID() {
 		ebb.OtherBikerForces = append(ebb.OtherBikerForces, agentForces)
 	}
+
 }
 
 // Send messages to server which will be sent to the reciepients of the messages

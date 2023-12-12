@@ -4,8 +4,9 @@ import (
 	"SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-	"cmp"
 	"fmt"
+	"sort"
+
 	"math"
 	"slices"
 
@@ -98,7 +99,7 @@ func (s *Server) FoundingInstitutions() {
 	bikesUsed := make([]uuid.UUID, 0)
 	for governanceMethod, numBikers := range foundingTotals {
 		megaBikesNeeded := int(math.Ceil(float64(numBikers) / float64(utils.BikersOnBike)))
-		govBikes[governanceMethod] = make([]uuid.UUID, 0, megaBikesNeeded)
+		govBikes[governanceMethod] = make([]uuid.UUID, megaBikesNeeded)
 		// get bikes for this governance
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
@@ -110,7 +111,7 @@ func (s *Server) FoundingInstitutions() {
 				if !slices.Contains(bikesUsed, bike) {
 					foundBike = true
 					bikesUsed = append(bikesUsed, bike)
-					govBikes[governanceMethod] = append(govBikes[governanceMethod], bike)
+					govBikes[governanceMethod][i] = bike
 
 					// set the governance
 					bikeObj := s.GetMegaBikes()[bike]
@@ -127,13 +128,9 @@ func (s *Server) FoundingInstitutions() {
 
 		// select a bike with this governance method which has been assigned the lowest amount of bikers
 		bikesAvailable := govBikes[governance]
-		if len(bikesAvailable) == 0 {
-			panic("not enough bikes to accommodate governance choices")
-		}
-
-		// Sort bikes from least to most full
-		slices.SortFunc(bikesAvailable, func(a, b uuid.UUID) int {
-			return cmp.Compare(len(s.megaBikes[a].GetAgents()), len(s.megaBikes[b].GetAgents()))
+		sort.Slice(bikesAvailable, func(i, j int) bool {
+			// in the order from large to small
+			return len(s.GetMegaBikes()[bikesAvailable[i]].GetAgents()) < len(s.GetMegaBikes()[bikesAvailable[j]].GetAgents())
 		})
 
 		// get the first one of the sorted bikes
