@@ -6,9 +6,11 @@ import (
 )
 
 type NavigationInputs struct {
-	IsDestination   bool
-	Destination     utils.Coordinates
-	CurrentLocation utils.Coordinates
+	IsDestination          bool
+	Destination            utils.Coordinates
+	CurrentLocation        utils.Coordinates
+	CurrentEnergy          float64
+	ConscientiousnessLevel float64
 }
 
 /*
@@ -23,14 +25,29 @@ type NavigationDecisionFramework struct {
 }
 
 func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) utils.Forces {
+	// Store the inputs in the navigation decision framework for later use
 	ndf.inputs = &inputs
 
+	// Calculate the turning force based on the inputs
 	turningForce := ndf.GetTurnAngle(inputs)
+	// Create a turning decision with the calculated turning force
 	turningInput := utils.TurningDecision{SteerBike: true, SteeringForce: turningForce}
-	pedallingForce := float64(1)
+
+	// Constant ratio for pedaling force based on the current energy level
+	// Low conscientiousness => lazy => Pedal with low effort relative to energy level
+	// High conscientiousness => hard-working => Pedal with high effort relative to energy level.
+	forceToEnergyRatio := inputs.ConscientiousnessLevel // This value can be adjusted
+
+	// Pedaling force is the current energy multiplied by a constant ratio
+	pedallingForce := inputs.CurrentEnergy * forceToEnergyRatio
+
+	// Braking force is set to zero, assuming no need to brake in this context
 	brakingForce := float64(0)
 
+	// Combine all the forces into a single structure to be returned
 	forces := utils.Forces{Pedal: pedallingForce, Brake: brakingForce, Turning: turningInput}
+
+	// Return the combined forces as the decision
 	return forces
 }
 

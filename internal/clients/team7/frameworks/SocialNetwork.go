@@ -17,6 +17,7 @@ type SocialConnection struct {
 }
 
 type SocialNetworkUpdateInput struct {
+	AgentIds           []uuid.UUID
 	AgentDecisions     map[uuid.UUID]utils.Forces
 	AgentResourceVotes map[uuid.UUID]voting.IdVoteMap
 	AgentEnergyLevels  map[uuid.UUID]float64
@@ -85,8 +86,9 @@ func (sn *SocialNetwork) GetSocialNetwork() map[uuid.UUID]*SocialConnection {
 }
 
 func (sn *SocialNetwork) updateTrustLevels(input SocialNetworkUpdateInput) {
+
 	agentIds := make([]uuid.UUID, 0)
-	for agentId := range input.AgentDecisions {
+	for _, agentId := range input.AgentIds {
 		if agentId != sn.myId {
 			agentIds = append(agentIds, agentId)
 		}
@@ -94,18 +96,16 @@ func (sn *SocialNetwork) updateTrustLevels(input SocialNetworkUpdateInput) {
 
 	DistributionPenaltyMap := make(map[uuid.UUID]float64)
 	if len(input.AgentResourceVotes) > 0 {
-		DistributionPenaltyMap = sn.CalcDistributionPenalties(input.AgentResourceVotes, input.AgentEnergyLevels)
+		DistributionPenaltyMap = sn.CalcDistributionPenalties(input.AgentResourceVotes, input.AgentEnergyLevels, agentIds)
 	}
-	PedallingPenaltyMap := sn.CalcPedallingPenalties(input.AgentDecisions, input.AgentEnergyLevels)
-	OrientationPenaltyMap := sn.CalcTurningPenalties(input.AgentDecisions, input.BikeTurnAngle)
-	BrakingPenaltyMap := sn.CalcBrakingPenalties(input.AgentDecisions)
-	DifferentLootPenaltyMap := sn.CalcDifferentLootBoxPenalties(input.AgentColours)
+	PedallingPenaltyMap := sn.CalcPedallingPenalties(input.AgentDecisions, input.AgentEnergyLevels, agentIds)
+	OrientationPenaltyMap := sn.CalcTurningPenalties(input.AgentDecisions, input.BikeTurnAngle, agentIds)
+	BrakingPenaltyMap := sn.CalcBrakingPenalties(input.AgentDecisions, agentIds)
 
 	W_dp := 1.0
 	W_op := 1.0
 	W_bp := 1.0
 	W_pp := 1.0
-	W_dlp := 1.0
 
 	for _, agentId := range agentIds {
 		_, exists := sn.socialNetwork[agentId]
@@ -119,11 +119,17 @@ func (sn *SocialNetwork) updateTrustLevels(input SocialNetworkUpdateInput) {
 
 		updatedTrust := (W_pp * PedallingPenaltyMap[agentId]) +
 			(W_op * OrientationPenaltyMap[agentId]) +
-			(W_bp * BrakingPenaltyMap[agentId]) +
-			(W_dlp * DifferentLootPenaltyMap[agentId])
+			(W_bp * BrakingPenaltyMap[agentId])
 
 		if len(input.AgentResourceVotes) > 0 {
 			updatedTrust += (W_dp * DistributionPenaltyMap[agentId])
+		}
+
+		if updatedTrust > 1 {
+			updatedTrust = 1
+		}
+		if updatedTrust < 0 {
+			updatedTrust = 0
 		}
 
 		trustLevels := sn.socialNetwork[agentId].trustLevels
@@ -170,72 +176,62 @@ func (sn *SocialNetwork) GetCurrentBikeNetwork() map[uuid.UUID]SocialConnection 
 
 // Calc_Distribution_penalty calculates the penalty based on resources given
 // and resources requested. This is a method of the SocialNetwork type.
-func (sn *SocialNetwork) CalcDistributionPenalties(resourceDistribution map[uuid.UUID]voting.IdVoteMap, energyLevelMap map[uuid.UUID]float64) map[uuid.UUID]float64 {
-	bikerCount := len(resourceDistribution)
+func (sn *SocialNetwork) CalcDistributionPenalties(resourceDistribution map[uuid.UUID]voting.IdVoteMap, energyLevelMap map[uuid.UUID]float64, agentIds []uuid.UUID) map[uuid.UUID]float64 {
 
 	idPenaltyMap := make(map[uuid.UUID]float64)
 
-	expectedEgalitarianValue := 1.0 / float64(bikerCount)
 	for agentId, agentDistributionVote := range resourceDistribution {
-		utilitarianPenalty := 0.0
-		egalitarianPenalty := 0.0
-		selfishPenalty := 0.0
-		judgementalPenalty := 0.0
-		for recipientId, recipientDistribution := range agentDistributionVote {
-			egalitarianPenalty += math.Abs(expectedEgalitarianValue - recipientDistribution)
 
-			utilitarianPenalty += math.Abs(recipientDistribution - (1 - energyLevelMap[recipientId]))
+		selfishPenalty := 0.0
+
+		for recipientId, recipientDistribution := range agentDistributionVote {
 
 			if recipientId == sn.myId {
 				selfishPenalty = math.Abs(1 - recipientDistribution)
 			}
 
-			if recipientId == agentId {
-				judgementalPenalty = recipientDistribution
-			}
 		}
 
-		overallPenalty := egalitarianPenalty*sn.personality.Egalitarian +
-			selfishPenalty*sn.personality.Selfish +
-			judgementalPenalty*sn.personality.Judgemental +
-			utilitarianPenalty*sn.personality.Utilitarian
+		overallPenalty := selfishPenalty * (1 + sn.personality.Neuroticism + (1 - sn.personality.Agreeableness))
+
 		idPenaltyMap[agentId] = overallPenalty
 
 	}
+
+	for _, agentId := range agentIds {
+		if _, ok := idPenaltyMap[agentId]; !ok {
+			idPenaltyMap[agentId] = 0.005
+		}
+	}
+
 	return idPenaltyMap // Return the calculated penalty map
 }
 
 // TODO: Find shift to account for forgiveness
-func (sn *SocialNetwork) CalcPedallingPenalties(agentForces map[uuid.UUID]utils.Forces, energyLevelMap map[uuid.UUID]float64) map[uuid.UUID]float64 {
-	agentCount := len(agentForces)
+func (sn *SocialNetwork) CalcPedallingPenalties(agentForces map[uuid.UUID]utils.Forces, energyLevelMap map[uuid.UUID]float64, agentIds []uuid.UUID) map[uuid.UUID]float64 {
 
 	pedallingPenaltyMap := make(map[uuid.UUID]float64)
 
-	totalPedalling := 0.0
-	for _, forces := range agentForces {
-		totalPedalling += forces.Pedal
-	}
-	expectedPedalValue := totalPedalling / float64(agentCount)
-
 	for id, forces := range agentForces {
 		agentPedallingForce := forces.Pedal
-		egalitarianPenalty := math.Abs(expectedPedalValue - agentPedallingForce)
-		utilitarianPenalty := (1-agentPedallingForce)*(energyLevelMap[id]) - (math.Pow(agentPedallingForce, 1.0/agentPedallingForce))*0.3
-		judgementalPenalty := 1 - agentPedallingForce
-		selfishPenalty := 1 - agentPedallingForce
 
-		overallPenalty := egalitarianPenalty*sn.personality.Egalitarian +
-			selfishPenalty*sn.personality.Selfish +
-			judgementalPenalty*sn.personality.Judgemental +
-			utilitarianPenalty*sn.personality.Utilitarian
+		Penalty := 1 - agentPedallingForce
+
+		overallPenalty := Penalty * (1 + sn.personality.Conscientiousness)
 
 		pedallingPenaltyMap[id] = overallPenalty
+	}
+
+	for _, agentId := range agentIds {
+		if _, ok := pedallingPenaltyMap[agentId]; !ok {
+			pedallingPenaltyMap[agentId] = 0.005
+		}
 	}
 
 	return pedallingPenaltyMap
 }
 
-func (sn *SocialNetwork) CalcTurningPenalties(agentForces map[uuid.UUID]utils.Forces, proposedTurnAngle float64) map[uuid.UUID]float64 {
+func (sn *SocialNetwork) CalcTurningPenalties(agentForces map[uuid.UUID]utils.Forces, proposedTurnAngle float64, agentIds []uuid.UUID) map[uuid.UUID]float64 {
 	turningPenaltyMap := make(map[uuid.UUID]float64)
 
 	for id, forces := range agentForces {
@@ -248,7 +244,6 @@ func (sn *SocialNetwork) CalcTurningPenalties(agentForces map[uuid.UUID]utils.Fo
 		// 	}
 		// 	continue
 		// }
-
 		if turningDecision.SteerBike && turningDecision.SteeringForce == proposedTurnAngle {
 			// Biker is steering in the right direction
 			turningPenaltyMap[id] = -0.2
@@ -261,34 +256,29 @@ func (sn *SocialNetwork) CalcTurningPenalties(agentForces map[uuid.UUID]utils.Fo
 		}
 	}
 
+	for _, agentId := range agentIds {
+		if _, ok := turningPenaltyMap[agentId]; !ok {
+			turningPenaltyMap[agentId] = 0.005
+		}
+	}
+
 	return turningPenaltyMap
 }
 
-func (sn *SocialNetwork) CalcBrakingPenalties(agentForces map[uuid.UUID]utils.Forces) map[uuid.UUID]float64 {
+func (sn *SocialNetwork) CalcBrakingPenalties(agentForces map[uuid.UUID]utils.Forces, agentIds []uuid.UUID) map[uuid.UUID]float64 {
 	brakingPenaltyMap := make(map[uuid.UUID]float64)
 	for id, forces := range agentForces {
 		if forces.Brake == 0 {
-			brakingPenaltyMap[id] = 0.8
+			brakingPenaltyMap[id] = 0.4
 			continue
 		}
 	}
-	return brakingPenaltyMap
-}
 
-func (sn *SocialNetwork) CalcDifferentLootBoxPenalties(agentColourMap map[uuid.UUID]utils.Colour) map[uuid.UUID]float64 {
-	myColour := agentColourMap[sn.myId]
-	colourPenaltyMap := make(map[uuid.UUID]float64)
-
-	for _, colour := range agentColourMap {
-		penalty := 0.0
-		if colour == myColour {
-			penalty = -0.2
-		} else {
-			penalty = 0.095
+	for _, agentId := range agentIds {
+		if _, ok := brakingPenaltyMap[agentId]; !ok {
+			brakingPenaltyMap[agentId] = 0.005
 		}
-		penalty = (1 - sn.personality.Egalitarian) * penalty
-		colourPenaltyMap[sn.myId] = penalty
 	}
 
-	return colourPenaltyMap
+	return brakingPenaltyMap
 }

@@ -21,6 +21,13 @@ type VoteOnAgentsInput struct {
 	CurrentSocialNetwork map[uuid.UUID]*SocialConnection
 }
 
+type VoteOnLootBoxesInput struct {
+	LootBoxCandidates map[uuid.UUID]uuid.UUID
+	MyPersonality     *Personality
+	MyDesired         uuid.UUID
+	MyOpinion         map[uuid.UUID]float64
+}
+
 // Expected to return votes which sum to 1 for some voting types.
 // This function normalises vote map to sum to 1.
 func NormaliseVote(agentScoreMap voting.IdVoteMap, totalScore float64) voting.IdVoteMap {
