@@ -142,8 +142,11 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 
 	// Get the agents' votes on allocation. At this point we are just trusting what they say to be true for now.
 	agentResourceVotes := make(map[uuid.UUID]voting.IdVoteMap)
-	for _, msg := range biker.voteAllocationMessages {
-		agentResourceVotes[msg.GetSender().GetID()] = msg.VoteMap
+	if biker.votedForResources {
+		for _, msg := range biker.voteAllocationMessages {
+			agentResourceVotes[msg.GetSender().GetID()] = msg.VoteMap
+		}
+		biker.votedForResources = false
 	}
 
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{
@@ -484,32 +487,39 @@ func (biker *BaseTeamSevenBiker) QueryReputation(agentId uuid.UUID) float64 {
 // This function updates all the messages for that agent i.e. both sending and receiving.
 // And returns the new messages from other agents to your agent
 func (biker *BaseTeamSevenBiker) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[objects.IBaseBiker] {
+
 	messages := make([]messaging.IMessage[objects.IBaseBiker], 0)
 
 	// Get all the trust levels of the agents on the bike
 	trustLevels := biker.socialNetwork.GetCurrentTrustLevels()
-	for agentId, trustLevel := range trustLevels {
-		reputationMessage := biker.CreateReputationMessage(agentId, trustLevel)
-		messages = append(messages, reputationMessage)
 
-		kickoutMessage := biker.CreatekickoutMessage(agentId, false)
-		if trustLevel < 0.2 {
-			kickoutMessage = biker.CreatekickoutMessage(agentId, true)
+	// Low extraversion => Less likely to send a message
+	// High extraversion => More likely to send a message
+	randNum := rand.Float64()
+	if biker.personality.Extraversion > randNum {
+		for agentId, trustLevel := range trustLevels {
+			reputationMessage := biker.CreateReputationMessage(agentId, trustLevel)
+			messages = append(messages, reputationMessage)
+
+			kickoutMessage := biker.CreatekickoutMessage(agentId, false)
+			if trustLevel < 0.2 {
+				kickoutMessage = biker.CreatekickoutMessage(agentId, true)
+			}
+			messages = append(messages, kickoutMessage)
 		}
-		messages = append(messages, kickoutMessage)
+
+		voteKickoutMessage := biker.CreateVotekickoutMessage()
+		messages = append(messages, voteKickoutMessage)
+
+		voteDirectionMessage := biker.CreateVoteLootboxDirectionMessage()
+		messages = append(messages, voteDirectionMessage)
+
+		forcesMessage := biker.CreateForcesMessage()
+		messages = append(messages, forcesMessage)
+
+		voteAllocationMessage := biker.CreateVoteAllocationMessage()
+		messages = append(messages, voteAllocationMessage)
 	}
-
-	voteKickoutMessage := biker.CreateVotekickoutMessage()
-	messages = append(messages, voteKickoutMessage)
-
-	voteDirectionMessage := biker.CreateVoteLootboxDirectionMessage()
-	messages = append(messages, voteDirectionMessage)
-
-	forcesMessage := biker.CreateForcesMessage()
-	messages = append(messages, forcesMessage)
-
-	voteAllocationMessage := biker.CreateVoteAllocationMessage()
-	messages = append(messages, voteAllocationMessage)
 
 	return messages
 }
