@@ -113,7 +113,7 @@ func (mb *MegaBike) UpdateOrientation() {
 	if numOfSteeringAgents > 0 {
 		avgX := xSum / float64(numOfSteeringAgents)
 		avgY := ySum / float64(numOfSteeringAgents)
-		mb.orientation = math.Atan2(avgY, avgX) / math.Pi // Converts back to -1 to 1 range
+		mb.orientation += math.Atan2(avgY, avgX) / math.Pi // Converts back to -1 to 1 range
 	}
 }
 
