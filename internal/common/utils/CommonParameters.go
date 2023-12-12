@@ -35,8 +35,8 @@ const MovingDepletion float64 = 0.01 // proportionality of energy loss
 
 const LimboEnergyPenalty float64 = -0.05 // amount of energy lost per round when off a bike
 
-const DeliberativeDemocracyPenalty float64 = 0.025 // amount of energy lost per vote in a deliberative democracy
-const LeadershipDemocracyPenalty float64 = 0.0125  // amount of energy lost per vote in a leadership democracy
+const DeliberativeDemocracyPenalty float64 = 0.05 // amount of energy lost per vote in a deliberative democracy
+const LeadershipDemocracyPenalty float64 = 0.025  // amount of energy lost per vote in a leadership democracy
 
 /*
 Resources - Points and Energy
