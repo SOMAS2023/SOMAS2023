@@ -94,8 +94,14 @@ func (t5 *team5Agent) VoteForKickout() map[uuid.UUID]int {
 
 func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 
-	agentMap := t5.GetGameState().GetAgents()
 	result := make(map[uuid.UUID]bool)
+
+	//make all bools true at the start
+	for _, agentID := range pendingAgents {
+		result[agentID] = true
+	}
+	agentMap := t5.GetGameState().GetAgents()
+
 	pendingAgentUtility := make(map[uuid.UUID]float64)
 	threshold := 0.5
 	maxBikers := utils.BikersOnBike
@@ -120,25 +126,28 @@ func (t5 *team5Agent) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]boo
 	}
 
 	for _, agentID := range pendingAgents {
-		agentState := agentMap[agentID]
+		//if agent in agentMap
+		if _, ok := agentMap[agentID]; !ok {
+			agentState := agentMap[agentID]
 
-		key := agentState.GetID()
-		reputation := t5.QueryReputation(key)
-		energyLevel := agentState.GetEnergyLevel()
-		pendingAgentColor := agentState.GetColour()
+			key := agentState.GetID()
+			reputation := t5.QueryReputation(key)
+			energyLevel := agentState.GetEnergyLevel()
+			pendingAgentColor := agentState.GetColour()
 
-		isColorSame := 0.0
+			isColorSame := 0.0
 
-		if targetColor == pendingAgentColor {
-			isColorSame = 1.0
+			if targetColor == pendingAgentColor {
+				isColorSame = 1.0
+			}
+
+			// color has to be a 0/1 and replaced with
+			utility := (a * energyLevel) + (b * reputation) + (c * isColorSame)
+			utilityNorm := utility / 3.0
+			utilityNorm = utilityNorm * scaleFactor
+
+			pendingAgentUtility[agentID] = utilityNorm
 		}
-
-		// color has to be a 0/1 and replaced with
-		utility := (a * energyLevel) + (b * reputation) + (c * isColorSame)
-		utilityNorm := utility / 3.0
-		utilityNorm = utilityNorm * scaleFactor
-
-		pendingAgentUtility[agentID] = utilityNorm
 
 	}
 

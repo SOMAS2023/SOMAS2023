@@ -39,6 +39,7 @@ class GameScreen:
         self.mouseXCur = 0
         self.mouseYCur = 0
         self.consoleScreen = None
+        self.aliveAgents = 0
         self.stats = {
             "Active Bikes" : 0,
             "Active Lootboxes" : 0,
@@ -46,10 +47,6 @@ class GameScreen:
             "Dead Agents" : 0,
         }
         self.agents = {}
-        self.deadCount = {
-            "-1" : 0,
-            "0" : 0,
-        }
         self.maxDead = 0
         self.draw_mouse_coords()
 
@@ -380,6 +377,9 @@ class GameScreen:
             self.awdi = Awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
         else:
             self.awdi.update_awdi(self.jsonData[self.round]["audi"], self.jsonData[self.round]["bikes"])
+        if self.round == 0:
+            self.aliveAgents = len(self.agents.values())
+            self.stats["Dead Agents"] = 0
         self.update_stats()
         self.elements["stats"].rebuild()
         self.elements["console"].rebuild()
@@ -513,15 +513,7 @@ class GameScreen:
                     self.log(f"Agent {agentid} is in the void.", "INFO")
                     self.stats["Void Agents"] += 1
         self.stats["Alive Agents"] = len(newAgents.values())
-        if str(self.round) not in self.deadCount:
-            if str(self.round-1) in self.deadCount:
-                self.deadCount[str(self.round)] = self.deadCount[str(self.round-1)] + dead
-            else:
-                self.stats["Dead Agents"] = "N/A"
-            if self.round % ITERATIONLENGTH == 0:
-                self.deadCount[str(self.round)] = 0
-        if str(self.round) in self.deadCount:
-            self.stats["Dead Agents"] = self.deadCount[str(self.round)]
+        self.stats["Dead Agents"] = self.aliveAgents - self.stats["Alive Agents"]
         self.agents = newAgents
 
     def compare_bikes(self, newBikes:dict) -> None:

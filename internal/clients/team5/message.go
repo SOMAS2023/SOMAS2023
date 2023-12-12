@@ -12,7 +12,7 @@ func (t5 *team5Agent) GetAllMessages([]objects.IBaseBiker) []messaging.IMessage[
 
 	// send message to all other agents on the bike containing our reputation value on them, expecting them to send back their reputation value on us
 	for _, agent := range t5.GetFellowBikers() {
-		if agent.GetID() != t5.GetID() && t5.QueryReputation(agent.GetID()) >= 0.6 {
+		if agent.GetID() != t5.GetID() && t5.QueryReputation(agent.GetID()) >= 0.0 {
 			repMsg := t5.CreateReputationMessage(agent)
 			messages = append(messages, repMsg)
 		}

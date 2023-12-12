@@ -2,7 +2,6 @@ package team5Agent
 
 import (
 	"SOMAS2023/internal/common/objects"
-	obj "SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
 
@@ -14,7 +13,7 @@ type Iteam5Agent interface {
 }
 
 type team5Agent struct {
-	objects.BaseBiker
+	*objects.BaseBiker
 	resourceAllocMethod ResourceAllocationMethod
 	//set state default to 0
 	state            int // 0 = normal, 1 = conservative
@@ -36,12 +35,12 @@ const (
 )
 
 // Creates an instance of Team 5 Biker
-func GetBiker5(baseBiker *obj.BaseBiker) obj.IBaseBiker {
+func GetBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
 	baseBiker.GroupID = 5
 	// print
-	// //** fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
+	// fmt.Println("team5Agent: newTeam5Agent: baseBiker: ", baseBiker)
 	return &team5Agent{
-		BaseBiker:           *baseBiker,
+		BaseBiker:           baseBiker,
 		resourceAllocMethod: Equal,
 		state:               0,
 		roundCount:          0,
@@ -99,7 +98,7 @@ func (t5 *team5Agent) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voti
 }
 
 func (t5 *team5Agent) DecideAllocation() voting.IdVoteMap {
-	////** fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
+	//fmt.Println("team5Agent: GetBike: t5.BaseBiker.DecideAllocation: ", t5.resourceAllocationMethod)
 	method := t5.resourceAllocMethod
 	return t5.calculateResourceAllocation(method)
 }
