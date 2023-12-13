@@ -574,7 +574,7 @@ func (bb *Agent8) UpdateReputation() {
 	for i := 1; i <= 10; i++ {
 		for agentId, Score := range bb.agentsActionsMap[i] {
 			if Score != 0.0 {
-				agentScore[agentId] += Score
+				agentScore[agentId] += Score * math.Pow(0.8, float64(i))
 				agentCount[agentId]++
 			}
 		}
