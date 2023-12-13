@@ -140,6 +140,7 @@ func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
 			}
 		}
 		if math.IsNaN(socialCapital[id]) {
+			fmt.Println(socialCapital[id])
 			runtime.Breakpoint()
 			panic("dhsd")
 		}
