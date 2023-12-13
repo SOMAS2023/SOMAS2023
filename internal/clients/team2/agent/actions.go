@@ -144,14 +144,6 @@ func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
 	}
 	// We give ourselves 1.0
 	socialCapital[a.GetID()] = 1.0
-
-	sum := 0.0
-	for _, v := range socialCapital {
-		sum += v
-	}
-	if sum == 0 {
-		fmt.Print("Sum is 0")
-	}
 	return socialCapital
 }
 
