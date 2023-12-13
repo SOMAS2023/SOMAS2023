@@ -42,13 +42,13 @@ func (bb *Team6Biker) CreatekickoutMessage() objects.KickoutAgentMessage {
 }
 
 // Haven't changed yet
-func (bb *Team6Biker) CreateReputationMessage() objects.ReputationOfAgentMessage {
-	return objects.ReputationOfAgentMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		AgentId:     uuid.Nil,
-		Reputation:  1.0,
-	}
-}
+// func (bb *Team6Biker) CreateReputationMessage() objects.ReputationOfAgentMessage {
+// 	return objects.ReputationOfAgentMessage{
+// 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
+// 		AgentId:     uuid.Nil,
+// 		Reputation:  1.0,
+// 	}
+// }
 
 func (bb *Team6Biker) CreateJoiningMessage() objects.JoiningAgentMessage {
 	// Send messages to the all the bikers on the bike that the agent wants to join
@@ -104,23 +104,23 @@ func (bb *Team6Biker) CreateVoteLootboxDirectionMessage() objects.VoteLootboxDir
 	}
 }
 
-func (bb *Team6Biker) CreateVoteRulerMessage() objects.VoteRulerMessage {
-	RulerMap := make(voting.IdVoteMap)
-	for _, agent := range bb.GetFellowBikers() {
-		RulerMap[agent.GetID()] = bb.GetReputation()[agent.GetID()]
-		if agent.GetID() == bb.GetID() {
-			RulerMap[agent.GetID()] = 1.0
-		}
-	}
-	return objects.VoteRulerMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		VoteMap:     RulerMap,
-	}
-}
+// func (bb *Team6Biker) CreateVoteRulerMessage() objects.VoteRulerMessage {
+// 	RulerMap := make(voting.IdVoteMap)
+// 	for _, agent := range bb.GetFellowBikers() {
+// 		RulerMap[agent.GetID()] = bb.GetReputation()[agent.GetID()]
+// 		if agent.GetID() == bb.GetID() {
+// 			RulerMap[agent.GetID()] = 1.0
+// 		}
+// 	}
+// 	return objects.VoteRulerMessage{
+// 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
+// 		VoteMap:     RulerMap,
+// 	}
+// }
 
-func (bb *Team6Biker) CreateVotekickoutMessage() objects.VoteKickoutMessage {
-	return objects.VoteKickoutMessage{
-		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
-		VoteMap:     bb.VoteForKickout(),
-	}
-}
+// func (bb *Team6Biker) CreateVotekickoutMessage() objects.VoteKickoutMessage {
+// 	return objects.VoteKickoutMessage{
+// 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](bb, bb.GetFellowBikers()),
+// 		VoteMap:     bb.VoteForKickout(),
+// 	}
+// }

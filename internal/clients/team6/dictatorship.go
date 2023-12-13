@@ -10,9 +10,9 @@ func (bb *Team6Biker) DictateDirection() uuid.UUID {
 	return bb.ProposeDirection()
 }
 
-func (bb *Team6Biker) DecideKickOut() []uuid.UUID {
-	return (make([]uuid.UUID, 0))
-}
+// func (bb *Team6Biker) DecideKickOut() []uuid.UUID {
+// 	return (make([]uuid.UUID, 0))
+// }
 
 func (bb *Team6Biker) DecideDictatorAllocation() voting.IdVoteMap {
 	/*fellowBikers := bb.GetFellowBikers()

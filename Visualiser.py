@@ -12,7 +12,7 @@ import pygame_gui
 from pygame_gui import UIManager
 from pygame_gui.elements import UIButton, UIImage
 from pygame_gui.core import UIContainer
-from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, ITERATIONLENGTH, FPSDISPLAYRATE
+from visualiser.util.Constants import WINDOW_TITLE, FRAMERATE, DIM, BGCOLOURS, THEMEJSON, OVERLAY, JSONPATH, FPSDISPLAYRATE
 from visualiser.util.HelperFunc import make_center
 from visualiser.GameScreen import GameScreen
 
@@ -74,7 +74,7 @@ class Visualiser:
                 "right": "left",
                 "top": "top",
                 "bottom": "top",
-               }
+            }
         )
         self.draw_fps()
 
@@ -178,18 +178,22 @@ class Visualiser:
                 )
                 root.destroy()
                 if filepath != "":
-                    self.load_game(filepath)
+                    try:
+                        self.load_game(filepath)
+                    except: # pylint: disable=bare-except
+                        print("Attempted to load incompatible/outdated JSON file.")
+                        self.switch_screen("main_menu")
 
     def load_game(self, filepath:str) -> None:
         """
         Load the game from the JSON file
         """
         self.json_parser(filepath)
-        self.gameScreenManager.change_round(0)
+        self.gameScreenManager.change_iteration(0)
         self.gameScreenManager.log("Welcome to the visualiser!")
-        self.gameScreenManager.log(f"Max Iterations: {self.gameScreenManager.maxRound}", "INFO")
-        self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound % ITERATIONLENGTH}", "INFO")
-        self.gameScreenManager.log(f"There are {ITERATIONLENGTH} iterations per round.", "INFO")
+        self.gameScreenManager.log(f"Max Iterations: {(self.gameScreenManager.maxRound * self.gameScreenManager.roundLength)-1}", "INFO")
+        self.gameScreenManager.log(f"Max Rounds: {self.gameScreenManager.maxRound}", "INFO")
+        self.gameScreenManager.log(f"There are {self.gameScreenManager.roundLength} iterations per round.", "INFO")
         self.gameScreenManager.elements["console"].rebuild()
         self.switch_screen("game_screen")
 
@@ -220,8 +224,13 @@ class Visualiser:
         """
         filepath = sys.argv[0] + "/../" + JSONPATH
         if exists(filepath):
-            self.load_game(filepath)
-            self.run_loop("game_screen")
+            # Load game from JSON file
+            try:
+                self.load_game(filepath)
+                self.run_loop("game_screen")
+            except: # pylint: disable=bare-except
+                print("Attempted to load incompatible/outdated JSON file.")
+                self.run_loop()
         else:
             self.run_loop()
 
@@ -239,11 +248,3 @@ if __name__ == "__main__":
         subprocess.Popen("snakeviz visualiser/profiles/stats.prof", shell=True)
     else:
         visualiser.start()
-
-"""
-TODO:
--Motivation
--Design decisions
-    - Why i selected certain attributes
-        - 
-"""

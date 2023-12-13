@@ -227,7 +227,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 				}
 
 				// get approval votes from each agent
-				responses := make(map[uuid.UUID](map[uuid.UUID]bool), len(agents)) // list containing all the agents' ranking
+				responses := make(map[uuid.UUID]map[uuid.UUID]bool, len(agents)) // list containing all the agents' ranking
 				for _, agent := range agents {
 					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}
@@ -469,7 +469,11 @@ func (s *Server) LootboxCheckAndDistributions() {
 func (s *Server) SetDestinationBikes() {
 	for _, agent := range s.GetAgentMap() {
 		if !agent.GetBikeStatus() {
-			agent.SetBike(agent.ChangeBike())
+			targetBike := agent.ChangeBike()
+			if _, ok := s.megaBikes[targetBike]; !ok {
+				panic("agent requested a bike that doesn't exist")
+			}
+			agent.SetBike(targetBike)
 		}
 	}
 }

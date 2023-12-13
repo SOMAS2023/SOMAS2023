@@ -73,6 +73,7 @@ func createMockBikers(s server.IBaseBikerServer, count int) []*MockBiker {
 } */
 
 func TestResetGameState(t *testing.T) {
+	OnlySpawnBaseBikers(t)
 	it := 2
 	s := server.Initialize(it)
 	s.FoundingInstitutions()

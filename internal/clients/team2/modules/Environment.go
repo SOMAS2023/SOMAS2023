@@ -44,6 +44,13 @@ func (e *EnvironmentModule) GetLootboxPos(lootboxId uuid.UUID) utils.Coordinates
 	return e.GetLootBoxById(lootboxId).GetPosition()
 }
 
+func (e *EnvironmentModule) GetRandomLootbox() uuid.UUID {
+	for _, lootbox := range e.GetLootBoxes() {
+		return lootbox.GetID()
+	}
+	panic("No lootboxes found.")
+}
+
 func (e *EnvironmentModule) GetLootBoxesByColor(color utils.Colour) map[uuid.UUID]objects.ILootBox {
 	lootboxes := e.GetLootBoxes()
 	lootboxesFiltered := make(map[uuid.UUID]objects.ILootBox)
@@ -59,12 +66,21 @@ func (e *EnvironmentModule) GetNearestLootbox(agentId uuid.UUID) uuid.UUID {
 	nearestLootbox := uuid.Nil
 	minDist := math.MaxFloat64
 	for _, lootbox := range e.GetLootBoxes() {
+		if e.IsLootboxNearAudi(lootbox.GetID()) {
+			fmt.Printf("[GetNearestLootbox] Lootbox %v is near audi\n", lootbox.GetID())
+			continue
+		}
 		dist := e.GetDistanceToLootbox(lootbox.GetID())
 		if dist < minDist {
 			minDist = dist
 			nearestLootbox = lootbox.GetID()
 		}
 	}
+
+	if nearestLootbox == uuid.Nil {
+		nearestLootbox = e.GetRandomLootbox()
+	}
+
 	return nearestLootbox
 }
 
@@ -72,14 +88,19 @@ func (e *EnvironmentModule) GetNearestLootboxByColor(agentId uuid.UUID, color ut
 	nearestLootbox := uuid.Nil
 	minDist := math.MaxFloat64
 	for _, lootbox := range e.GetLootBoxesByColor(color) {
+		if e.IsLootboxNearAudi(lootbox.GetID()) {
+			fmt.Printf("[GetNearestLootboxByColor] Lootbox %v is near audi\n", lootbox.GetID())
+			continue
+		}
 		dist := e.GetDistanceToLootbox(lootbox.GetID())
 		if dist < minDist {
 			minDist = dist
 			nearestLootbox = lootbox.GetID()
 		}
 	}
+
 	if nearestLootbox == uuid.Nil {
-		return e.GetNearestLootbox(e.AgentId)
+		nearestLootbox = e.GetRandomLootbox()
 	}
 	return nearestLootbox
 }
@@ -96,13 +117,21 @@ func (e *EnvironmentModule) GetHighestGainLootbox() uuid.UUID {
 	bestGain := float64(0)
 	bestLoot := uuid.Nil
 	for _, lootboxId := range e.GetLootBoxes() {
-
+		if e.IsLootboxNearAudi(lootboxId.GetID()) {
+			fmt.Printf("[GetHighestGainLootbox] Lootbox %v is near audi\n", lootboxId.GetID())
+			continue
+		}
 		gain := lootboxId.GetTotalResources() / e.GetDistanceToLootbox(lootboxId.GetID())
 		if gain > bestGain {
 			bestGain = gain
 			bestLoot = lootboxId.GetID()
 		}
 	}
+
+	if bestLoot == uuid.Nil {
+		bestLoot = e.GetRandomLootbox()
+	}
+
 	return bestLoot
 }
 
@@ -183,7 +212,26 @@ func (e *EnvironmentModule) GetBikerWithMinSocialCapital(sc *SocialCapital) (uui
 			}
 		}
 	}
-	return minSCAgentId, minSC
+
+	if minSCAgentId != uuid.Nil || minSCAgentId != e.AgentId {
+		// If minSC is nil or !us, then return the culprit.
+		return minSCAgentId, minSC
+	} else {
+		// Otherwise, return a random agent.
+		if len(fellowBikers) > 1 {
+			i, targetI := 0, rand.Intn(len(fellowBikers))
+			for id := range fellowBikers {
+				if i == targetI {
+					return id, minSC
+				}
+				i++
+			}
+		} else {
+			return uuid.Nil, 0
+		}
+		panic("No agents found to kick off.")
+	}
+	// return minSCAgentId, minSC
 }
 
 func (e *EnvironmentModule) GetBikeWithMaximumSocialCapital(sc *SocialCapital) uuid.UUID {
@@ -225,6 +273,12 @@ func (e *EnvironmentModule) GetBikeWithMaximumSocialCapital(sc *SocialCapital) u
 		}
 		panic("No bikes found to change to.")
 	}
+}
+
+func (e *EnvironmentModule) IsLootboxNearAudi(lootboxId uuid.UUID) bool {
+	lootboxPos, audiPos := e.GetLootBoxById(lootboxId).GetPosition(), e.GetAudi().GetPosition()
+
+	return e.GetDistance(lootboxPos, audiPos) <= AudiRange
 }
 
 func (e *EnvironmentModule) GetDistanceToAudi() float64 {

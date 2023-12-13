@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -8,8 +9,9 @@ import (
 )
 
 type GameStatistics struct {
-	PerRound []AgentStatistics `json:"per_round"`
-	Average  AgentStatistics   `json:"average"`
+	PerRound         []AgentStatistics `json:"per_round"`
+	Average          AgentStatistics   `json:"average"`
+	AgentIDToGroupID map[uuid.UUID]int `json:"agent_id_to_group_id"`
 }
 
 type AgentStatistics struct {
@@ -52,6 +54,15 @@ func CalculateStatistics(gameStates [][]GameStateDump) GameStatistics {
 	getAgentEnergy := func(agent *AgentDump) float64 { return agent.EnergyLevel }
 	getAgentPoints := func(agent *AgentDump) float64 { return float64(agent.Points) }
 
+	agentIDToGroupID := make(map[uuid.UUID]int)
+	for _, roundStates := range gameStates {
+		for _, gameState := range roundStates {
+			for id, agent := range gameState.Agents {
+				agentIDToGroupID[id] = agent.GroupID
+			}
+		}
+	}
+
 	statisticsPerRound := make([]AgentStatistics, 0, len(gameStates))
 	for _, round := range gameStates {
 		statisticsPerRound = append(statisticsPerRound, AgentStatistics{
@@ -72,6 +83,7 @@ func CalculateStatistics(gameStates [][]GameStateDump) GameStatistics {
 			AgentPointsAverage:  averageStatisticsOverRounds(statisticsPerRound, getPointsAverage),
 			AgentPointsVariance: averageStatisticsOverRounds(statisticsPerRound, getPointsVariance),
 		},
+		AgentIDToGroupID: agentIDToGroupID,
 	}
 }
 
@@ -123,6 +135,7 @@ func agentVariance(gameStates []GameStateDump, agentProperty func(agentDump *Age
 }
 
 func (gs *GameStatistics) ToSpreadsheet() *xlsx.File {
+	// Create the map from AgentID to GroupID
 	workbook := xlsx.NewFile()
 
 	columnIndexes := make(map[uuid.UUID]int)
@@ -152,7 +165,8 @@ func (gs *GameStatistics) ToSpreadsheet() *xlsx.File {
 			row.GetCell(0).SetValue(i + 1)
 			for id, value := range accessor(&round) {
 				columnIndex := getColumnIndex(id)
-				headerRow.GetCell(columnIndex).SetString(id.String())
+				groupID := gs.AgentIDToGroupID[id]
+				headerRow.GetCell(columnIndex).SetString(fmt.Sprintf("(Group: %d)", groupID))
 				row.GetCell(columnIndex).SetValue(value)
 			}
 		}
