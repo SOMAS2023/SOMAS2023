@@ -85,7 +85,7 @@ func (e *EnvironmentModule) GetNearestLootbox(agentId uuid.UUID) uuid.UUID {
 }
 
 func (e *EnvironmentModule) GetNearestLootboxByColor(agentId uuid.UUID, color utils.Colour) uuid.UUID {
-	nearestLootbox := uuid.Nil
+	nearestLootbox := e.GetNearestLootbox(agentId) // Defaults to nearest lootbox
 	minDist := math.MaxFloat64
 	for _, lootbox := range e.GetLootBoxesByColor(color) {
 		if e.IsLootboxNearAudi(lootbox.GetID()) {
