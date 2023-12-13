@@ -65,9 +65,11 @@ func (t5 *team5Agent) DecideAction() objects.BikerAction {
 func (t5 *team5Agent) ChangeBike() uuid.UUID {
 	//get reputation of all bikes
 	bikeReps := t5.getReputationOfAllBikes()
+	currentBikeId := t5.GetBike()
+
 	//get ID for maximum reputation bike if the bike is not full (<8 agents)
 	maxRep := 0.0
-	maxRepID := uuid.Nil
+	maxRepID := currentBikeId
 	for bikeID, rep := range bikeReps {
 		//get length from GetAgents()
 		numAgentsOnbike := len(t5.GetGameState().GetMegaBikes()[bikeID].GetAgents())
