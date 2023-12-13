@@ -128,10 +128,11 @@ func (agent *BaselineAgent) DecideAction() objects.BikerAction {
 
 // called by the spawner/server to instantiate bikers in the MVP
 func GetBiker4(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+	baseBiker.GroupID = 4
 	team4Agent := &BaselineAgent{
 		BaseBiker: baseBiker,
 	}
-	team4Agent.BaseBiker.GroupID = 4
+	//team4Agent.BaseBiker.GroupID = 4
 	//fmt.Println("Team 4 Agent Created", team4Agent.GetID())
 	return team4Agent
 }

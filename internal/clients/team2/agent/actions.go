@@ -64,10 +64,6 @@ func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	weights := make(map[uuid.UUID]float64)
 	agents := a.GetFellowBikers()
 	for _, agent := range agents {
-		if !agent.GetBikeStatus() {
-			fmt.Println("Agent is dead or is not on a bike")
-			continue
-		}
 		// if agent Id is not in the a.Modules.SocialCapital.SocialCapital map, set the weight to 0.5 (neither trust or distrust)
 		if _, ok := a.Modules.SocialCapital.SocialCapital[agent.GetID()]; !ok {
 			// add agent to the map
@@ -138,6 +134,11 @@ func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
 			if biker.GetID() == id {
 				continue
 			}
+		}
+		if math.IsNaN(socialCapital[id]) {
+			fmt.Println(socialCapital[id])
+			runtime.Breakpoint()
+			panic("dhsd")
 		}
 		// This agent is not a fellow biker - remove it from SC
 		delete(socialCapital, id)
