@@ -3,7 +3,6 @@ package team6
 import (
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
-	"fmt"
 	"slices"
 
 	"github.com/google/uuid"
@@ -21,14 +20,14 @@ func (bb *Team6Biker) DecideGovernance() utils.Governance {
 	fellowBikers := bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetAgents()
 	var sameColourCount int
 	sameColourCount = 0
-	fmt.Println(fellowBikers)
+	// fmt.Println(fellowBikers)
 	for _, agent := range fellowBikers {
-		fmt.Println(bb.GetColour(), agent.GetColour())
+		// fmt.Println(bb.GetColour(), agent.GetColour())
 		if bb.GetColour() == agent.GetColour() {
 			sameColourCount = sameColourCount + 1
 		}
 	}
-	fmt.Println(sameColourCount)
+	// fmt.Println(sameColourCount)
 	if sameColourCount > (len(fellowBikers) / 2) {
 		return utils.Dictatorship
 	} else if sameColourCount > (len(fellowBikers) / 3) {

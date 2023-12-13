@@ -5,7 +5,7 @@ import (
 	objects "SOMAS2023/internal/common/objects"
 	"SOMAS2023/internal/common/utils"
 	"SOMAS2023/internal/common/voting"
-
+	"math"
 	"math/rand"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
@@ -362,7 +362,7 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 
 	if len(biker.myProposedLootboxes) > 0 {
 		distanceFromMyProposal := biker.environmentHandler.GetDistanceBetweenLootboxes(direction, biker.myProposedLootboxes[len(biker.myProposedLootboxes)-1])
-		if len(biker.distanceFromMyLootbox) < biker.memoryLength {
+		if !math.IsNaN(distanceFromMyProposal) && len(biker.distanceFromMyLootbox) < biker.memoryLength {
 			biker.distanceFromMyLootbox = append(biker.distanceFromMyLootbox, distanceFromMyProposal)
 		} else {
 			biker.distanceFromMyLootbox = append(biker.distanceFromMyLootbox[1:], distanceFromMyProposal)

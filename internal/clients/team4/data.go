@@ -177,7 +177,7 @@ func (agent *BaselineAgent) DisplayFellowsReputation() {
 	for _, fellow := range fellowBikers {
 		fellowID := fellow.GetID()
 		fmt.Println("")
-		//fmt.Println("Reputation Matrix for: ", fellowID)
+		fmt.Println("Reputation Matrix for: ", fellowID)
 		fmt.Print(agent.reputation[fellowID])
 		fmt.Println("")
 	}
