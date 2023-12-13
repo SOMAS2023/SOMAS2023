@@ -34,7 +34,10 @@ type SmartAgent struct {
 }
 
 func GetT3Agent(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+<<<<<<< HEAD
 	baseBiker.GroupID = 3
+=======
+>>>>>>> 43755e47077e2ca45a31550a8b89a1c869ec376a
 	return &SmartAgent{
 		BaseBiker:     *baseBiker,
 		targetLootBox: uuid.Nil,
