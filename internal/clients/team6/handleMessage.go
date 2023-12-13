@@ -2,7 +2,6 @@ package team6
 
 import (
 	"SOMAS2023/internal/common/objects"
-	"fmt"
 	"math"
 
 	"github.com/MattSScott/basePlatformSOMAS/messaging"
@@ -45,7 +44,7 @@ func (bb *Team6Biker) HandleKickoutMessage(msg objects.KickoutAgentMessage) {
 func (bb *Team6Biker) HandleJoiningMessage(msg objects.JoiningAgentMessage) {
 	sender := msg.BaseMessage.GetSender()
 	senderReputation := bb.QueryReputation(sender.GetID())
-	fmt.Print("HandleJoiningMessage part is fine")
+	// fmt.Print("HandleJoiningMessage part is fine")
 	if senderReputation < TrustThreshold {
 		bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.05, 1))
 	}
@@ -56,7 +55,7 @@ func (bb *Team6Biker) HandleLootboxMessage(msg objects.LootboxMessage) {
 	senderColour := sender.GetColour()
 	if senderColour == bb.GetColour() {
 		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.1, 1))
-	}	
+	}
 }
 
 func (bb *Team6Biker) HandleGovernanceMessage(msg objects.GovernanceMessage) {
@@ -64,7 +63,7 @@ func (bb *Team6Biker) HandleGovernanceMessage(msg objects.GovernanceMessage) {
 	senderGovernance := msg.GovernanceId
 	if senderGovernance == int(bb.DecideGovernance()) {
 		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+0.1, 1))
-	}	
+	}
 }
 
 func (bb *Team6Biker) HandleForcesMessage(msg objects.ForcesMessage) {
@@ -75,19 +74,19 @@ func (bb *Team6Biker) HandleForcesMessage(msg objects.ForcesMessage) {
 	}
 	if senderForces.Pedal > 0 {
 		bb.SetReputation(sender.GetID(), math.Min(bb.QueryReputation(sender.GetID())+senderForces.Pedal/2, 1))
-	}	
+	}
 }
 
 func (bb *Team6Biker) HandleVoteGovernanceMessage(msg objects.VoteGoveranceMessage) {
 
-	sender := msg.BaseMessage.GetSender()
+	// sender := msg.BaseMessage.GetSender()
 	voteMap := msg.VoteMap
 
 	//type IdVoteMap map[uuid.UUID]float64
 
-	for agent, score := range voteMap {
+	for _, score := range voteMap {
 		if score == 1 {
-			fmt.Print(agent, sender)
+			// fmt.Print(agent, sender)
 		}
 	}
 }
@@ -112,5 +111,5 @@ func (bb *Team6Biker) HandleVoteKickoutMessage(msg objects.VoteKickoutMessage) {
 		if agent == bb.GetID() && score == 1 {
 			bb.SetReputation(sender.GetID(), math.Max(bb.QueryReputation(sender.GetID())-0.3, 0))
 		}
-	}	
+	}
 }

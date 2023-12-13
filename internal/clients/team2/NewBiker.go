@@ -7,5 +7,6 @@ import (
 
 // this function is going to be called by the server to instantiate bikers in the MVP
 func GetBiker(baseBiker *objects.BaseBiker) objects.IBaseBiker {
+	baseBiker.GroupID = 2
 	return agent.NewBaseTeam2Biker(baseBiker)
 }

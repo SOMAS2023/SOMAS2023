@@ -4,7 +4,6 @@ import (
 	"SOMAS2023/internal/common/objects"
 	utils "SOMAS2023/internal/common/utils"
 	voting "SOMAS2023/internal/common/voting"
-	"fmt"
 	"math"
 
 	"github.com/google/uuid"
@@ -87,7 +86,7 @@ func (bb *Team6Biker) DecideAction() objects.BikerAction {
 		bb.MegabikeTrustList[bb.GetBike()] = 1.0
 		//bb.Getlootboxterm = 0
 		bb.CheckPointsget = bb.GetPoints()
-		fmt.Println(bb.CheckPointsget)
+		// fmt.Println(bb.CheckPointsget)
 	}
 
 	if bb.GetPoints() > bb.CheckPointsget {
@@ -95,10 +94,10 @@ func (bb *Team6Biker) DecideAction() objects.BikerAction {
 		bb.MegabikeTrustList[bb.GetBike()] += 0.7
 	}
 	if bb.MegabikeTrustList[bb.GetBike()] < 0.21 {
-		fmt.Println(bb.CheckPointsget)
-		fmt.Println(bb.GetPoints())
-		fmt.Println(bb.MegabikeTrustList[bb.GetBike()])
-		fmt.Println(bb.itercount)
+		// fmt.Println(bb.CheckPointsget)
+		// fmt.Println(bb.GetPoints())
+		// fmt.Println(bb.MegabikeTrustList[bb.GetBike()])
+		// fmt.Println(bb.itercount)
 		bb.Changeflag = true
 	}
 	//return objects.Pedal
@@ -121,7 +120,7 @@ func GetMostCommonColor(agents []objects.IBaseBiker) (utils.Colour, int, int) {
 	for _, ags := range agents {
 		color := ags.GetColour()
 		colorCounts[color]++
-		fmt.Println(color, colorCounts[color])
+		// fmt.Println(color, colorCounts[color])
 	}
 
 	var mostCommonColor utils.Colour
@@ -268,12 +267,12 @@ func (bb *Team6Biker) FindBiker(agentID uuid.UUID) objects.IBaseBiker {
 			return agent
 		}
 	}
-	fmt.Print("Do not find such agent")
+	// fmt.Print("Do not find such agent")
 	return bb.BaseBiker
 }
 
 func InitialiseBiker6(bb *objects.BaseBiker) objects.IBaseBiker {
-	fmt.Printf("Generating Biker for Team 6")
+	// fmt.Printf("Generating Biker for Team 6")
 	bb.GroupID = 6
 	//bb.soughtColour = utils.Red
 	return &Team6Biker{

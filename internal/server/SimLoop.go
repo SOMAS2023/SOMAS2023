@@ -165,12 +165,12 @@ func (s *Server) Start() {
 	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
-		fmt.Printf("Main game loop running...\n\n")
+		// fmt.Printf("Main game loop running...\n\n")
 		gameStates = append(gameStates, s.RunSimLoop(utils.RoundIterations))
-		fmt.Printf("\nMain game loop finished.\n\n")
-		fmt.Printf("Messaging session started...\n\n")
+		// fmt.Printf("\nMain game loop finished.\n\n")
+		// fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
-		fmt.Printf("\nMessaging session completed\n\n")
+		// fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
 	}
 	s.outputResults(gameStates)

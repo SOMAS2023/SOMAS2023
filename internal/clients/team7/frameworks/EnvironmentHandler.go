@@ -95,11 +95,17 @@ func (env *EnvironmentHandler) GetNearestLootBoxByColour(colour utils.Colour) ob
 
 func (env *EnvironmentHandler) GetDistanceBetweenLootboxes(lootbox1 uuid.UUID, lootbox2 uuid.UUID) float64 {
 	if lootbox1 == uuid.Nil || lootbox2 == uuid.Nil {
-		// Return -1 if either of the lootboxes are nil, as this is an invalid input
-		return -1
+		// Return NaN if either of the lootboxes are nil, as this is an invalid input
+		return math.NaN()
 	}
-	lootbox1Pos := env.GetLootboxById(lootbox1).GetPosition()
-	lootbox2Pos := env.GetLootboxById(lootbox2).GetPosition()
+	lootboxMap := env.GameState.GetLootBoxes()
+	lootbox1Obj, lootbox1exists := lootboxMap[lootbox1]
+	lootbox2Obj, lootbox2exists := lootboxMap[lootbox2]
+	if !lootbox1exists || !lootbox2exists {
+		return math.NaN()
+	}
+	lootbox1Pos := lootbox1Obj.GetPosition()
+	lootbox2Pos := lootbox2Obj.GetPosition()
 	return math.Sqrt(math.Pow(lootbox1Pos.X-lootbox2Pos.X, 2) + math.Pow(lootbox1Pos.Y-lootbox2Pos.Y, 2))
 }
 
