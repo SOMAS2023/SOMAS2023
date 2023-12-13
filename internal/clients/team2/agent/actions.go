@@ -60,7 +60,9 @@ func (a *AgentTwo) DecideKickOut() []uuid.UUID {
 	// GetBikerWithMinSocialCapital returns only one agent, if more agents with min SC, it randomly chooses one.
 	kickOut_agents := make([]uuid.UUID, 0)
 	agentId, _ := a.Modules.Environment.GetBikerWithMinSocialCapital(a.Modules.SocialCapital)
-	kickOut_agents = append(kickOut_agents, agentId)
+	if agentId != uuid.Nil {
+		kickOut_agents = append(kickOut_agents, agentId)
+	}
 	return kickOut_agents
 }
 
