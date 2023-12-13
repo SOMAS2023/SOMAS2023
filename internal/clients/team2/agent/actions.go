@@ -64,7 +64,7 @@ func (a *AgentTwo) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	weights := make(map[uuid.UUID]float64)
 	agents := a.GetFellowBikers()
 	for _, agent := range agents {
-		if agent.GetEnergyLevel() <= 0 || !agent.GetBikeStatus() {
+		if !agent.GetBikeStatus() {
 			fmt.Println("Agent is dead or is not on a bike")
 			continue
 		}
@@ -139,15 +139,19 @@ func (a *AgentTwo) DecideAllocation() voting.IdVoteMap {
 				continue
 			}
 		}
-		if math.IsNaN(socialCapital[id]) {
-			runtime.Breakpoint()
-			panic("dhsd")
-		}
 		// This agent is not a fellow biker - remove it from SC
 		delete(socialCapital, id)
 	}
 	// We give ourselves 1.0
 	socialCapital[a.GetID()] = 1.0
+
+	sum := 0.0
+	for _, v := range socialCapital {
+		sum += v
+	}
+	if sum == 0 {
+		fmt.Print("Sum is 0")
+	}
 	return socialCapital
 }
 
