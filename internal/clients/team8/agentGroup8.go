@@ -277,7 +277,6 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 	// Get all lootboxes and initialise the preferences map
 	lootBoxes := bb.GetGameState().GetLootBoxes()
 	preferences := make(map[uuid.UUID]float64)
-	//TODO:find a correct safe angle
 	safeAngle := 20.0
 	safe := false
 	// Iterate the lootboxes and calculate preferences for each
@@ -286,7 +285,6 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 		angleBetweenBikeAndBox := 0.0
 		angleBetweenBikeAndAudi := 0.0
 		//calcuate the angle between our bike and the lootbox
-		//TODO: Not sure if this is correct
 		// check if we are onbike
 		if bb.GetBike() != uuid.Nil {
 			// get distance between our bike and the lootbox
@@ -364,7 +362,6 @@ func (bb *Agent8) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 
 	// iterate all agents on our bike
 	agents := bb.GetFellowBikers()
-	// TODO: find a better strategy
 	for _, agent := range agents {
 		// give good agent a higher weighting
 
@@ -387,7 +384,6 @@ func (bb *Agent8) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.L
 	// rerank the all lootboxes in MVP
 	_ = bb.ProposeDirection()
 
-	// TODO: find a better strategy
 	// iterate the input lootboxList and give them preference based on our rankingMap
 	for _, lootboxid := range proposals {
 		preferenceScores[lootboxid] = bb.overallLootboxPreferences[lootboxid]
@@ -411,11 +407,10 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 	// decide the brake and pedal depends on our energylevel and the speed of bike
 	forces.Brake = 0.0
 	if bb.GetBike() != uuid.Nil {
-		// TODO: find a better strategy
 		if bb.GetEnergyLevel() > GlobalParameters.EnergyThreshold {
-			forces.Pedal = bb.GetEnergyLevel() * (1 - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetVelocity()) / 2
+			forces.Pedal = math.Max(0, bb.GetEnergyLevel()*(1-bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetVelocity())/2)
 		} else {
-			forces.Pedal = 0.1 * (1 - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetVelocity())
+			forces.Pedal = math.Max(0, 0.1*(1-bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetVelocity()))
 		}
 	} else {
 		forces.Pedal = 1.0
@@ -497,7 +492,6 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 
 // Decide the resource allocation if our bike get a lootbox in current loop
 func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
-	// TODO: find a better strategy
 	// get all agents on our bike and initialise the allocationMap
 	fellowBikers := bb.GetFellowBikers()
 	allocationMap := make(voting.IdVoteMap)
@@ -505,11 +499,9 @@ func (bb *Agent8) DecideAllocation() voting.IdVoteMap {
 	// iterate the agents on our bike and update the allocationMap
 	for _, agent := range fellowBikers {
 		if agent.GetID() == bb.GetID() {
-			//allocationMap[agent.GetID()] = math.Exp(5 - 5*bb.GetEnergyLevel())
-			allocationMap[agent.GetID()] = 1
+			allocationMap[agent.GetID()] = math.Exp(5 - 5*bb.GetEnergyLevel())
 		} else {
-			//allocationMap[agent.GetID()] = bb.QueryReputation(agent.GetID())*0.5 + 0.5
-			allocationMap[agent.GetID()] = 0
+			allocationMap[agent.GetID()] = bb.QueryReputation(agent.GetID())*0.5 + 0.5
 		}
 	}
 
@@ -577,7 +569,6 @@ func (bb *Agent8) updateLoopScoreMap() {
 
 // update the reputation for other agents
 func (bb *Agent8) UpdateReputation() {
-	// TODO: implement this function
 	agentCount := make(map[uuid.UUID]float64)
 	agentScore := make(map[uuid.UUID]float64)
 	for i := 1; i <= 10; i++ {
