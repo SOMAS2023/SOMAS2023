@@ -242,7 +242,7 @@ class Visualiser:
 if __name__ == "__main__":
     visualiser = Visualiser()
     # Run profiler to check for optimisations
-    OPTIM = True
+    OPTIM = False
     if OPTIM:
         import cProfile
         import subprocess
