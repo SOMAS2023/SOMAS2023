@@ -17,7 +17,7 @@ const (
 	ChangeBike
 	energyThreshold       = 0.35 // energy level which mind us we need to change bike
 	reputationThreshold   = 0.5
-	distAudiThreshold     = 10
+	distAudiThreshold     = 15
 	energyChangeThreshold = 0.9 // energy level which allows us to change bike
 
 )
