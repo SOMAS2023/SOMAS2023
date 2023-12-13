@@ -148,3 +148,24 @@ func (bb *Agent8) GetAverageReputation(agent objects.IBaseBiker) float64 {
 	}
 	return averageReputation / float64(agentNum)
 }
+
+func (bb *Agent8) setMessageReputation(agentId uuid.UUID, reputation float64) {
+	if bb.messageReputation == nil {
+		bb.messageReputation = make(map[uuid.UUID]float64)
+	}
+	bb.messageReputation[agentId] = reputation
+}
+
+func (bb *Agent8) countReputationScore(megaBike objects.IMegaBike) float64 {
+	agents := megaBike.GetAgents()
+	agentCount := 0.0
+	reputationSum := 0.0
+	for _, agent := range agents {
+		reputationSum += bb.QueryReputation(agent.GetID())
+		if bb.QueryReputation(agent.GetID()) != 0 {
+			agentCount++
+		}
+	}
+
+	return reputationSum / agentCount
+}
