@@ -39,7 +39,13 @@ func (ndf *NavigationDecisionFramework) GetDecision(inputs NavigationInputs) uti
 	forceToEnergyRatio := inputs.ConscientiousnessLevel // This value can be adjusted
 
 	// Pedaling force is the current energy multiplied by a constant ratio
-	pedallingForce := inputs.CurrentEnergy * forceToEnergyRatio
+	// Set pedalling to zero if current energy is less than 0.2
+	var pedallingForce float64
+	if inputs.CurrentEnergy < 0.2 {
+		pedallingForce = 0
+	} else {
+		pedallingForce = inputs.CurrentEnergy * forceToEnergyRatio
+	}
 
 	// Braking force is set to zero, assuming no need to brake in this context
 	brakingForce := float64(0)

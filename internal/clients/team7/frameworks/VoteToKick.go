@@ -14,14 +14,14 @@ func NewVoteToKickAgentHandler() *VoteToKickAgentHandler {
 
 func (voteHandler *VoteToKickAgentHandler) GetDecision(inputs VoteOnAgentsInput) map[uuid.UUID]int {
 	vote := make(map[uuid.UUID]int)
-	threshold := ScoreType(0.4)
+	threshold := ScoreType(0.1)
 
 	for _, agent_id := range inputs.AgentCandidates {
 		// Agent score depends on our average trust level of the agent.
 		agentConnection, exists := inputs.CurrentSocialNetwork[agent_id]
 		var averageTrustLevel float64
 		if !exists {
-			averageTrustLevel = 0.5
+			averageTrustLevel = 1
 		} else {
 			averageTrustLevel = agentConnection.GetAverageTrustLevels()
 		}

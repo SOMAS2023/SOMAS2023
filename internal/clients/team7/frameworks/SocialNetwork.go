@@ -158,6 +158,11 @@ func (sn *SocialNetwork) updateActiveConnections(agentIds []uuid.UUID) {
 			continue
 		}
 		connection.isActiveConnection = agentIsOnBike
+		sn.socialNetwork[agentId] = &SocialConnection{
+			connectionAge:      0,
+			trustLevels:        []float64{0.5},
+			isActiveConnection: true,
+		}
 	}
 }
 
