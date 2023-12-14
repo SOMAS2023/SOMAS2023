@@ -345,6 +345,8 @@ func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 
 	navOutput := biker.navigationFramework.GetDecision(navInputs)
 
+	navOutput.Turning.SteeringForce -= biker.environmentHandler.GetCurrentBike().GetOrientation()
+
 	biker.SetForces(navOutput)
 
 	// Update Memory
