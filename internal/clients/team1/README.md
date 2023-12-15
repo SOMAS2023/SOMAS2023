@@ -11,6 +11,6 @@ TBC
 | Agent strategy | Sherif Agbabiaka | sa1420 |
 | Agent strategy | Soma Komaromy | skk120 |
 | Agent strategy | Chris Myers | cm1220 |
-| Agent strategy | Aleera Ewan | |
-| Agent strategy | Timur Ismagilov | |
-| Agent strategy | Kert Laansalu | |
+| Agent strategy | Aleera Ewan | Ace20 |
+| Agent strategy | Timur Ismagilov | Ti120 |
+| Agent strategy | Kert Laansalu | Kl3620 |
