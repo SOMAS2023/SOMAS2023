@@ -13,8 +13,7 @@ type Opinion struct {
 	effort   float64
 	trust    float64
 	fairness float64
-	// relativeSuccess float64
-	opinion float64 // cumulative result of all the above
+	opinion  float64 // cumulative result of all the above
 }
 
 // -----------------OPINION FUNCTIONS------------------
@@ -54,8 +53,7 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 		effort:   bb.opinions[id].effort,
 		fairness: bb.opinions[id].fairness,
 		trust:    finalTrust,
-		// relativeSuccess: bb.opinions[id].relativeSuccess,
-		opinion: bb.opinions[id].opinion,
+		opinion:  bb.opinions[id].opinion,
 	}
 	bb.opinions[id] = newOpinion
 }
@@ -124,8 +122,7 @@ func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 			effort:   0.5,
 			trust:    0.5,
 			fairness: 0.5,
-			// relativeSuccess: 0.5,
-			opinion: 0.5,
+			opinion:  0.5,
 		}
 		bb.opinions[id] = newOpinion
 	}
@@ -159,8 +156,7 @@ func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
 				effort:   0.5,
 				trust:    0.5,
 				fairness: 0.5,
-				// relativeSuccess: 0.5,
-				opinion: 0.5,
+				opinion:  0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -207,8 +203,7 @@ func (bb *Biker1) UpdateAllAgentsOpinions(agents_to_update []obj.IBaseBiker) {
 				effort:   0.5,
 				trust:    0.5,
 				fairness: 0.5,
-				// relativeSuccess: 0.5,
-				opinion: 0.5,
+				opinion:  0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -245,8 +240,7 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 				effort:   0.5,
 				trust:    0.5,
 				fairness: 0.5,
-				// relativeSuccess: 0.5,
-				opinion: 0.5,
+				opinion:  0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -284,8 +278,7 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 			effort:   finalEffort,
 			fairness: bb.opinions[agentId].fairness,
 			trust:    bb.opinions[agentId].trust,
-			// relativeSuccess: bb.opinions[agentId].relativeSuccess,
-			opinion: bb.opinions[agentId].opinion,
+			opinion:  bb.opinions[agentId].opinion,
 		}
 		bb.opinions[agent.GetID()] = newOpinion
 	}
@@ -306,8 +299,7 @@ func (bb *Biker1) UpdateAllAgentsTrust(agents_to_update []obj.IBaseBiker) {
 				effort:   0.5,
 				trust:    0.5,
 				fairness: 0.5,
-				// relativeSuccess: 0.5,
-				opinion: 0.5,
+				opinion:  0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
@@ -329,8 +321,7 @@ func (bb *Biker1) UpdateAllAgentsFairness(agents_to_update []obj.IBaseBiker) {
 				effort:   0.5,
 				trust:    0.5,
 				fairness: 0.5,
-				// relativeSuccess: 0.5,
-				opinion: 0.5,
+				opinion:  0.5,
 			}
 			bb.opinions[agentId] = newOpinion
 		}
