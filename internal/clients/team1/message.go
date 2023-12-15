@@ -58,7 +58,6 @@ func (bb *Biker1) HandleReputationMessage(msg obj.ReputationOfAgentMessage) {
 	verified := bb.VerifySender(sender)
 
 	if verified {
-		// TODO: SOME FORMULA TO UPDATE OPINION BASED ON REPUTATION given
 		if msg.AgentId != uuid.Nil {
 			// Retrieve the struct from the map
 			opinion, ok := bb.opinions[msg.AgentId]
@@ -106,16 +105,6 @@ func (bb *Biker1) HandleLootboxMessage(msg obj.LootboxMessage) {
 	}
 }
 
-// Agent receives a message from another agent saying what Governance they want
-func (bb *Biker1) HandleGovernanceMessage(msg obj.GovernanceMessage) {
-	sender := msg.GetSender()
-	verified := bb.VerifySender(sender)
-	if verified {
-		// TODO: some update on governance decision maybe??
-
-	}
-}
-
 // HandleForcesMessage
 func (bb *Biker1) HandleForcesMessage(msg obj.ForcesMessage) {
 	sender := msg.GetSender()
@@ -139,6 +128,7 @@ func (bb *Biker1) HandleForcesMessage(msg obj.ForcesMessage) {
 	}
 }
 
+// Only send messages to people we trust
 func (bb *Biker1) GetTrustedRecepients() []obj.IBaseBiker {
 	fellowBikers := bb.GetFellowBikers()
 	var trustedRecepients []obj.IBaseBiker

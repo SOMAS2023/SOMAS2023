@@ -141,6 +141,7 @@ func (bb *Biker1) getNearestBox() uuid.UUID {
 	return nearestBox
 }
 
+// Finds the nearest box of our colour
 func (bb *Biker1) nearestLootColour() (uuid.UUID, float64) {
 	shortestDist := math.MaxFloat64
 	nearestBox := uuid.Nil
@@ -163,6 +164,7 @@ func (bb *Biker1) nearestLootColour() (uuid.UUID, float64) {
 	return nearestBox, shortestDist
 }
 
+// Find box closest to another box
 func (bb *Biker1) FindReachableBoxNearestToBox(nearestColourBox uuid.UUID) uuid.UUID {
 	minDist := math.MaxFloat64
 	nearestBox := uuid.Nil
@@ -184,6 +186,7 @@ func (bb *Biker1) FindReachableBoxNearestToBox(nearestColourBox uuid.UUID) uuid.
 	return nearestBox
 }
 
+// Decides which box to nominate
 func (bb *Biker1) ProposeDirection() uuid.UUID {
 	// get box of our colour
 	nearestColourBox, distanceToNearestBox := bb.nearestLootColour()
@@ -207,6 +210,7 @@ func (bb *Biker1) ProposeDirection() uuid.UUID {
 	return nearestBox
 }
 
+// Get distance to a box
 func (bb *Biker1) distanceToBox(box uuid.UUID) float64 {
 	currLocation := bb.GetLocation()
 	boxPos := bb.GetGameState().GetLootBoxes()[box].GetPosition()
@@ -214,6 +218,7 @@ func (bb *Biker1) distanceToBox(box uuid.UUID) float64 {
 	return currDist
 }
 
+// Finds the remaining energy after reaching a given box
 func (bb *Biker1) findRemainingEnergyAfterReachingBox(box uuid.UUID) float64 {
 	dist := bb.ComputeDistance(bb.GetLocation(), bb.GetGameState().GetLootBoxes()[box].GetPosition())
 	remainingEnergy := bb.distanceToEnergy(dist, bb.GetEnergyLevel())
@@ -236,6 +241,7 @@ func (bb *Biker1) checkBoxNearColour(box uuid.UUID, energy float64) uuid.UUID {
 	return uuid.Nil
 }
 
+// Calculate Cube Score (TM) for a given agent
 func (bb *Biker1) calculateCubeScoreForAgent(agent obj.IBaseBiker) float64 {
 	agentPoints := float64(agent.GetPoints())
 	ourPoints := float64(bb.GetPoints())
@@ -258,6 +264,7 @@ func (bb *Biker1) calculateCubeScoreForAgent(agent obj.IBaseBiker) float64 {
 	return cubeScore
 }
 
+// Calculate Energy Score
 func (bb *Biker1) calcEnergyScore(destBoxID uuid.UUID, curBoxID uuid.UUID, curEnergy float64) float64 {
 	boxes := bb.GetGameState().GetLootBoxes()
 	destBox := boxes[destBoxID]
@@ -273,6 +280,10 @@ func (bb *Biker1) calcEnergyScore(destBoxID uuid.UUID, curBoxID uuid.UUID, curEn
 	return energyAfterTravelling / curEnergy
 }
 
+// FinalDirectionVote calculates the final direction vote based on the given proposals.
+// It takes a map of proposals where the key is the proposer's ID and the value is the proposed direction.
+// The function calculates the votes for each proposal based on various factors such as energy level, distance, and color.
+// The final vote is normalized and returned as a LootboxVoteMap, where the key is the proposal and the value is the vote score.
 func (bb *Biker1) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	votes := make(voting.LootboxVoteMap)
 	_, maxDist := bb.energyToReachableDistance(bb.GetEnergyLevel(), bb.GetBikeInstance())
