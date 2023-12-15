@@ -4,6 +4,10 @@ import (
 	"github.com/google/uuid"
 )
 
+// VoteToKick: Determines how our agent votes on kicking a biker off its bike.
+// If the average trust level our agent has had for the biker is less than a threshold, we vote to kick off the biker.
+// Otherwise, we vote to allow the biker to stay on our bike.
+
 type VoteToKickAgentHandler struct {
 	IDecisionFramework[VoteOnAgentsInput, map[uuid.UUID]int]
 }
@@ -17,7 +21,8 @@ func (voteHandler *VoteToKickAgentHandler) GetDecision(inputs VoteOnAgentsInput)
 	threshold := ScoreType(0.1)
 
 	for _, agent_id := range inputs.AgentCandidates {
-		// Agent score depends on our average trust level of the agent.
+		// Assign a score to each agent based on our average trust for them in previous iterations.
+		// Use this score to determine whether to kick agent off bike.
 		agentConnection, exists := inputs.CurrentSocialNetwork[agent_id]
 		var averageTrustLevel float64
 		if !exists {
@@ -35,9 +40,3 @@ func (voteHandler *VoteToKickAgentHandler) GetDecision(inputs VoteOnAgentsInput)
 
 	return vote
 }
-
-// Assign a score to express approval/disapproval of a proposal.
-/*func (voteHandler *VoteToKickAgentHandler) voteToKickScore(agent_id uuid.UUID) ScoreType {
-	score := ScoreType(0.8) //TODO: Simple implementation for now. Will depend on factors such as opinion of agent and our agent's personality.
-	return score
-}*/

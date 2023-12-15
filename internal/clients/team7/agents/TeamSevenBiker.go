@@ -12,10 +12,26 @@ import (
 	"github.com/google/uuid"
 )
 
+/*
+----------------------------------------------------------------------------
+This is the main code file for agent 007 (Team 7's agent).
+To modularise the code, the the agent's behaviour has been divided into separate frameworks, all of which are within the "frameworks" package:
+  - DecisionFramework: A generic interface used by all other frameworks.
+  - BikeDecisionFramework: Decides whether to stay on or leave bike.
+  - EnvironmentHandler: A compilation of useful functions to get information about the environment.
+  - NavigationDecisionFramework: Decides steering, braking and pedalling strategy of agent.
+  - OpinionFramework: Formulates the agent's opinion on different lootboxes.
+  - Personality: Configures the agent's default personality based on the OCEAN model.
+  - SocialNetwork: Contains the agent's social network, from which trust and forgiveness of other agents is derived.
+  - Vote*: Determine how the agent will vote in each vote type.
+
+-----------------------------------------------------------------------------
+*/
 type ITeamSevenBiker interface {
 	objects.IBaseBiker
 }
 
+// Create BaseTeamSevenBiker type.
 type BaseTeamSevenBiker struct {
 	*objects.BaseBiker    // BaseBiker inherits functions from BaseAgent such as GetID(), GetAllMessages() and UpdateAgentInternalState()
 	navigationFramework   *frameworks.NavigationDecisionFramework
@@ -34,12 +50,14 @@ type BaseTeamSevenBiker struct {
 	distanceFromMyLootbox []float64
 	time                  int
 
+	// Votes
 	votedForResources bool
 	voteAllocationMap voting.IdVoteMap
 	voteDirectionMap  voting.LootboxVoteMap
 	voteKickingMap    map[uuid.UUID]int
 	voteJoiningMap    map[uuid.UUID]bool
 
+	// Messages
 	reputationMessages           []objects.ReputationOfAgentMessage
 	kickoutMessages              []objects.KickoutAgentMessage
 	lootboxMessages              []objects.LootboxMessage
@@ -52,6 +70,7 @@ type BaseTeamSevenBiker struct {
 	voteKickoutMessages          []objects.VoteKickoutMessage
 	voteAllocationMessages       []objects.VoteAllocationMessage
 
+	// Opinion
 	currentOpinionsOfAgents    map[uuid.UUID]float64
 	currentOpinionsOfLootboxes map[uuid.UUID]float64
 }
@@ -145,6 +164,11 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		biker.votedForResources = false
 	}
 
+	/*
+		------------------------------------
+		UPDATE AGENT SOCIAL NETWORK
+		------------------------------------
+	*/
 	socialNetworkInput := frameworks.SocialNetworkUpdateInput{
 		AgentIds:           agentIds,
 		AgentDecisions:     agentForces,
@@ -154,6 +178,7 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 		BikeTurnAngle:      biker.proposedDirections[len(biker.proposedDirections)-1],
 	}
 
+	// Update social network and trust levels for other agents.
 	biker.socialNetwork.UpdateSocialNetwork(agentIds, socialNetworkInput)
 
 	// Next, update opinions
@@ -184,6 +209,13 @@ func (biker *BaseTeamSevenBiker) UpdateAgentInternalState() {
 	biker.governanceMessages = make([]objects.GovernanceMessage, 0)
 }
 
+/*
+------------------------------------
+
+	UPDATE AGENT OPINION
+
+------------------------------------
+*/
 func (biker *BaseTeamSevenBiker) get2DReputationMap() map[uuid.UUID](map[uuid.UUID]float64) {
 	// Get reputation of each agent from each message
 	// This is a map of agentId to a map of agentId to reputation
@@ -268,6 +300,13 @@ func (biker *BaseTeamSevenBiker) updateOpinionsOnLootboxes(agentIds []uuid.UUID)
 	}
 }
 
+/*
+------------------------------------
+
+	DECIDE ON NAVIGATION
+
+------------------------------------
+*/
 func (biker *BaseTeamSevenBiker) getLootboxInterest() map[uuid.UUID]([]uuid.UUID) {
 	lootboxMap := make(map[uuid.UUID]([]uuid.UUID))
 	// Get lootbox interest of each agent from each message
@@ -307,7 +346,6 @@ func (biker *BaseTeamSevenBiker) getDesiredLootboxId() uuid.UUID {
 	return myProposedLootboxObject.GetID()
 }
 
-// TODO: Implement a strategy for choosing the final vote
 func (biker *BaseTeamSevenBiker) FinalDirectionVote(proposals map[uuid.UUID]uuid.UUID) voting.LootboxVoteMap {
 	myDesired := biker.getDesiredLootboxId()
 
@@ -322,7 +360,7 @@ func (biker *BaseTeamSevenBiker) FinalDirectionVote(proposals map[uuid.UUID]uuid
 	return voteOutput
 }
 
-// Override base biker functions
+// Override base biker function to decide force.
 func (biker *BaseTeamSevenBiker) DecideForce(direction uuid.UUID) {
 	proposedLootbox := biker.environmentHandler.GetLootboxById(direction)
 
@@ -388,6 +426,12 @@ func (biker *BaseTeamSevenBiker) DecideAction() objects.BikerAction {
 
 	return objects.Pedal
 }
+
+/*
+------------------------------------
+	VOTING
+------------------------------------
+*/
 
 // Vote on whether to accept new agent onto bike.
 func (biker *BaseTeamSevenBiker) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
@@ -481,6 +525,12 @@ func (biker *BaseTeamSevenBiker) QueryReputation(agentId uuid.UUID) float64 {
 	trustLevels := biker.socialNetwork.GetCurrentTrustLevels()
 	return trustLevels[agentId]
 }
+
+/*
+------------------------------------
+	MESSAGING
+------------------------------------
+*/
 
 // This function updates all the messages for that agent i.e. both sending and receiving.
 // And returns the new messages from other agents to your agent
@@ -577,8 +627,6 @@ func (biker *BaseTeamSevenBiker) CreateForcesMessage() objects.ForcesMessage {
 }
 
 func (biker *BaseTeamSevenBiker) CreateVoteLootboxDirectionMessage() objects.VoteLootboxDirectionMessage {
-	// Currently this returns a default/meaningless message
-	// For team's agent, add your own logic to communicate with other agents
 	return objects.VoteLootboxDirectionMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
 		VoteMap:     biker.voteDirectionMap.GetVotes(),
@@ -605,8 +653,6 @@ func (biker *BaseTeamSevenBiker) CreateVotekickoutMessage() objects.VoteKickoutM
 }
 
 func (biker *BaseTeamSevenBiker) CreateVoteAllocationMessage() objects.VoteAllocationMessage {
-	// Currently this returns a default/meaningless message
-	// For team's agent, add your own logic to communicate with other agents
 	return objects.VoteAllocationMessage{
 		BaseMessage: messaging.CreateMessage[objects.IBaseBiker](biker, biker.GetFellowBikers()),
 		VoteMap:     biker.voteAllocationMap,

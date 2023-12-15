@@ -6,6 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// VoteAllocation: This determines how our agent votes on resource allocation.
+// The allocation depends on the agreeableness level of our agent's personality.
+
 type VoteOnAllocationInput struct {
 	AgentCandidates []uuid.UUID
 	MyPersonality   *Personality

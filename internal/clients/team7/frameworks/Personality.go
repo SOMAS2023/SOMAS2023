@@ -1,6 +1,8 @@
 package frameworks
 
 /*
+  Personality: Configures the agent's default personality based on OCEAN model.
+
   A personality is a set of traits that define how an agent behaves. These traits can
   be used to modulate and control how agents make decisions, and how they perceive and
   interact with other agents.

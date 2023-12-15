@@ -1,5 +1,8 @@
 package frameworks
 
+// VoteToAccept: Determines how our agent votes on accepting a new biker onto its bike.
+// If the average trust level our agent has had for the biker is less than a threshold, we reject the biker.
+// Otherwise, we accept the biker onto our bike.
 type VoteToAcceptAgentHandler struct {
 	IDecisionFramework[VoteOnAgentsInput, MapIdBool]
 }
@@ -13,7 +16,8 @@ func (voteHandler *VoteToAcceptAgentHandler) GetDecision(inputs VoteOnAgentsInpu
 	threshold := ScoreType(0.4)
 
 	for _, agent_id := range inputs.AgentCandidates {
-		// Agent score depends on our average trust level of the agent.
+		// Assign a score to each agent based on our average trust for them in previous iterations.
+		// Use this score to determine whether to accept agent onto bike.
 		agentConnection, exists := inputs.CurrentSocialNetwork[agent_id]
 		var agentScore float64
 		if !exists {
@@ -26,11 +30,3 @@ func (voteHandler *VoteToAcceptAgentHandler) GetDecision(inputs VoteOnAgentsInpu
 
 	return vote
 }
-
-/*
-// Assign a score to express approval/disapproval of a proposal.
-func (voteHandler *VoteToAcceptAgentHandler) voteToAcceptScore(agent_id interface{}) ScoreType {
-	score := ScoreType(0.8) //TODO: Simple implementation for now. Will depend on factors such as opinion of agent and our agent's personality.
-	return score
-}
-*/

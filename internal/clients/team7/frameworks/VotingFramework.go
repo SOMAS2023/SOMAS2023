@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// VotingFramework: Contains functions and types used in voting.
+
 // This map can hold any type of data as the value
 type Map map[uuid.UUID]interface{}
 
