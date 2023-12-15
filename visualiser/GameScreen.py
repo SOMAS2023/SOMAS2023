@@ -399,7 +399,7 @@ class GameScreen:
         Update the owdis
         """
         owdi = {}
-        for owdidata in self.jsonData[self.currentRound][self.iterationIndex]["audis"]:
+        for owdidata in self.jsonData[self.currentRound][self.iterationIndex]["awdis"]:
             owdiid = owdidata["id"]
             if owdiid not in self.owdis:
                 owdiObj = Owdi(owdidata, self.jsonData[self.currentRound][self.iterationIndex]["bikes"])

@@ -39,8 +39,8 @@ When a Megabike collides with a lootbox:
    2. Agents of the same colour as the lootbox will receive a set number of points each.
    3. If more than one bike colides with a lootbox during one epoch, the energy will be split between the bikes equally.
 
-## Audi Collision
-An Audi targets the slowest bike. When an Audi collides with a lootbox:
+## Awdi Collision
+An Awdi targets the slowest bike. When an Awdi collides with a lootbox:
    1. All agents on the bike die.
 
 ## Physics Boundaries

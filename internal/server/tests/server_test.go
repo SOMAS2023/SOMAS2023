@@ -25,8 +25,8 @@ func TestInitialize(t *testing.T) {
 		t.Error("Mega bikes not properly instantiated")
 	}
 
-	if s.GetAudi().GetID() == uuid.Nil {
-		t.Error("audi not properly instantiated")
+	if s.GetAwdi().GetID() == uuid.Nil {
+		t.Error("awdi not properly instantiated")
 	}
 
 	fmt.Printf("\nInitialize passed \n")

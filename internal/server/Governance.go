@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// obtain direction for current round from the dictator
 func (s *Server) RunRulerAction(bike objects.IMegaBike) uuid.UUID {
-	// vote for dictator
 	agents := s.GetAgentMap()
 	ruler := agents[bike.GetRuler()]
 	// get dictators direction choice
@@ -17,8 +17,9 @@ func (s *Server) RunRulerAction(bike objects.IMegaBike) uuid.UUID {
 	return direction
 }
 
+// elect ruler (happens during the foundation stage, or when a bike with ruler-lead
+// governance is left without ruler for any of various reasons)
 func (s *Server) RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID {
-	// TODO: need extra input "voteWeight". For now, we just initialise a unit weight for each agent
 	votes := make(map[uuid.UUID]voting.IdVoteMap, len(agents))
 	voteWeight := make(map[uuid.UUID]float64)
 	for _, agent := range agents {
@@ -31,6 +32,7 @@ func (s *Server) RulerElection(agents []objects.IBaseBiker, governance utils.Gov
 		}
 	}
 
+	// required as a list of interfaces that implement IVoter is not percieved as a list of IVoters due to Go weirdness
 	IVotes := make(map[uuid.UUID]voting.IVoter, len(votes))
 	for i, vote := range votes {
 		IVotes[i] = vote
@@ -40,6 +42,7 @@ func (s *Server) RulerElection(agents []objects.IBaseBiker, governance utils.Gov
 	return ruler
 }
 
+// select this round's decision following a voting-based approach (with weights in the case of a leadership-led governance)
 func (s *Server) RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID {
 	// map of the proposed lootboxes by bike (for each bike a list of lootbox proposals is made, with one lootbox proposed by each agent on the bike)
 	agents := bike.GetAgents()
@@ -57,14 +60,15 @@ func (s *Server) RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UU
 		}
 	}
 
-	// pass the pitched directions of a bike to all agents on that bike and get their final vote
 	finalVotes := make(map[uuid.UUID]voting.LootboxVoteMap, len(agents))
 	for _, agent := range agents {
 		// ---------------------------VOTING ROUTINE - STEP 2 ---------------------
+		// pass the pitched directions of a bike to all agents on that bike and get their final vote
 		finalVotes[agent.GetID()] = agent.FinalDirectionVote(proposedDirections)
 	}
 
 	// ---------------------------VOTING ROUTINE - STEP 3 --------------
+	// get the winning direction from the final votes
 	direction := s.GetWinningDirection(finalVotes, weights)
 	if _, ok := s.lootBoxes[direction]; !ok {
 		panic("agents voted on a non-existent lootbox")

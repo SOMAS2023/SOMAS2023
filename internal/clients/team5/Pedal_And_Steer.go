@@ -41,17 +41,17 @@ func (t5 *team5Agent) DecideForce(targetLootBoxID uuid.UUID) {
 
 		angleToGoal := math.Atan2(deltaYB, deltaXB) / math.Pi
 
-		audiPos := t5.GetGameState().GetAudi().GetPosition()
+		awdiPos := t5.GetGameState().GetAwdi().GetPosition()
 
-		deltaXA := audiPos.X - currLocation.X
-		deltaYA := audiPos.Y - currLocation.Y
+		deltaXA := awdiPos.X - currLocation.X
+		deltaYA := awdiPos.Y - currLocation.Y
 
-		angleToAudi := math.Atan2(deltaYA, deltaXA) / math.Pi
+		angleToAwdi := math.Atan2(deltaYA, deltaXA) / math.Pi
 
-		distance_to_audi := math.Sqrt((((deltaXA) * (deltaXA)) + (deltaYA * (deltaYA))))
+		distance_to_awdi := math.Sqrt((((deltaXA) * (deltaXA)) + (deltaYA * (deltaYA))))
 
-		if distance_to_audi < (2*utils.CollisionThreshold) && math.Abs(angleToAudi-angleToGoal) < 0.5 {
-			angleToGoal = angleToAudi - math.Copysign(0.5, angleToAudi-angleToGoal)
+		if distance_to_awdi < (2*utils.CollisionThreshold) && math.Abs(angleToAwdi-angleToGoal) < 0.5 {
+			angleToGoal = angleToAwdi - math.Copysign(0.5, angleToAwdi-angleToGoal)
 		}
 
 		steer := (angleToGoal - orientation)

@@ -9,5 +9,5 @@ type IGameState interface {
 	GetLootBoxes() map[uuid.UUID]ILootBox
 	GetMegaBikes() map[uuid.UUID]IMegaBike
 	GetAgents() map[uuid.UUID]IBaseBiker
-	GetAudi() IAudi
+	GetAwdi() IAwdi
 }

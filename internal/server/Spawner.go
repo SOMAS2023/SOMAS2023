@@ -35,18 +35,7 @@ var AgentInitFunctions = []AgentInitFunction{
 // }
 
 func GetAgentGenerators() []baseserver.AgentGeneratorCountPair[objects.IBaseBiker] {
-	// bikersPerTeam := BikerAgentCount / (len(AgentInitFunctions) + 1)
-	// // To spawn Basebikers
-	// extraBaseBikers := BikerAgentCount % (len(AgentInitFunctions) + 1)
-	// agentGenerators := []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
-	// 	// Spawn base bikers
-	// 	baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(nil), bikersPerTeam+extraBaseBikers),
-	// }
-	// // var agentGenerators []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]
-	// for _, initFunction := range AgentInitFunctions {
-	// 	agentGenerators = append(agentGenerators, baseserver.MakeAgentGeneratorCountPair(BikerAgentGenerator(initFunction), bikersPerTeam))
-	// }
-	// return agentGenerators
+
 	bikersPerTeam := BikerAgentCount / (len(AgentInitFunctions) + 1)
 	extraBaseBikers := BikerAgentCount % (len(AgentInitFunctions) + 1)
 	agentGenerators := []baseserver.AgentGeneratorCountPair[objects.IBaseBiker]{
@@ -75,6 +64,7 @@ func (s *Server) spawnLootBox() {
 	s.lootBoxes[lootBox.GetID()] = lootBox
 }
 
+// replenishes lootboxes up to the externally set count
 func (s *Server) replenishLootBoxes() {
 	count := LootBoxCount - len(s.lootBoxes)
 	for i := 0; i < count; i++ {

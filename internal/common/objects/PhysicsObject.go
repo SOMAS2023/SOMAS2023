@@ -2,7 +2,7 @@ package objects
 
 /*
 
-The IPhysicsObject is an interface class that all moving objects (Biker and Audi) must implement.
+The IPhysicsObject is an interface class that all moving objects (Biker and Awdi) must implement.
 The Bikers/Agents will not need to implement this interface
 
 */
@@ -30,7 +30,7 @@ type IPhysicsObject interface {
 
 	// This method will update the force of the PhysicsObject based on the current GameState.
 	// I.e. for MegaBike, force will be cacluated from the bikers
-	// For the audi, force will be calculated from the target MegaBike
+	// For the awdi, force will be calculated from the target MegaBike
 	UpdateForce()
 	// Similar to UpdateForce, this will update the desired orientation for the PhysicsObject,
 	// based on the current GameState
@@ -86,7 +86,7 @@ func (po *PhysicsObject) SetPhysicalState(state utils.PhysicalState) {
 	po.velocity = state.Velocity
 }
 
-// this will be used to check if a MegaBike has looted a LootBok or if the Audi has collided with a MegaBike
+// this will be used to check if a MegaBike has looted a LootBok or if the Awdi has collided with a MegaBike
 func (po *PhysicsObject) CheckForCollision(otherObject IPhysicsObject) bool {
 	otherPos := otherObject.GetPosition()
 	distance := math.Sqrt(math.Pow(otherPos.X-po.coordinates.X, 2) + math.Pow(otherPos.Y-po.coordinates.Y, 2))

@@ -60,15 +60,15 @@ func (bb *Team6Biker) nearestLootList() []objects.ILootBox {
 }
 
 func (bb *Team6Biker) nearestLoot(sortedLoot []objects.ILootBox) uuid.UUID {
-	var loot2Audi float64
+	var loot2Awdi float64
 	var nearestBoxPos utils.Coordinates
 	var nearestBox uuid.UUID
-	audiPos := bb.GetGameState().GetAudi().GetPosition()
+	awdiPos := bb.GetGameState().GetAwdi().GetPosition()
 
 	for _, loot := range sortedLoot {
 		nearestBoxPos = loot.GetPosition()
-		loot2Audi = math.Sqrt(math.Pow(audiPos.X-nearestBoxPos.X, 2) + math.Pow(audiPos.Y-nearestBoxPos.Y, 2))
-		if loot2Audi > utils.CollisionThreshold {
+		loot2Awdi = math.Sqrt(math.Pow(awdiPos.X-nearestBoxPos.X, 2) + math.Pow(awdiPos.Y-nearestBoxPos.Y, 2))
+		if loot2Awdi > utils.CollisionThreshold {
 			nearestBox = loot.GetID()
 			break
 		}
@@ -78,15 +78,15 @@ func (bb *Team6Biker) nearestLoot(sortedLoot []objects.ILootBox) uuid.UUID {
 
 // Derive the UUID of the nearest lootbox of the same colour as the biker
 func (bb *Team6Biker) nearestSameColourLoot(sortedLoot []objects.ILootBox) uuid.UUID {
-	var loot2Audi float64
+	var loot2Awdi float64
 	var nearestBoxPos utils.Coordinates
 	var nearestSameColour uuid.UUID
-	audiPos := bb.GetGameState().GetAudi().GetPosition()
+	awdiPos := bb.GetGameState().GetAwdi().GetPosition()
 
 	for _, loot := range sortedLoot {
 		nearestBoxPos = loot.GetPosition()
-		loot2Audi = math.Sqrt(math.Pow(audiPos.X-nearestBoxPos.X, 2) + math.Pow(audiPos.Y-nearestBoxPos.Y, 2))
-		if loot2Audi > utils.CollisionThreshold {
+		loot2Awdi = math.Sqrt(math.Pow(awdiPos.X-nearestBoxPos.X, 2) + math.Pow(awdiPos.Y-nearestBoxPos.Y, 2))
+		if loot2Awdi > utils.CollisionThreshold {
 			if loot.GetColour() == bb.GetColour() {
 				nearestSameColour = loot.GetID()
 				break

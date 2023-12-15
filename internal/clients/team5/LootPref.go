@@ -22,7 +22,7 @@ func (t5 *team5Agent) ProposeDirection() uuid.UUID {
 
 	averageEnergyOthers := calculateAverageEnergyOthers(gameState, t5)                 // Average energy of other agents on the bike
 	urgencyFactor := averageEnergyPreference(t5.GetEnergyLevel(), averageEnergyOthers) // Urgency factor based on agent's energy level compared to his bike mates
-	audiPos := t5.GetGameState().GetAudi().GetPosition()
+	awdiPos := t5.GetGameState().GetAwdi().GetPosition()
 
 	// Calculate the preference for each lootbox
 	for id, loot := range lootBoxes {
@@ -30,7 +30,7 @@ func (t5 *team5Agent) ProposeDirection() uuid.UUID {
 		energy := energyPreference(t5.GetEnergyLevel(), loot.GetTotalResources())
 		colour := colourMatch(t5.GetColour(), loot.GetColour())
 
-		distanceFromAudi := calculateDistance(audiPos, loot.GetPosition())
+		distanceFromAwdi := calculateDistance(awdiPos, loot.GetPosition())
 
 		weightedDistancePreference := urgencyFactor * wd / (0.01 * distance)
 		weightedEnergyPreference := we * energy
@@ -39,7 +39,7 @@ func (t5 *team5Agent) ProposeDirection() uuid.UUID {
 		preference := weightedDistancePreference + weightedEnergyPreference + weightedColourPreference
 		preferenceMap[id] = preference
 
-		if distanceFromAudi < (1.5 * utils.CollisionThreshold) {
+		if distanceFromAwdi < (1.5 * utils.CollisionThreshold) {
 			preferenceMap[id] = 0
 		}
 	}

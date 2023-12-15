@@ -290,11 +290,11 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 
 	a.Modules.VotedDirection = direction
 
-	if a.Modules.Environment.IsAudiNear() {
-		// fmt.Printf("[DecideForce] Agent %s is near Audi\n", a.GetID())
-		// Move in opposite direction to Audi in full force
-		bikePos, audiPos := a.Modules.Environment.GetBike().GetPosition(), a.Modules.Environment.GetAudi().GetPosition()
-		force := a.Modules.Utils.GetForcesToTargetWithDirectionOffset(utils.BikerMaxForce, 1.0-a.Modules.Environment.GetBikeOrientation(), bikePos, audiPos)
+	if a.Modules.Environment.IsAwdiNear() {
+		// fmt.Printf("[DecideForce] Agent %s is near Awdi\n", a.GetID())
+		// Move in opposite direction to Awdi in full force
+		bikePos, awdiPos := a.Modules.Environment.GetBike().GetPosition(), a.Modules.Environment.GetAwdi().GetPosition()
+		force := a.Modules.Utils.GetForcesToTargetWithDirectionOffset(utils.BikerMaxForce, 1.0-a.Modules.Environment.GetBikeOrientation(), bikePos, awdiPos)
 		a.SetForces(force)
 		return
 	}
@@ -312,10 +312,10 @@ func (a *AgentTwo) DecideForce(direction uuid.UUID) {
 }
 
 func (a *AgentTwo) DictateDirection() uuid.UUID {
-	// Move in opposite direction to Audi in full force
-	if a.Modules.Environment.IsAudiNear() {
-		// fmt.Printf("[DictateDirection] Agent %s is near Audi\n", a.GetID())
-		return a.Modules.Environment.GetNearestLootboxAwayFromAudi()
+	// Move in opposite direction to Awdi in full force
+	if a.Modules.Environment.IsAwdiNear() {
+		// fmt.Printf("[DictateDirection] Agent %s is near Awdi\n", a.GetID())
+		return a.Modules.Environment.GetNearestLootboxAwayFromAwdi()
 	}
 	// Otherwise, move towards the lootbox with the highest gain
 	return a.Modules.Environment.GetHighestGainLootbox()

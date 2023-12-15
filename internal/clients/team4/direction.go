@@ -16,7 +16,7 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 	ranksum := make(map[uuid.UUID]float64)
 	totalsum := float64(0)
 	totaloptions := len(proposedLootBox)
-	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	awdiPos := agent.GetGameState().GetAwdi().GetPosition()
 
 	fellowBikers := agent.GetFellowBikers()
 	//This is the relavtive reputation and honest for bikers my bike
@@ -36,7 +36,7 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 	for i, lootBox := range proposedLootBox {
 		lootboxID := lootBox.GetID()
 		lootboxResources := lootBox.GetTotalResources()
-		distanceFromAudi := physics.ComputeDistance(audiPos, lootBox.GetPosition())
+		distanceFromAwdi := physics.ComputeDistance(awdiPos, lootBox.GetPosition())
 		//if energy level is below threshold, increase weighting towards distance
 		distanceRank := float64(totaloptions - i)
 		if agent.GetEnergyLevel() < minEnergyThreshold {
@@ -47,19 +47,19 @@ func (agent *BaselineAgent) rankTargetProposals(proposedLootBox []objects.ILootB
 		for _, fellow := range fellowBikers {
 			fellowID := fellow.GetID()
 			if fellow.GetColour() == lootBox.GetColour() {
-				weight := (distanceWeight * distanceRank) + (reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (audiDistanceWeight * distanceFromAudi) + (resourceWeight * lootboxResources)
+				weight := (distanceWeight * distanceRank) + (reputationWeight * reputationRank[fellowID]) + (honestyWeight * honestyRank[fellowID]) + (awdiDistanceWeight * distanceFromAwdi) + (resourceWeight * lootboxResources)
 				ranksum[lootboxID] += weight
 				totalsum += weight
 			}
 		}
 
 		if lootBox.GetColour() == agent.GetColour() {
-			weight := (distanceRank * distanceWeight * 1.25) + (audiDistanceWeight * distanceFromAudi) + (resourceWeight * lootboxResources)
+			weight := (distanceRank * distanceWeight * 1.25) + (awdiDistanceWeight * distanceFromAwdi) + (resourceWeight * lootboxResources)
 			ranksum[lootboxID] += weight
 			totalsum += weight
 		}
 		if ranksum[lootboxID] == 0 {
-			weight := (distanceRank * distanceWeight * 2.6) + (audiDistanceWeight * distanceFromAudi) + (resourceWeight * lootboxResources)
+			weight := (distanceRank * distanceWeight * 2.6) + (awdiDistanceWeight * distanceFromAwdi) + (resourceWeight * lootboxResources)
 			ranksum[lootboxID] = weight
 			totalsum += weight
 		}
@@ -94,21 +94,21 @@ func (agent *BaselineAgent) DecideForce(direction uuid.UUID) {
 	agent.targetLoot = direction
 	currLocation := agent.GetLocation()
 	currentLootBoxes := agent.GetGameState().GetLootBoxes()
-	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	awdiPos := agent.GetGameState().GetAwdi().GetPosition()
 
 	agent.lootBoxColour = currentLootBoxes[direction].GetColour()
 	agent.lootBoxLocation = currentLootBoxes[direction].GetPosition()
 
-	distanceFromAudi := physics.ComputeDistance(currLocation, audiPos)
+	distanceFromAwdi := physics.ComputeDistance(currLocation, awdiPos)
 	pedalForce := 1.0
 
-	if distanceFromAudi < audiDistanceThreshold {
-		deltaX := audiPos.X - currLocation.X
-		deltaY := audiPos.Y - currLocation.Y
-		// Steer in opposite direction to audi
+	if distanceFromAwdi < awdiDistanceThreshold {
+		deltaX := awdiPos.X - currLocation.X
+		deltaY := awdiPos.Y - currLocation.Y
+		// Steer in opposite direction to awdi
 		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
-		// Steer in opposite direction to audi
+		// Steer in opposite direction to awdi
 		var flipAngle float64
 		if normalisedAngle < 0.0 {
 			flipAngle = normalisedAngle + 1.0
@@ -119,12 +119,12 @@ func (agent *BaselineAgent) DecideForce(direction uuid.UUID) {
 			SteerBike:     true,
 			SteeringForce: flipAngle - agent.GetGameState().GetMegaBikes()[agent.GetBike()].GetOrientation(),
 		}
-		escapeAudiForces := utils.Forces{
+		escapeAwdiForces := utils.Forces{
 			Pedal:   utils.BikerMaxForce,
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		agent.SetForces(escapeAudiForces)
+		agent.SetForces(escapeAwdiForces)
 	} else {
 		targetPos := currentLootBoxes[agent.targetLoot].GetPosition()
 		deltaX := targetPos.X - currLocation.X
@@ -173,11 +173,11 @@ func (agent *BaselineAgent) ProposeDirection() uuid.UUID {
 	agent.UpdateDecisionData()
 
 	var lootBoxesWithinThreshold []objects.ILootBox
-	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	awdiPos := agent.GetGameState().GetAwdi().GetPosition()
 	agentLocation := agent.GetLocation() // agent's location
 
 	for _, lootbox := range agent.GetGameState().GetLootBoxes() {
-		if physics.ComputeDistance(lootbox.GetPosition(), audiPos) > audiDistanceThreshold {
+		if physics.ComputeDistance(lootbox.GetPosition(), awdiPos) > awdiDistanceThreshold {
 			lootBoxesWithinThreshold = append(lootBoxesWithinThreshold, lootbox)
 		}
 	}
@@ -204,11 +204,11 @@ func (agent *BaselineAgent) DictateDirection() uuid.UUID {
 	agent.UpdateDecisionData()
 
 	var lootBoxesWithinThreshold []objects.ILootBox
-	audiPos := agent.GetGameState().GetAudi().GetPosition()
+	awdiPos := agent.GetGameState().GetAwdi().GetPosition()
 	agentLocation := agent.GetLocation() // agent's location
 
 	for _, lootbox := range agent.GetGameState().GetLootBoxes() {
-		if physics.ComputeDistance(lootbox.GetPosition(), audiPos) > audiDistanceThreshold {
+		if physics.ComputeDistance(lootbox.GetPosition(), awdiPos) > awdiDistanceThreshold {
 			lootBoxesWithinThreshold = append(lootBoxesWithinThreshold, lootbox)
 		}
 	}

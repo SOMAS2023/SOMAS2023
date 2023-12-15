@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	AudiRange = 10
+	AwdiRange = 10
 )
 
 type EnvironmentModule struct {
@@ -65,8 +65,8 @@ func (e *EnvironmentModule) GetNearestLootbox(agentId uuid.UUID) uuid.UUID {
 	nearestLootbox := uuid.Nil
 	minDist := math.MaxFloat64
 	for _, lootbox := range e.GetLootBoxes() {
-		if e.IsLootboxNearAudi(lootbox.GetID()) {
-			// fmt.Printf("[GetNearestLootbox] Lootbox %v is near audi\n", lootbox.GetID())
+		if e.IsLootboxNearAwdi(lootbox.GetID()) {
+			// fmt.Printf("[GetNearestLootbox] Lootbox %v is near awdi\n", lootbox.GetID())
 			continue
 		}
 		dist := e.GetDistanceToLootbox(lootbox.GetID())
@@ -87,8 +87,8 @@ func (e *EnvironmentModule) GetNearestLootboxByColor(agentId uuid.UUID, color ut
 	nearestLootbox := e.GetNearestLootbox(agentId) // Defaults to nearest lootbox
 	minDist := math.MaxFloat64
 	for _, lootbox := range e.GetLootBoxesByColor(color) {
-		if e.IsLootboxNearAudi(lootbox.GetID()) {
-			// fmt.Printf("[GetNearestLootboxByColor] Lootbox %v is near audi\n", lootbox.GetID())
+		if e.IsLootboxNearAwdi(lootbox.GetID()) {
+			// fmt.Printf("[GetNearestLootboxByColor] Lootbox %v is near awdi\n", lootbox.GetID())
 			continue
 		}
 		dist := e.GetDistanceToLootbox(lootbox.GetID())
@@ -116,8 +116,8 @@ func (e *EnvironmentModule) GetHighestGainLootbox() uuid.UUID {
 	bestGain := float64(0)
 	bestLoot := uuid.Nil
 	for _, lootboxId := range e.GetLootBoxes() {
-		if e.IsLootboxNearAudi(lootboxId.GetID()) {
-			// fmt.Printf("[GetHighestGainLootbox] Lootbox %v is near audi\n", lootboxId.GetID())
+		if e.IsLootboxNearAwdi(lootboxId.GetID()) {
+			// fmt.Printf("[GetHighestGainLootbox] Lootbox %v is near awdi\n", lootboxId.GetID())
 			continue
 		}
 		gain := lootboxId.GetTotalResources() / e.GetDistanceToLootbox(lootboxId.GetID())
@@ -134,20 +134,20 @@ func (e *EnvironmentModule) GetHighestGainLootbox() uuid.UUID {
 	return bestLoot
 }
 
-func (e *EnvironmentModule) GetNearestLootboxAwayFromAudi() uuid.UUID {
+func (e *EnvironmentModule) GetNearestLootboxAwayFromAwdi() uuid.UUID {
 	// Find positions.
 	bikePos := e.GetBikeById(e.BikeId).GetPosition()
-	audiPos := e.GetAudi().GetPosition()
+	awdiPos := e.GetAwdi().GetPosition()
 
-	// Find position away from audi.
-	deltaX := audiPos.X - bikePos.X
-	deltaY := audiPos.Y - bikePos.Y
+	// Find position away from awdi.
+	deltaX := awdiPos.X - bikePos.X
+	deltaY := awdiPos.Y - bikePos.Y
 
 	awayX := bikePos.X - deltaX
 	awayY := bikePos.Y - deltaY
 	awayPos := utils.Coordinates{X: awayX, Y: awayY}
 
-	// Find nearest lootbox away from audi.
+	// Find nearest lootbox away from awdi.
 	minLoot := uuid.Nil
 	minDist := math.MaxFloat64
 	for id, lootbox := range e.GetLootBoxes() {
@@ -164,8 +164,8 @@ func (e *EnvironmentModule) GetNearestLootboxAwayFromAudi() uuid.UUID {
 /// Bikes
 ///
 
-func (e *EnvironmentModule) GetAudi() objects.IAudi {
-	return e.GameState.GetAudi()
+func (e *EnvironmentModule) GetAwdi() objects.IAwdi {
+	return e.GameState.GetAwdi()
 }
 
 func (e *EnvironmentModule) GetBikes() map[uuid.UUID]objects.IMegaBike {
@@ -274,24 +274,24 @@ func (e *EnvironmentModule) GetBikeWithMaximumSocialCapital(sc *SocialCapital) u
 	}
 }
 
-func (e *EnvironmentModule) IsLootboxNearAudi(lootboxId uuid.UUID) bool {
-	lootboxPos, audiPos := e.GetLootBoxById(lootboxId).GetPosition(), e.GetAudi().GetPosition()
+func (e *EnvironmentModule) IsLootboxNearAwdi(lootboxId uuid.UUID) bool {
+	lootboxPos, awdiPos := e.GetLootBoxById(lootboxId).GetPosition(), e.GetAwdi().GetPosition()
 
-	return e.GetDistance(lootboxPos, audiPos) <= AudiRange
+	return e.GetDistance(lootboxPos, awdiPos) <= AwdiRange
 }
 
-func (e *EnvironmentModule) GetDistanceToAudi() float64 {
-	bikePos, audiPos := e.GetBikeById(e.BikeId).GetPosition(), e.GetAudi().GetPosition()
+func (e *EnvironmentModule) GetDistanceToAwdi() float64 {
+	bikePos, awdiPos := e.GetBikeById(e.BikeId).GetPosition(), e.GetAwdi().GetPosition()
 
-	// fmt.Printf("[GetDistanceToAudi] Pos of bike: %f\n", bikePos)
-	// fmt.Printf("[GetDistanceToAudi] Pos of Audi: %f\n", audiPos)
+	// fmt.Printf("[GetDistanceToAwdi] Pos of bike: %f\n", bikePos)
+	// fmt.Printf("[GetDistanceToAwdi] Pos of Awdi: %f\n", awdiPos)
 
-	return e.GetDistance(bikePos, audiPos)
+	return e.GetDistance(bikePos, awdiPos)
 }
 
-func (e *EnvironmentModule) IsAudiNear() bool {
-	// fmt.Printf("[IsAudiNear] Distance to audi: %f\n", e.GetDistanceToAudi())
-	return e.GetDistanceToAudi() <= AudiRange
+func (e *EnvironmentModule) IsAwdiNear() bool {
+	// fmt.Printf("[IsAwdiNear] Distance to awdi: %f\n", e.GetDistanceToAwdi())
+	return e.GetDistanceToAwdi() <= AwdiRange
 }
 
 func (e *EnvironmentModule) GetBikerAgents() map[uuid.UUID]objects.IBaseBiker {

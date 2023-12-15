@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestAudiCollisionProcess(t *testing.T) {
+func TestAwdiCollisionProcess(t *testing.T) {
 	it := 2
 	s := server.Initialize(it)
 	nAgentToDelete := 0
@@ -21,36 +21,36 @@ func TestAudiCollisionProcess(t *testing.T) {
 		}
 		// find any non-empty bike
 		if len(agentsOnBike) > 0 {
-			// send audi to it
-			s.GetAudi().SetPhysicalState(utils.PhysicalState{Position: anyBike.GetPosition()})
+			// send awdi to it
+			s.GetAwdi().SetPhysicalState(utils.PhysicalState{Position: anyBike.GetPosition()})
 		}
 	}
 	nAgentsBefore := len(s.GetAgentMap())
 	nMegaBikesBefore := len(s.GetMegaBikes())
-	s.AudiCollisionCheck()
+	s.AwdiCollisionCheck()
 	nAgentsAfter := len(s.GetAgentMap())
 	nMegaBikesAfter := len(s.GetMegaBikes())
 
 	// check if remove agents correctly
 	if nAgentsBefore-nAgentsAfter != nAgentToDelete {
-		fmt.Printf("Before audi collision, number of agents = %d \n", nAgentsBefore)
-		fmt.Printf("After audi collision, number of agents = %d \n", nAgentsAfter)
-		fmt.Printf("On bike collide with audi, number of agents = %d \n", nAgentToDelete)
-		t.Error("Audi didnt remove agents correctly")
+		fmt.Printf("Before awdi collision, number of agents = %d \n", nAgentsBefore)
+		fmt.Printf("After awdi collision, number of agents = %d \n", nAgentsAfter)
+		fmt.Printf("On bike collide with awdi, number of agents = %d \n", nAgentToDelete)
+		t.Error("Awdi didnt remove agents correctly")
 	}
 
-	if utils.AudiRemovesMegaBike {
+	if utils.AwdiRemovesMegaBike {
 		// check if remove megaBike correctly
 		if nMegaBikesBefore-nMegaBikesAfter != 1 {
-			fmt.Printf("Before audi collision, number of megaBikes = %d \n", nMegaBikesBefore)
-			fmt.Printf("After audi collision, number of megaBikes = %d \n", nMegaBikesAfter)
-			t.Error("Audi didnt remove megaBike correctly")
+			fmt.Printf("Before awdi collision, number of megaBikes = %d \n", nMegaBikesBefore)
+			fmt.Printf("After awdi collision, number of megaBikes = %d \n", nMegaBikesAfter)
+			t.Error("Awdi didnt remove megaBike correctly")
 		}
 	}
 	fmt.Printf("\nRun action process passed \n")
 }
 
-func TestAudiTargeting(t *testing.T) {
+func TestAwdiTargeting(t *testing.T) {
 	it := 1
 	s := server.Initialize(it)
 	// required otherwise agents are not initialized to bikes
@@ -88,18 +88,18 @@ func TestAudiTargeting(t *testing.T) {
 		}
 		i += 1
 	}
-	s.GetAudi().UpdateGameState(gs)
-	s.GetAudi().UpdateForce()
-	targetId := s.GetAudi().GetTargetID()
-	fmt.Printf("Audi is targeting {%s}\n", targetId)
-	if utils.AudiTargetsEmptyMegaBike {
+	s.GetAwdi().UpdateGameState(gs)
+	s.GetAwdi().UpdateForce()
+	targetId := s.GetAwdi().GetTargetID()
+	fmt.Printf("Awdi is targeting {%s}\n", targetId)
+	if utils.AwdiTargetsEmptyMegaBike {
 		if targetId != emptyBikeId {
-			t.Error("Audi didnt target empty megaBike!")
+			t.Error("Awdi didnt target empty megaBike!")
 		}
 	}
-	if utils.AudiOnlyTargetsStationaryMegaBike {
+	if utils.AwdiOnlyTargetsStationaryMegaBike {
 		if targetId == slowBikeId {
-			t.Error("Audi didnt ignore moving megaBike!")
+			t.Error("Awdi didnt ignore moving megaBike!")
 		}
 	}
 	fmt.Printf("\nRun action process passed \n")

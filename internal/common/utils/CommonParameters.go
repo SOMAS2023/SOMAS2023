@@ -24,10 +24,10 @@ Physics Parameters
 */
 const MassBike float64 = 1.0
 const MassBiker float64 = 1.0
-const MassAudi float64 = 7.0
+const MassAwdi float64 = 7.0
 
 const BikerMaxForce float64 = 0.8 // The max force a biker can pedal
-const AudiMaxForce float64 = 1.0  // The audi's force is equivalent to that of one biker agent going at maximum speed
+const AwdiMaxForce float64 = 1.0  // The awdi's force is equivalent to that of one biker agent going at maximum speed
 
 const DragCoefficient float64 = 0.5 // Drag coefficient can be optimised in experimentation
 
@@ -44,11 +44,11 @@ Resources - Points and Energy
 const PointsFromSameColouredLootBox = 5.0
 
 /*
-Audi Behavior
+Awdi Behavior
 */
-const AudiTargetsEmptyMegaBike bool = false
-const AudiOnlyTargetsStationaryMegaBike bool = false // if false, targeting slowest
-const AudiRemovesMegaBike bool = false
+const AwdiTargetsEmptyMegaBike bool = false
+const AwdiOnlyTargetsStationaryMegaBike bool = false // if false, targeting slowest
+const AwdiRemovesMegaBike bool = false
 
 /*
 Voting Method Choice

@@ -9,6 +9,10 @@ import (
 	"github.com/google/uuid"
 )
 
+// in order to limit access to certain functions that are part of the IBaseBiker and IPhysicsObject interfaces
+// bikers have access to a gamestate which implements the interface but imposes some
+// restrictions on the functions that can be called
+
 const bannedFunctionErrorMessage = "you're not allowed to call this"
 
 func (o PhysicsObjectDump) SetPhysicalState(state utils.PhysicalState) {
@@ -209,6 +213,6 @@ func (b BikeDump) SetRuler(uuid.UUID) {
 	panic(bannedFunctionErrorMessage)
 }
 
-func (a AudiDump) UpdateGameState(objects.IGameState) {
+func (a AwdiDump) UpdateGameState(objects.IGameState) {
 	panic(bannedFunctionErrorMessage)
 }

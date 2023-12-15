@@ -24,8 +24,8 @@ func (s *Server) RunRoundLoop() {
 	// get the direction decisions and pedalling forces
 	s.RunActionProcess()
 
-	// The Audi makes a decision
-	s.audi.UpdateGameState(gameState)
+	// The Awdi makes a decision
+	s.awdi.UpdateGameState(gameState)
 
 	// Move the mega bikes
 	for _, bike := range s.megaBikes {
@@ -34,8 +34,8 @@ func (s *Server) RunRoundLoop() {
 		s.MovePhysicsObject(bike)
 	}
 
-	// Move the audi
-	s.MovePhysicsObject(s.audi)
+	// Move the awdi
+	s.MovePhysicsObject(s.awdi)
 
 	s.UpdateGameStates()
 
@@ -46,8 +46,8 @@ func (s *Server) RunRoundLoop() {
 	s.punishBikelessAgents()
 
 	// Check if agents died
-	// Check Audi collision
-	s.AudiCollisionCheck()
+	// Check Awdi collision
+	s.AwdiCollisionCheck()
 	s.unaliveAgents()
 	s.UpdateGameStates()
 
@@ -73,27 +73,36 @@ func (s *Server) RunRoundLoop() {
 		s.replenishMegaBikes()
 	}
 
+	// Run the messaging session
 	s.RunMessagingSession()
 }
 
+// handles bikers leaving the bike, potential kick outs and the acceptance process (in this order)
 func (s *Server) RunBikeSwitch(gameState GameStateDump) {
 	inLimbo := make([]uuid.UUID, 0)
+
 	// check if agents want ot leave the bike on this round
 	changeBike := s.GetLeavingDecisions(gameState)
 	inLimbo = append(inLimbo, changeBike...)
+
 	// update gamestate as it has changed
 	s.UpdateGameStates()
+
 	//process the kickout request
 	kickedOff := s.HandleKickoutProcess()
+
 	// update gamestate as it has changed
 	s.UpdateGameStates()
 	inLimbo = append(inLimbo, kickedOff...)
+
 	// process the joining request
 	s.ProcessJoiningRequests(inLimbo)
+
 	// update gamestate as it has changed
 	s.UpdateGameStates()
 }
 
+// handles the kick out process according to each bike's governance
 func (s *Server) HandleKickoutProcess() []uuid.UUID {
 	allKicked := make([]uuid.UUID, 0)
 	for _, bike := range s.GetMegaBikes() {
@@ -102,10 +111,10 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 
 			agentsVotes := make([]uuid.UUID, 0)
 
-			// the kickout process only happens democratically in level 0 and level 1
+			// the kickout process only happens through a (possibly weighted) vote in deliberative democracy and leadership democracy
 			switch bike.GetGovernance() {
 			case utils.Democracy:
-				// make map of weights of 1 for all agents on bike
+				// make map of weights of 1 for all agents on bike (as they all have the same voting power)
 				agents := bike.GetAgents()
 				weights := make(map[uuid.UUID]float64)
 				for _, agent := range agents {
@@ -124,7 +133,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 				agentsVotes = bike.KickOutAgent(weights)
 
 			case utils.Dictatorship:
-				// in level 2 only the ruler can kick out people
+				// in a dictatorship only the ruler can kick out people
 				dictator := s.GetAgentMap()[bike.GetRuler()]
 				agentsVotes = dictator.DecideKickOut()
 			}
@@ -133,18 +142,18 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 			leaderKickedOut := false
 			allKicked = append(allKicked, agentsVotes...)
 			for _, agentID := range agentsVotes {
-				// fmt.Printf("kicking out agent %s\n", agentID)
 				s.RemoveAgentFromBike(s.GetAgentMap()[agentID])
-				// if the leader was kicked out vote for a new one
+				// if the leader was kicked out will need to vote for a new one
 				if agentID == bike.GetRuler() {
 					leaderKickedOut = true
 				}
 			}
 			s.UpdateGameStates()
+
+			// new elections if needed
 			if leaderKickedOut && len(bike.GetAgents()) != 0 && bike.GetGovernance() == utils.Leadership {
 				ruler := s.RulerElection(bike.GetAgents(), utils.Leadership)
 				bike.SetRuler(ruler)
-
 			}
 		}
 
@@ -152,6 +161,7 @@ func (s *Server) HandleKickoutProcess() []uuid.UUID {
 	return allKicked
 }
 
+// get list of agents that want to leave their bike in current round
 func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 	leavingAgents := make([]uuid.UUID, 0)
 	for agentId, agent := range s.GetAgentMap() {
@@ -162,7 +172,6 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 			case objects.Pedal:
 				continue
 			case objects.ChangeBike:
-				// decide which bike the agent is going to try and go t
 				// the bike id is set to be the desired bike and onbike is set to false
 				// so by looking at the values of onBike and megaBikeID it will be known
 				// whether the agent is trying to join a bike (and which one)
@@ -171,13 +180,14 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 				// will only be finalised then
 				leavingAgents = append(leavingAgents, agentId)
 				s.RemoveAgentFromBike(agent)
-				// fmt.Printf("Agent %s left the bike \n", agentId)
 			default:
 				panic("agent decided invalid action")
 			}
 		}
 	}
+
 	s.UpdateGameStates()
+	// if ruler has left the bike will need to run elections
 	for _, bike := range s.GetMegaBikes() {
 		if slices.Contains(leavingAgents, bike.GetRuler()) && len(bike.GetAgents()) != 0 {
 			ruler := s.RulerElection(bike.GetAgents(), utils.Leadership)
@@ -187,15 +197,21 @@ func (s *Server) GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID {
 	return leavingAgents
 }
 
+// dispatch joining requests to the bikes of competence and move bikers from limbo to their desired bike subject to the
+// acceptance process outcome
 func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 
 	// -------------------------- PROCESS JOINING REQUESTS -------------------------
 	// 1. group agents that have onBike = false by the bike they are trying to join
 	bikeRequests := s.GetJoiningRequests(inLimbo)
+
 	// 2. pass to agents on each of the desired bikes a list of all agents trying to join
 	for bikeID, pendingAgents := range bikeRequests {
 		agents := s.megaBikes[bikeID].GetAgents()
+		// if there are no agents on the target bike accept all of them (until all seats are filled)
 		if len(agents) == 0 {
+			// as iterating over a map is pseudo-random it's enough to stop whrn the capacity is reached
+			// to ensure a fair (= random) selection in the case of an empty target bike
 			for i, pendingAgent := range pendingAgents {
 				if i <= utils.BikersOnBike {
 					acceptedAgent := s.GetAgentMap()[pendingAgent]
@@ -217,6 +233,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 			bike := s.GetMegaBikes()[bikeID]
 			acceptedRanked := make([]uuid.UUID, 0)
 
+			// the acceptance process is different for each governance type
 			switch bike.GetGovernance() {
 			case utils.Democracy:
 				// make map of weights of 1 for all agents on bike
@@ -231,7 +248,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}
 
-				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
+				// accept agents based on the response outcome (only capacity-n bikers can be accepted)
 				acceptedRanked = voting.GetAcceptanceRanking(responses, weights)
 			case utils.Leadership:
 				// get the map of weights from the leader
@@ -244,7 +261,8 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 					responses[agent.GetID()] = agent.DecideJoining(pendingAgents)
 				}
 
-				// accept agents based on the response outcome (it will have to be a ranking system, as only 8-n bikers can be accepted)
+				// accept agents based on the response outcome (only capacity-n bikers can be accepted)
+				// so the ranking is sorted based on how many people voted positively for each agent
 				acceptedRanked = voting.GetAcceptanceRanking(responses, weights)
 			case utils.Dictatorship:
 				dictator := s.GetAgentMap()[bike.GetRuler()]
@@ -260,6 +278,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 			totalSeatsFilled := len(agents)
 			emptySpaces := utils.BikersOnBike - totalSeatsFilled
 
+			// accept up to capacity
 			for i := 0; i < min(emptySpaces, len(acceptedRanked)); i++ {
 				accepted := acceptedRanked[i]
 				acceptedAgent := s.GetAgentMap()[accepted]
@@ -269,6 +288,7 @@ func (s *Server) ProcessJoiningRequests(inLimbo []uuid.UUID) {
 	}
 }
 
+// run the process on deciding this round's direction according to each governance's rules and on deciding the forces
 func (s *Server) RunActionProcess() {
 
 	for _, bike := range s.GetMegaBikes() {
@@ -278,7 +298,6 @@ func (s *Server) RunActionProcess() {
 		}
 
 		// get the direction for this round (either the voted on or what's decided by the leader/ dictator)
-		// for now it's actually just the elected lootbox (will change to accomodate for other proposal types)
 		var direction uuid.UUID
 		electedGovernance := bike.GetGovernance()
 		switch electedGovernance {
@@ -288,7 +307,9 @@ func (s *Server) RunActionProcess() {
 			for _, agent := range agents {
 				weights[agent.GetID()] = 1.0
 			}
+
 			direction = s.RunDemocraticAction(bike, weights)
+			// agetns incur in an energetic penalty for partecipating in a vote
 			for _, agent := range agents {
 				agent.UpdateEnergyLevel(-utils.DeliberativeDemocracyPenalty)
 			}
@@ -301,6 +322,7 @@ func (s *Server) RunActionProcess() {
 				agent.UpdateEnergyLevel(-utils.LeadershipDemocracyPenalty)
 			}
 		case utils.Dictatorship:
+			// the dictator is solely responsible for choosing the direction
 			direction = s.RunRulerAction(bike)
 		}
 
@@ -313,6 +335,7 @@ func (s *Server) RunActionProcess() {
 	}
 }
 
+// move the physics objects (i.e. mega bikes and awdi) according to the forces and orientations
 func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 
 	// Server requests to update their force and orientation based on agents pedaling
@@ -320,7 +343,7 @@ func (s *Server) MovePhysicsObject(po objects.IPhysicsObject) {
 	force := po.GetForce()
 	po.UpdateOrientation()
 	orientation := po.GetOrientation()
-	// Obtains the current xstate (i.e. velocity, acceleration, position, mass)
+	// Obtains the current state (i.e. velocity, acceleration, position, mass)
 	initialState := po.GetPhysicalState()
 
 	// Generates a new state based on the force and orientation
@@ -341,28 +364,26 @@ func (s *Server) GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVote
 		IfinalVotes[i] = v
 	}
 
-	// TODO integrate voting functions from group 8
 	return voting.WinnerFromDist(IfinalVotes, weights)
 }
 
-func (s *Server) AudiCollisionCheck() {
-	// Check collision for audi with any megaBike
+// check for deadly collisions
+func (s *Server) AwdiCollisionCheck() {
+	// Check collision for awdi with any megaBike
 	for _, megabike := range s.GetMegaBikes() {
-		if s.audi.CheckForCollision(megabike) {
+		if s.awdi.CheckForCollision(megabike) {
 			// Collision detected
-			// fmt.Printf("Collision detected between Audi and MegaBike %s \n", bikeid)
 			for _, agentToDelete := range megabike.GetAgents() {
-				// fmt.Printf("Agent %s killed by Audi \n", agentToDelete.GetID())
 				s.RemoveAgent(agentToDelete)
 			}
-			if utils.AudiRemovesMegaBike {
-				// fmt.Printf("Megabike %s removed by Audi \n", megabike.GetID())
+			if utils.AwdiRemovesMegaBike {
 				delete(s.megaBikes, megabike.GetID())
 			}
 		}
 	}
 }
 
+// if a bike has looted a box run the distribution process according to the governance type
 func (s *Server) LootboxCheckAndDistributions() {
 
 	// checks how many bikes have looted one lootbox to split it between them
@@ -382,7 +403,6 @@ func (s *Server) LootboxCheckAndDistributions() {
 		for lootid, lootbox := range s.GetLootBoxes() {
 			if megabike.CheckForCollision(lootbox) {
 				// Collision detected
-				// fmt.Printf("Collision detected between MegaBike %s and LootBox %s \n", bikeid, lootid)
 				agents := megabike.GetAgents()
 				totAgents := len(agents)
 
@@ -394,7 +414,7 @@ func (s *Server) LootboxCheckAndDistributions() {
 						allAllocations := make(map[uuid.UUID]voting.IdVoteMap)
 						for _, agent := range agents {
 							// the agents return their ideal lootbox split by assigning a number between 0 and 1 to
-							// each biker on their bike (including themselves)
+							// each biker on their bike (including themselves) ensuring they sum to 1
 							allAllocations[agent.GetID()] = agent.DecideAllocation()
 						}
 
@@ -402,13 +422,13 @@ func (s *Server) LootboxCheckAndDistributions() {
 						for i, v := range allAllocations {
 							Iallocations[i] = v
 						}
-						// TODO handle error
 						// make weights of 1 for all agents
 						weights := make(map[uuid.UUID]float64)
 						for _, agent := range agents {
 							weights[agent.GetID()] = 1.0
 						}
 						winningAllocation = voting.CumulativeDist(Iallocations, weights)
+
 					case utils.Leadership:
 						// get the map of weights from the leader
 						leader := s.GetAgentMap()[megabike.GetRuler()]
@@ -427,11 +447,13 @@ func (s *Server) LootboxCheckAndDistributions() {
 						for _, agent := range agents {
 							allAllocations[agent.GetID()] = agent.DecideAllocation()
 						}
+
 						Iallocations := make(map[uuid.UUID]voting.IVoter)
 						for i, v := range allAllocations {
 							Iallocations[i] = v
 						}
 						winningAllocation = voting.CumulativeDist(Iallocations, weights)
+
 					case utils.Dictatorship:
 						// dictator decides the allocation
 						leader := s.GetAgentMap()[megabike.GetRuler()]
@@ -441,11 +463,9 @@ func (s *Server) LootboxCheckAndDistributions() {
 					bikeShare := float64(looted[lootid]) // how many other bikes have looted this box
 
 					for agentID, allocation := range winningAllocation {
-						// fmt.Printf("total loot: %f \n", lootbox.GetTotalResources())
 						lootShare := allocation * (lootbox.GetTotalResources() / bikeShare)
 						agent := s.GetAgentMap()[agentID]
 						// Allocate loot based on the calculated utility share
-						// fmt.Printf("Agent %s allocated %f loot \n", agent.GetID(), lootShare)
 						agent.UpdateEnergyLevel(lootShare)
 						// Allocate points if the box is of the right colour
 						if agent.GetColour() == lootbox.GetColour() {
