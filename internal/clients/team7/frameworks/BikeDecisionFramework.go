@@ -7,6 +7,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// BikeDecisionFramework: Decides whether agent should stay on or leave current bike.
+// Depends on whether our bike has moved towards any of our lootbox proposals in previous iterations.
+
 // There will be different times when a decision needs to be made.
 // For example, when the biker is on the bike, the biker needs to decide whether to get off the bike or not.
 // This enum can be used to specify the type of decision that needs to be made.
@@ -37,7 +40,7 @@ type BikeDecisionFramework struct {
 func (bdf *BikeDecisionFramework) GetDecision(inputs BikeDecisionInputs) BikeDecision {
 	if inputs.DecisionType == StayOrLeaveBike {
 		distances := inputs.PreviousDistancesFromProposals
-		// find gradient of distances
+		// find gradient of distances from previous lootbox proposals
 		if len(distances) == 0 {
 			return BikeDecision{LeaveBike: false}
 		}

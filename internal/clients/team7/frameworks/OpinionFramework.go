@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// OpinionFramework: Formulates the agent's opinion on different lootboxes.
+
 type OpinionFrameworkInputs struct {
 	AgentOpinion map[uuid.UUID]float64
 	Mindset      float64

@@ -1,6 +1,6 @@
 package frameworks
 
-// This code returns the governance type the agent wants.
+// VoteGovernance: This code returns the governance type the agent wants.
 // Initial strategy is to always vote for "deliberative democracy".
 
 import (

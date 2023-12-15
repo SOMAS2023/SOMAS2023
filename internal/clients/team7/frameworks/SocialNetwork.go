@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// SocialNetwork: Contains the agent's social network, from which trust for other agents is derived.
+
 const maxTrustIterations int = 6
 
 type SocialConnection struct {
@@ -212,7 +214,6 @@ func (sn *SocialNetwork) CalcDistributionPenalties(resourceDistribution map[uuid
 	return idPenaltyMap // Return the calculated penalty map
 }
 
-// TODO: Find shift to account for forgiveness
 func (sn *SocialNetwork) CalcPedallingPenalties(agentForces map[uuid.UUID]utils.Forces, energyLevelMap map[uuid.UUID]float64, agentIds []uuid.UUID) map[uuid.UUID]float64 {
 
 	pedallingPenaltyMap := make(map[uuid.UUID]float64)

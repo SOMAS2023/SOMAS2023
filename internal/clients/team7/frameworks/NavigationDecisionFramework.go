@@ -14,7 +14,7 @@ type NavigationInputs struct {
 }
 
 /*
-This framework can be used for determining the navigation decisions of the biker.
+NavigationDecisionFramework: Decides steering, braking and pedalling strategy of agent.
 
 	Input: NavigationInputs
 	Output: Forces

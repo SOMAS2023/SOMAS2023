@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// EnvironmentHandler: A compilation of useful functions to get information about the environment.
+
 type EnvironmentHandler struct {
 	GameState     objects.IGameState // Game state to be updated in each round
 	CurrentBikeId uuid.UUID          // unique ID of current bike
