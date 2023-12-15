@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// agents only have access to a limited subset of the interface functions
+
 func (gs GameStateDump) GetLootBoxes() map[uuid.UUID]objects.ILootBox {
 	result := make(map[uuid.UUID]objects.ILootBox)
 	for id, lb := range gs.LootBoxes {
@@ -32,8 +34,8 @@ func (gs GameStateDump) GetAgents() map[uuid.UUID]objects.IBaseBiker {
 	return result
 }
 
-func (gs GameStateDump) GetAudi() objects.IAudi {
-	return gs.Audis[0]
+func (gs GameStateDump) GetAwdi() objects.IAwdi {
+	return gs.Awdis[0]
 }
 
 func (o PhysicsObjectDump) GetID() uuid.UUID {
@@ -120,6 +122,6 @@ func (l LootBoxDump) GetColour() utils.Colour {
 	return l.Colour
 }
 
-func (a AudiDump) GetTargetID() uuid.UUID {
+func (a AwdiDump) GetTargetID() uuid.UUID {
 	return a.TargetBike
 }

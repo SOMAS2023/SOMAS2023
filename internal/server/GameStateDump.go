@@ -15,7 +15,7 @@ type GameStateDump struct {
 	Agents    map[uuid.UUID]AgentDump   `json:"agents"`
 	Bikes     map[uuid.UUID]BikeDump    `json:"bikes"`
 	LootBoxes map[uuid.UUID]LootBoxDump `json:"loot_boxes"`
-	Audis     []AudiDump                `json:"audis"`
+	Awdis     []AwdiDump                `json:"awdis"`
 }
 
 type PhysicsObjectDump struct {
@@ -55,7 +55,7 @@ type LootBoxDump struct {
 	ColourString   string       `json:"colour"`
 }
 
-type AudiDump struct {
+type AwdiDump struct {
 	PhysicsObjectDump
 	ID         uuid.UUID `json:"id"`
 	TargetBike uuid.UUID `json:"target_bike"`
@@ -70,6 +70,9 @@ func newPhysicsObjectDump(physicsObject objects.IPhysicsObject) PhysicsObjectDum
 	}
 }
 
+// the updated game state dump will be used both by the visualiser (at the end of a round)
+// and by the agents, as a representation of the state of the game (to be updated every time anything
+// changes in the game, such as agents leaving a bike, bikes moving or lootboxes being looted)
 func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 	agents := make(map[uuid.UUID]AgentDump, len(s.GetAgentMap()))
 	for id, agent := range s.GetAgentMap() {
@@ -127,10 +130,10 @@ func (s *Server) NewGameStateDump(iteration int) GameStateDump {
 		Agents:    agents,
 		Bikes:     bikes,
 		LootBoxes: lootBoxes,
-		Audis: []AudiDump{{
-			PhysicsObjectDump: newPhysicsObjectDump(s.audi),
-			ID:                s.audi.GetID(),
-			TargetBike:        s.audi.GetTargetID(),
+		Awdis: []AwdiDump{{
+			PhysicsObjectDump: newPhysicsObjectDump(s.awdi),
+			ID:                s.awdi.GetID(),
+			TargetBike:        s.awdi.GetTargetID(),
 		}},
 	}
 }

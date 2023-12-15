@@ -17,7 +17,7 @@ func (t5 *team5Agent) CalculateLootBoxPreferences(gameState objects.IGameState, 
 
 	// retrieve agent and loot boxes from game state
 	position := gameState.GetMegaBikes()[t5.GetBike()].GetPosition()
-	audiPos := t5.GetGameState().GetAudi().GetPosition()
+	awdiPos := t5.GetGameState().GetAwdi().GetPosition()
 
 	for _, lootBoxID := range proposals {
 		lootBox = gameState.GetLootBoxes()[lootBoxID]
@@ -25,10 +25,10 @@ func (t5 *team5Agent) CalculateLootBoxPreferences(gameState objects.IGameState, 
 		colorPreference := calculateColorPreference(t5.GetColour(), lootBox.GetColour())
 		energyPreference := calculateEnergyPreference(t5.GetEnergyLevel(), lootBox.GetTotalResources())
 
-		distanceFromAudi := calculateDistanceToObject(audiPos, lootBox.GetPosition())
+		distanceFromAwdi := calculateDistanceToObject(awdiPos, lootBox.GetPosition())
 		finalPreferences[lootBoxID] = 0.4*(1/distanceFromBike) + 0.3*colorPreference + 0.2*energyPreference
 
-		if distanceFromAudi < (2 * utils.CollisionThreshold) {
+		if distanceFromAwdi < (2 * utils.CollisionThreshold) {
 			finalPreferences[lootBoxID] = 0
 		}
 

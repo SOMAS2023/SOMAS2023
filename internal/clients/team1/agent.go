@@ -29,7 +29,7 @@ const effortConstant = 1             // weight of effort in opinion
 const fairnessDifference = 0.5       // modifies how much fairness increases of decreases, higher is more increase, 0.5 is fair
 const lowEnergyLevel = 0.3           // energy level below which the agent will try to get a lootbox of the desired colour
 const colorOpinionConstant = 0.2     // how much any agent likes any other of the same colour in the objective function
-const audiDistanceThreshold = 75     // how close the agent must be to the audi to run away
+const awdiDistanceThreshold = 75     // how close the agent must be to the awdi to run away
 const reputationScaling = 0.1        //scaling factor for effort, the higher it is the more other agents' opinion influences ours
 
 // Governance decision constants
@@ -44,7 +44,7 @@ const dictatorshipReputationThreshold = 0.7
 const majorityWeight = 3.0
 const lootboxWeight = 0.2
 const lootboxColourWeight = 0.6
-const audiDistWeight = 0.7
+const awdiDistWeight = 0.7
 const opinionWeight = 0.5
 const nearbyBikeWeight = 0.5
 
@@ -94,7 +94,7 @@ func (bb *Biker1) ScoreBike(bike obj.IMegaBike) float64 {
 	score := majorityWeight * majorityScore
 	score += lootboxWeight * float64(boxCount)
 	score += lootboxColourWeight * float64(colourCount)
-	score += audiDistWeight * bb.DistanceFromAudi(bike)
+	score += awdiDistWeight * bb.DistanceFromAwdi(bike)
 	score += opinionWeight * bb.GetAverageOpinionOfBike(bike)
 	score -= nearbyBikeWeight * float64(bikeCount)
 

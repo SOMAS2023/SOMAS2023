@@ -272,7 +272,7 @@ func (bb *Agent8) DecideAction() objects.BikerAction {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> stage 3 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // Dicide which lootbox to vote for round 1
-// New strategy: we propose two consider the angle between our bike and the lootbox and also the audi
+// New strategy: we propose two consider the angle between our bike and the lootbox and also the awdi
 func (bb *Agent8) ProposeDirection() uuid.UUID {
 	// Get all lootboxes and initialise the preferences map
 	lootBoxes := bb.GetGameState().GetLootBoxes()
@@ -283,15 +283,15 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 	for boxId, lootBox := range lootBoxes {
 		distance := 0.0
 		angleBetweenBikeAndBox := 0.0
-		angleBetweenBikeAndAudi := 0.0
+		angleBetweenBikeAndAwdi := 0.0
 		//calcuate the angle between our bike and the lootbox
 		// check if we are onbike
 		if bb.GetBike() != uuid.Nil {
 			// get distance between our bike and the lootbox
 			angleBetweenBikeAndBox = math.Atan2(lootBox.GetPosition().Y-bb.GetLocation().Y, lootBox.GetPosition().X-bb.GetLocation().X)/math.Pi -
 				bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
-				//calculate the angle between our bike and the audi
-			angleBetweenBikeAndAudi = math.Atan2(bb.GetGameState().GetAudi().GetPosition().Y-bb.GetLocation().Y, bb.GetGameState().GetAudi().GetPosition().X-bb.GetLocation().X)/math.Pi -
+				//calculate the angle between our bike and the awdi
+			angleBetweenBikeAndAwdi = math.Atan2(bb.GetGameState().GetAwdi().GetPosition().Y-bb.GetLocation().Y, bb.GetGameState().GetAwdi().GetPosition().X-bb.GetLocation().X)/math.Pi -
 				bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
 			distance = calculateDistance(bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetPosition(), lootBox.GetPosition())
 		}
@@ -300,24 +300,24 @@ func (bb *Agent8) ProposeDirection() uuid.UUID {
 		energyWeighting := bb.GetEnergyLevel()
 
 		// The higher energy, the higher weight for target color
-		distanceBoxAudi := calculateDistance(bb.GetGameState().GetAudi().GetPosition(), lootBox.GetPosition())
+		distanceBoxAwdi := calculateDistance(bb.GetGameState().GetAwdi().GetPosition(), lootBox.GetPosition())
 
 		// check the angle
 		if bb.GetBike() != uuid.Nil {
-			if (angleBetweenBikeAndBox > 0 && angleBetweenBikeAndAudi > 0) || (angleBetweenBikeAndBox < 0 && angleBetweenBikeAndAudi < 0) {
-				if math.Abs(angleBetweenBikeAndBox-angleBetweenBikeAndAudi) > safeAngle {
+			if (angleBetweenBikeAndBox > 0 && angleBetweenBikeAndAwdi > 0) || (angleBetweenBikeAndBox < 0 && angleBetweenBikeAndAwdi < 0) {
+				if math.Abs(angleBetweenBikeAndBox-angleBetweenBikeAndAwdi) > safeAngle {
 					safe = true
 				}
 			} else {
-				if (angleBetweenBikeAndBox + angleBetweenBikeAndAudi) > 0 {
+				if (angleBetweenBikeAndBox + angleBetweenBikeAndAwdi) > 0 {
 					safe = true
 				}
 			}
 
 		}
-		// if the lootbox is near audi, igore this box
-		if distanceBoxAudi > 20 && safe {
-			// if distanceBoxAudi > 20 {
+		// if the lootbox is near awdi, igore this box
+		if distanceBoxAwdi > 20 && safe {
+			// if distanceBoxAwdi > 20 {
 			// check our energylevel and calculate the preference of lootbox
 			if energyWeighting > GlobalParameters.EnergyThreshold {
 				// colorPreference + distancePreference
@@ -427,25 +427,25 @@ func (bb *Agent8) DecideForce(direction uuid.UUID) {
 		}
 	}
 
-	// initialise the distance between our bike and the audi to check our risky score
-	distanceAudiBike := 0.0
+	// initialise the distance between our bike and the awdi to check our risky score
+	distanceAwdiBike := 0.0
 
-	// if we are onbike, calculate the distance between our bike and the audi
+	// if we are onbike, calculate the distance between our bike and the awdi
 	if bb.GetBike() != uuid.Nil {
-		distanceAudiBike = calculateDistance(bb.GetLocation(), bb.GetGameState().GetAudi().GetPosition())
+		distanceAwdiBike = calculateDistance(bb.GetLocation(), bb.GetGameState().GetAwdi().GetPosition())
 	}
 
 	// intialise the angel for tuning
 	var angle float64
 
 	// check if we are in danger
-	if distanceAudiBike > 15 {
+	if distanceAwdiBike > 15 {
 		angle = math.Atan2(target.GetPosition().Y-bb.GetLocation().Y, target.GetPosition().X-bb.GetLocation().X)/math.Pi -
 			bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
 	} else {
 		// if we are in danger, run away
 		if bb.GetBike() != uuid.Nil {
-			angle = math.Atan2(bb.GetLocation().Y-bb.GetGameState().GetAudi().GetPosition().Y, bb.GetLocation().X-bb.GetGameState().GetAudi().GetPosition().X)/math.Pi -
+			angle = math.Atan2(bb.GetLocation().Y-bb.GetGameState().GetAwdi().GetPosition().Y, bb.GetLocation().X-bb.GetGameState().GetAwdi().GetPosition().X)/math.Pi -
 				bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation()
 		}
 	}

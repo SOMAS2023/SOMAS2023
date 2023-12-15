@@ -32,12 +32,12 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 	currLocation := bb.GetLocation()
 	targetPos := lootBoxes[direction].GetPosition()
 
-	// If audi is close, steer away from it
-	if bb.DistanceFromAudi(bb.GetBikeInstance()) < audiDistanceThreshold {
-		audiPos := bb.GetGameState().GetAudi().GetPosition()
-		deltaX := audiPos.X - currLocation.X
-		deltaY := audiPos.Y - currLocation.Y
-		// Steer in opposite direction to audi (regardless of governance)
+	// If awdi is close, steer away from it
+	if bb.DistanceFromAwdi(bb.GetBikeInstance()) < awdiDistanceThreshold {
+		awdiPos := bb.GetGameState().GetAwdi().GetPosition()
+		deltaX := awdiPos.X - currLocation.X
+		deltaY := awdiPos.Y - currLocation.Y
+		// Steer in opposite direction to awdi (regardless of governance)
 		angle := math.Atan2(-deltaY, -deltaX)
 		normalisedAngle := angle / math.Pi
 		turningDecision := utils.TurningDecision{
@@ -45,12 +45,12 @@ func (bb *Biker1) DecideForce(direction uuid.UUID) {
 			SteeringForce: normalisedAngle - bb.GetBikeInstance().GetOrientation(),
 		}
 
-		escapeAudiForces := utils.Forces{
+		escapeAwdiForces := utils.Forces{
 			Pedal:   bb.getPedalForce(),
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		bb.SetForces(escapeAudiForces)
+		bb.SetForces(escapeAwdiForces)
 	}
 
 	//agent doesn't rebel, just decides to leave next round if dislike vote

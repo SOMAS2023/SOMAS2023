@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// the simulation loop represents a round
 func (s *Server) RunSimLoop(iterations int) []GameStateDump {
 
 	s.ResetGameState()
@@ -27,6 +28,8 @@ func (s *Server) RunSimLoop(iterations int) []GameStateDump {
 	return gameStates
 }
 
+// remove all agents from bikes, respawn dead agents (if required), replenish energy (if required), reset points (if required)
+// replenish environment objects
 func (s *Server) ResetGameState() {
 	// kick everyone off bikes
 	for _, agent := range s.GetAgentMap() {
@@ -73,8 +76,8 @@ func (s *Server) ResetGameState() {
 	s.replenishMegaBikes()
 }
 
+// run the founding stage in which agents organise themselves on bikes
 func (s *Server) FoundingInstitutions() {
-	// Say which goverance method you might choose
 
 	// run founding messaging session
 	s.UpdateGameStates()
@@ -89,7 +92,6 @@ func (s *Server) FoundingInstitutions() {
 	}
 
 	// tally the choices
-	// FoundingChoices := make([]voting.IVoter, len(allAllocations))
 	// FoundingAllocations is a map of governance method to number of agents that want that governance method
 	foundingTotals, _ := voting.TallyFoundingVotes(s.foundingChoices)
 
@@ -99,7 +101,7 @@ func (s *Server) FoundingInstitutions() {
 	for governanceMethod, numBikers := range foundingTotals {
 		megaBikesNeeded := int(math.Ceil(float64(numBikers) / float64(utils.BikersOnBike)))
 		govBikes[governanceMethod] = make([]uuid.UUID, 0, megaBikesNeeded)
-		// get bikes for this governance
+		// get bikes for this governance (enough to accommodate all bikers who chose this governance method)
 		for i := 0; i < megaBikesNeeded; i++ {
 			foundBike := false
 			if len(bikesUsed) == len(s.megaBikes) {
@@ -165,12 +167,8 @@ func (s *Server) Start() {
 	s.deadAgents = make(map[uuid.UUID]objects.IBaseBiker)
 	for i := 0; i < s.GetIterations(); i++ {
 		fmt.Printf("Game Loop %d running... \n \n", i)
-		// fmt.Printf("Main game loop running...\n\n")
 		gameStates = append(gameStates, s.RunSimLoop(utils.RoundIterations))
-		// fmt.Printf("\nMain game loop finished.\n\n")
-		// fmt.Printf("Messaging session started...\n\n")
 		s.RunMessagingSession()
-		// fmt.Printf("\nMessaging session completed\n\n")
 		fmt.Printf("Game Loop %d completed.\n", i)
 	}
 	s.outputResults(gameStates)

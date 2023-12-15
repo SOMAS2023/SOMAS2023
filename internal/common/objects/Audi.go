@@ -8,66 +8,66 @@ import (
 	"github.com/google/uuid"
 )
 
-type IAudi interface {
+type IAwdi interface {
 	IPhysicsObject
 	UpdateGameState(state IGameState)
 	GetTargetID() uuid.UUID
 }
 
-type Audi struct {
+type Awdi struct {
 	*PhysicsObject
 	target    IMegaBike
 	gameState IGameState
 }
 
-// GetAudi is a constructor for Audi that initializes it with a new UUID and default position.
-func GetAudi() *Audi {
-	return &Audi{
-		PhysicsObject: GetPhysicsObject(utils.MassAudi),
+// GetAwdi is a constructor for Awdi that initializes it with a new UUID and default position.
+func GetAwdi() *Awdi {
+	return &Awdi{
+		PhysicsObject: GetPhysicsObject(utils.MassAwdi),
 	}
 }
 
-func GetIAudi() IAudi {
-	return &Audi{
-		PhysicsObject: GetPhysicsObject(utils.MassAudi),
+func GetIAwdi() IAwdi {
+	return &Awdi{
+		PhysicsObject: GetPhysicsObject(utils.MassAwdi),
 	}
 }
 
-// Calculates and returns the desired force of the audi based on the current gamestate
-func (audi *Audi) UpdateForce() {
-	// Compute the target Megabike, which will update audi.target
-	audi.ComputeTarget()
+// Calculates and returns the desired force of the awdi based on the current gamestate
+func (awdi *Awdi) UpdateForce() {
+	// Compute the target Megabike, which will update awdi.target
+	awdi.ComputeTarget()
 
-	if audi.target == nil { // no target, audi will not apply a force and eventually come to a stop
-		audi.force = 0.0
+	if awdi.target == nil { // no target, awdi will not apply a force and eventually come to a stop
+		awdi.force = 0.0
 	} else {
-		audi.force = utils.AudiMaxForce // Otherwise apply max force to get to target MegaBike
+		awdi.force = utils.AwdiMaxForce // Otherwise apply max force to get to target MegaBike
 	}
 }
 
-// Calculates and returns the desired orientation of the audi based on the current gamestate
-func (audi *Audi) UpdateOrientation() {
-	// If no target, audi will not change orientation
+// Calculates and returns the desired orientation of the awdi based on the current gamestate
+func (awdi *Awdi) UpdateOrientation() {
+	// If no target, awdi will not change orientation
 	// Otherwise, new orientation is calculated based on positioning of target
-	if audi.target != nil {
-		audi.orientation = phy.ComputeOrientation(audi.coordinates, audi.target.GetPosition())
+	if awdi.target != nil {
+		awdi.orientation = phy.ComputeOrientation(awdi.coordinates, awdi.target.GetPosition())
 	}
 }
 
 // Computes the target Megabike based on current gameState
-func (audi *Audi) ComputeTarget() {
+func (awdi *Awdi) ComputeTarget() {
 	// search for target
 	minDistance := math.Inf(1)
 	minVelocity := math.Inf(1)
-	audi.target = nil
-	for _, bike := range audi.gameState.GetMegaBikes() {
-		if utils.AudiOnlyTargetsStationaryMegaBike {
+	awdi.target = nil
+	for _, bike := range awdi.gameState.GetMegaBikes() {
+		if utils.AwdiOnlyTargetsStationaryMegaBike {
 			if bike.GetVelocity() != 0.0 {
 				continue
 			}
 		}
 
-		if !utils.AudiTargetsEmptyMegaBike {
+		if !utils.AwdiTargetsEmptyMegaBike {
 			agentsOnBike := bike.GetAgents()
 			if len(agentsOnBike) == 0 {
 				continue
@@ -79,28 +79,28 @@ func (audi *Audi) ComputeTarget() {
 			continue
 		}
 
-		distance := phy.ComputeDistance(audi.coordinates, bike.GetPosition())
+		distance := phy.ComputeDistance(awdi.coordinates, bike.GetPosition())
 		// minimize the velocity first
 		if bike.GetVelocity() < minVelocity {
-			audi.target = bike
+			awdi.target = bike
 		} else if distance < minDistance { // if same velocity, then minimize distance
-			audi.target = bike
+			awdi.target = bike
 		} else {
 			continue
 		}
-		minVelocity = audi.target.GetVelocity()
+		minVelocity = awdi.target.GetVelocity()
 		minDistance = distance
 	}
 }
 
 // Updates gameState member variable
-func (audi *Audi) UpdateGameState(state IGameState) {
-	audi.gameState = state
+func (awdi *Awdi) UpdateGameState(state IGameState) {
+	awdi.gameState = state
 }
 
-func (audi *Audi) GetTargetID() uuid.UUID {
-	if audi.target != nil {
-		return audi.target.GetID()
+func (awdi *Awdi) GetTargetID() uuid.UUID {
+	if awdi.target != nil {
+		return awdi.target.GetID()
 	} else {
 		return uuid.UUID{}
 	}

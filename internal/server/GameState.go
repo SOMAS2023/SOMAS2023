@@ -16,8 +16,8 @@ func (s *Server) GetLootBoxes() map[uuid.UUID]objects.ILootBox {
 	return s.lootBoxes
 }
 
-func (s *Server) GetAudi() objects.IAudi {
-	return s.audi
+func (s *Server) GetAwdi() objects.IAwdi {
+	return s.awdi
 }
 
 // get a map of megaBikeIDs mapping to the ids of all Bikers that are trying to join it
@@ -26,7 +26,7 @@ func (s *Server) GetJoiningRequests(inLimbo []uuid.UUID) map[uuid.UUID][]uuid.UU
 	bikeRequests := make(map[uuid.UUID][]uuid.UUID)
 
 	for agentID, agent := range s.GetAgentMap() {
-		// don't process joining requests of agents in limbo
+		// don't process joining requests of agents in first round of limbo (ie the ones that have just left the bike)
 		if !agent.GetBikeStatus() && !slices.Contains(inLimbo, agentID) {
 			bike := agent.GetBike()
 			if ids, ok := bikeRequests[bike]; ok {

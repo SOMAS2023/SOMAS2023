@@ -18,27 +18,27 @@ const BikerAgentCount = 56                 // 56 agents in total
 
 type IBaseBikerServer interface {
 	baseserver.IServer[objects.IBaseBiker]
-	GetMegaBikes() map[uuid.UUID]objects.IMegaBike
-	GetLootBoxes() map[uuid.UUID]objects.ILootBox
-	GetAudi() objects.IAudi
-	GetJoiningRequests([]uuid.UUID) map[uuid.UUID][]uuid.UUID
-	GetRandomBikeId() uuid.UUID
-	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID
-	RunRulerAction(bike objects.IMegaBike) uuid.UUID
-	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID
-	NewGameStateDump(iteration int) GameStateDump
-	GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID
-	HandleKickoutProcess() []uuid.UUID
-	ProcessJoiningRequests(inLimbo []uuid.UUID)
-	RunActionProcess()
-	AudiCollisionCheck()
-	AddAgentToBike(agent objects.IBaseBiker)
-	FoundingInstitutions()
-	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID
-	LootboxCheckAndDistributions()
-	ResetGameState()
-	GetDeadAgents() map[uuid.UUID]objects.IBaseBiker
-	UpdateGameStates()
+	GetMegaBikes() map[uuid.UUID]objects.IMegaBike                                                               // returns all megabikes present on map
+	GetLootBoxes() map[uuid.UUID]objects.ILootBox                                                                // returns all looboxes present on map
+	GetAwdi() objects.IAwdi                                                                                      // returns the awdi interface
+	GetJoiningRequests([]uuid.UUID) map[uuid.UUID][]uuid.UUID                                                    // returns a map from bike id to the id of all agents trying to joing that bike
+	GetRandomBikeId() uuid.UUID                                                                                  // gets the id of any random bike in the map
+	RulerElection(agents []objects.IBaseBiker, governance utils.Governance) uuid.UUID                            // runs the ruler election
+	RunRulerAction(bike objects.IMegaBike) uuid.UUID                                                             // gets the direction from the dictator
+	RunDemocraticAction(bike objects.IMegaBike, weights map[uuid.UUID]float64) uuid.UUID                         // gets the direction in voting-based governances
+	NewGameStateDump(iteration int) GameStateDump                                                                // creates a new game state dump
+	GetLeavingDecisions(gameState objects.IGameState) []uuid.UUID                                                // gets the list of agents that want to leave their bike
+	HandleKickoutProcess() []uuid.UUID                                                                           // handles the kickout process
+	ProcessJoiningRequests(inLimbo []uuid.UUID)                                                                  // processes the joining requests
+	RunActionProcess()                                                                                           // runs the action (direction choice + pedalling) process for each bike
+	AwdiCollisionCheck()                                                                                         // checks for collisions between awdi and bikes
+	AddAgentToBike(agent objects.IBaseBiker)                                                                     // adds an agent to a bike (which also has some side effects on some server data structures)
+	FoundingInstitutions()                                                                                       // runs the founding institutions process
+	GetWinningDirection(finalVotes map[uuid.UUID]voting.LootboxVoteMap, weights map[uuid.UUID]float64) uuid.UUID // gets the winning direction according to the selected voting process
+	LootboxCheckAndDistributions()                                                                               // checks for collision between bike and lootbox and runs the distribution process
+	ResetGameState()                                                                                             // resets game state (at the beginning of a new round)
+	GetDeadAgents() map[uuid.UUID]objects.IBaseBiker                                                             // returns the map of dead agents
+	UpdateGameStates()                                                                                           // updates the game state object of all agents
 }
 
 type Server struct {
@@ -47,9 +47,9 @@ type Server struct {
 	megaBikes map[uuid.UUID]objects.IMegaBike
 	// megaBikeRiders is a mapping from Agent ID -> ID of the bike that they are riding
 	// helps with efficiently managing ridership status
-	megaBikeRiders  map[uuid.UUID]uuid.UUID
-	audi            objects.IAudi
-	deadAgents      map[uuid.UUID]objects.IBaseBiker
+	megaBikeRiders  map[uuid.UUID]uuid.UUID // maps riders to their bike
+	awdi            objects.IAwdi
+	deadAgents      map[uuid.UUID]objects.IBaseBiker // map of dead agents (used for respawning at the end of a round )
 	foundingChoices map[uuid.UUID]utils.Governance
 }
 
@@ -60,7 +60,7 @@ func Initialize(iterations int) IBaseBikerServer {
 		megaBikes:      make(map[uuid.UUID]objects.IMegaBike),
 		megaBikeRiders: make(map[uuid.UUID]uuid.UUID),
 		deadAgents:     make(map[uuid.UUID]objects.IBaseBiker),
-		audi:           objects.GetIAudi(),
+		awdi:           objects.GetIAwdi(),
 	}
 	server.replenishLootBoxes()
 	server.replenishMegaBikes()
@@ -68,6 +68,7 @@ func Initialize(iterations int) IBaseBikerServer {
 	return server
 }
 
+// when an agent dies it needs to be removed from its bike, the riders map and the agents map + it's added to the dead agents map
 func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
 	id := agent.GetID()
 	// add agent to dead agent map
@@ -80,6 +81,7 @@ func (s *Server) RemoveAgent(agent objects.IBaseBiker) {
 	}
 }
 
+// ensures that adding agents to a bike is atomic (ie no agent is added to a bike while still resulting as on another bike)
 func (s *Server) AddAgentToBike(agent objects.IBaseBiker) {
 	// Remove the agent from the old bike, if it was on one
 	if oldBikeId, ok := s.megaBikeRiders[agent.GetID()]; ok {

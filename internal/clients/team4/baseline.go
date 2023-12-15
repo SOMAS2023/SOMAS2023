@@ -69,10 +69,10 @@ type IBaselineAgent interface {
 }
 
 // general weights
-const audiDistanceThreshold = 75
+const awdiDistanceThreshold = 75
 const minEnergyThreshold = 0.4
 
-const audiDistanceWeight = 8.0
+const awdiDistanceWeight = 8.0
 const distanceWeight = 7.0
 const reputationWeight = 2.0
 const honestyWeight = 1.0
@@ -93,7 +93,7 @@ type BaselineAgent struct {
 	*objects.BaseBiker
 	currentBike       uuid.UUID
 	capacity          int       //number of agents on my bike
-	audiTarget        uuid.UUID //current bike audi is targeting
+	awdiTarget        uuid.UUID //current bike awdi is targeting
 	currentGovernance utils.Governance
 	currentRuler      uuid.UUID //ruler of the current bike = uuid.Nil if no ruler
 	targetLoot        uuid.UUID

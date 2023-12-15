@@ -13,17 +13,17 @@ func (bb *Team6Biker) DecideForce(direction uuid.UUID) {
 	currLocation := bb.GetLocation()
 	currentLootBoxes := bb.GetGameState().GetLootBoxes()
 
-	audiPos := bb.GetGameState().GetAudi().GetPosition()
-	deltaXAudi := audiPos.X - currLocation.X
-	deltaYAudi := audiPos.Y - currLocation.Y
-	distAudi := math.Sqrt(deltaXAudi*deltaXAudi + deltaYAudi*deltaYAudi)
+	awdiPos := bb.GetGameState().GetAwdi().GetPosition()
+	deltaXAwdi := awdiPos.X - currLocation.X
+	deltaYAwdi := awdiPos.Y - currLocation.Y
+	distAwdi := math.Sqrt(deltaXAwdi*deltaXAwdi + deltaYAwdi*deltaYAwdi)
 	targetPos := currentLootBoxes[direction].GetPosition()
 	targetDeltaX := targetPos.X - currLocation.X
 	targetDeltaY := targetPos.Y - currLocation.Y
 	targetNormAngle := math.Atan2(targetDeltaY, targetDeltaX) / math.Pi
 
 	// Check if there are lootboxes available and move towards closest one
-	if distAudi > distAudiThreshold {
+	if distAwdi > distAwdiThreshold {
 
 		deltaX := targetPos.X - currLocation.X
 		deltaY := targetPos.Y - currLocation.Y
@@ -47,13 +47,13 @@ func (bb *Team6Biker) DecideForce(direction uuid.UUID) {
 			Turning: turningDecision,
 		}
 		bb.SetForces(nearestBoxForces)
-	} else { // otherwise move away from audi
-		audiPos := bb.GetGameState().GetAudi().GetPosition()
+	} else { // otherwise move away from awdi
+		awdiPos := bb.GetGameState().GetAwdi().GetPosition()
 
-		deltaX := audiPos.X - currLocation.X
-		deltaY := audiPos.Y - currLocation.Y
+		deltaX := awdiPos.X - currLocation.X
+		deltaY := awdiPos.Y - currLocation.Y
 
-		// Steer in opposite direction to audi
+		// Steer in opposite direction to awdi
 		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
 		lootAngle := targetNormAngle - normalisedAngle
@@ -85,11 +85,11 @@ func (bb *Team6Biker) DecideForce(direction uuid.UUID) {
 			SteeringForce: FinalAngle - bb.GetGameState().GetMegaBikes()[bb.GetBike()].GetOrientation(),
 		}
 
-		escapeAudiForces := utils.Forces{
+		escapeAwdiForces := utils.Forces{
 			Pedal:   utils.BikerMaxForce * 0.5,
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		bb.SetForces(escapeAudiForces)
+		bb.SetForces(escapeAwdiForces)
 	}
 }

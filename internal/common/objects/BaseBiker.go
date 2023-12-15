@@ -195,17 +195,17 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 			Turning: turningDecision,
 		}
 		bb.SetForces(nearestBoxForces)
-	} else { // otherwise move away from audi
-		audiPos := bb.GetGameState().GetAudi().GetPosition()
+	} else { // otherwise move away from awdi
+		awdiPos := bb.GetGameState().GetAwdi().GetPosition()
 
-		deltaX := audiPos.X - currLocation.X
-		deltaY := audiPos.Y - currLocation.Y
+		deltaX := awdiPos.X - currLocation.X
+		deltaY := awdiPos.Y - currLocation.Y
 
-		// Steer in opposite direction to audi
+		// Steer in opposite direction to awdi
 		angle := math.Atan2(deltaY, deltaX)
 		normalisedAngle := angle / math.Pi
 
-		// Steer in opposite direction to audi
+		// Steer in opposite direction to awdi
 		var flipAngle float64
 		if normalisedAngle < 0.0 {
 			flipAngle = normalisedAngle + 1.0
@@ -219,12 +219,12 @@ func (bb *BaseBiker) DecideForce(direction uuid.UUID) {
 			SteeringForce: flipAngle - bb.gameState.GetMegaBikes()[bb.megaBikeId].GetOrientation(),
 		}
 
-		escapeAudiForces := utils.Forces{
+		escapeAwdiForces := utils.Forces{
 			Pedal:   utils.BikerMaxForce,
 			Brake:   0.0,
 			Turning: turningDecision,
 		}
-		bb.SetForces(escapeAudiForces)
+		bb.SetForces(escapeAwdiForces)
 	}
 }
 
