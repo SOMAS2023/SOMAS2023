@@ -58,7 +58,7 @@ type Biker1 struct {
 	opinions              map[uuid.UUID]Opinion // contains the opinions of all agents
 	desiredBike           uuid.UUID             // the bike the agent wants to go to
 	pursuedBikes          []uuid.UUID           // the bikes the agent has tried to go to
-	mostRecentBike        uuid.UUID             // the bike the agent was on last round
+	mostRecentBike        uuid.UUID             // the bike the agent was on most recently
 	timeInLimbo           int                   // the number of rounds the agent has been off a bike
 	prevOnBike            bool                  // whether the agent was on a bike last round
 	numberOfLeaves        int                   // the number of times the agent has left a bike
