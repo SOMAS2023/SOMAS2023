@@ -8,8 +8,7 @@ import (
 )
 
 // -------------------GOVERMENT CHOICE FUNCTIONS--------------------------
-
-// Not implemented on Server yet so this is just a placeholder
+// DecideGoverment is the main function that decides the goverment type
 func (bb *Biker1) DecideGovernance() utils.Governance {
 	bb.setOpinions()
 	if bb.DecideDictatorship() {
@@ -23,7 +22,6 @@ func (bb *Biker1) DecideGovernance() utils.Governance {
 	//return 2
 }
 
-// Might be unnecesary as this is the default goverment choice for us
 func (bb *Biker1) DecideDemocracy() bool {
 	founding_agents := bb.GetAllAgents()
 	totalOpinion := 0.0
@@ -79,6 +77,7 @@ func (bb *Biker1) DecideDictatorship() bool {
 }
 
 // ----------------------LEADER/DICTATOR VOTING FUNCTIONS------------------
+
 func (bb *Biker1) VoteLeader() voting.IdVoteMap {
 
 	votes := make(voting.IdVoteMap)
@@ -127,10 +126,6 @@ func (bb *Biker1) VoteDictator() voting.IdVoteMap {
 	}
 	for _, agent := range fellowBikers {
 		votes[agent.GetID()] = votes[agent.GetID()] / votesum
-	}
-	votesum2 := 0.0
-	for _, agent := range fellowBikers {
-		votesum2 = votesum2 + votes[agent.GetID()]
 	}
 	return votes
 }

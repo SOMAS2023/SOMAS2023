@@ -9,13 +9,13 @@ import (
 )
 
 // --------------------LEADER FUNCTIONS------------------
-func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
-	// decides the weights of other peoples votes
-	// Leadership democracy
-	// takes in proposed action as a parameter
-	// only run for the leader after everyone's proposeDirection is run
-	// assigns vector of weights to everyone's proposals, 0.5 is neutral
 
+// decides the weights of other peoples votes
+// Leadership democracy
+// takes in proposed action as a parameter
+// only run for the leader after everyone's proposeDirection is run
+// assigns vector of weights to everyone's proposals, 0.5 is neutral
+func (bb *Biker1) DecideWeights(action utils.Action) map[uuid.UUID]float64 {
 	//consider adding weights for agents with low points
 	fellowBikers := bb.GetFellowBikers()
 	weights := map[uuid.UUID]float64{}

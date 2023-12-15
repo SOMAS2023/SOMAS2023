@@ -10,6 +10,8 @@ import (
 )
 
 // // -----------------PEDALLING FORCE FUNCTIONS------------------
+
+// helper function to get the pedal force
 func (bb *Biker1) getPedalForce() float64 {
 	//can be made more complex
 	return utils.BikerMaxForce * bb.GetEnergyLevel()

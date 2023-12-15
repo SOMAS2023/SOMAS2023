@@ -12,15 +12,12 @@ import (
 
 // ** called only when the agent is the dictator
 func (bb *Biker1) DictateDirection() uuid.UUID {
-	// TODO: make more sophisticated
 	tmp, _ := bb.nearestLootColour()
 	return tmp
 }
 
 // ** decide which agents to kick out (dictator)
 func (bb *Biker1) DecideKickOut() []uuid.UUID {
-
-	// TODO: make more sophisticated
 	tmp := []uuid.UUID{}
 	agent := bb.lowestOpinionKick()
 	if agent != uuid.Nil {

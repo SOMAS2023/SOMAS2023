@@ -26,12 +26,14 @@ func (bb *Biker1) GetFellowBikers() []obj.IBaseBiker {
 	}
 }
 
+// Get the bike object
 func (bb *Biker1) GetBikeInstance() obj.IMegaBike {
 	gs := bb.GetGameState()
 	bikeId := bb.GetBike()
 	return gs.GetMegaBikes()[bikeId]
 }
 
+// Get lootbox location
 func (bb *Biker1) GetLootLocation(id uuid.UUID) utils.Coordinates {
 	gs := bb.GetGameState()
 	lootboxes := gs.GetLootBoxes()
@@ -39,15 +41,7 @@ func (bb *Biker1) GetLootLocation(id uuid.UUID) utils.Coordinates {
 	return lootbox.GetPosition()
 }
 
-func (bb *Biker1) GetAverageOpinionOfAgent(biker uuid.UUID) float64 {
-	fellowBikers := bb.GetFellowBikers()
-	opinionSum := 0.0
-	for _, agent := range fellowBikers {
-		opinionSum += agent.QueryReputation(biker)
-	}
-	return opinionSum / float64(len(fellowBikers))
-}
-
+// Get the average opinion of the bike members
 func (bb *Biker1) GetAverageOpinionOfBike(megabike obj.IMegaBike) float64 {
 	bikers := megabike.GetAgents()
 	totalBikers := len(bikers)
@@ -121,6 +115,7 @@ func calculateSelfishnessScore(success float64, relationship float64) float64 {
 	return overallScore
 }
 
+// Get the selfishness score of an agent
 func (bb *Biker1) GetSelfishness(agent obj.IBaseBiker) float64 {
 	maxPoints := 0
 	for _, agents := range bb.GetFellowBikers() {
@@ -140,6 +135,7 @@ func (bb *Biker1) GetSelfishness(agent obj.IBaseBiker) float64 {
 	return calculateSelfishnessScore(relativeSuccess, ourRelationship)
 }
 
+// Get the helpfulness allocation for a set of agents
 func (bb *Biker1) getHelpfulAllocation() map[uuid.UUID]float64 {
 	fellowBikers := bb.GetFellowBikers()
 

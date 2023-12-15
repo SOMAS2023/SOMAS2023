@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// agent specific parameters
+// agent specific parameters/thresholds
 const deviateNegative = 0.1          // trust loss on deviation
 const deviatePositive = 0.15         // trust gain on non deviation
 const effortScaling = 0.2            // scaling factor for effort, highr it is the more effort chages each round
@@ -41,7 +41,6 @@ const dictatorshipOpinionThreshold = 0.9
 const dictatorshipReputationThreshold = 0.7
 
 // Bike scoring constants
-
 const majorityWeight = 3.0
 const lootboxWeight = 0.2
 const lootboxColourWeight = 0.6
@@ -56,14 +55,14 @@ type Biker1 struct {
 	recentDecidedColour   utils.Colour          // the colour of the most recent decision (protects if another bike has taken the box)
 	recentDecidedPosition utils.Coordinates     // recent decided position (protects if another bike has taken the box)
 	dislikeVote           bool                  // whether the agent disliked the most recent vote
-	opinions              map[uuid.UUID]Opinion
-	desiredBike           uuid.UUID
-	pursuedBikes          []uuid.UUID
-	mostRecentBike        uuid.UUID
-	timeInLimbo           int
-	prevOnBike            bool
-	numberOfLeaves        int
-	leavingRisk           float64
+	opinions              map[uuid.UUID]Opinion // contains the opinions of all agents
+	desiredBike           uuid.UUID             // the bike the agent wants to go to
+	pursuedBikes          []uuid.UUID           // the bikes the agent has tried to go to
+	mostRecentBike        uuid.UUID             // the bike the agent was on most recently
+	timeInLimbo           int                   // the number of rounds the agent has been off a bike
+	prevOnBike            bool                  // whether the agent was on a bike last round
+	numberOfLeaves        int                   // the number of times the agent has left a bike
+	leavingRisk           float64               // the average number of rounds the agent has been off a bike
 	prevEnergy            map[uuid.UUID]float64 // energy level of each agent in the previous round
 
 }
@@ -83,6 +82,7 @@ func (bb *Biker1) GetLocation() utils.Coordinates {
 
 // -------------------DECISION FUNCTIONS----------------------------
 
+// Rate a bike
 func (bb *Biker1) ScoreBike(bike obj.IMegaBike) float64 {
 	var majorityScore float64
 	if bb.BikeOurColour(bike) {
@@ -101,6 +101,7 @@ func (bb *Biker1) ScoreBike(bike obj.IMegaBike) float64 {
 	return score
 }
 
+// Pick the best bike to go to
 func (bb *Biker1) PickBestBike() uuid.UUID {
 	gs := bb.GetGameState()
 	allBikes := gs.GetMegaBikes()
@@ -137,6 +138,7 @@ func (bb *Biker1) PickBestBike() uuid.UUID {
 	return bestBike
 }
 
+// Update previous energy levels of all agents
 func (bb *Biker1) updatePrevEnergy() {
 	fellowBikers := bb.GetFellowBikers()
 	for _, agent := range fellowBikers {
@@ -144,6 +146,7 @@ func (bb *Biker1) updatePrevEnergy() {
 	}
 }
 
+// Deicde what to do
 func (bb *Biker1) DecideAction() obj.BikerAction {
 	bb.mostRecentBike = bb.GetBike()
 	fellowBikers := bb.GetFellowBikers()
@@ -202,6 +205,7 @@ func (bb *Biker1) DecideAction() obj.BikerAction {
 // -------------------END OF DECISION FUNCTIONS---------------------
 // ----------------CHANGE BIKE FUNCTIONS-----------------
 
+// check if the majority of agents on a bike are of our colour
 func (bb *Biker1) BikeOurColour(bike obj.IMegaBike) bool {
 	matchCounter := 0
 	totalAgents := len(bike.GetAgents())
@@ -243,7 +247,6 @@ func (bb *Biker1) ChangeBike() uuid.UUID {
 // -------------------BIKER ACCEPTANCE FUNCTIONS------------------------
 // an agent will have to rank the agents that are trying to join and that they will try to
 func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
-	//gs.GetMegaBikes()[bikeId].GetAgents()
 
 	decision := make(map[uuid.UUID]bool)
 
@@ -253,7 +256,6 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 	}
 
 	for _, agentId := range pendingAgents {
-		//TODO FIX
 		agent := bb.GetAgentFromId(agentId)
 		reputation, ok := bb.GetReputation()[agentId]
 		var agent_reputation float64
@@ -268,6 +270,7 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 		if agentColour == bbColour {
 			decision[agentId] = true
 			sameColourReward := 1.05
+			// reward for accepting them with same colour
 			bb.UpdateOpinion(agentId, sameColourReward)
 		} else {
 			if bb.opinions[agentId].opinion >= averageBikeOpinion || agent_reputation > joinReputationThreshold {
@@ -281,13 +284,13 @@ func (bb *Biker1) DecideJoining(pendingAgents []uuid.UUID) map[uuid.UUID]bool {
 		}
 
 	}
-
 	// for _, agentId := range pendingAgents {
 	// 	decision[agentId] = true
 	// }
 	return decision
 }
 
+// Get the lowest opinion biker
 func (bb *Biker1) lowestOpinionKick() uuid.UUID {
 	fellowBikers := bb.GetFellowBikers()
 	lowestOpinion := kickThreshold
@@ -305,6 +308,7 @@ func (bb *Biker1) lowestOpinionKick() uuid.UUID {
 	return uuid.Nil
 }
 
+// Kick agents below a kickThreshold
 func (bb *Biker1) DecideKick(agent uuid.UUID) int {
 	if bb.opinions[agent].opinion < kickThreshold {
 		return 1
@@ -312,6 +316,7 @@ func (bb *Biker1) DecideKick(agent uuid.UUID) int {
 	return 0
 }
 
+// Decide on vote for a kickout
 func (bb *Biker1) VoteForKickout() map[uuid.UUID]int {
 	voteResults := make(map[uuid.UUID]int)
 	fellowBikers := bb.GetFellowBikers()

@@ -19,6 +19,7 @@ type Opinion struct {
 
 // -----------------OPINION FUNCTIONS------------------
 
+// Update an agent's trust value
 func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 	id := agentID
 	agent := bb.GetAgentFromId(id)
@@ -59,6 +60,7 @@ func (bb *Biker1) UpdateTrust(agentID uuid.UUID) {
 	bb.opinions[id] = newOpinion
 }
 
+// Update an agent's fairness value
 func (bb *Biker1) UpdateFairness(agentID uuid.UUID) {
 	helpfulAllocation := bb.getHelpfulAllocation()
 	//for now just implement for democracy
@@ -113,6 +115,7 @@ func (bb *Biker1) GetRelativeSuccess(id1 uuid.UUID, id2 uuid.UUID, all_agents []
 	return relativeSuccess
 }
 
+// Update our agent's of another agent
 func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 	_, ok := bb.opinions[id]
 	if !ok {
@@ -145,6 +148,7 @@ func (bb *Biker1) UpdateOpinion(id uuid.UUID, multiplier float64) {
 
 }
 
+// Initialise/Set the opinions of all agents
 func (bb *Biker1) setOpinions() map[uuid.UUID]Opinion {
 	for _, agent := range bb.GetAllAgents() {
 		agentId := agent.GetID()
@@ -189,6 +193,7 @@ func (bb *Biker1) DetermineOurAverageReputation() float64 {
 	return reputation
 }
 
+// Update all agents' opinions
 func (bb *Biker1) UpdateAllAgentsOpinions(agents_to_update []obj.IBaseBiker) {
 	bb.setOpinions()
 	for _, agent := range agents_to_update {
@@ -212,6 +217,7 @@ func (bb *Biker1) UpdateAllAgentsOpinions(agents_to_update []obj.IBaseBiker) {
 
 }
 
+// Update all agents' efforts
 func (bb *Biker1) UpdateAllAgentsEffort() {
 	fellowBikers := bb.GetFellowBikers()
 
@@ -286,6 +292,7 @@ func (bb *Biker1) UpdateAllAgentsEffort() {
 
 }
 
+// Update all agents' trust
 func (bb *Biker1) UpdateAllAgentsTrust(agents_to_update []obj.IBaseBiker) {
 	bb.setOpinions()
 	for _, agent := range agents_to_update {
@@ -308,6 +315,7 @@ func (bb *Biker1) UpdateAllAgentsTrust(agents_to_update []obj.IBaseBiker) {
 	}
 }
 
+// Update all agents' fairness
 func (bb *Biker1) UpdateAllAgentsFairness(agents_to_update []obj.IBaseBiker) {
 	bb.setOpinions()
 	for _, agent := range agents_to_update {
